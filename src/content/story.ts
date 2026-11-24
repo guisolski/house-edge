@@ -51,7 +51,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     dialogue: [
       {
         speaker: 'Luna Pixel',
-        text: 'Manolo… I pulled a slice of their algorithm. But Seu Zé only trades the pendrive if you beat the rooftop draw.',
+        text: 'Rita… I pulled a slice of their algorithm. But Seu Zé only trades the pendrive if you beat the rooftop draw.',
       },
       {
         speaker: 'Rita Odds',
@@ -178,7 +178,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Dr. Margin',
-        text: '…You won. The Tower opened the emergency elevator. Azar deles.',
+        text: 'Win the hearing and the Tower’s elevator unlocks. Lose… and the scandal dies in committee.',
       },
     ],
   },
@@ -201,8 +201,8 @@ export const STORY_BEATS: readonly StoryBeat[] = [
         text: 'A chip? I’m the hill, the fair, the calçadão, and the pixo. Roll the dice.',
       },
       {
-        speaker: 'Narrator',
-        text: 'The odd breaks. The Casa falls. In the streets, funk and samba celebrate: life is still a bet — but the table belongs to the people now.',
+        speaker: 'Augusto Casa',
+        text: 'One last odd, then. High stakes. No appeals.',
       },
     ],
   },

@@ -70,15 +70,18 @@ describe('ui state machine', () => {
 describe('maps and interaction', () => {
   it('builds walkable city maps with exits and npcs', () => {
     const map = buildDistrictMap('morro-neon');
+    expect(buildDistrictMap('feira-central').props.length).toBeGreaterThan(0);
+    expect(buildDistrictMap('avenida-odds').buildings[0]?.kind).toBe('avenida');
+    expect(buildDistrictMap('torre-casa').landmark.kind).toBe('casa-tower');
     expect(map.width).toBeGreaterThan(20);
     expect(isWalkable(map, 8, 15)).toBe(true);
     expect(tileAt(map, -1, 0)).toBe('blocked');
     expect(tileAt(map, 0, 0)).toBe('grass');
     const npcs = districtNpcs();
     const exits = districtExits();
-    expect(nearestNpc(npcs, 'morro-neon', 14, 15)?.id).toBe('dona-nair');
+    expect(nearestNpc(npcs, 'morro-neon', 13, 14)?.id).toBe('dona-nair');
     expect(nearestNpc(npcs, 'morro-neon', 0, 0)).toBeNull();
-    expect(nearestExit(exits, 'morro-neon', 40, 15)?.toDistrict).toBe('feira-central');
+    expect(nearestExit(exits, 'morro-neon', 38, 14)?.toDistrict).toBe('feira-central');
     expect(nearestExit(exits, 'morro-neon', 0, 0)).toBeNull();
     expect(inRange({ x: 0, y: 0, tx: 1, ty: 0 })).toBe(true);
   });
@@ -113,7 +116,7 @@ describe('objectives', () => {
       unlocked: () => false,
     });
     expect(obj.text).toContain('Dona Nair');
-    expect(obj.targetX).toBe(14);
+    expect(obj.targetX).toBe(13);
     const travel = currentObjective({
       beats: STORY_BEATS,
       completed: ['intro-laje', 'boteco-nair', 'luna-beco', 'seu-ze-banca'],
@@ -137,7 +140,7 @@ describe('objectives', () => {
   });
 });
 
-describe('session deep paths', () => {
+describe('session story bet choice', () => {
   beforeEach(() => {
     const mem = new MemoryStorage();
     vi.stubGlobal('localStorage', mem);
@@ -147,20 +150,41 @@ describe('session deep paths', () => {
   it('completes dialogue into bet and confirms', () => {
     const session = new GameSession(9);
     session.startNew();
-    session.player.setPosition(14, 15);
+    session.player.setPosition(13, 14);
     expect(session.interact()).toBe(true);
     expect(session.ui.is('dialogue')).toBe(true);
-    session.closeModal();
+    expect(session.hasPendingStoryBet()).toBe(true);
+    expect(session.acceptStoryBet()).toBe(true);
     expect(session.ui.is('bet')).toBe(true);
+    expect(session.getPendingStake()).toBeGreaterThan(0);
+    session.adjustStake(5);
     expect(session.confirmBet()).toBe(true);
     expect(session.objective().text.length).toBeGreaterThan(0);
+  });
+
+  it('declining story bet leaves the beat retryable', () => {
+    const session = new GameSession(19);
+    session.startNew();
+    session.runStoryBeat('boteco-nair');
+    session.declineStoryBet();
+    expect(session.ui.is('play')).toBe(true);
+    expect(session.story.getCompleted().includes('boteco-nair')).toBe(false);
+    expect(session.runStoryBeat('boteco-nair')).toBe(true);
+  });
+});
+
+describe('session deep paths', () => {
+  beforeEach(() => {
+    const mem = new MemoryStorage();
+    vi.stubGlobal('localStorage', mem);
+    clearStorage(mem);
   });
 
   it('travels via exit when unlocked and nearby', () => {
     const session = new GameSession(10);
     session.startNew();
     session.world.unlock('feira-central');
-    session.player.setPosition(40, 15);
+    session.player.setPosition(38, 14);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
     expect(session.interact()).toBe(true);
     expect(session.player.getStats().districtId).toBe('feira-central');
@@ -173,7 +197,7 @@ describe('session deep paths', () => {
     session.cancelBet();
     expect(session.ui.is('play')).toBe(true);
     session.story.completeBeat('boteco-nair');
-    session.player.setPosition(14, 15);
+    session.player.setPosition(13, 14);
     expect(session.interact()).toBe(true);
   });
 
@@ -207,7 +231,7 @@ describe('session deep paths', () => {
     session.runStoryBeat('boteco-nair');
     session.cancelBet();
     // locked exit: feira locked
-    session.player.setPosition(40, 15);
+    session.player.setPosition(38, 14);
     expect(session.nearbyExit()).toBeNull();
     expect(session.openTravel()).toBe(true);
   });

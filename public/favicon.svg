@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" fill="#07060f"/>
+  <rect x="4" y="8" width="24" height="16" fill="#002776" stroke="#2bfff2" stroke-width="2"/>
+  <text x="16" y="20" text-anchor="middle" font-size="10" font-family="monospace" fill="#ffdf00">HE</text>
+</svg>

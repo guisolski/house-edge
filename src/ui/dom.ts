@@ -18,4 +18,8 @@ export function setVisible(node: HTMLElement, visible: boolean): void {
   // Author `display:flex` otherwise overrides the [hidden] UA rule.
   node.style.display = visible ? '' : 'none';
   node.setAttribute('aria-hidden', visible ? 'false' : 'true');
+  // Prevent focused controls inside hidden panels (aria-hidden focus warning).
+  if ('inert' in node) {
+    (node as HTMLElement & { inert: boolean }).inert = !visible;
+  }
 }

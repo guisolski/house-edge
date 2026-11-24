@@ -19,7 +19,8 @@ export function resolveBet(
 ): BetResult {
   const stake = stakeOverride ?? bet.stake;
   const roll = rng.next();
-  const chance = bet.winChance ?? impliedWinChance(bet.odds, bet.houseEdge);
+  // Always derive from odds + house edge so UI odds match the roll.
+  const chance = impliedWinChance(bet.odds, bet.houseEdge);
   const won = roll < chance;
   const payout = won ? payoutForWin(stake, bet.odds) : 0;
   return {
@@ -30,6 +31,17 @@ export function resolveBet(
     net: payout - stake,
     roll,
   };
+}
+
+export function formatWinChance(odds: Odds, houseEdge: number): string {
+  const pct = Math.round(impliedWinChance(odds, houseEdge) * 100);
+  return `${pct}%`;
+}
+
+export function clampStake(bet: BetDefinition, stake: number, credits: number): number {
+  const min = bet.stakeMin ?? Math.max(1, Math.floor(bet.stake / 2));
+  const max = Math.min(bet.stakeMax ?? bet.stake * 3, credits);
+  return Math.min(max, Math.max(min, stake));
 }
 
 export function canAfford(credits: number, stake: number): boolean {

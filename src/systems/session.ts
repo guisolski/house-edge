@@ -1,7 +1,7 @@
 import { EventBus } from '../core/event-bus';
 import { createRng, type Rng } from '../core/rng';
 import type { BetDefinition, GameSave, DistrictId } from '../core/types';
-import { canAfford, resolveBet } from './betting';
+import { canAfford, clampStake, resolveBet } from './betting';
 import { PlayerSystem } from './player';
 import { StorySystem } from './story';
 import { WorldSystem } from './world';
@@ -34,6 +34,7 @@ export class GameSession {
   private muted = false;
   private masterVolume = 0.7;
   private pendingBetId: string | null = null;
+  private pendingStake = 0;
   private pendingStoryBeat: string | null = null;
   private pendingBetAfterDialogue: string | null = null;
   private lastDialogue: import('../core/types').DialogueLine[] = [];
@@ -125,11 +126,14 @@ export class GameSession {
   offerBet(betId: string): boolean {
     const bet = getBet(betId);
     if (!bet) return false;
-    if (!canAfford(this.player.getStats().credits, bet.stake)) {
+    const credits = this.player.getStats().credits;
+    const stake = clampStake(bet, bet.stake, credits);
+    if (!canAfford(credits, stake)) {
       this.bus.emit('ui:toast', { message: 'Not enough credits.', kind: 'danger' });
       return false;
     }
     this.pendingBetId = betId;
+    this.pendingStake = stake;
     this.bus.emit('bet:offered', { betId, title: bet.title });
     return this.ui.go('bet');
   }
@@ -145,20 +149,68 @@ export class GameSession {
     if (!betId) return false;
     const bet = getBet(betId);
     if (!bet) return false;
-    const ok = this.settleBet(bet, stakeOverride ?? bet.stake);
+    const stake = clampStake(
+      bet,
+      stakeOverride ?? this.pendingStake ?? bet.stake,
+      this.player.getStats().credits,
+    );
+    const ok = this.settleBet(bet, stake);
     this.pendingBetId = null;
+    this.pendingStake = 0;
     this.ui.go('play');
     return ok;
   }
 
   cancelBet(): void {
     this.pendingBetId = null;
+    this.pendingStake = 0;
     this.pendingStoryBeat = null;
+    this.pendingBetAfterDialogue = null;
     this.ui.go('play');
   }
 
   getPendingBet(): BetDefinition | null {
     return this.pendingBetId ? (getBet(this.pendingBetId) ?? null) : null;
+  }
+
+  getPendingStake(): number {
+    return this.pendingStake;
+  }
+
+  adjustStake(delta: number): number {
+    const bet = this.getPendingBet();
+    if (!bet) return 0;
+    this.pendingStake = clampStake(
+      bet,
+      this.pendingStake + delta,
+      this.player.getStats().credits,
+    );
+    return this.pendingStake;
+  }
+
+  /** After dialogue: player opts into the linked story bet. */
+  acceptStoryBet(): boolean {
+    const betId = this.pendingBetAfterDialogue;
+    this.pendingBetAfterDialogue = null;
+    if (!betId) {
+      this.ui.backToPlay();
+      return false;
+    }
+    if (this.offerBet(betId)) return true;
+    this.pendingStoryBeat = null;
+    this.ui.backToPlay();
+    return false;
+  }
+
+  /** After dialogue: decline the bet and leave the beat retryable. */
+  declineStoryBet(): void {
+    this.pendingBetAfterDialogue = null;
+    this.pendingStoryBeat = null;
+    this.ui.backToPlay();
+  }
+
+  hasPendingStoryBet(): boolean {
+    return this.pendingBetAfterDialogue !== null;
   }
 
   availableStory(): ReturnType<StorySystem['availableBeats']> {
@@ -207,12 +259,9 @@ export class GameSession {
   }
 
   private advanceDialogue(): void {
+    // Story bets require an explicit Accept / Decline from the HUD — never auto-open.
     if (this.pendingBetAfterDialogue) {
-      const betId = this.pendingBetAfterDialogue;
-      this.pendingBetAfterDialogue = null;
-      if (this.offerBet(betId)) return;
-      this.pendingStoryBeat = null;
-      this.ui.backToPlay();
+      this.declineStoryBet();
       return;
     }
     if (this.pendingStoryBeat) {
@@ -289,18 +338,28 @@ export class GameSession {
     this.player.addCredits(-stake);
     const result = resolveBet(bet, this.rng, stake);
     this.player.addCredits(result.payout);
-    const rep = result.won ? bet.reputationDeltaWin : bet.reputationDeltaLose;
-    this.player.addReputation(rep);
+    this.player.addReputation(
+      result.won ? bet.reputationDeltaWin : bet.reputationDeltaLose,
+    );
     this.bus.emit('bet:resolved', {
       betId: bet.id,
       won: result.won,
       payout: result.payout,
       stake,
     });
-    if (result.won) this.applyBetWins(bet);
+    this.afterBetResolved(bet, result.won);
     this.toastBet(result.won, result.payout);
-    this.finishPendingStory();
     return true;
+  }
+
+  private afterBetResolved(bet: BetDefinition, won: boolean): void {
+    if (won) {
+      this.applyBetWins(bet);
+      this.finishPendingStory();
+      return;
+    }
+    // Losses keep the story beat incomplete so the player can retry.
+    this.pendingStoryBeat = null;
   }
 
   private applyBetWins(bet: BetDefinition): void {

@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] — 2026-11-24
+
+### Performance
+
+- Baked tile/sprite atlas + per-district map layer cache; cheap rain/lights; throttled HUD prompt writes with trailing flush.
+- F3 FPS overlay (bottom-left); `make playtest` FPS budget + 4× CPU throttle gate (≥50 avg FPS).
+
+### Gameplay / UX
+
+- Stake +/− selection; win chance matches odds + house edge; short roll reveal.
+- Story bets require **Take the bet** / **Walk away** (no auto-open); losses no longer advance story.
+- Fixed Luna “Manolo” → Rita; removed pre-bet spoilers; menu hints match input mode; title shows `v1.3.0`.
+- Faster walk + Shift run; Side Jobs in every district; inert/aria-hidden panels; favicon.
+
 ## [1.2.0] — 2026-11-24
 
 ### Added

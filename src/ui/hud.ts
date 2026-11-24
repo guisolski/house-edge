@@ -131,9 +131,17 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
   return {
     showDialogue: (lines) => {
       only(p, 'dialogue');
-      paintDialogue(p.dialogue, lines, () => {
-        session.closeModal();
-        h.syncScreen();
+      const offerBet = session.hasPendingStoryBet();
+      paintDialogue(p.dialogue, lines, {
+        offerBet,
+        onAcceptBet: () => {
+          session.acceptStoryBet();
+          h.syncScreen();
+        },
+        onClose: () => {
+          session.closeModal();
+          h.syncScreen();
+        },
       });
     },
     showMenu: (open) => toggleMenu(p, open),
@@ -197,6 +205,13 @@ function only(p: Parts, which: string): void {
     ending: p.ending,
   };
   setVisible(map[which]!, true);
+  blurIfHidden();
+}
+
+function blurIfHidden(): void {
+  const ae = document.activeElement;
+  if (!(ae instanceof HTMLElement)) return;
+  if (ae.closest('[aria-hidden="true"], [inert]')) ae.blur();
 }
 
 function hideAll(nodes: HTMLElement[]): void {
@@ -208,6 +223,7 @@ function fillTitle(panel: HTMLElement, session: GameSession): void {
   panel.append(
     el('h1', 'logo', UI.title),
     el('p', 'tagline', UI.tagline),
+    el('p', 'version', UI.version),
     button(UI.newGame, () => session.startNew()),
     button(UI.continue, () => {
       if (!session.tryLoad()) session.startNew();
@@ -226,8 +242,15 @@ function fillMenu(panel: HTMLElement, session: GameSession, h: HudHandles): void
     button(UI.travel, () => openFromMenu(session, h, 'travel')),
     button(UI.grind, () => openFromMenu(session, h, 'jobs')),
     button(UI.mute, () => session.setMuted(!session.getAudio().muted)),
-    el('p', 'hint menu-hint', UI.hintGamepad),
+    el('p', 'hint menu-hint', menuHintFor(panel)),
   );
+}
+
+function menuHintFor(panel: HTMLElement): string {
+  const mode = panel.closest('.hud')?.getAttribute('data-input-mode') ?? 'keyboard';
+  if (mode === 'gamepad') return UI.hintMenuGamepad;
+  if (mode === 'touch') return UI.hintMenuTouch;
+  return UI.hintMenuKeyboard;
 }
 
 function openFromMenu(
@@ -282,6 +305,15 @@ function applyMode(p: Parts, mode: InputMode): void {
       : mode === 'touch'
         ? UI.hintTouch
         : UI.hintKeyboard;
+  const menuHint = p.menu.querySelector('.menu-hint');
+  if (menuHint) {
+    menuHint.textContent =
+      mode === 'gamepad'
+        ? UI.hintMenuGamepad
+        : mode === 'touch'
+          ? UI.hintMenuTouch
+          : UI.hintMenuKeyboard;
+  }
 }
 
 function navModal(

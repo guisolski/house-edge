@@ -16,7 +16,7 @@ English dialogue with occasional Brazilian slang for flavor. Old informal street
 
 ## Beat 3 — Pixo alley
 
-- Luna: Manolo… I pulled a slice of their algorithm. Seu Zé trades the pendrive if you beat the rooftop draw.
+- Luna: Rita… I pulled a slice of their algorithm. Seu Zé trades the pendrive if you beat the rooftop draw.
 - Rita: Street lotteries got wiped when the corps took over. Now even the laje plays by Casa rules.
 - **Bet:** Rooftop number draw.
 
@@ -56,7 +56,7 @@ English dialogue with occasional Brazilian slang for flavor. Old informal street
 
 - Margin: Regulation is just another table. Wager on a public hearing.
 - Rita: People will see the house edge eating schools, hospitals, and water.
-- Margin: You won. The Tower elevator opened. Azar deles.
+- Margin: Win the hearing and the Tower elevator unlocks. Lose and the scandal dies in committee.
 - **Bet:** Rigged public hearing → unlocks Tower.
 
 ## Beat 10 — Duel at Casa Suprema Tower

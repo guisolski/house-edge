@@ -37,6 +37,14 @@ make playtest          # Playwright playthrough + screenshots + console check
 make e2e               # includes golden-path story completion
 ```
 
+## Performance (mandatory)
+
+1. Toggle FPS overlay with **F3** (or `setShowFps(true)` in the harness).
+2. Walk for several seconds on desktop; avg FPS must stay **≥ 50** (target 60).
+3. Repeat with Chrome DevTools **4× CPU slowdown** (mobile throttle); avg FPS **≥ 50**.
+4. `make playtest` includes a scripted-walk FPS budget assertion **and** a 4× CPU throttle budget (≥50 avg) — failing either fails the playtest.
+5. Causes of stutter to watch for: per-frame procedural `fillRect` tile painting, recreating canvases, regenerating sprites, heavy glows, DOM HUD writes every frame, AudioNode churn on move.
+
 ## Fail conditions (any one blocks done)
 
 - Interact/bet works with no NPC in range
@@ -46,6 +54,7 @@ make e2e               # includes golden-path story completion
 - Placeholder-only repeating tile soup with no readable streets/buildings
 - Console errors or 404s
 - Golden-path e2e fails
+- FPS budget fails (desktop avg < 50 during scripted walk)
 - You did not personally verify in a browser
 
 ## Artifacts

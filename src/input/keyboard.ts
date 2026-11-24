@@ -14,6 +14,8 @@ const KEY_MAP: Record<string, ActionName> = {
   KeyF: Actions.Bet,
   Escape: Actions.Menu,
   KeyM: Actions.Mute,
+  ShiftLeft: Actions.Run,
+  ShiftRight: Actions.Run,
 };
 
 export function applyKey(

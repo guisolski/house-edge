@@ -11,6 +11,7 @@ import { loadFromStorage } from '../systems/save';
 import { InputModeTracker } from '../systems/input-mode';
 import { wireSessionEvents } from './wiring';
 import type { HudHandles } from '../ui/hud';
+import type { FpsSample } from '../rendering/fps';
 
 export type GameApp = {
   engine: ex.Engine;
@@ -27,7 +28,12 @@ type TickDeps = {
   modes: InputModeTracker;
   hud: HudHandles;
   frame: { n: number };
+  lastDistrict: { id: string };
 };
+
+/** Tile step cadence — FR-independent via elapsed cooldown (ms). */
+const WALK_MS = 52;
+const RUN_MS = 28;
 
 export function createGameApp(host: HTMLElement): GameApp {
   const session = new GameSession(Date.now() % 100000);
@@ -37,36 +43,70 @@ export function createGameApp(host: HTMLElement): GameApp {
   host.appendChild(world.canvas);
   const state = createActionState();
   const audio = createAudioEngine();
-  const cooldown = { ms: 0 };
   const modes = new InputModeTracker(350, detectInitialMode());
   const touch = mountTouchControls(host, state, session.bus, modes);
+  touch.setVisible(false);
   wireSessionEvents(session, hud, audio, modes, touch);
-  bindKeyboard(window, state, (action, pressed) => {
-    modes.note('keyboard');
-    session.bus.emit('input:action', { action, pressed });
-  });
-  window.addEventListener('touchstart', () => modes.note('touch'), { passive: true });
+  bindInputs(host, session, state, modes, world);
   const deps: TickDeps = {
     session,
     state,
     world,
     audio,
-    cooldown,
+    cooldown: { ms: 0 },
     modes,
     hud,
     frame: { n: 0 },
+    lastDistrict: { id: '' },
   };
   engine.on('postupdate', (ev) => onTick(deps, ev.elapsed));
   hud.showTitle(loadFromStorage() !== null);
-  const app = { engine, session, start: () => engine.start() };
-  // Playtest / e2e harness — UX mode switching + session control.
+  exposeHarness(session, modes, hud, world);
+  return { engine, session, start: () => engine.start() };
+}
+
+function bindInputs(
+  host: HTMLElement,
+  session: GameSession,
+  state: ActionState,
+  modes: InputModeTracker,
+  world: ReturnType<typeof createWorldView>,
+): void {
+  bindKeyboard(window, state, (action, pressed) => {
+    modes.note('keyboard');
+    session.bus.emit('input:action', { action, pressed });
+  });
+  window.addEventListener(
+    'keydown',
+    (e) => {
+      if (e.code !== 'F3') return;
+      e.preventDefault();
+      const on = !host.dataset.fps;
+      host.dataset.fps = on ? '1' : '';
+      world.setShowFps(on);
+    },
+    { passive: false },
+  );
+  window.addEventListener('touchstart', () => modes.note('touch'), {
+    passive: true,
+  });
+}
+
+function exposeHarness(
+  session: GameSession,
+  modes: InputModeTracker,
+  hud: HudHandles,
+  world: ReturnType<typeof createWorldView>,
+): void {
   (window as unknown as { __HOUSE_EDGE__: unknown }).__HOUSE_EDGE__ = {
     session,
     modes,
     hud,
+    world,
     forceMode: (mode: 'keyboard' | 'touch' | 'gamepad') => modes.force(mode),
+    getFps: (): FpsSample => world.getFps(),
+    setShowFps: (on: boolean) => world.setShowFps(on),
   };
-  return app;
 }
 
 function detectInitialMode(): 'keyboard' | 'touch' | 'gamepad' {
@@ -80,14 +120,15 @@ function makeEngine(host: HTMLElement): ex.Engine {
   canvas.className = 'engine-canvas';
   host.appendChild(canvas);
   return new ex.Engine({
-    width: 960,
-    height: 540,
+    width: 320,
+    height: 180,
     canvasElement: canvas,
     displayMode: ex.DisplayMode.Fixed,
     pixelArt: true,
     backgroundColor: ex.Color.fromHex('#07060f'),
     suppressPlayButton: true,
     suppressConsoleBootMessage: true,
+    maxFps: 60,
   });
 }
 
@@ -95,8 +136,13 @@ function onTick(deps: TickDeps, delta: number): void {
   pollPads(deps);
   deps.cooldown.ms = Math.max(0, deps.cooldown.ms - delta);
   maybeMove(deps);
+  const id = deps.session.player.getStats().districtId;
+  if (id !== deps.lastDistrict.id) {
+    deps.lastDistrict.id = id;
+    deps.world.invalidateMap();
+  }
   deps.frame.n += 1;
-  deps.world.draw(deps.frame.n);
+  deps.world.draw(deps.frame.n, performance.now());
 }
 
 function maybeMove(deps: TickDeps): void {
@@ -105,8 +151,7 @@ function maybeMove(deps: TickDeps): void {
   const { dx, dy } = movementDelta(deps.state);
   if (!dx && !dy) return;
   deps.session.move(dx, dy);
-  deps.audio.playSfx('move');
-  deps.cooldown.ms = 140;
+  deps.cooldown.ms = deps.state.run ? RUN_MS : WALK_MS;
 }
 
 function pollPads(deps: TickDeps): void {

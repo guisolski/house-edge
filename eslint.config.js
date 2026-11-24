@@ -61,4 +61,15 @@ export default tseslint.config(
       'max-params': ['error', 6],
     },
   },
+  {
+    // Hand-authored district layouts are data-heavy by nature.
+    files: ['src/world/maps.ts'],
+    rules: {
+      'max-lines-per-function': [
+        'error',
+        { max: 80, skipBlankLines: true, skipComments: true },
+      ],
+      'max-params': ['error', 6],
+    },
+  },
 );

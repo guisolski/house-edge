@@ -9,9 +9,15 @@ import { estimateHourly, listJobs } from '../../src/systems/grind';
 import { WorldSystem } from '../../src/systems/world';
 import { EventBus } from '../../src/core/event-bus';
 import { DISTRICTS } from '../../src/content/districts';
-import { resolveBet, payoutForWin } from '../../src/systems/betting';
+import { resolveBet, payoutForWin, clampStake } from '../../src/systems/betting';
 import { createRng } from '../../src/core/rng';
 import { getBet } from '../../src/content/bets';
+import type { BetDefinition } from '../../src/core/types';
+import { currentObjective } from '../../src/systems/objectives';
+import { STORY_BEATS } from '../../src/content/story';
+import { districtExits, districtNpcs } from '../../src/systems/interaction';
+import { InputModeTracker } from '../../src/systems/input-mode';
+import { tileAt, buildDistrictMap } from '../../src/world/maps';
 
 class MemoryStorage {
   private data = new Map<string, string>();
@@ -35,6 +41,7 @@ describe('input branches', () => {
   it('covers gamepad deadzone false paths', () => {
     const state = createActionState();
     readGamepad({ axes: [0, 0], buttons: [] }, state);
+    readGamepad({ axes: [], buttons: [] }, state);
     readGamepad(
       {
         axes: [-1, 1],
@@ -43,6 +50,71 @@ describe('input branches', () => {
       state,
     );
     expect(state.left).toBe(true);
+  });
+});
+
+describe('coverage edge branches', () => {
+  it('hits clampStake defaults, unlock text, and sparse tiles', () => {
+    const bare: BetDefinition = {
+      id: 'bare',
+      kind: 'job',
+      title: 'Bare',
+      description: 'x',
+      stake: 20,
+      odds: { numerator: 1, denominator: 1 },
+      houseEdge: 0.1,
+      reputationDeltaWin: 1,
+      reputationDeltaLose: -1,
+    };
+    expect(clampStake(bare, 5, 100)).toBe(10);
+    expect(clampStake(bare, 90, 100)).toBe(60);
+    const agua = getBet('agua-gelada')!;
+    const savedChance = agua.winChance;
+    delete agua.winChance;
+    expect(
+      estimateHourly({
+        id: 'bare-job',
+        label: 'Bare',
+        betId: 'agua-gelada',
+        minReputation: 0,
+        districtId: 'morro-neon',
+      }),
+    ).toBeGreaterThan(0);
+    agua.winChance = savedChance;
+    const unlockHint = currentObjective({
+      beats: STORY_BEATS,
+      completed: ['intro-laje', 'boteco-nair', 'luna-beco', 'seu-ze-banca'],
+      flags: () => true,
+      districtId: 'morro-neon',
+      npcs: districtNpcs(),
+      exits: districtExits(),
+      unlocked: () => false,
+    });
+    expect(unlockHint.text).toMatch(/Unlock path/);
+    const orphan = currentObjective({
+      beats: STORY_BEATS,
+      completed: ['intro-laje'],
+      flags: () => true,
+      districtId: 'morro-neon',
+      npcs: [],
+      exits: districtExits(),
+      unlocked: () => true,
+    });
+    expect(orphan.text.length).toBeGreaterThan(0);
+    expect(parseSave(JSON.stringify({ version: 1 }))).toBeNull();
+    const map = buildDistrictMap('morro-neon');
+    const hole = { ...map, tiles: [...map.tiles] };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (hole.tiles as any)[5] = undefined;
+    expect(tileAt(hole, 5 % map.width, Math.floor(5 / map.width))).toBe('blocked');
+    vi.useFakeTimers();
+    const tracker = new InputModeTracker(40, 'keyboard');
+    tracker.note('keyboard');
+    tracker.note('touch');
+    tracker.note('touch');
+    vi.advanceTimersByTime(40);
+    expect(tracker.get()).toBe('touch');
+    vi.useRealTimers();
   });
 });
 
@@ -58,7 +130,7 @@ describe('session branches', () => {
     session.startNew();
     session.player.addCredits(-session.player.getStats().credits);
     expect(session.runStoryBeat('boteco-nair')).toBe(true);
-    session.closeModal();
+    expect(session.acceptStoryBet()).toBe(false);
     expect(session.getPendingBet()).toBeNull();
     expect(session.ui.is('play')).toBe(true);
     expect(session.runStoryBeat('missing')).toBe(false);
@@ -66,7 +138,13 @@ describe('session branches', () => {
 
   it('applies unlock flags on winning story bets', () => {
     const bet = getBet('prova-vazamento')!;
-    expect(resolveBet({ ...bet, winChance: 1 }, createRng(1), 10).won).toBe(true);
+    expect(
+      resolveBet(
+        { ...bet, odds: { numerator: 1, denominator: 1000 }, houseEdge: 0 },
+        createRng(1),
+        10,
+      ).won,
+    ).toBe(true);
     expect(payoutForWin(10, bet.odds)).toBeGreaterThan(0);
     expect(forceUnlockLoop()).toBe(true);
   });
@@ -76,7 +154,7 @@ describe('save upgrade world branches', () => {
   it('parses partial saves and upgrade rejection paths', () => {
     expect(parsePartial()).toBe(false);
     expect(upgradeRejects()).toBe(true);
-    expect(listJobs('avenida-odds', 0)).toHaveLength(0);
+    expect(listJobs('avenida-odds', 0).length).toBeGreaterThan(0);
     expect(
       estimateHourly({
         id: 'x',
@@ -117,17 +195,19 @@ function runKeyboardCase(): boolean {
 }
 
 function forceUnlockLoop(): boolean {
-  for (let seed = 0; seed < 40; seed += 1) {
+  let sawFlag = false;
+  let sawDistrict = false;
+  for (let seed = 0; seed < 200; seed += 1) {
     const session = new GameSession(seed);
     session.startNew();
     session.player.addCredits(500);
     session.placeBet('prova-vazamento');
     session.placeBet('corrida-moto');
-    if (session.story.getFlag('tem_prova') && session.world.isUnlocked('feira-central')) {
-      return true;
-    }
+    if (session.story.getFlag('tem_prova')) sawFlag = true;
+    if (session.world.isUnlocked('feira-central')) sawDistrict = true;
+    if (sawFlag && sawDistrict) return true;
   }
-  return true;
+  return sawFlag && sawDistrict;
 }
 
 function parsePartial(): boolean | undefined {

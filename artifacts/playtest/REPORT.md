@@ -1,34 +1,38 @@
-# Playtest report — House Edge 1.2.0
+# Playtest report — House Edge 1.3.0
 
 Date: 2026-11-24
 
 ## Summary
 
-**PASS** — golden path + three input modes verified via `make playtest` / Playwright desktop Chromium. Console clean (no errors / 404s asserted in golden path).
+**PASS** — golden path, three input modes, desktop FPS budget, and 4× CPU throttle FPS budget verified. Browser profile held ~60 FPS desktop and under 4×/6× CPU throttle. Console clean.
+
+## Performance
+
+| Scenario                                | Avg FPS | Frame ms | Result     |
+| --------------------------------------- | ------- | -------- | ---------- |
+| Desktop scripted walk (`make playtest`) | ~60     | ~16      | PASS (≥50) |
+| 4× CPU throttle walk                    | ~59–60  | ~16–17   | PASS (≥50) |
+| 6× CPU throttle (extra)                 | ~60     | ~16–17   | PASS       |
+
+F3 FPS overlay sits bottom-left (clear of the play HUD).
 
 ## Steps
 
-| Step                     | Result | Evidence                                         |
-| ------------------------ | ------ | ------------------------------------------------ |
-| Title → New Game         | pass   | `01-title-play-keyboard.png`                     |
-| Proximity prompt at NPC  | pass   | `02-prompt-npc.png`                              |
-| Dialogue                 | pass   | `03-dialogue.png`                                |
-| Bet modal (stake/odds)   | pass   | `04-bet.png`                                     |
-| Travel UI                | pass   | `05-travel.png`                                  |
-| World / camera / streets | pass   | `06-world-art.png`                               |
-| Touch stick + actions    | pass   | `mobile-01-touch.png`, `mobile-02-menu.png`      |
-| Gamepad hints + menu nav | pass   | `gamepad-01-play.png`, `gamepad-02-menu-nav.png` |
-
-## Guidelines applied (cites)
-
-- Proximity + prompt — **GD-4**
-- Bet stake/odds/roll — **GD-3**
-- Objective strip + marker — **GD-1**
-- Paths/landmarks/camera — **LD-1…LD-6** (see research docs)
-- Input-adaptive chrome — **UX-1…UX-7**
-- Neon lighting pass — **LT-1 / LT-2**
+| Step                              | Result | Evidence                                   |
+| --------------------------------- | ------ | ------------------------------------------ |
+| Title + version `v1.3.0`          | pass   | title / browser                            |
+| New Game → play HUD               | pass   | `01-title-play-keyboard.png`               |
+| Walk / Shift run                  | pass   | browser video                              |
+| Proximity prompt at NPC           | pass   | `02-prompt-npc.png` (+ trailing flush fix) |
+| Dialogue Take the bet / Walk away | pass   | `03-dialogue.png`                          |
+| Bet stake +/− + win chance        | pass   | `04-bet.png`                               |
+| Travel UI                         | pass   | `05-travel.png`                            |
+| World / camera                    | pass   | `06-world-art.png`                         |
+| Touch stick + actions             | pass   | `mobile-01-touch.png`                      |
+| Gamepad hints + menu nav          | pass   | `gamepad-01-play.png`                      |
+| FPS walk budget                   | pass   | `07-fps-walk.png`                          |
 
 ## Gaps / follow-ups
 
-- Pixel art is procedural (readable streets/buildings/neon) but not hand-painted atlas quality.
-- Mutation suite not re-ground after every UI split; run `make mutation` before release tags.
+- District art can still deepen beyond procedural tiles.
+- Mutation suite optional before release tags (`make mutation`).

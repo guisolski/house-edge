@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   applyHouseFlavor,
   canAfford,
+  clampStake,
   formatOdds,
+  formatWinChance,
   impliedWinChance,
   payoutForWin,
   resolveBet,
@@ -38,5 +40,13 @@ describe('betting', () => {
     expect(applyHouseFlavor(0.16)).toMatch(/Crooked/i);
     expect(applyHouseFlavor(0.09)).toMatch(/cut/i);
     expect(applyHouseFlavor(0.01)).toMatch(/Almost/i);
+  });
+
+  it('clamps stake and formats win chance from odds', () => {
+    const bet = getBet('agua-gelada')!;
+    expect(clampStake(bet, 1, 100)).toBe(bet.stakeMin ?? 5);
+    expect(clampStake(bet, 999, 25)).toBe(25);
+    expect(formatWinChance(bet.odds, bet.houseEdge)).toMatch(/%$/);
+    expect(impliedWinChance({ numerator: 1, denominator: 1 }, 2)).toBeLessThan(1);
   });
 });

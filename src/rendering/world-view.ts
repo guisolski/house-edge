@@ -1,94 +1,177 @@
 import { Palette } from '../content/palette';
 import type { GameSession } from '../systems/session';
 import { createCamera, followPlayer } from '../world/camera';
-import { tileAt, type TileKind } from '../world/maps';
+import { tileAt, type MapDef, type TileKind } from '../world/maps';
+import { bakeSprite, blitImage } from './bake';
+import { FpsMeter, type FpsSample } from './fps';
 import {
   makeAlley,
   makeAsphalt,
   makeBuilding,
   makeExitPad,
   makeGrass,
+  makeInterior,
+  makeKiosk,
   makeLandmark,
+  makeMoto,
   makeNeonSign,
   makeNpcSprite,
   makePlayerSprite,
   makePlaza,
   makeSidewalk,
-  paintGrid,
-  type PixelGrid,
+  makeStairs,
+  makeWire,
 } from './pixel-gen';
 
 const TILE = 16;
 const SCALE = 3;
 const TILE_PX = TILE * SCALE;
+const RAIN_COUNT = 8;
+const MAX_LIGHTS = 2;
+const GLOW_R = 72;
 
 export type WorldView = {
   canvas: HTMLCanvasElement;
-  draw: (frame: number) => void;
+  draw: (frame: number, now: number) => FpsSample;
+  getFps: () => FpsSample;
+  setShowFps: (on: boolean) => void;
+  invalidateMap: () => void;
 };
 
-type Assets = {
-  tiles: Record<TileKind, PixelGrid>;
-  player: PixelGrid[];
-  npc: PixelGrid;
-  building: PixelGrid[];
-  exit: PixelGrid;
-  landmark: Map<string, PixelGrid>;
+type Baked = {
+  tiles: Record<TileKind, HTMLCanvasElement>;
+  player: HTMLCanvasElement[];
+  npc: Map<string, HTMLCanvasElement>;
+  building: Record<string, HTMLCanvasElement[]>;
+  exit: HTMLCanvasElement;
+  landmark: Map<string, HTMLCanvasElement>;
+  sign: Map<string, HTMLCanvasElement>;
+  props: Record<'moto' | 'kiosk' | 'wire', HTMLCanvasElement>;
+  glow: Map<string, HTMLCanvasElement>;
 };
+
+type MapCache = {
+  districtId: string;
+  layer: HTMLCanvasElement;
+};
+
+type ActorItem = { y: number; x: number; img: HTMLCanvasElement };
 
 export function createWorldView(session: GameSession): WorldView {
+  const state = makeViewState(session);
+  window.addEventListener('resize', () => {
+    state.resizeW = 0;
+    state.resizeH = 0;
+  });
+  return {
+    canvas: state.canvas,
+    invalidateMap: () => {
+      state.mapCache = null;
+    },
+    setShowFps: (on) => {
+      state.showFps = on;
+    },
+    getFps: () => state.lastSample,
+    draw: (frame, now) => drawOnce(state, frame, now),
+  };
+}
+
+type ViewState = {
+  canvas: HTMLCanvasElement;
+  session: GameSession;
+  baked: Baked;
+  meter: FpsMeter;
+  cam: ReturnType<typeof createCamera>;
+  mapCache: MapCache | null;
+  showFps: boolean;
+  lastSample: FpsSample;
+  resizeW: number;
+  resizeH: number;
+  actors: ActorItem[];
+  marker: { x: number; y: number; districtId: string } | null;
+  markerFrame: number;
+};
+
+function makeViewState(session: GameSession): ViewState {
   const canvas = document.createElement('canvas');
   canvas.className = 'world-canvas';
   canvas.width = 960;
   canvas.height = 540;
-  const assets = loadAssets();
-  let cam = createCamera();
   return {
     canvas,
-    draw: (frame) => {
-      cam = paintFrame(canvas, session, assets, cam, frame);
-    },
+    session,
+    baked: bakeAll(),
+    meter: new FpsMeter(),
+    cam: createCamera(),
+    mapCache: null,
+    showFps: false,
+    lastSample: { fps: 60, frameMs: 16, avgFps: 60, avgFrameMs: 16 },
+    resizeW: 0,
+    resizeH: 0,
+    actors: [],
+    marker: null,
+    markerFrame: -1,
   };
 }
 
-function loadAssets(): Assets {
+function drawOnce(state: ViewState, frame: number, now: number): FpsSample {
+  state.lastSample = state.meter.tick(now);
+  state.cam = paintFrame(state, frame);
+  return state.lastSample;
+}
+
+function bakeAll(): Baked {
+  const tiles: Record<TileKind, HTMLCanvasElement> = {
+    asphalt: bakeSprite(makeAsphalt(), SCALE),
+    sidewalk: bakeSprite(makeSidewalk(), SCALE),
+    alley: bakeSprite(makeAlley(), SCALE),
+    plaza: bakeSprite(makePlaza(), SCALE),
+    grass: bakeSprite(makeGrass(), SCALE),
+    stairs: bakeSprite(makeStairs(), SCALE),
+    interior: bakeSprite(makeInterior(), SCALE),
+    blocked: bakeSprite(makeGrass(), SCALE),
+    exit: bakeSprite(makeExitPad(), SCALE),
+  };
   return {
-    tiles: {
-      asphalt: makeAsphalt(),
-      sidewalk: makeSidewalk(),
-      alley: makeAlley(),
-      plaza: makePlaza(),
-      grass: makeGrass(),
-      blocked: makeGrass(),
-      exit: makeExitPad(),
+    tiles,
+    player: [
+      bakeSprite(makePlayerSprite(0), SCALE),
+      bakeSprite(makePlayerSprite(1), SCALE),
+    ],
+    npc: new Map(),
+    building: {
+      morro: [0, 1, 2, 3].map((s) => bakeSprite(makeBuilding(s, 'morro'), SCALE)),
+      feira: [0, 1, 2, 3].map((s) => bakeSprite(makeBuilding(s, 'feira'), SCALE)),
+      avenida: [0, 1, 2, 3].map((s) => bakeSprite(makeBuilding(s, 'avenida'), SCALE)),
+      torre: [0, 1, 2, 3].map((s) => bakeSprite(makeBuilding(s, 'torre'), SCALE)),
     },
-    player: [makePlayerSprite(0), makePlayerSprite(1)],
-    npc: makeNpcSprite(Palette.neonCyan),
-    building: [0, 1, 2, 3].map((s) => makeBuilding(s)),
-    exit: makeExitPad(),
+    exit: tiles.exit,
     landmark: new Map([
-      ['led-tower', makeLandmark('led-tower')],
-      ['calcadao', makeLandmark('calcadao')],
-      ['glass-corp', makeLandmark('glass-corp')],
-      ['casa-tower', makeLandmark('casa-tower')],
+      ['led-tower', bakeSprite(makeLandmark('led-tower'), SCALE)],
+      ['calcadao', bakeSprite(makeLandmark('calcadao'), SCALE)],
+      ['glass-corp', bakeSprite(makeLandmark('glass-corp'), SCALE)],
+      ['casa-tower', bakeSprite(makeLandmark('casa-tower'), SCALE)],
     ]),
+    sign: new Map(),
+    props: {
+      moto: bakeSprite(makeMoto(), SCALE),
+      kiosk: bakeSprite(makeKiosk(), SCALE),
+      wire: bakeSprite(makeWire(), SCALE),
+    },
+    glow: new Map(),
   };
 }
 
-function paintFrame(
-  canvas: HTMLCanvasElement,
-  session: GameSession,
-  assets: Assets,
-  camIn: ReturnType<typeof createCamera>,
-  frame: number,
-): ReturnType<typeof createCamera> {
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return camIn;
-  fitCanvas(canvas);
+function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCamera> {
+  const { canvas, session, baked, showFps, lastSample: sample } = state;
+  const ctx = canvas.getContext('2d', { alpha: false });
+  if (!ctx) return state.cam;
+  fitCanvas(canvas, state);
   const stats = session.player.getStats();
   const map = session.getMap();
+  ensureMapCache(state, map, baked);
   const cam = followPlayer({
-    cam: camIn,
+    cam: state.cam,
     playerX: stats.x,
     playerY: stats.y,
     mapW: map.width,
@@ -100,111 +183,232 @@ function paintFrame(
   ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = Palette.void;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.save();
-  ctx.translate(-cam.x, -cam.y);
-  drawGround(ctx, map, assets);
-  drawProps(ctx, session, assets);
-  drawActors(ctx, session, assets, frame);
-  drawLighting(ctx, session, stats.x, stats.y);
-  ctx.restore();
-  drawRainScreen(ctx);
+  const layer = state.mapCache?.layer;
+  if (layer) ctx.drawImage(layer, -cam.x, -cam.y);
+  drawActors(ctx, state, frame, cam.x, cam.y);
+  drawFewLights(ctx, state, stats.x, stats.y, cam.x, cam.y);
+  if ((frame & 1) === 0) drawRain(ctx, frame);
+  drawMarker(ctx, state, cam.x, cam.y, frame);
+  if (showFps) drawFpsOverlay(ctx, sample);
   return cam;
 }
 
-function drawGround(
-  ctx: CanvasRenderingContext2D,
-  map: ReturnType<GameSession['getMap']>,
-  assets: Assets,
-): void {
+function ensureMapCache(state: ViewState, map: MapDef, baked: Baked): void {
+  if (state.mapCache?.districtId === map.districtId) return;
+  state.mapCache = {
+    districtId: map.districtId,
+    layer: bakeMapLayer(map, baked),
+  };
+}
+
+function bakeMapLayer(map: MapDef, baked: Baked): HTMLCanvasElement {
+  const layer = document.createElement('canvas');
+  layer.width = map.width * TILE_PX;
+  layer.height = map.height * TILE_PX;
+  const ctx = layer.getContext('2d');
+  if (!ctx) return layer;
+  ctx.imageSmoothingEnabled = false;
+  paintTiles(ctx, map, baked);
+  paintBuildings(ctx, map, baked);
+  paintSigns(ctx, map, baked);
+  paintProps(ctx, map, baked);
+  paintLandmark(ctx, map, baked);
+  ctx.fillStyle = '#2bfff210';
+  ctx.fillRect(0, 0, layer.width, layer.height);
+  return layer;
+}
+
+function paintTiles(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): void {
   for (let y = 0; y < map.height; y += 1) {
     for (let x = 0; x < map.width; x += 1) {
-      const kind = tileAt(map, x, y);
-      blit(ctx, assets.tiles[kind], { tx: x, ty: y, yOffset: 0 });
+      blitImage(ctx, baked.tiles[tileAt(map, x, y)], x * TILE_PX, y * TILE_PX);
     }
   }
 }
 
-function drawProps(
-  ctx: CanvasRenderingContext2D,
-  session: GameSession,
-  assets: Assets,
-): void {
-  const map = session.getMap();
+function paintBuildings(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): void {
   for (const b of map.buildings) {
-    const spr = assets.building[b.style % assets.building.length]!;
-    blitRaw(ctx, spr, b.x * TILE_PX, b.y * TILE_PX - 24);
+    const set = baked.building[b.kind] ?? baked.building.morro!;
+    const spr = set[b.style % set.length]!;
+    blitImage(ctx, spr, b.x * TILE_PX, b.y * TILE_PX - spr.height + TILE_PX);
   }
-  for (const s of map.signs) {
-    blitRaw(ctx, makeNeonSign(s.color), s.x * TILE_PX, s.y * TILE_PX - 20);
-  }
-  const lm = assets.landmark.get(map.landmark.kind) ?? makeLandmark('led-tower');
-  blitRaw(ctx, lm, map.landmark.x * TILE_PX, map.landmark.y * TILE_PX - 40);
-  markExits(ctx, session, assets);
 }
 
-function markExits(
-  ctx: CanvasRenderingContext2D,
-  session: GameSession,
-  assets: Assets,
-): void {
-  const id = session.player.getStats().districtId;
-  for (const exit of session.exits) {
-    if (exit.districtId !== id) continue;
-    if (!session.world.isUnlocked(exit.toDistrict)) continue;
-    blit(ctx, assets.exit, { tx: exit.x, ty: exit.y, yOffset: 0 });
+function paintSigns(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): void {
+  for (const s of map.signs) {
+    const key = `${s.label}|${s.color}`;
+    let img = baked.sign.get(key);
+    if (!img) {
+      img = bakeSignWithText(s.label, s.color);
+      baked.sign.set(key, img);
+    }
+    blitImage(ctx, img, s.x * TILE_PX, s.y * TILE_PX - 28);
   }
+}
+
+function paintProps(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): void {
+  for (const p of map.props) {
+    blitImage(ctx, baked.props[p.kind], p.x * TILE_PX, p.y * TILE_PX - 8);
+  }
+}
+
+function paintLandmark(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): void {
+  const lm = baked.landmark.get(map.landmark.kind) ?? baked.landmark.get('led-tower')!;
+  blitImage(
+    ctx,
+    lm,
+    map.landmark.x * TILE_PX,
+    map.landmark.y * TILE_PX - lm.height + TILE_PX,
+  );
+}
+
+function bakeSignWithText(label: string, color: string): HTMLCanvasElement {
+  const base = bakeSprite(makeNeonSign(color), SCALE);
+  const ctx = base.getContext('2d');
+  if (ctx) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = '#f4f4ff';
+    ctx.font = 'bold 14px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, base.width / 2, base.height / 2 + 1);
+  }
+  return base;
+}
+
+function glowSprite(baked: Baked, color: string): HTMLCanvasElement {
+  let img = baked.glow.get(color);
+  if (img) return img;
+  const size = GLOW_R * 2;
+  img = document.createElement('canvas');
+  img.width = size;
+  img.height = size;
+  const g = img.getContext('2d');
+  if (g) {
+    const grad = g.createRadialGradient(GLOW_R, GLOW_R, 2, GLOW_R, GLOW_R, GLOW_R);
+    grad.addColorStop(0, color);
+    grad.addColorStop(0.35, color);
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    g.globalAlpha = 0.45;
+    g.fillStyle = grad;
+    g.fillRect(0, 0, size, size);
+  }
+  baked.glow.set(color, img);
+  return img;
+}
+
+function npcSprite(baked: Baked, color: string, frame: number): HTMLCanvasElement {
+  const key = `${color}:${frame % 2}`;
+  let img = baked.npc.get(key);
+  if (!img) {
+    img = bakeSprite(makeNpcSprite(color, frame % 2), SCALE);
+    baked.npc.set(key, img);
+  }
+  return img;
 }
 
 function drawActors(
   ctx: CanvasRenderingContext2D,
-  session: GameSession,
-  assets: Assets,
+  state: ViewState,
   frame: number,
+  camX: number,
+  camY: number,
 ): void {
-  const list = collectActors(ctx, session, assets, frame);
-  list.sort((a, b) => a.y - b.y);
-  for (const item of list) item.draw();
-  drawMarker(ctx, session);
-}
-
-function collectActors(
-  ctx: CanvasRenderingContext2D,
-  session: GameSession,
-  assets: Assets,
-  frame: number,
-): { y: number; draw: () => void }[] {
+  const { session, baked, actors } = state;
   const stats = session.player.getStats();
-  const list: { y: number; draw: () => void }[] = [];
+  const anim = Math.floor(frame / 8) % 2;
+  actors.length = 0;
   for (const npc of session.npcs) {
     if (npc.districtId !== stats.districtId) continue;
-    list.push({
+    actors.push({
       y: npc.y,
-      draw: () =>
-        blit(ctx, makeNpcSprite(npc.color, frame), {
-          tx: npc.x,
-          ty: npc.y,
-          yOffset: -8,
-        }),
+      x: npc.x,
+      img: npcSprite(baked, npc.color, anim),
     });
   }
-  list.push({
+  actors.push({
     y: stats.y,
-    draw: () =>
-      blit(ctx, assets.player[frame % 2]!, {
-        tx: stats.x,
-        ty: stats.y,
-        yOffset: -8,
-      }),
+    x: stats.x,
+    img: baked.player[anim]!,
   });
-  return list;
+  actors.sort((a, b) => a.y - b.y || a.x - b.x);
+  const vw = ctx.canvas.width;
+  const vh = ctx.canvas.height;
+  for (const it of actors) {
+    const ox = it.x * TILE_PX - camX;
+    const oy = it.y * TILE_PX - camY - (it.img.height - TILE_PX);
+    if (ox + it.img.width < 0 || oy + it.img.height < 0) continue;
+    if (ox > vw || oy > vh) continue;
+    blitImage(ctx, it.img, ox, oy);
+  }
 }
 
-function drawMarker(ctx: CanvasRenderingContext2D, session: GameSession): void {
-  const obj = session.objective();
-  if (obj.targetX === undefined || obj.targetY === undefined) return;
-  if (obj.districtId !== session.player.getStats().districtId) return;
-  const px = obj.targetX * TILE_PX + 16;
-  const py = obj.targetY * TILE_PX - 10 + Math.sin(performance.now() / 200) * 4;
+function drawFewLights(
+  ctx: CanvasRenderingContext2D,
+  state: ViewState,
+  px: number,
+  py: number,
+  camX: number,
+  camY: number,
+): void {
+  const map = state.session.getMap();
+  const { baked } = state;
+  ctx.globalCompositeOperation = 'lighter';
+  let n = 0;
+  for (const s of map.signs) {
+    if (n >= MAX_LIGHTS - 1) break;
+    const img = glowSprite(baked, s.color);
+    ctx.drawImage(img, s.x * TILE_PX + 24 - camX - GLOW_R, s.y * TILE_PX - camY - GLOW_R);
+    n += 1;
+  }
+  const playerGlow = glowSprite(baked, Palette.neonMagenta);
+  ctx.drawImage(
+    playerGlow,
+    px * TILE_PX + 20 - camX - GLOW_R,
+    py * TILE_PX + 10 - camY - GLOW_R,
+  );
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function drawRain(ctx: CanvasRenderingContext2D, frame: number): void {
+  ctx.fillStyle = Palette.rain;
+  const w = ctx.canvas.width;
+  const h = ctx.canvas.height;
+  const t = frame * 2;
+  for (let i = 0; i < RAIN_COUNT; i += 1) {
+    const x = (i * 97 + t) % w;
+    const y = (i * 53 + t * 3) % h;
+    ctx.fillRect(x, y, 2, 8);
+  }
+}
+
+function drawMarker(
+  ctx: CanvasRenderingContext2D,
+  state: ViewState,
+  camX: number,
+  camY: number,
+  frame: number,
+): void {
+  // Refresh objective marker at most every 8 frames (not every paint).
+  if (state.markerFrame < 0 || frame - state.markerFrame >= 8) {
+    state.markerFrame = frame;
+    const obj = state.session.objective();
+    if (obj.targetX === undefined || obj.targetY === undefined) {
+      state.marker = null;
+    } else {
+      state.marker = {
+        x: obj.targetX,
+        y: obj.targetY,
+        districtId: obj.districtId ?? '',
+      };
+    }
+  }
+  const m = state.marker;
+  if (!m) return;
+  if (m.districtId !== state.session.player.getStats().districtId) return;
+  const bob = Math.sin(frame / 10) * 4;
+  const px = m.x * TILE_PX + 16 - camX;
+  const py = m.y * TILE_PX - 14 + bob - camY;
   ctx.fillStyle = Palette.brasilYellow;
   ctx.beginPath();
   ctx.moveTo(px, py);
@@ -213,86 +417,25 @@ function drawMarker(ctx: CanvasRenderingContext2D, session: GameSession): void {
   ctx.fill();
 }
 
-function drawLighting(
-  ctx: CanvasRenderingContext2D,
-  session: GameSession,
-  px: number,
-  py: number,
-): void {
-  const map = session.getMap();
-  for (const s of map.signs) {
-    softLight(ctx, {
-      x: s.x * TILE_PX + 24,
-      y: s.y * TILE_PX,
-      color: s.color,
-      radius: 140,
-    });
-  }
-  softLight(ctx, {
-    x: px * TILE_PX + 20,
-    y: py * TILE_PX + 10,
-    color: Palette.neonMagenta,
-    radius: 110,
-  });
-  // LT-2 wet sheen
-  ctx.fillStyle = '#2bfff214';
-  ctx.fillRect(0, 0, map.width * TILE_PX, map.height * TILE_PX);
+function drawFpsOverlay(ctx: CanvasRenderingContext2D, sample: FpsSample): void {
+  // Bottom-left so the play HUD does not cover the meter.
+  const y = ctx.canvas.height - 52;
+  ctx.fillStyle = '#000000aa';
+  ctx.fillRect(8, y, 150, 44);
+  ctx.fillStyle = sample.avgFps >= 50 ? '#b8ff2b' : '#ff3b5c';
+  ctx.font = '12px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(`FPS ${sample.fps} (avg ${sample.avgFps.toFixed(0)})`, 14, y + 18);
+  ctx.fillText(`${sample.frameMs.toFixed(1)} ms`, 14, y + 34);
 }
 
-function softLight(
-  ctx: CanvasRenderingContext2D,
-  light: { x: number; y: number; color: string; radius: number },
-): void {
-  const g = ctx.createRadialGradient(light.x, light.y, 4, light.x, light.y, light.radius);
-  g.addColorStop(0, `${light.color}99`);
-  g.addColorStop(1, '#00000000');
-  ctx.fillStyle = g;
-  ctx.fillRect(
-    light.x - light.radius,
-    light.y - light.radius,
-    light.radius * 2,
-    light.radius * 2,
-  );
-}
-
-function drawRainScreen(ctx: CanvasRenderingContext2D): void {
-  ctx.strokeStyle = Palette.rain;
-  ctx.lineWidth = 1;
-  for (let i = 0; i < 50; i += 1) {
-    const x = (i * 97 + performance.now() / 30) % ctx.canvas.width;
-    const y = (i * 53 + performance.now() / 8) % ctx.canvas.height;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + 3, y + 12);
-    ctx.stroke();
-  }
-}
-
-function blit(
-  ctx: CanvasRenderingContext2D,
-  grid: PixelGrid,
-  at: { tx: number; ty: number; yOffset: number },
-): void {
-  blitRaw(ctx, grid, at.tx * TILE_PX, at.ty * TILE_PX + at.yOffset);
-}
-
-function fitCanvas(canvas: HTMLCanvasElement): void {
+function fitCanvas(canvas: HTMLCanvasElement, state: ViewState): void {
   const parent = canvas.parentElement;
-  const w = Math.max(320, parent?.clientWidth ?? window.innerWidth);
-  const h = Math.max(240, parent?.clientHeight ?? window.innerHeight);
-  if (canvas.width === w && canvas.height === h) return;
+  const w = Math.max(320, parent?.clientWidth ?? 960);
+  const h = Math.max(240, parent?.clientHeight ?? 540);
+  if (state.resizeW === w && state.resizeH === h) return;
+  state.resizeW = w;
+  state.resizeH = h;
   canvas.width = w;
   canvas.height = h;
-}
-
-function blitRaw(
-  ctx: CanvasRenderingContext2D,
-  grid: PixelGrid,
-  ox: number,
-  oy: number,
-): void {
-  ctx.save();
-  ctx.translate(ox, oy);
-  paintGrid(ctx, grid, SCALE);
-  ctx.restore();
 }

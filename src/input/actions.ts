@@ -7,6 +7,7 @@ export const Actions = {
   Bet: 'bet',
   Menu: 'menu',
   Mute: 'mute',
+  Run: 'run',
 } as const;
 
 export type ActionName = (typeof Actions)[keyof typeof Actions];
@@ -23,6 +24,7 @@ export function createActionState(): ActionState {
     bet: false,
     menu: false,
     mute: false,
+    run: false,
   };
 }
 

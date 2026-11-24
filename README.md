@@ -13,18 +13,18 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123).
 
 ## Commands
 
-| Target          | Purpose                                     |
-| --------------- | ------------------------------------------- |
-| `make install`  | npm ci + Playwright Chromium                |
-| `make dev`      | Vite dev server (port 43123)                |
-| `make test`     | Unit tests + coverage gates                 |
-| `make e2e`      | Playwright flows                            |
-| `make playtest` | Golden-path browser playtest + screenshots  |
-| `make mutation` | Stryker mutation tests                      |
-| `make lint`     | ESLint + Prettier + markdownlint            |
-| `make build`    | Production static build (`BASE_PATH` aware) |
-| `make deploy`   | Build + print GitHub Pages instructions     |
-| `make docker`   | Optional nginx image from `dist/`           |
+| Target          | Purpose                                               |
+| --------------- | ----------------------------------------------------- |
+| `make install`  | npm ci + Playwright Chromium                          |
+| `make dev`      | Vite dev server (port 43123)                          |
+| `make test`     | Unit tests + coverage gates                           |
+| `make e2e`      | Playwright flows                                      |
+| `make playtest` | Golden-path playtest + FPS budgets (desktop + 4× CPU) |
+| `make mutation` | Stryker mutation tests                                |
+| `make lint`     | ESLint + Prettier + markdownlint                      |
+| `make build`    | Production static build (`BASE_PATH` aware)           |
+| `make deploy`   | Build + print GitHub Pages instructions               |
+| `make docker`   | Optional nginx image from `dist/`                     |
 
 ## GitHub Pages
 

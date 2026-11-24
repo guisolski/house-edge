@@ -1,16 +1,34 @@
 import type { DistrictId } from '../core/types';
 
-/** Tile kinds — LD-1 paths/edges, LD-3 pathway flooring. */
+/** Tile kinds — night city. */
 export type TileKind =
-  'asphalt' | 'sidewalk' | 'alley' | 'plaza' | 'grass' | 'blocked' | 'exit';
+  | 'asphalt'
+  | 'sidewalk'
+  | 'alley'
+  | 'plaza'
+  | 'grass'
+  | 'stairs'
+  | 'interior'
+  | 'blocked'
+  | 'exit';
+
+export type BuildingStyle = 'morro' | 'feira' | 'avenida' | 'torre';
 
 export type MapDef = {
   districtId: DistrictId;
   width: number;
   height: number;
   tiles: TileKind[];
-  buildings: { x: number; y: number; w: number; h: number; style: number }[];
+  buildings: {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    style: number;
+    kind: BuildingStyle;
+  }[];
   signs: { x: number; y: number; label: string; color: string }[];
+  props: { x: number; y: number; kind: 'moto' | 'kiosk' | 'wire' }[];
   landmark: { x: number; y: number; kind: string };
 };
 
@@ -25,157 +43,255 @@ export function isWalkable(map: MapDef, x: number, y: number): boolean {
 }
 
 export function buildDistrictMap(id: DistrictId): MapDef {
-  const size = sizes[id];
-  const tiles = carveCity(size.w, size.h, id);
+  if (id === 'morro-neon') return buildMorro();
+  if (id === 'feira-central') return buildFeira();
+  if (id === 'avenida-odds') return buildAvenida();
+  return buildTorre();
+}
+
+function fill(w: number, h: number, kind: TileKind): TileKind[] {
+  return Array.from({ length: w * h }, () => kind);
+}
+
+function set(tiles: TileKind[], w: number, x: number, y: number, kind: TileKind): void {
+  if (x < 0 || y < 0) return;
+  tiles[y * w + x] = kind;
+}
+
+function hStrip(
+  tiles: TileKind[],
+  w: number,
+  y: number,
+  x0: number,
+  x1: number,
+  kind: TileKind,
+): void {
+  for (let x = x0; x <= x1; x += 1) set(tiles, w, x, y, kind);
+}
+
+function vStrip(
+  tiles: TileKind[],
+  w: number,
+  x: number,
+  y0: number,
+  y1: number,
+  kind: TileKind,
+): void {
+  for (let y = y0; y <= y1; y += 1) set(tiles, w, x, y, kind);
+}
+
+/** Favela hillside: stairs, stacked houses, winding alleys. */
+function buildMorro(): MapDef {
+  const w = 40;
+  const h = 28;
+  const tiles = fill(w, h, 'grass');
+  // main laje road
+  for (let y = 13; y <= 16; y += 1) hStrip(tiles, w, y, 1, w - 2, 'asphalt');
+  hStrip(tiles, w, 12, 1, w - 2, 'sidewalk');
+  hStrip(tiles, w, 17, 1, w - 2, 'sidewalk');
+  // vertical alley spine
+  for (let x = 18; x <= 20; x += 1) vStrip(tiles, w, x, 2, h - 3, 'alley');
+  // hillside stairs climbing north
+  for (let y = 2; y <= 11; y += 1) {
+    hStrip(
+      tiles,
+      w,
+      y,
+      8 + Math.floor((11 - y) / 2),
+      12 + Math.floor((11 - y) / 2),
+      'stairs',
+    );
+  }
+  // boteco plaza pocket
+  for (let y = 13; y <= 16; y += 1) hStrip(tiles, w, y, 10, 16, 'plaza');
+  // exits
+  set(tiles, w, w - 2, 14, 'exit');
+  set(tiles, w, w - 2, 15, 'exit');
+  // edge fill (no void)
+  for (let x = 0; x < w; x += 1) {
+    set(tiles, w, x, 0, 'grass');
+    set(tiles, w, x, h - 1, 'grass');
+  }
+  for (let y = 0; y < h; y += 1) {
+    set(tiles, w, 0, y, 'grass');
+    set(tiles, w, w - 1, y, 'grass');
+  }
   return {
-    districtId: id,
-    width: size.w,
-    height: size.h,
+    districtId: 'morro-neon',
+    width: w,
+    height: h,
     tiles,
-    buildings: placeBuildings(size.w, size.h, tiles),
-    signs: placeSigns(id),
-    landmark: landmarks[id],
+    buildings: [
+      { x: 3, y: 8, w: 3, h: 3, style: 0, kind: 'morro' },
+      { x: 6, y: 6, w: 3, h: 3, style: 1, kind: 'morro' },
+      { x: 12, y: 7, w: 3, h: 3, style: 2, kind: 'morro' },
+      { x: 22, y: 8, w: 3, h: 3, style: 3, kind: 'morro' },
+      { x: 26, y: 6, w: 3, h: 3, style: 0, kind: 'morro' },
+      { x: 30, y: 8, w: 3, h: 3, style: 1, kind: 'morro' },
+      { x: 4, y: 18, w: 3, h: 3, style: 2, kind: 'morro' },
+      { x: 24, y: 18, w: 3, h: 3, style: 3, kind: 'morro' },
+      { x: 32, y: 18, w: 3, h: 3, style: 0, kind: 'morro' },
+    ],
+    signs: [
+      { x: 11, y: 12, label: 'BOTECO NAIR', color: '#b8ff2b' },
+      { x: 26, y: 12, label: 'ODDS 24h', color: '#ff2bd6' },
+      { x: 6, y: 17, label: 'LAJE BET', color: '#ffdf00' },
+    ],
+    props: [
+      { x: 15, y: 15, kind: 'moto' },
+      { x: 28, y: 14, kind: 'kiosk' },
+      { x: 10, y: 8, kind: 'wire' },
+      { x: 22, y: 10, kind: 'wire' },
+    ],
+    landmark: { x: 19, y: 3, kind: 'led-tower' },
   };
 }
 
-const sizes: Record<DistrictId, { w: number; h: number }> = {
-  'morro-neon': { w: 42, h: 30 },
-  'feira-central': { w: 44, h: 32 },
-  'avenida-odds': { w: 46, h: 30 },
-  'torre-casa': { w: 36, h: 28 },
-};
-
-const landmarks: Record<DistrictId, { x: number; y: number; kind: string }> = {
-  'morro-neon': { x: 20, y: 6, kind: 'led-tower' },
-  'feira-central': { x: 22, y: 14, kind: 'calcadao' },
-  'avenida-odds': { x: 24, y: 8, kind: 'glass-corp' },
-  'torre-casa': { x: 18, y: 6, kind: 'casa-tower' },
-};
-
-function carveCity(w: number, h: number, id: DistrictId): TileKind[] {
-  const tiles: TileKind[] = Array.from({ length: w * h }, () => 'blocked');
-  paintBorderGrass(tiles, w, h);
-  paintRoads(tiles, w, h);
-  paintPlaza(tiles, w, h, id);
-  return tiles;
-}
-
-function paintBorderGrass(tiles: TileKind[], w: number, h: number): void {
-  for (let y = 0; y < h; y += 1) {
-    for (let x = 0; x < w; x += 1) {
-      if (x === 0 || y === 0 || x === w - 1 || y === h - 1) {
-        tiles[y * w + x] = 'grass';
-      }
-    }
+/** Market fair: calçadão plaza, stalls, wave paving. */
+function buildFeira(): MapDef {
+  const w = 42;
+  const h = 28;
+  const tiles = fill(w, h, 'sidewalk');
+  // big plaza
+  for (let y = 8; y <= 20; y += 1) hStrip(tiles, w, y, 6, 34, 'plaza');
+  // ring road
+  for (let y = 6; y <= 7; y += 1) hStrip(tiles, w, y, 2, w - 3, 'asphalt');
+  for (let y = 21; y <= 22; y += 1) hStrip(tiles, w, y, 2, w - 3, 'asphalt');
+  for (let x = 2; x <= 4; x += 1) vStrip(tiles, w, x, 6, 22, 'asphalt');
+  for (let x = w - 5; x <= w - 3; x += 1) vStrip(tiles, w, x, 6, 22, 'asphalt');
+  // exits
+  set(tiles, w, 2, 14, 'exit');
+  set(tiles, w, w - 3, 14, 'exit');
+  // border night plants
+  for (let x = 0; x < w; x += 1) {
+    set(tiles, w, x, 0, 'grass');
+    set(tiles, w, x, 1, 'grass');
+    set(tiles, w, x, h - 1, 'grass');
+    set(tiles, w, x, h - 2, 'grass');
   }
+  return {
+    districtId: 'feira-central',
+    width: w,
+    height: h,
+    tiles,
+    buildings: [
+      { x: 8, y: 9, w: 3, h: 2, style: 0, kind: 'feira' },
+      { x: 14, y: 9, w: 3, h: 2, style: 1, kind: 'feira' },
+      { x: 20, y: 9, w: 3, h: 2, style: 2, kind: 'feira' },
+      { x: 26, y: 9, w: 3, h: 2, style: 3, kind: 'feira' },
+      { x: 10, y: 17, w: 3, h: 2, style: 1, kind: 'feira' },
+      { x: 18, y: 17, w: 3, h: 2, style: 0, kind: 'feira' },
+      { x: 28, y: 17, w: 3, h: 2, style: 2, kind: 'feira' },
+    ],
+    signs: [
+      { x: 12, y: 12, label: 'PASTEL & ODD', color: '#ffdf00' },
+      { x: 24, y: 12, label: 'FORRÓ FM', color: '#ff6eb4' },
+      { x: 16, y: 18, label: 'CALÇADÃO BET', color: '#2bfff2' },
+    ],
+    props: [
+      { x: 15, y: 14, kind: 'kiosk' },
+      { x: 22, y: 15, kind: 'kiosk' },
+      { x: 30, y: 14, kind: 'moto' },
+    ],
+    landmark: { x: 20, y: 11, kind: 'calcadao' },
+  };
 }
 
-function paintRoads(tiles: TileKind[], w: number, h: number): void {
-  const midY = Math.floor(h / 2);
-  const midX = Math.floor(w / 2);
-  paintHRoad(tiles, w, midY);
-  paintVRoad(tiles, w, h, midX);
-  paintAlleys(tiles, w, h);
+/** Corporate boulevard: wide neon avenue + glass towers. */
+function buildAvenida(): MapDef {
+  const w = 44;
+  const h = 26;
+  const tiles = fill(w, h, 'sidewalk');
+  // wide boulevard
+  for (let y = 10; y <= 15; y += 1) hStrip(tiles, w, y, 1, w - 2, 'asphalt');
+  hStrip(tiles, w, 9, 1, w - 2, 'sidewalk');
+  hStrip(tiles, w, 16, 1, w - 2, 'sidewalk');
+  // median plaza
+  for (let y = 11; y <= 14; y += 1) hStrip(tiles, w, y, 18, 24, 'plaza');
+  // side alleys
+  for (let x = 8; x <= 9; x += 1) vStrip(tiles, w, x, 3, 9, 'alley');
+  for (let x = 32; x <= 33; x += 1) vStrip(tiles, w, x, 16, 22, 'alley');
+  set(tiles, w, 2, 12, 'exit');
+  set(tiles, w, w - 3, 12, 'exit');
+  for (let x = 0; x < w; x += 1) {
+    set(tiles, w, x, 0, 'grass');
+    set(tiles, w, x, h - 1, 'grass');
+  }
+  return {
+    districtId: 'avenida-odds',
+    width: w,
+    height: h,
+    tiles,
+    buildings: [
+      { x: 3, y: 2, w: 3, h: 4, style: 0, kind: 'avenida' },
+      { x: 12, y: 2, w: 3, h: 4, style: 1, kind: 'avenida' },
+      { x: 26, y: 2, w: 3, h: 4, style: 2, kind: 'avenida' },
+      { x: 36, y: 2, w: 3, h: 4, style: 3, kind: 'avenida' },
+      { x: 4, y: 17, w: 3, h: 4, style: 1, kind: 'avenida' },
+      { x: 16, y: 17, w: 3, h: 4, style: 0, kind: 'avenida' },
+      { x: 30, y: 17, w: 3, h: 4, style: 2, kind: 'avenida' },
+    ],
+    signs: [
+      { x: 10, y: 9, label: 'ODDSCORP', color: '#2bfff2' },
+      { x: 28, y: 9, label: 'CASA ATM', color: '#ff3b5c' },
+      { x: 20, y: 16, label: 'PIXO ZONE', color: '#b8ff2b' },
+    ],
+    props: [
+      { x: 14, y: 12, kind: 'moto' },
+      { x: 34, y: 13, kind: 'moto' },
+      { x: 6, y: 8, kind: 'wire' },
+    ],
+    landmark: { x: 21, y: 3, kind: 'glass-corp' },
+  };
 }
 
-function paintHRoad(tiles: TileKind[], w: number, midY: number): void {
+/** Casa Tower: interior casino floor — fill edges, no void. */
+function buildTorre(): MapDef {
+  const w = 36;
+  const h = 26;
+  const tiles = fill(w, h, 'interior');
+  // carpeted main hall
+  for (let y = 8; y <= 18; y += 1) hStrip(tiles, w, y, 4, w - 5, 'plaza');
+  // marble walk
+  for (let y = 11; y <= 15; y += 1) hStrip(tiles, w, y, 4, w - 5, 'asphalt');
+  // VIP rooms
+  for (let y = 2; y <= 6; y += 1) hStrip(tiles, w, y, 6, 14, 'sidewalk');
+  for (let y = 2; y <= 6; y += 1) hStrip(tiles, w, y, 20, 28, 'sidewalk');
+  set(tiles, w, 2, 13, 'exit');
+  set(tiles, w, 2, 14, 'exit');
+  // walls as blocked ring inside edge
   for (let x = 1; x < w - 1; x += 1) {
-    setRoad(tiles, w, x, midY);
-    setRoad(tiles, w, x, midY - 1);
-    setSide(tiles, w, x, midY - 2);
-    setSide(tiles, w, x, midY + 1);
+    set(tiles, w, x, 1, 'blocked');
+    set(tiles, w, x, h - 2, 'blocked');
   }
-}
-
-function paintVRoad(tiles: TileKind[], w: number, h: number, midX: number): void {
   for (let y = 1; y < h - 1; y += 1) {
-    setRoad(tiles, w, midX, y);
-    setRoad(tiles, w, midX - 1, y);
-    setSide(tiles, w, midX - 2, y);
-    setSide(tiles, w, midX + 1, y);
+    set(tiles, w, 1, y, 'blocked');
+    set(tiles, w, w - 2, y, 'blocked');
   }
-}
-
-function paintAlleys(tiles: TileKind[], w: number, h: number): void {
-  for (let y = 2; y < h - 2; y += 3) {
-    for (let x = 2; x < w - 2; x += 1) {
-      if (tiles[y * w + x] === 'blocked') tiles[y * w + x] = 'alley';
-    }
-  }
-}
-
-function paintPlaza(tiles: TileKind[], w: number, h: number, id: DistrictId): void {
-  const cx = Math.floor(w / 2);
-  const cy = Math.floor(h / 2);
-  for (let y = cy - 2; y <= cy + 2; y += 1) {
-    for (let x = cx - 3; x <= cx + 3; x += 1) {
-      tiles[y * w + x] = id === 'feira-central' ? 'plaza' : 'asphalt';
-    }
-  }
-  // Exit approach tiles stay asphalt/sidewalk (walkable).
-  tiles[cy * w + (w - 2)] = 'exit';
-  tiles[cy * w + 1] = 'exit';
-}
-
-function setRoad(tiles: TileKind[], w: number, x: number, y: number): void {
-  if (y < 0 || x < 0) return;
-  tiles[y * w + x] = 'asphalt';
-}
-
-function setSide(tiles: TileKind[], w: number, x: number, y: number): void {
-  if (y < 0 || x < 0) return;
-  const i = y * w + x;
-  if (tiles[i] === 'blocked' || tiles[i] === 'grass') tiles[i] = 'sidewalk';
-}
-
-function placeBuildings(
-  w: number,
-  h: number,
-  tiles: TileKind[],
-): { x: number; y: number; w: number; h: number; style: number }[] {
-  const out: { x: number; y: number; w: number; h: number; style: number }[] = [];
-  let style = 0;
-  for (let y = 3; y < h - 4; y += 5) {
-    for (let x = 3; x < w - 5; x += 6) {
-      if (tiles[y * w + x] !== 'blocked') continue;
-      out.push({ x, y: y - 1, w: 3, h: 3, style: style % 4 });
-      style += 1;
-      blockFootprint(tiles, w, { x, y: y - 1, bw: 3, bh: 2 });
-    }
-  }
-  return out;
-}
-
-function blockFootprint(
-  tiles: TileKind[],
-  stride: number,
-  box: { x: number; y: number; bw: number; bh: number },
-): void {
-  for (let yy = box.y; yy < box.y + box.bh; yy += 1) {
-    for (let xx = box.x; xx < box.x + box.bw; xx += 1) {
-      tiles[yy * stride + xx] = 'blocked';
-    }
-  }
-}
-
-type Sign = { x: number; y: number; label: string; color: string };
-
-const SIGNS: Record<DistrictId, Sign[]> = {
-  'morro-neon': [
-    { x: 12, y: 13, label: 'BOTECO NAIR', color: '#b8ff2b' },
-    { x: 28, y: 14, label: 'ODDS 24h', color: '#ff2bd6' },
-  ],
-  'feira-central': [
-    { x: 14, y: 15, label: 'PASTEL & ODD', color: '#ffdf00' },
-    { x: 30, y: 12, label: 'FORRÓ FM', color: '#ff6eb4' },
-  ],
-  'avenida-odds': [
-    { x: 10, y: 14, label: 'ODDSCORP', color: '#2bfff2' },
-    { x: 32, y: 14, label: 'CASA ATM', color: '#ff3b5c' },
-  ],
-  'torre-casa': [{ x: 16, y: 18, label: 'CASA SUPREMA', color: '#ff2bd6' }],
-};
-
-function placeSigns(id: DistrictId): Sign[] {
-  return SIGNS[id];
+  // reopen exit
+  set(tiles, w, 1, 13, 'exit');
+  set(tiles, w, 1, 14, 'exit');
+  set(tiles, w, 2, 13, 'asphalt');
+  set(tiles, w, 2, 14, 'asphalt');
+  return {
+    districtId: 'torre-casa',
+    width: w,
+    height: h,
+    tiles,
+    buildings: [
+      { x: 8, y: 3, w: 3, h: 3, style: 0, kind: 'torre' },
+      { x: 22, y: 3, w: 3, h: 3, style: 1, kind: 'torre' },
+      { x: 10, y: 16, w: 3, h: 3, style: 2, kind: 'torre' },
+      { x: 24, y: 16, w: 3, h: 3, style: 3, kind: 'torre' },
+    ],
+    signs: [
+      { x: 14, y: 10, label: 'CASA SUPREMA', color: '#ff2bd6' },
+      { x: 20, y: 16, label: 'VIP TABLE', color: '#ffdf00' },
+    ],
+    props: [
+      { x: 16, y: 12, kind: 'kiosk' },
+      { x: 26, y: 13, kind: 'kiosk' },
+    ],
+    landmark: { x: 17, y: 4, kind: 'casa-tower' },
+  };
 }

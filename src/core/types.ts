@@ -14,10 +14,14 @@ export type BetDefinition = {
   kind: BetKind;
   title: string;
   description: string;
+  /** Default stake shown in the UI. */
   stake: number;
+  stakeMin?: number;
+  stakeMax?: number;
   odds: Odds;
   houseEdge: number;
-  winChance: number;
+  /** If omitted, derived from odds + houseEdge at resolve time. */
+  winChance?: number;
   requiredFlag?: string;
   unlocksFlag?: string;
   unlocksDistrict?: DistrictId;

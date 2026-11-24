@@ -29,7 +29,7 @@ export const CHARACTERS: readonly CharacterDef[] = [
     name: 'Luna Pixel',
     role: 'Hill hacker / ex-Casa intern',
     districtId: 'morro-neon',
-    slang: 'Manolo, I leaked their RNG. Now you just need guts.',
+    slang: 'Rita, I leaked their RNG. Now you just need guts.',
     color: '#2bfff2',
   },
   {

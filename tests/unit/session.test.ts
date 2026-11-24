@@ -62,7 +62,7 @@ describe('GameSession basics', () => {
     const session = new GameSession(7);
     session.startNew();
     expect(session.interact()).toBe(false);
-    session.player.setPosition(14, 15);
+    session.player.setPosition(13, 14);
     expect(session.nearbyNpc()?.id).toBe('dona-nair');
     expect(session.interact()).toBe(true);
   });

@@ -54,7 +54,7 @@ describe('WorldSystem', () => {
     expect(world.unlock('feira-central')).toBe(true);
     expect(unlocked).toHaveBeenCalled();
     expect(world.unlock('feira-central')).toBe(false);
-    expect(world.clampPosition('morro-neon', -5, 99)).toEqual({ x: 0, y: 29 });
+    expect(world.clampPosition('morro-neon', -5, 99)).toEqual({ x: 0, y: 27 });
     world.hydrate(['morro-neon']);
     world.syncFromFlags((f) => f === 'unlocked_feira');
     expect(world.isUnlocked('feira-central')).toBe(true);

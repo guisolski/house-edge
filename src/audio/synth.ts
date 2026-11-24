@@ -100,9 +100,9 @@ function startLoop(state: AudioState): ReturnType<typeof setInterval> {
   const chord = [196, 233.08, 293.66, 349.23];
   let i = 0;
   blip(state, chord[0]!, 0.2, 'sawtooth');
+  // PERF: slow music pulse — avoid AudioNode storms.
   return setInterval(() => {
     i = (i + 1) % chord.length;
-    blip(state, chord[i]!, 0.2, 'sawtooth');
-    if (i % 2 === 0) blip(state, chord[i]! * 2, 0.06, 'triangle');
-  }, 420);
+    blip(state, chord[i]!, 0.18, 'sawtooth');
+  }, 900);
 }

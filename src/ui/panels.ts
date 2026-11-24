@@ -3,7 +3,7 @@ import { UI } from './strings';
 import type { GameSession } from '../systems/session';
 import type { DialogueLine } from '../core/types';
 import { listJobs } from '../systems/grind';
-import { formatOdds, applyHouseFlavor } from '../systems/betting';
+import { formatOdds, formatWinChance, applyHouseFlavor } from '../systems/betting';
 import { DISTRICTS } from '../content/districts';
 
 export function button(label: string, onClick: () => void): HTMLButtonElement {
@@ -21,13 +21,21 @@ export function focusFirst(panel: HTMLElement): void {
 export function paintDialogue(
   panel: HTMLElement,
   lines: DialogueLine[],
-  onClose: () => void,
+  opts: {
+    onClose: () => void;
+    offerBet?: boolean;
+    onAcceptBet?: () => void;
+  },
 ): void {
   clearNode(panel);
   for (const line of lines) {
     panel.appendChild(el('p', 'line', `${line.speaker}: ${line.text}`));
   }
-  panel.appendChild(button(UI.close, onClose));
+  if (opts.offerBet && opts.onAcceptBet) {
+    panel.append(button(UI.takeBet, opts.onAcceptBet), button(UI.walkAway, opts.onClose));
+  } else {
+    panel.appendChild(button(UI.close, opts.onClose));
+  }
   focusFirst(panel);
 }
 
@@ -39,7 +47,25 @@ export function paintBet(
   clearNode(panel);
   const bet = session.getPendingBet();
   if (!bet) return;
-  appendBetBody(panel, bet);
+  const stakeLine = el('p', 'stake-line', '');
+  const chanceLine = el(
+    'p',
+    '',
+    `Win chance ${formatWinChance(bet.odds, bet.houseEdge)} · Odds ${formatOdds(bet.odds)}`,
+  );
+  const writeStake = (): void => {
+    stakeLine.textContent = `Stake: ${session.getPendingStake()} credits`;
+  };
+  writeStake();
+  panel.append(
+    el('h2', '', bet.title),
+    el('p', '', bet.description),
+    stakeLine,
+    chanceLine,
+    el('p', '', applyHouseFlavor(bet.houseEdge)),
+    stakeControls(session, writeStake),
+    el('div', 'bet-roll', 'Ready to roll'),
+  );
   panel.append(
     button(UI.confirmBet, () => {
       animateRoll(panel, () => {
@@ -54,23 +80,28 @@ export function paintBet(
   );
 }
 
-function appendBetBody(
-  panel: HTMLElement,
-  bet: NonNullable<ReturnType<GameSession['getPendingBet']>>,
-): void {
-  panel.append(
-    el('h2', '', bet.title),
-    el('p', '', bet.description),
-    el('p', '', `Stake: ${bet.stake} · Odds ${formatOdds(bet.odds)}`),
-    el('p', '', applyHouseFlavor(bet.houseEdge)),
-    el('div', 'bet-roll', 'Ready to roll'),
+function stakeControls(session: GameSession, writeStake: () => void): HTMLElement {
+  const row = el('div', 'stake-row');
+  row.append(
+    button(UI.stakeDown, () => {
+      session.adjustStake(-5);
+      writeStake();
+    }),
+    button(UI.stakeUp, () => {
+      session.adjustStake(5);
+      writeStake();
+    }),
   );
+  return row;
 }
 
 function animateRoll(panel: HTMLElement, done: () => void): void {
   const roll = panel.querySelector('.bet-roll');
   if (roll) roll.textContent = '⚀ ⚁ ⚂ …';
-  window.setTimeout(done, 450);
+  window.setTimeout(() => {
+    if (roll) roll.textContent = 'Resolving…';
+    window.setTimeout(done, 280);
+  }, 420);
 }
 
 export function paintTravel(
@@ -121,9 +152,7 @@ export function paintJobs(
   for (const job of jobs) {
     panel.appendChild(
       button(job.label, () => {
-        session.closeModal();
-        session.offerBet(job.betId);
-        after();
+        if (session.offerBet(job.betId)) after();
       }),
     );
   }

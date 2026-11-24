@@ -46,7 +46,7 @@ async function walkTo(page: Page, x: number, y: number): Promise<void> {
   await page.keyboard.press('ArrowLeft');
 }
 
-test.describe('Playtest golden path + input modes', () => {
+test.describe('Playtest golden path', () => {
   test('desktop keyboard golden path', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -63,16 +63,20 @@ test.describe('Playtest golden path + input modes', () => {
     await expect(page.locator('.touch-controls')).toBeHidden();
     await expect(page.locator('.input-hints')).toContainText('WASD');
 
-    await walkTo(page, 14, 15);
+    await walkTo(page, 13, 14);
     await expect(page.locator('.interact-prompt')).toBeVisible();
     await page.screenshot({ path: path.join(ART, '02-prompt-npc.png') });
 
     await page.keyboard.press('KeyE');
     await expect(page.locator('.dialogue-panel')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Take the bet' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Walk away' })).toBeVisible();
     await page.screenshot({ path: path.join(ART, '03-dialogue.png') });
-    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByRole('button', { name: 'Take the bet' }).click();
     await expect(page.locator('.bet-panel')).toBeVisible();
     await expect(page.locator('.bet-panel')).toContainText('Odds');
+    await expect(page.locator('.bet-panel')).toContainText('Win chance');
+    await expect(page.getByRole('button', { name: 'Stake +' })).toBeVisible();
     await page.screenshot({ path: path.join(ART, '04-bet.png') });
     await page.getByRole('button', { name: 'Place bet' }).click();
     await expect(page.locator('.play-hud')).toBeVisible({ timeout: 5000 });
@@ -87,7 +91,9 @@ test.describe('Playtest golden path + input modes', () => {
     await page.screenshot({ path: path.join(ART, '06-world-art.png') });
     expect(errors, errors.join('\n')).toEqual([]);
   });
+});
 
+test.describe('Playtest input modes', () => {
   test('touch mode chrome', async ({ page }) => {
     await startGame(page);
     await forceMode(page, 'touch');
@@ -125,5 +131,35 @@ test.describe('Playtest golden path + input modes', () => {
     });
     await expect(page.locator('.jobs-panel:not([hidden])')).toBeVisible();
     await page.screenshot({ path: path.join(ART, 'gamepad-02-menu-nav.png') });
+  });
+
+  test('performance budget during scripted walk', async ({ page }) => {
+    await startGame(page);
+    await forceMode(page, 'keyboard');
+    await page.evaluate(() => {
+      (
+        window as unknown as {
+          __HOUSE_EDGE__: { setShowFps: (on: boolean) => void };
+        }
+      ).__HOUSE_EDGE__.setShowFps(true);
+    });
+    // Scripted WASD walk for ~1.5s of wall time while the game ticks.
+    for (let i = 0; i < 24; i += 1) {
+      await page.keyboard.down(i % 2 === 0 ? 'ArrowRight' : 'ArrowDown');
+      await page.waitForTimeout(40);
+      await page.keyboard.up(i % 2 === 0 ? 'ArrowRight' : 'ArrowDown');
+      await page.waitForTimeout(20);
+    }
+    await page.waitForTimeout(400);
+    const sample = await page.evaluate(() => {
+      type Sample = { avgFps: number; avgFrameMs: number; fps: number };
+      const edge = (window as unknown as { __HOUSE_EDGE__: { getFps: () => Sample } })
+        .__HOUSE_EDGE__;
+      return edge.getFps();
+    });
+    await page.screenshot({ path: path.join(ART, '07-fps-walk.png') });
+    // Desktop budget: steady avg >= 50 FPS (target 60).
+    expect(sample.avgFps, `avg FPS ${sample.avgFps}`).toBeGreaterThanOrEqual(50);
+    expect(sample.avgFrameMs).toBeLessThanOrEqual(22);
   });
 });
