@@ -307,8 +307,8 @@ function paintTerraceEdges(ctx: CanvasRenderingContext2D, map: MapDef): void {
       const kind = tileAt(map, x, y);
       if (kind === 'stairs' || kind === 'exit') continue;
       const wall = walls[x % walls.length]!;
-      // Hang the tall face down from the terrace lip onto the level below.
-      blitImage(ctx, wall, x * TILE_PX, y * TILE_PX + TILE_PX - 12);
+      // Align lip with the top of the blocked cliff row; face covers ~3 tiles down.
+      blitImage(ctx, wall, x * TILE_PX, y * TILE_PX);
     }
   }
 }

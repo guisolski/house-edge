@@ -158,28 +158,27 @@ function morroHouseSpots(): {
   bw: number;
   bh: number;
 }[] {
-  // Irregular, overlapping terrace edges — not a uniform grid.
+  // Irregular footprints overlapping terrace lips — keep clear of left border.
   return [
-    { x: 2, y: 3, style: 0, bw: 3, bh: 2 },
-    { x: 5, y: 1, style: 5, bw: 2, bh: 3 },
-    { x: 9, y: 2, style: 2, bw: 3, bh: 3 },
-    { x: 13, y: 1, style: 7, bw: 2, bh: 2 },
-    { x: 23, y: 2, style: 1, bw: 3, bh: 3 },
-    { x: 27, y: 1, style: 4, bw: 2, bh: 2 },
-    { x: 31, y: 3, style: 6, bw: 3, bh: 2 },
-    { x: 35, y: 1, style: 3, bw: 2, bh: 3 },
-    { x: 1, y: 8, style: 3, bw: 2, bh: 3 },
-    { x: 4, y: 10, style: 0, bw: 3, bh: 2 },
-    { x: 11, y: 7, style: 6, bw: 2, bh: 3 },
+    { x: 3, y: 1, style: 0, bw: 3, bh: 2 },
+    { x: 7, y: 2, style: 5, bw: 2, bh: 2 },
+    { x: 11, y: 1, style: 2, bw: 3, bh: 2 },
+    { x: 24, y: 1, style: 1, bw: 3, bh: 2 },
+    { x: 28, y: 2, style: 4, bw: 2, bh: 2 },
+    { x: 32, y: 1, style: 6, bw: 3, bh: 2 },
+    { x: 36, y: 2, style: 3, bw: 2, bh: 2 },
+    { x: 3, y: 7, style: 3, bw: 2, bh: 2 },
+    { x: 6, y: 8, style: 0, bw: 3, bh: 2 },
+    { x: 12, y: 7, style: 6, bw: 2, bh: 2 },
     { x: 24, y: 8, style: 2, bw: 3, bh: 2 },
-    { x: 29, y: 10, style: 5, bw: 2, bh: 3 },
-    { x: 34, y: 7, style: 1, bw: 3, bh: 3 },
-    { x: 2, y: 19, style: 4, bw: 3, bh: 3 },
-    { x: 7, y: 21, style: 7, bw: 2, bh: 2 },
-    { x: 11, y: 18, style: 0, bw: 3, bh: 3 },
+    { x: 29, y: 7, style: 5, bw: 2, bh: 2 },
+    { x: 34, y: 8, style: 1, bw: 3, bh: 2 },
+    { x: 3, y: 19, style: 4, bw: 3, bh: 2 },
+    { x: 8, y: 20, style: 7, bw: 2, bh: 2 },
+    { x: 12, y: 19, style: 0, bw: 3, bh: 2 },
     { x: 24, y: 20, style: 3, bw: 2, bh: 2 },
-    { x: 28, y: 18, style: 6, bw: 3, bh: 3 },
-    { x: 33, y: 21, style: 2, bw: 3, bh: 2 },
+    { x: 28, y: 19, style: 6, bw: 3, bh: 2 },
+    { x: 34, y: 20, style: 2, bw: 3, bh: 2 },
   ];
 }
 
@@ -218,18 +217,19 @@ function fillMorroProps(props: MapDef['props']): void {
 }
 
 function layoutMorroTerraces(tiles: TileKind[], w: number, h: number): void {
-  // Ridge / mid / street / lower — grass slopes between (not alley window-dots).
-  rect({ tiles, w, x0: 1, y0: 1, x1: w - 2, y1: 4, kind: 'sidewalk' });
-  rect({ tiles, w, x0: 1, y0: 5, x1: w - 2, y1: 7, kind: 'grass' });
-  rect({ tiles, w, x0: 1, y0: 8, x1: w - 2, y1: 11, kind: 'sidewalk' });
-  rect({ tiles, w, x0: 1, y0: 12, x1: w - 2, y1: 13, kind: 'grass' });
+  // Ridge / mid / street / lower — BLOCKED retaining faces between (height illusion).
+  rect({ tiles, w, x0: 1, y0: 1, x1: w - 2, y1: 3, kind: 'sidewalk' });
+  // 3-tile-tall cliff faces (walk only via central stairs).
+  rect({ tiles, w, x0: 1, y0: 4, x1: w - 2, y1: 6, kind: 'blocked' });
+  rect({ tiles, w, x0: 1, y0: 7, x1: w - 2, y1: 10, kind: 'sidewalk' });
+  rect({ tiles, w, x0: 1, y0: 11, x1: w - 2, y1: 13, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: 14, x1: w - 2, y1: 17, kind: 'asphalt' });
-  rect({ tiles, w, x0: 1, y0: 18, x1: w - 2, y1: 19, kind: 'grass' });
+  rect({ tiles, w, x0: 1, y0: 18, x1: w - 2, y1: 19, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: 20, x1: w - 2, y1: h - 2, kind: 'sidewalk' });
   // ONE wide central staircase spine (4 tiles) climbing the whole hill.
   const spine = 19;
   for (let x = spine; x < spine + 4; x += 1) {
-    vStrip(tiles, w, x, 4, 20, 'stairs');
+    vStrip(tiles, w, x, 3, 20, 'stairs');
   }
   rect({ tiles, w, x0: 10, y0: 14, x1: 17, y1: 17, kind: 'plaza' });
   paintExitPad(tiles, w, 38, 15);
@@ -264,28 +264,28 @@ function buildMorro(): MapDef {
     tiles,
     buildings,
     signs: [
-      { x: 12, y: 13, label: 'BOTECO NAIR', color: '#ffdf00' },
-      { x: 7, y: 18, label: 'LAJE BET', color: '#ffdf00' },
-      { x: 29, y: 13, label: 'ODDS 24h', color: '#ff2bd6' },
+      { x: 12, y: 14, label: 'BOTECO NAIR', color: '#ffdf00' },
+      { x: 7, y: 20, label: 'LAJE BET', color: '#ffdf00' },
+      { x: 29, y: 14, label: 'ODDS 24h', color: '#ff2bd6' },
     ],
     props,
     landmark: { x: 22, y: 2, kind: 'led-tower' },
-    terraceEdges: [4, 11, 17],
+    // Lips sit on the top row of each blocked cliff face.
+    terraceEdges: [4, 11, 18],
   };
 }
 
 function buildFeira(): MapDef {
   const w = 44;
   const h = 26;
-  // Calm asphalt plaza — no speckled sidewalk dots across the whole fair.
-  const tiles = fill(w, h, 'asphalt');
+  // Calm plaza ground — occasional asphalt patches, no yellow-stripe hatch field.
+  const tiles = fill(w, h, 'plaza');
   const buildings: MapDef['buildings'] = [];
   const props: MapDef['props'] = [];
   seal(tiles, w, h);
-  rect({ tiles, w, x0: 1, y0: 11, x1: w - 2, y1: 15, kind: 'plaza' });
+  rect({ tiles, w, x0: 1, y0: 11, x1: w - 2, y1: 15, kind: 'asphalt' });
   hStrip(tiles, w, 10, 1, w - 2, 'sidewalk');
   hStrip(tiles, w, 16, 1, w - 2, 'sidewalk');
-  // Occasional plaza patches for variation — not a uniform dotted field.
   for (const [x, y] of [
     [6, 6],
     [18, 7],
@@ -294,7 +294,7 @@ function buildFeira(): MapDef {
     [22, 21],
     [34, 20],
   ] as const) {
-    rect({ tiles, w, x0: x, y0: y, x1: x + 2, y1: y + 1, kind: 'plaza' });
+    rect({ tiles, w, x0: x, y0: y, x1: x + 2, y1: y + 1, kind: 'asphalt' });
   }
   paintExitPad(tiles, w, 1, 13);
   paintExitPad(tiles, w, 40, 13);

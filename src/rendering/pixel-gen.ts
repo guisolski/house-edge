@@ -139,6 +139,12 @@ function paintAsphaltVariant(g: PixelGrid, variant: TileDistrict): void {
 }
 
 export function makeAsphalt(variant: TileDistrict = 'default'): PixelGrid {
+  if (variant === 'feira') {
+    const g = empty(16, 16, '#1a1c24');
+    fillRect(g, { x: 0, y: 0, w: 16, h: 1 }, '#22242c');
+    fillRect(g, { x: 5, y: 9, w: 1, h: 1 }, '#242830');
+    return g;
+  }
   const g = empty(16, 16, ASPHALT_BASE[variant]);
   for (let i = 0; i < 16; i += 3) {
     fillRect(g, { x: 0, y: i, w: 16, h: 1 }, Palette.asphalt);
@@ -230,8 +236,12 @@ function blockedWallColor(variant: TileDistrict): string {
 
 function paintBlockedFacade(g: PixelGrid, variant: TileDistrict): void {
   if (variant === 'morro') {
-    fillRect(g, { x: 0, y: 4, w: 16, h: 1 }, '#3a3848');
-    fillRect(g, { x: 0, y: 9, w: 16, h: 1 }, '#1a1820');
+    // Brick retaining fill under terrace overlays (no window-dot column).
+    fillRect(g, { x: 0, y: 0, w: 16, h: 16 }, '#1a1418');
+    for (let y = 2; y < 16; y += 4) {
+      fillRect(g, { x: 0, y, w: 16, h: 1 }, '#0a080c');
+      fillRect(g, { x: y % 8 === 2 ? 0 : 4, y: y + 1, w: 1, h: 3 }, '#0a080c');
+    }
     return;
   }
   if (variant === 'feira') {
@@ -258,38 +268,48 @@ export function makeBlocked(variant: TileDistrict = 'default'): PixelGrid {
   return g;
 }
 
+function paintBrickCourses(g: PixelGrid, brick: string, brick2: string): void {
+  for (let y = 5; y < 35; y += 5) {
+    fillRect(g, { x: 0, y, w: 16, h: 1 }, '#0a080c');
+    const offset = y % 10 === 5 ? 0 : 4;
+    for (let x = offset; x < 16; x += 8) {
+      fillRect(g, { x, y: y + 1, w: 1, h: 4 }, '#0a080c');
+    }
+    fillRect(g, { x: 0, y: y + 1, w: 16, h: 4 }, y % 10 === 5 ? brick2 : brick);
+  }
+}
+
 /** Tall terrace retaining face (≈3 tiles) + drop shadow onto level below. */
 export function makeRetainingWall(variant = 0): PixelGrid {
   const g = empty(16, 48, 'transparent');
-  const face = variant % 2 === 0 ? '#3a3848' : '#2e3040';
-  const lip = variant % 2 === 0 ? '#5a5868' : '#4a4c58';
-  fillRect(g, { x: 0, y: 0, w: 16, h: 4 }, lip);
-  fillRect(g, { x: 0, y: 4, w: 16, h: 28 }, face);
-  fillRect(g, { x: 0, y: 4, w: 16, h: 1 }, '#00000044');
-  for (let y = 8; y < 30; y += 6) {
-    fillRect(g, { x: 0, y, w: 16, h: 1 }, '#00000033');
-  }
+  const brick = variant % 2 === 0 ? '#1a1418' : '#141018';
+  const brick2 = variant % 2 === 0 ? '#22181c' : '#1a1418';
+  fillRect(g, { x: 0, y: 0, w: 16, h: 5 }, '#6a6878');
+  fillRect(g, { x: 0, y: 1, w: 16, h: 1 }, '#8a8898');
+  fillRect(g, { x: 0, y: 5, w: 16, h: 30 }, brick);
+  paintBrickCourses(g, brick, brick2);
   fillRect(
     g,
-    { x: 2, y: 12, w: 2, h: 2 },
-    variant % 3 === 0 ? Palette.neonMagenta : '#445',
+    { x: 3, y: 14, w: 2, h: 2 },
+    variant % 3 === 0 ? Palette.neonMagenta : '#2a2030',
   );
   fillRect(
     g,
-    { x: 11, y: 20, w: 2, h: 2 },
-    variant % 3 === 1 ? Palette.neonCyan : '#445',
+    { x: 11, y: 24, w: 2, h: 2 },
+    variant % 3 === 1 ? Palette.neonCyan : '#2a2030',
   );
-  fillRect(g, { x: 0, y: 32, w: 16, h: 16 }, Palette.shadow);
-  fillRect(g, { x: 0, y: 32, w: 16, h: 3 }, '#00000066');
+  fillRect(g, { x: 0, y: 35, w: 16, h: 13 }, '#00000099');
+  fillRect(g, { x: 0, y: 35, w: 16, h: 4 }, '#000000cc');
   return g;
 }
 
 /** Solid map-border wall — no window-dot column. */
 export function makeEdgeWall(): PixelGrid {
-  const g = empty(16, 16, '#141218');
-  fillRect(g, { x: 0, y: 0, w: 16, h: 2 }, '#1e1c24');
-  fillRect(g, { x: 0, y: 14, w: 16, h: 2 }, Palette.shadow);
-  fillRect(g, { x: 0, y: 7, w: 16, h: 1 }, '#0a0810');
+  const g = empty(16, 16, '#0c0a10');
+  fillRect(g, { x: 0, y: 0, w: 16, h: 2 }, '#18161c');
+  fillRect(g, { x: 0, y: 14, w: 16, h: 2 }, '#000000');
+  fillRect(g, { x: 0, y: 7, w: 16, h: 1 }, '#06050a');
+  fillRect(g, { x: 6, y: 3, w: 4, h: 1 }, '#1a1820');
   return g;
 }
 

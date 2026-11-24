@@ -31,9 +31,9 @@ export function followPlayer(args: FollowArgs): Camera {
   const focusY = args.playerY * args.tilePx + args.tilePx / 2;
   const targetX = focusX - args.viewW / 2;
   const targetY = focusY - args.viewH / 2;
-  // Edge pad grows with viewport so the player stays centered (and on-screen)
-  // at the north/west map edges instead of clipping under the HUD.
-  const padX = Math.max(CAMERA_SPRITE_PAD, Math.floor(args.viewW / 2) - args.tilePx);
+  // Y pad grows with viewport so the player stays on-screen at the north edge.
+  // Keep X pad modest so side letterboxing does not open a green void column.
+  const padX = CAMERA_SPRITE_PAD;
   const padY = Math.max(CAMERA_SPRITE_PAD, Math.floor(args.viewH / 2) - args.tilePx);
   const maxX = Math.max(-padX, worldW - args.viewW + padX);
   const maxY = Math.max(-padY, worldH - args.viewH + padY);
