@@ -151,7 +151,7 @@ export function paintTravel(
   }
   panel.appendChild(
     button(UI.close, () => {
-      session.closeModal();
+      if (!session.returnToMenu()) session.closeModal();
       after();
     }),
   );
@@ -199,7 +199,7 @@ export function paintJobs(
   }
   panel.appendChild(
     button(UI.close, () => {
-      session.closeModal();
+      if (!session.returnToMenu()) session.closeModal();
       after();
     }),
   );
@@ -228,7 +228,7 @@ export function paintUpgrades(
   }
   panel.appendChild(
     button(UI.close, () => {
-      session.closeModal();
+      if (!session.returnToMenu()) session.closeModal();
       after();
     }),
   );

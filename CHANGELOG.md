@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] — 2026-11-24
+
+### Changed
+
+- Art v1.9 (main): Morro tall 3-tile retaining walls + drop shadows, one wide central staircase landmark, stacked irregular houses overlapping terraces; removed left window-dot column; Fair calm asphalt/plaza (no speckled floor / yellow-window bands); building flips + recolor/size variants.
+- Story: longer dialogue + Neon radar shop beat (`avenida-radar`) toward ~20 min.
+
+### Fixed
+
+- Camera scrolls at Morro north edge so the player stays on-screen.
+- Generous E interaction radius + on-screen `E` prompt; story NPCs preferred over side-job rematches; ATM Hacker moved off Odds Avenue story cluster.
+- NPCs are non-blocking (walk-through).
+- Esc → Side Jobs → Close returns to the main menu.
+
 ## [1.8.0] — 2026-11-24
 
 ### Changed

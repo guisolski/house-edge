@@ -22,6 +22,7 @@ import {
   makeNeonSign,
   makeNpcSprite,
   makePlayerSprite,
+  makeEdgeWall,
   makePlaza,
   makeRetainingWall,
   makeSidewalk,
@@ -283,6 +284,7 @@ function bakeMapLayer(map: MapDef, baked: Baked): HTMLCanvasElement {
   if (!ctx) return layer;
   ctx.imageSmoothingEnabled = false;
   paintTiles(ctx, map, tiles);
+  paintMapEdges(ctx, map);
   paintTerraceEdges(ctx, map);
   paintBuildings(ctx, map, baked);
   // Signs painted each frame on top — keep cache key warm in bakeAll.
@@ -299,13 +301,28 @@ function bakeMapLayer(map: MapDef, baked: Baked): HTMLCanvasElement {
 
 function paintTerraceEdges(ctx: CanvasRenderingContext2D, map: MapDef): void {
   if (!map.terraceEdges?.length) return;
-  const wall = bakeSprite(makeRetainingWall(), SCALE);
+  const walls = [0, 1, 2].map((v) => bakeSprite(makeRetainingWall(v), SCALE));
   for (const y of map.terraceEdges) {
     for (let x = 1; x < map.width - 1; x += 1) {
       const kind = tileAt(map, x, y);
       if (kind === 'stairs' || kind === 'exit') continue;
-      blitImage(ctx, wall, x * TILE_PX, y * TILE_PX + TILE_PX - 8);
+      const wall = walls[x % walls.length]!;
+      // Hang the tall face down from the terrace lip onto the level below.
+      blitImage(ctx, wall, x * TILE_PX, y * TILE_PX + TILE_PX - 12);
     }
+  }
+}
+
+/** Solid border walls — kills the full-height window-dot column look. */
+function paintMapEdges(ctx: CanvasRenderingContext2D, map: MapDef): void {
+  const edge = bakeSprite(makeEdgeWall(), SCALE);
+  for (let y = 0; y < map.height; y += 1) {
+    blitImage(ctx, edge, 0, y * TILE_PX);
+    blitImage(ctx, edge, (map.width - 1) * TILE_PX, y * TILE_PX);
+  }
+  for (let x = 0; x < map.width; x += 1) {
+    blitImage(ctx, edge, x * TILE_PX, 0);
+    blitImage(ctx, edge, x * TILE_PX, (map.height - 1) * TILE_PX);
   }
 }
 
@@ -325,7 +342,18 @@ function paintBuildings(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked
   for (const b of map.buildings) {
     const set = baked.building[b.kind] ?? baked.building.morro!;
     const spr = set[b.style % set.length]!;
-    blitImage(ctx, spr, b.x * TILE_PX, b.y * TILE_PX - spr.height + TILE_PX);
+    const x = b.x * TILE_PX;
+    const y = b.y * TILE_PX - spr.height + TILE_PX;
+    // Flip every other facade to break left/right repetition.
+    if ((b.x + b.style) % 2 === 1) {
+      ctx.save();
+      ctx.translate(x + spr.width, y);
+      ctx.scale(-1, 1);
+      ctx.drawImage(spr, 0, 0);
+      ctx.restore();
+    } else {
+      blitImage(ctx, spr, x, y);
+    }
   }
 }
 

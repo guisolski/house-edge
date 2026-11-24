@@ -39,6 +39,10 @@ export const STORY_BEATS: readonly StoryBeat[] = [
         speaker: 'Dona Nair',
         text: 'Luna’s been sniffing around the LED antenna. Pirate signal nonsense. Ask the tech on the hill first.',
       },
+      {
+        speaker: 'Dona Nair',
+        text: 'And drink slow. Casa bills the ice cubes now. Take the stairs up the spine — one wide climb, whole hill.',
+      },
     ],
   },
   {
@@ -61,6 +65,10 @@ export const STORY_BEATS: readonly StoryBeat[] = [
         speaker: 'Antena Tech',
         text: 'Signal’s clean, you hear Luna on the beco. If you wipe out, I catch the antenna — not you.',
       },
+      {
+        speaker: 'Rita Odds',
+        text: 'Pirate feed tastes like static and hope. I’m taking both down the stairs.',
+      },
     ],
   },
   {
@@ -78,6 +86,10 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       {
         speaker: 'Rita Odds',
         text: 'Street lotteries got wiped when the corps took over. Now even the laje plays by Casa rules.',
+      },
+      {
+        speaker: 'Luna Pixel',
+        text: 'Seu Zé’s booth sits east of the stairs. Don’t let Fio snatch the copper mid-hand — he runs the wires.',
       },
     ],
   },
@@ -146,6 +158,10 @@ export const STORY_BEATS: readonly StoryBeat[] = [
         speaker: 'Kiko Calçadão',
         text: 'Talk to the catador by the stalls. He sees everything tossed in the calçadão trash.',
       },
+      {
+        speaker: 'Rita Odds',
+        text: 'Fair ground smells like oil and guaraná. Keep me pointed at the scavenger.',
+      },
     ],
   },
   {
@@ -185,6 +201,10 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       {
         speaker: 'Rita Odds',
         text: 'Bet. Tonight the floor is ours.',
+      },
+      {
+        speaker: 'Bia Forró',
+        text: 'After the set, find the DJ. He reads the crowd better than any Casa sensor.',
       },
     ],
   },
@@ -270,6 +290,10 @@ export const STORY_BEATS: readonly StoryBeat[] = [
         speaker: 'Mole Contact',
         text: 'Bet the twist. Win and we know if the vazamento is real. Lose and assume the corp wrote the script.',
       },
+      {
+        speaker: 'Rita Odds',
+        text: 'If it’s bait, I still walk the boulevard. Truth or trap — Capita’s checkpoint is next.',
+      },
     ],
   },
   {
@@ -309,10 +333,35 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     ],
   },
   {
+    id: 'avenida-radar',
+    title: 'Neon radar shop',
+    districtId: 'avenida-odds',
+    requiredFlags: ['influencer_ok'],
+    setsFlags: ['radar_ok'],
+    dialogue: [
+      {
+        speaker: 'Mensageiro',
+        text: 'Influencer’s feed is cooked. Militia radar vans circle the ATM strip — wait for the sweep to pass.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'I don’t wait for vans. I time them.',
+      },
+      {
+        speaker: 'Mensageiro',
+        text: 'Count the neon blinks. When the pink ODDS sign dims twice, the alley’s clear for the hacker south of the glass.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Pink blink, then south to the ATM. Got it.',
+      },
+    ],
+  },
+  {
     id: 'avenida-atm',
     title: 'ATM glitch hunt',
     districtId: 'avenida-odds',
-    requiredFlags: ['influencer_ok'],
+    requiredFlags: ['radar_ok'],
     setsFlags: ['atm_ok'],
     betId: 'avenida-atm',
     dialogue: [
@@ -323,6 +372,10 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       {
         speaker: 'Rita Odds',
         text: 'Every chipped coin buys time. Run the exploit.',
+      },
+      {
+        speaker: 'ATM Hacker',
+        text: 'Machine’s south of the glass strip — away from Margin’s coffee. Don’t mix my glitch with his hearing.',
       },
     ],
   },
@@ -346,6 +399,10 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       {
         speaker: 'Dr. Margin',
         text: 'The hearing decides everything. Place your chips — the mic is already bought.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Then I buy the mic back with scandal. Tower elevator opens when this trends.',
       },
     ],
   },

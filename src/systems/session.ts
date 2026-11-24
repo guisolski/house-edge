@@ -98,7 +98,7 @@ export class GameSession {
     const nx = Math.max(0, Math.min(map.width - 1, s.x + dx));
     const ny = Math.max(0, Math.min(map.height - 1, s.y + dy));
     if (!isWalkable(map, nx, ny)) return false;
-    if (this.npcBlocks(nx, ny)) return false;
+    // NPCs are non-blocking — walk-through keeps interaction from trapping the player.
     this.player.setPosition(nx, ny);
     // All districts: stepping onto an unlocked exit pad travels (consistent).
     if (tileAt(map, nx, ny) === 'exit') {
@@ -120,7 +120,15 @@ export class GameSession {
 
   nearbyNpc(): WorldNpc | null {
     const s = this.player.getStats();
-    return nearestNpc(this.npcs, s.districtId, s.x, s.y);
+    const available = new Set(this.story.availableBeats(s.districtId).map((b) => b.id));
+    // Prefer story NPCs with an active beat so side-job rematches don't steal E.
+    return nearestNpc({
+      npcs: this.npcs,
+      districtId: s.districtId,
+      x: s.x,
+      y: s.y,
+      prefer: (npc) => Boolean(npc.beatId && available.has(npc.beatId)),
+    });
   }
 
   nearbyExit(): DistrictExit | null {
@@ -400,6 +408,14 @@ export class GameSession {
     this.ui.backToPlay();
   }
 
+  /** Side Jobs / Travel / Upgrades Close → main pause menu (not straight to play). */
+  returnToMenu(): boolean {
+    if (!this.ui.is('jobs') && !this.ui.is('travel') && !this.ui.is('upgrades')) {
+      return false;
+    }
+    return this.ui.go('menu');
+  }
+
   private advanceDialogue(): void {
     // Story bets require an explicit Accept / Decline from the HUD — never auto-open.
     if (this.pendingBetAfterDialogue) {
@@ -446,6 +462,15 @@ export class GameSession {
       const available = this.story.availableBeats(npc.districtId);
       if (available.some((b) => b.id === npc.beatId)) {
         return this.beginStoryBeat(npc.beatId);
+      }
+      // Incomplete beat that isn't ready yet — don't fall through to side-job bet.
+      if (!this.story.getCompleted().includes(npc.beatId)) {
+        const tip = this.objective().text;
+        this.bus.emit('ui:toast', {
+          message: `${npc.name}: Not now — ${tip}`,
+          kind: 'info',
+        });
+        return false;
       }
     }
     if (npc.jobBetId) return this.offerBet(npc.jobBetId);
@@ -503,11 +528,6 @@ export class GameSession {
     // Skip win toast on ending so it doesn't overlap the ending panel.
     if (!this.ui.is('ending')) this.toastBet(result.won, result.payout, losses);
     return true;
-  }
-
-  private npcBlocks(x: number, y: number): boolean {
-    const id = this.player.getStats().districtId;
-    return this.npcs.some((n) => n.districtId === id && n.x === x && n.y === y);
   }
 
   private afterBetResolved(bet: BetDefinition, won: boolean): void {

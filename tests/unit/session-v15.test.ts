@@ -23,12 +23,13 @@ describe('session v1.5 recovery and upgrades', () => {
     clearStorage(mem);
   });
 
-  it('blocks walking onto NPCs and enforces safe-job cooldown', () => {
+  it('allows walking through NPCs and enforces safe-job cooldown', () => {
     const session = new GameSession(3);
     session.startNew();
     const nair = session.npcs.find((n) => n.id === 'dona-nair')!;
     session.player.setPosition(nair.x - 1, nair.y);
-    expect(session.move(1, 0)).toBe(false);
+    expect(session.move(1, 0)).toBe(true);
+    expect(session.player.getStats()).toMatchObject({ x: nair.x, y: nair.y });
     const job = listJobs('morro-neon', -999).find((j) => j.flatPay)!;
     expect(session.doSafeJob(job.id)).toBe(true);
     expect(session.doSafeJob(job.id)).toBe(false);

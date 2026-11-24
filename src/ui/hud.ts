@@ -354,7 +354,7 @@ function openFromMenu(
   h: HudHandles,
   kind: 'travel' | 'jobs' | 'upgrades',
 ): void {
-  session.closeModal();
+  // Stay in the menu stack so Close returns here (not straight to play).
   if (kind === 'travel' && session.openTravel()) h.showTravel();
   if (kind === 'jobs' && session.openJobs()) h.showJobs();
   if (kind === 'upgrades' && session.openUpgrades()) h.showUpgrades();
@@ -380,7 +380,7 @@ function paintPrompt(prompt: HTMLElement, session: GameSession): void {
     return;
   }
   if (npc) {
-    prompt.textContent = `${UI.promptTalk} (${npc.name})`;
+    prompt.textContent = `E  (${npc.name})`;
     setVisible(prompt, true);
     return;
   }

@@ -1,4 +1,4 @@
-/** LD-6: camera follows player, clamped to map. */
+/** LD-6: camera follows player, clamped to map (with sprite overhang pad). */
 
 export type Camera = {
   x: number;
@@ -16,6 +16,9 @@ export type FollowArgs = {
   tilePx: number;
 };
 
+/** Extra camera slack so tall sprites near map edges are not clipped. */
+export const CAMERA_SPRITE_PAD = 96;
+
 export function createCamera(): Camera {
   return { x: 0, y: 0 };
 }
@@ -24,11 +27,19 @@ export function followPlayer(args: FollowArgs): Camera {
   void args.cam;
   const worldW = args.mapW * args.tilePx;
   const worldH = args.mapH * args.tilePx;
-  const targetX = args.playerX * args.tilePx + args.tilePx / 2 - args.viewW / 2;
-  const targetY = args.playerY * args.tilePx + args.tilePx / 2 - args.viewH / 2;
+  const focusX = args.playerX * args.tilePx + args.tilePx / 2;
+  const focusY = args.playerY * args.tilePx + args.tilePx / 2;
+  const targetX = focusX - args.viewW / 2;
+  const targetY = focusY - args.viewH / 2;
+  // Edge pad grows with viewport so the player stays centered (and on-screen)
+  // at the north/west map edges instead of clipping under the HUD.
+  const padX = Math.max(CAMERA_SPRITE_PAD, Math.floor(args.viewW / 2) - args.tilePx);
+  const padY = Math.max(CAMERA_SPRITE_PAD, Math.floor(args.viewH / 2) - args.tilePx);
+  const maxX = Math.max(-padX, worldW - args.viewW + padX);
+  const maxY = Math.max(-padY, worldH - args.viewH + padY);
   return {
-    x: clamp(targetX, 0, Math.max(0, worldW - args.viewW)),
-    y: clamp(targetY, 0, Math.max(0, worldH - args.viewH)),
+    x: clamp(targetX, -padX, maxX),
+    y: clamp(targetY, -padY, maxY),
   };
 }
 

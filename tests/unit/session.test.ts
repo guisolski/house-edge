@@ -94,12 +94,38 @@ describe('GameSession persistence', () => {
     expect(new GameSession(4).tryLoad()).toBe(false);
   });
 
-  it('opens travel/jobs/menu only from play', () => {
+  it('opens side panels from menu and Close returns to menu', () => {
     const session = new GameSession(8);
     session.startNew();
     expect(session.openMenu()).toBe(true);
-    expect(session.openTravel()).toBe(false);
-    session.closeModal();
     expect(session.openJobs()).toBe(true);
+    expect(session.ui.is('jobs')).toBe(true);
+    expect(session.returnToMenu()).toBe(true);
+    expect(session.ui.is('menu')).toBe(true);
+    expect(session.openTravel()).toBe(true);
+    expect(session.returnToMenu()).toBe(true);
+    expect(session.ui.is('menu')).toBe(true);
+  });
+
+  it('walks through NPCs (non-blocking)', () => {
+    const session = new GameSession(9);
+    session.startNew();
+    session.player.setPosition(12, 14);
+    expect(session.move(1, 0)).toBe(true);
+    expect(session.player.getStats()).toMatchObject({ x: 13, y: 14 });
+  });
+
+  it('returnToMenu only from side panels; blocks early story rematch', () => {
+    const session = new GameSession(11);
+    session.startNew();
+    expect(session.returnToMenu()).toBe(false);
+    // Luna beat not ready yet — no side-job fallthrough (she has none) / toast.
+    session.player.setPosition(26, 16);
+    expect(session.nearbyNpc()?.id).toBe('luna');
+    expect(session.interact()).toBe(false);
+    // Prefer story NPC over nearby rematch giver when both in range.
+    session.story.setFlag('conheceu_rita', true);
+    session.player.setPosition(13, 14);
+    expect(session.nearbyNpc()?.id).toBe('dona-nair');
   });
 });

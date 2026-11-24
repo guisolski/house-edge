@@ -11,6 +11,17 @@ export type UiScreen =
   | 'upgrades'
   | 'ending';
 
+/** Extra edges beyond play→anything and →play/title/ending. */
+const EXTRA = new Set<string>([
+  'dialogue>bet',
+  'menu>jobs',
+  'menu>travel',
+  'menu>upgrades',
+  'jobs>menu',
+  'travel>menu',
+  'upgrades>menu',
+]);
+
 export class UiStateMachine {
   private screen: UiScreen = 'title';
 
@@ -23,7 +34,7 @@ export class UiStateMachine {
   }
 
   canOpenModal(): boolean {
-    return this.screen === 'play';
+    return this.screen === 'play' || this.screen === 'menu';
   }
 
   go(screen: UiScreen): boolean {
@@ -40,12 +51,9 @@ export class UiStateMachine {
   }
 
   private allowed(from: UiScreen, to: UiScreen): boolean {
-    if (to === 'title' || to === 'ending') return true;
+    if (to === 'title' || to === 'ending' || to === 'play' || from === 'play')
+      return true;
     if (from === 'title') return to === 'play';
-    if (to === 'play') return true;
-    if (from === 'play') return true;
-    // GD-3 / UX-5: dialogue can hand off into a bet modal.
-    if (from === 'dialogue' && to === 'bet') return true;
-    return false;
+    return EXTRA.has(`${from}>${to}`);
   }
 }

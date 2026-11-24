@@ -21,7 +21,8 @@ export type DistrictExit = {
   label: string;
 };
 
-const INTERACT_RANGE = 2.1;
+/** Generous tile radius (~3.5 tiles / ~170px) so E is not fiddly. */
+export const INTERACT_RANGE = 3.5;
 
 const NPCS: readonly WorldNpc[] = [
   {
@@ -175,8 +176,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'atm-hacker',
     name: 'ATM Hacker',
     districtId: 'avenida-odds',
-    x: 32,
-    y: 13,
+    // Spatially separate from story boulevard NPCs so side rematch doesn't steal E.
+    x: 38,
+    y: 17,
     beatId: 'avenida-atm',
     jobBetId: 'avenida-atm',
     color: '#ff3b5c',
@@ -185,8 +187,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'margin',
     name: 'Dr. Margin',
     districtId: 'avenida-odds',
-    x: 30,
-    y: 13,
+    x: 28,
+    y: 12,
     beatId: 'lobby-margin',
     color: '#4a6cff',
   },
@@ -196,6 +198,7 @@ const NPCS: readonly WorldNpc[] = [
     districtId: 'avenida-odds',
     x: 8,
     y: 11,
+    beatId: 'avenida-radar',
     safeJobId: 'safe-avenida-odds',
     color: '#c9b037',
   },
@@ -286,17 +289,29 @@ export function distance(ax: number, ay: number, bx: number, by: number): number
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-export function nearestNpc(
-  npcs: readonly WorldNpc[],
-  districtId: DistrictId,
-  x: number,
-  y: number,
+export type NearestNpcQuery = {
+  npcs: readonly WorldNpc[];
+  districtId: DistrictId;
+  x: number;
+  y: number;
+  prefer?: (npc: WorldNpc) => boolean;
+};
+
+export function nearestNpc(q: NearestNpcQuery): WorldNpc | null {
+  const preferred = pickNearest(q, q.prefer);
+  return preferred ?? pickNearest(q);
+}
+
+function pickNearest(
+  q: NearestNpcQuery,
+  filter?: (npc: WorldNpc) => boolean,
 ): WorldNpc | null {
   let best: WorldNpc | null = null;
   let bestDist = Infinity;
-  for (const npc of npcs) {
-    if (npc.districtId !== districtId) continue;
-    const d = distance(x, y, npc.x, npc.y);
+  for (const npc of q.npcs) {
+    if (npc.districtId !== q.districtId) continue;
+    if (filter && !filter(npc)) continue;
+    const d = distance(q.x, q.y, npc.x, npc.y);
     if (d <= INTERACT_RANGE && d < bestDist) {
       best = npc;
       bestDist = d;

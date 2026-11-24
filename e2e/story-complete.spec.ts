@@ -23,6 +23,7 @@ const STORY_IDS = [
   'avenida-twist',
   'avenida-checkpoint',
   'avenida-influencer',
+  'avenida-radar',
   'avenida-atm',
   'lobby-margin',
   'torre-vip',
@@ -32,7 +33,7 @@ const STORY_IDS = [
 test('full story reaches ending with safe-job recovery', async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto('/');
-  await expect(page.locator('.version')).toContainText('v1.8');
+  await expect(page.locator('.version')).toContainText('v1.9');
   await page.getByRole('button', { name: 'New Game' }).click();
   await page.locator('.world-canvas').click({ position: { x: 48, y: 48 } });
 

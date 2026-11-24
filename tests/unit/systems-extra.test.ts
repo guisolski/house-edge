@@ -65,6 +65,18 @@ describe('ui state machine', () => {
     ui.backToPlay();
     expect(ui.is('ending')).toBe(true);
   });
+
+  it('returns Side Jobs Close to the main menu', () => {
+    const ui = new UiStateMachine();
+    expect(ui.go('play')).toBe(true);
+    expect(ui.go('menu')).toBe(true);
+    expect(ui.canOpenModal()).toBe(true);
+    expect(ui.go('jobs')).toBe(true);
+    expect(ui.go('menu')).toBe(true);
+    expect(ui.is('menu')).toBe(true);
+    expect(ui.go('travel')).toBe(true);
+    expect(ui.go('menu')).toBe(true);
+  });
 });
 
 describe('maps and interaction', () => {
@@ -92,8 +104,28 @@ describe('maps and interaction', () => {
     expect(map.terraceEdges?.length ?? 0).toBeGreaterThan(0);
     const npcs = districtNpcs();
     const exits = districtExits();
-    expect(nearestNpc(npcs, 'morro-neon', 13, 14)?.id).toBe('dona-nair');
-    expect(nearestNpc(npcs, 'morro-neon', 0, 0)).toBeNull();
+    expect(nearestNpc({ npcs, districtId: 'morro-neon', x: 13, y: 14 })?.id).toBe(
+      'dona-nair',
+    );
+    expect(nearestNpc({ npcs, districtId: 'morro-neon', x: 0, y: 0 })).toBeNull();
+    expect(
+      nearestNpc({
+        npcs,
+        districtId: 'morro-neon',
+        x: 13,
+        y: 14,
+        prefer: (n) => n.id === 'catador-morro',
+      })?.id,
+    ).toBe('dona-nair');
+    expect(
+      nearestNpc({
+        npcs,
+        districtId: 'morro-neon',
+        x: 4,
+        y: 16,
+        prefer: (n) => n.id === 'catador-morro',
+      })?.id,
+    ).toBe('catador-morro');
     expect(nearestExit(exits, 'morro-neon', 38, 15)?.toDistrict).toBe('feira-central');
     expect(nearestExit(exits, 'morro-neon', 0, 0)).toBeNull();
     expect(inRange({ x: 0, y: 0, tx: 1, ty: 0 })).toBe(true);
@@ -112,6 +144,18 @@ describe('maps and interaction', () => {
     });
     expect(cam.x).toBeGreaterThanOrEqual(0);
     expect(cam.y).toBeGreaterThanOrEqual(0);
+    const north = followPlayer({
+      cam: createCamera(),
+      playerX: 10,
+      playerY: 1,
+      mapW: 42,
+      mapH: 30,
+      viewW: 960,
+      viewH: 540,
+      tilePx: 48,
+    });
+    // North edge: camera scrolls above y=0 so the player stays on-screen.
+    expect(north.y).toBeLessThan(0);
     const pad = viewportPadding({
       mapW: 20,
       mapH: 26,
@@ -120,6 +164,9 @@ describe('maps and interaction', () => {
       tilePx: 48,
     });
     expect(pad.padX).toBeGreaterThan(0);
+    expect(
+      viewportPadding({ mapW: 40, mapH: 30, viewW: 640, viewH: 360, tilePx: 48 }).padY,
+    ).toBe(0);
   });
 });
 

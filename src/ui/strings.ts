@@ -24,7 +24,7 @@ export const UI = {
   cancel: 'Cancel',
   stakeUp: 'Stake +',
   stakeDown: 'Stake −',
-  version: 'v1.8.0',
+  version: 'v1.9.0',
   wonEnding: 'The Casa falls. The table is yours.',
   endingBlurb:
     'Funk and samba take the streets. Side Jobs stay open if you want another round.',
@@ -41,7 +41,7 @@ export const UI = {
   hintMenuTouch: 'Tap Resume or use on-screen buttons',
   noJobs: 'No side jobs here — raise rep or change district.',
   noStory: 'No story beat here — follow the yellow marker.',
-  promptTalk: 'E / A — Talk',
-  promptExit: 'E / A — Travel',
+  promptTalk: 'E — Talk',
+  promptExit: 'E — Travel',
   promptBet: 'F / B — Bet',
 } as const;

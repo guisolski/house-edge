@@ -158,57 +158,58 @@ function morroHouseSpots(): {
   bw: number;
   bh: number;
 }[] {
+  // Irregular, overlapping terrace edges — not a uniform grid.
   return [
-    { x: 2, y: 2, style: 0, bw: 3, bh: 2 },
-    { x: 6, y: 1, style: 5, bw: 2, bh: 3 },
-    { x: 10, y: 3, style: 2, bw: 2, bh: 2 },
-    { x: 14, y: 1, style: 7, bw: 3, bh: 3 },
-    { x: 24, y: 2, style: 1, bw: 2, bh: 2 },
-    { x: 28, y: 1, style: 4, bw: 3, bh: 2 },
-    { x: 33, y: 3, style: 3, bw: 2, bh: 2 },
-    { x: 36, y: 1, style: 6, bw: 2, bh: 3 },
-    { x: 2, y: 8, style: 3, bw: 2, bh: 2 },
-    { x: 5, y: 9, style: 0, bw: 3, bh: 2 },
-    { x: 12, y: 8, style: 6, bw: 2, bh: 3 },
-    { x: 25, y: 8, style: 2, bw: 3, bh: 2 },
-    { x: 30, y: 9, style: 5, bw: 2, bh: 2 },
-    { x: 34, y: 8, style: 1, bw: 2, bh: 3 },
-    { x: 2, y: 22, style: 4, bw: 3, bh: 2 },
-    { x: 7, y: 23, style: 7, bw: 2, bh: 2 },
-    { x: 12, y: 21, style: 0, bw: 2, bh: 3 },
-    { x: 24, y: 22, style: 3, bw: 3, bh: 2 },
-    { x: 29, y: 21, style: 6, bw: 2, bh: 2 },
-    { x: 33, y: 23, style: 2, bw: 3, bh: 2 },
+    { x: 2, y: 3, style: 0, bw: 3, bh: 2 },
+    { x: 5, y: 1, style: 5, bw: 2, bh: 3 },
+    { x: 9, y: 2, style: 2, bw: 3, bh: 3 },
+    { x: 13, y: 1, style: 7, bw: 2, bh: 2 },
+    { x: 23, y: 2, style: 1, bw: 3, bh: 3 },
+    { x: 27, y: 1, style: 4, bw: 2, bh: 2 },
+    { x: 31, y: 3, style: 6, bw: 3, bh: 2 },
+    { x: 35, y: 1, style: 3, bw: 2, bh: 3 },
+    { x: 1, y: 8, style: 3, bw: 2, bh: 3 },
+    { x: 4, y: 10, style: 0, bw: 3, bh: 2 },
+    { x: 11, y: 7, style: 6, bw: 2, bh: 3 },
+    { x: 24, y: 8, style: 2, bw: 3, bh: 2 },
+    { x: 29, y: 10, style: 5, bw: 2, bh: 3 },
+    { x: 34, y: 7, style: 1, bw: 3, bh: 3 },
+    { x: 2, y: 19, style: 4, bw: 3, bh: 3 },
+    { x: 7, y: 21, style: 7, bw: 2, bh: 2 },
+    { x: 11, y: 18, style: 0, bw: 3, bh: 3 },
+    { x: 24, y: 20, style: 3, bw: 2, bh: 2 },
+    { x: 28, y: 18, style: 6, bw: 3, bh: 3 },
+    { x: 33, y: 21, style: 2, bw: 3, bh: 2 },
   ];
 }
 
 function fillMorroProps(props: MapDef['props']): void {
-  for (let x = 4; x < 38; x += 6) {
+  for (let x = 3; x < 38; x += 7) {
     props.push({ x, y: 6, kind: 'wire' });
-    props.push({ x: x + 2, y: 12, kind: 'wire' });
+    props.push({ x: x + 3, y: 13, kind: 'wire' });
   }
   for (const [x, y] of [
     [3, 2],
-    [15, 2],
-    [29, 2],
-    [6, 9],
+    [14, 2],
+    [28, 2],
+    [5, 9],
     [26, 9],
-    [8, 22],
-    [30, 22],
+    [9, 20],
+    [31, 20],
   ] as const) {
     props.push({ x, y, kind: 'tank' });
   }
   for (const [x, y] of [
-    [9, 15],
-    [18, 15],
-    [27, 16],
-    [14, 22],
+    [8, 15],
+    [17, 15],
+    [28, 16],
+    [13, 22],
   ] as const) {
     props.push({ x, y, kind: 'lamp' });
   }
-  props.push({ x: 19, y: 16, kind: 'moto' }, { x: 15, y: 15, kind: 'kiosk' });
+  props.push({ x: 18, y: 16, kind: 'moto' }, { x: 14, y: 15, kind: 'kiosk' });
   for (const [x, y] of [
-    [11, 16],
+    [10, 16],
     [25, 16],
     [34, 16],
   ] as const) {
@@ -217,28 +218,23 @@ function fillMorroProps(props: MapDef['props']): void {
 }
 
 function layoutMorroTerraces(tiles: TileKind[], w: number, h: number): void {
-  rect({ tiles, w, x0: 1, y0: 1, x1: w - 2, y1: 5, kind: 'sidewalk' });
+  // Ridge / mid / street / lower — grass slopes between (not alley window-dots).
+  rect({ tiles, w, x0: 1, y0: 1, x1: w - 2, y1: 4, kind: 'sidewalk' });
+  rect({ tiles, w, x0: 1, y0: 5, x1: w - 2, y1: 7, kind: 'grass' });
   rect({ tiles, w, x0: 1, y0: 8, x1: w - 2, y1: 11, kind: 'sidewalk' });
+  rect({ tiles, w, x0: 1, y0: 12, x1: w - 2, y1: 13, kind: 'grass' });
   rect({ tiles, w, x0: 1, y0: 14, x1: w - 2, y1: 17, kind: 'asphalt' });
-  hStrip(tiles, w, 13, 1, w - 2, 'sidewalk');
-  hStrip(tiles, w, 18, 1, w - 2, 'sidewalk');
-  rect({ tiles, w, x0: 1, y0: 21, x1: w - 2, y1: h - 2, kind: 'sidewalk' });
-  const spine = 20;
-  vStrip(tiles, w, spine, 5, 8, 'stairs');
-  vStrip(tiles, w, spine + 1, 5, 8, 'stairs');
-  vStrip(tiles, w, spine, 11, 14, 'stairs');
-  vStrip(tiles, w, spine + 1, 11, 14, 'stairs');
-  vStrip(tiles, w, spine, 17, 21, 'stairs');
-  vStrip(tiles, w, spine + 1, 17, 21, 'stairs');
-  for (const sx of [8, 32]) {
-    vStrip(tiles, w, sx, 5, 8, 'stairs');
-    vStrip(tiles, w, sx, 11, 14, 'stairs');
+  rect({ tiles, w, x0: 1, y0: 18, x1: w - 2, y1: 19, kind: 'grass' });
+  rect({ tiles, w, x0: 1, y0: 20, x1: w - 2, y1: h - 2, kind: 'sidewalk' });
+  // ONE wide central staircase spine (4 tiles) climbing the whole hill.
+  const spine = 19;
+  for (let x = spine; x < spine + 4; x += 1) {
+    vStrip(tiles, w, x, 4, 20, 'stairs');
   }
   rect({ tiles, w, x0: 10, y0: 14, x1: 17, y1: 17, kind: 'plaza' });
   paintExitPad(tiles, w, 38, 15);
 }
 
-/** Hillside favela: slope rises toward top (low y = ridge). */
 function buildMorro(): MapDef {
   const w = 42;
   const h = 30;
@@ -274,22 +270,32 @@ function buildMorro(): MapDef {
     ],
     props,
     landmark: { x: 22, y: 2, kind: 'led-tower' },
-    terraceEdges: [5, 11, 17],
+    terraceEdges: [4, 11, 17],
   };
 }
 
 function buildFeira(): MapDef {
   const w = 44;
   const h = 26;
-  const tiles = fill(w, h, 'sidewalk');
+  // Calm asphalt plaza — no speckled sidewalk dots across the whole fair.
+  const tiles = fill(w, h, 'asphalt');
   const buildings: MapDef['buildings'] = [];
   const props: MapDef['props'] = [];
   seal(tiles, w, h);
-  rect({ tiles, w, x0: 1, y0: 11, x1: w - 2, y1: 15, kind: 'asphalt' });
-  hStrip(tiles, w, 10, 1, w - 2, 'plaza');
-  hStrip(tiles, w, 16, 1, w - 2, 'plaza');
-  rect({ tiles, w, x0: 1, y0: 1, x1: w - 2, y1: 3, kind: 'blocked' });
-  rect({ tiles, w, x0: 1, y0: h - 4, x1: w - 2, y1: h - 2, kind: 'blocked' });
+  rect({ tiles, w, x0: 1, y0: 11, x1: w - 2, y1: 15, kind: 'plaza' });
+  hStrip(tiles, w, 10, 1, w - 2, 'sidewalk');
+  hStrip(tiles, w, 16, 1, w - 2, 'sidewalk');
+  // Occasional plaza patches for variation — not a uniform dotted field.
+  for (const [x, y] of [
+    [6, 6],
+    [18, 7],
+    [30, 6],
+    [8, 20],
+    [22, 21],
+    [34, 20],
+  ] as const) {
+    rect({ tiles, w, x0: x, y0: y, x1: x + 2, y1: y + 1, kind: 'plaza' });
+  }
   paintExitPad(tiles, w, 1, 13);
   paintExitPad(tiles, w, 40, 13);
 
@@ -352,8 +358,8 @@ function buildAvenida(): MapDef {
   rect({ tiles, w, x0: 1, y0: 9, x1: w - 2, y1: 14, kind: 'asphalt' });
   hStrip(tiles, w, 8, 1, w - 2, 'plaza');
   hStrip(tiles, w, 15, 1, w - 2, 'plaza');
-  rect({ tiles, w, x0: 1, y0: 1, x1: w - 2, y1: 2, kind: 'blocked' });
-  rect({ tiles, w, x0: 1, y0: h - 3, x1: w - 2, y1: h - 2, kind: 'blocked' });
+  rect({ tiles, w, x0: 1, y0: 1, x1: w - 2, y1: 1, kind: 'blocked' });
+  rect({ tiles, w, x0: 1, y0: h - 2, x1: w - 2, y1: h - 2, kind: 'blocked' });
   paintExitPad(tiles, w, 1, 11);
   paintExitPad(tiles, w, 42, 11);
 

@@ -155,18 +155,15 @@ export function makeAsphalt(variant: TileDistrict = 'default'): PixelGrid {
 export function makeSidewalk(variant: TileDistrict = 'default'): PixelGrid {
   const base =
     variant === 'feira'
-      ? '#32303a'
+      ? '#2a2834'
       : variant === 'avenida'
-        ? '#2a3048'
+        ? '#222838'
         : Palette.sidewalk;
   const g = empty(16, 16, base);
-  for (let i = 0; i < 16; i += 4) {
-    fillRect(g, { x: i, y: 0, w: 1, h: 16 }, Palette.curb);
-    fillRect(g, { x: 0, y: i, w: 16, h: 1 }, Palette.curb);
-  }
+  fillRect(g, { x: 0, y: 0, w: 16, h: 1 }, Palette.curb);
+  fillRect(g, { x: 0, y: 15, w: 16, h: 1 }, Palette.curb);
   if (variant === 'feira') {
-    fillRect(g, { x: 3, y: 3, w: 2, h: 2 }, '#fff3');
-    fillRect(g, { x: 10, y: 11, w: 2, h: 2 }, '#fff3');
+    fillRect(g, { x: 7, y: 8, w: 1, h: 1 }, '#fff2');
   }
   return g;
 }
@@ -219,12 +216,8 @@ export function makePlaza(variant: TileDistrict = 'default'): PixelGrid {
 export function makeGrass(): PixelGrid {
   const g = empty(16, 16, Palette.plantDark);
   fillRect(g, { x: 0, y: 0, w: 16, h: 1 }, '#0a2818');
-  fillRect(g, { x: 3, y: 5, w: 2, h: 2 }, Palette.plant);
-  fillRect(g, { x: 10, y: 11, w: 2, h: 2 }, Palette.plant);
-  fillRect(g, { x: 7, y: 2, w: 1, h: 1 }, '#2a5040');
-  fillRect(g, { x: 13, y: 7, w: 1, h: 1 }, '#1a4a30');
-  fillRect(g, { x: 1, y: 12, w: 2, h: 1 }, '#163828');
-  fillRect(g, { x: 8, y: 9, w: 1, h: 1 }, Palette.neonLime);
+  fillRect(g, { x: 4, y: 6, w: 1, h: 1 }, '#1a4030');
+  fillRect(g, { x: 11, y: 10, w: 1, h: 1 }, '#163828');
   return g;
 }
 
@@ -237,15 +230,14 @@ function blockedWallColor(variant: TileDistrict): string {
 
 function paintBlockedFacade(g: PixelGrid, variant: TileDistrict): void {
   if (variant === 'morro') {
-    fillRect(g, { x: 2, y: 4, w: 5, h: 5 }, Palette.windowLit);
-    fillRect(g, { x: 9, y: 4, w: 5, h: 5 }, Palette.neonCyan);
-    fillRect(g, { x: 5, y: 10, w: 6, h: 4 }, '#100818');
+    fillRect(g, { x: 0, y: 4, w: 16, h: 1 }, '#3a3848');
+    fillRect(g, { x: 0, y: 9, w: 16, h: 1 }, '#1a1820');
     return;
   }
   if (variant === 'feira') {
-    fillRect(g, { x: 1, y: 2, w: 14, h: 3 }, Palette.brasilYellow);
-    fillRect(g, { x: 3, y: 8, w: 4, h: 4 }, Palette.windowLit);
-    fillRect(g, { x: 9, y: 8, w: 4, h: 4 }, Palette.gold);
+    fillRect(g, { x: 0, y: 3, w: 16, h: 1 }, '#3a3028');
+    fillRect(g, { x: 4, y: 7, w: 3, h: 3 }, '#2a2018');
+    fillRect(g, { x: 10, y: 9, w: 3, h: 3 }, '#2a2018');
     return;
   }
   if (variant === 'torre') {
@@ -266,15 +258,38 @@ export function makeBlocked(variant: TileDistrict = 'default'): PixelGrid {
   return g;
 }
 
-/** Terrace retaining lip: front face + drop shadow below. */
-export function makeRetainingWall(): PixelGrid {
-  const g = empty(16, 20, 'transparent');
-  fillRect(g, { x: 0, y: 0, w: 16, h: 6 }, '#3a3848');
-  fillRect(g, { x: 0, y: 0, w: 16, h: 2 }, '#5a5868');
-  fillRect(g, { x: 0, y: 6, w: 16, h: 8 }, '#1a1820');
-  fillRect(g, { x: 0, y: 14, w: 16, h: 6 }, Palette.shadow);
-  fillRect(g, { x: 1, y: 8, w: 2, h: 2 }, Palette.neonMagenta);
-  fillRect(g, { x: 12, y: 9, w: 2, h: 2 }, Palette.neonCyan);
+/** Tall terrace retaining face (≈3 tiles) + drop shadow onto level below. */
+export function makeRetainingWall(variant = 0): PixelGrid {
+  const g = empty(16, 48, 'transparent');
+  const face = variant % 2 === 0 ? '#3a3848' : '#2e3040';
+  const lip = variant % 2 === 0 ? '#5a5868' : '#4a4c58';
+  fillRect(g, { x: 0, y: 0, w: 16, h: 4 }, lip);
+  fillRect(g, { x: 0, y: 4, w: 16, h: 28 }, face);
+  fillRect(g, { x: 0, y: 4, w: 16, h: 1 }, '#00000044');
+  for (let y = 8; y < 30; y += 6) {
+    fillRect(g, { x: 0, y, w: 16, h: 1 }, '#00000033');
+  }
+  fillRect(
+    g,
+    { x: 2, y: 12, w: 2, h: 2 },
+    variant % 3 === 0 ? Palette.neonMagenta : '#445',
+  );
+  fillRect(
+    g,
+    { x: 11, y: 20, w: 2, h: 2 },
+    variant % 3 === 1 ? Palette.neonCyan : '#445',
+  );
+  fillRect(g, { x: 0, y: 32, w: 16, h: 16 }, Palette.shadow);
+  fillRect(g, { x: 0, y: 32, w: 16, h: 3 }, '#00000066');
+  return g;
+}
+
+/** Solid map-border wall — no window-dot column. */
+export function makeEdgeWall(): PixelGrid {
+  const g = empty(16, 16, '#141218');
+  fillRect(g, { x: 0, y: 0, w: 16, h: 2 }, '#1e1c24');
+  fillRect(g, { x: 0, y: 14, w: 16, h: 2 }, Palette.shadow);
+  fillRect(g, { x: 0, y: 7, w: 16, h: 1 }, '#0a0810');
   return g;
 }
 
@@ -359,9 +374,9 @@ function paintFavelaShell(
 
 function favelaHouse(style: number): PixelGrid {
   const wide = style % 3 === 0;
-  const tall = style % 2 === 1;
-  const w = wide ? 56 : 48;
-  const h = tall ? 72 : 64;
+  const storeys = 2 + (style % 3); // 2–4 storeys
+  const w = wide ? 56 : 44 + (style % 3) * 4;
+  const h = 40 + storeys * 22;
   const g = empty(w, h, 'transparent');
   const wall = [
     Palette.wallWarm,
@@ -386,23 +401,51 @@ function favelaHouse(style: number): PixelGrid {
   const fw = w - 14;
   const fh = h - 28;
   paintFavelaShell(g, wall, roof, fw, fh, w);
-  fillRect(g, { x: 10, y: 28, w: 10, h: 10 }, Palette.windowLit);
-  fillRect(g, { x: 12, y: 30, w: 6, h: 6 }, '#ffe8a0');
-  fillRect(g, { x: 26, y: 28, w: 10, h: 10 }, Palette.neonCyan);
-  fillRect(g, { x: 28, y: 30, w: 6, h: 6 }, '#a0fff8');
-  if (wide) fillRect(g, { x: 40, y: 28, w: 8, h: 8 }, Palette.windowLit);
-  fillRect(g, { x: 18, y: h - 22, w: 12, h: 18 }, '#100818');
-  fillRect(g, { x: 26, y: h - 14, w: 2, h: 2 }, Palette.gold);
-  if (style % 2 === 0) {
-    fillRect(g, { x: 10, y: 2, w: 12, h: 8 }, '#4a6070');
-    fillRect(g, { x: 11, y: 3, w: 10, h: 2 }, '#7ab');
-  }
+  paintFavelaWindows(g, style, storeys, wide);
+  paintFavelaRoofProps(g, style, w, h);
   return g;
 }
 
+function paintFavelaWindows(
+  g: PixelGrid,
+  style: number,
+  storeys: number,
+  wide: boolean,
+): void {
+  const winColors = [
+    Palette.windowLit,
+    Palette.neonCyan,
+    Palette.gold,
+    Palette.neonMagenta,
+  ];
+  for (let s = 0; s < storeys; s += 1) {
+    const wy = 26 + s * 20;
+    const wx0 = 8 + (style % 3);
+    const c0 = winColors[(style + s) % winColors.length]!;
+    const c1 = winColors[(style + s + 1) % winColors.length]!;
+    fillRect(g, { x: wx0, y: wy, w: 9, h: 9 }, c0);
+    fillRect(g, { x: wx0 + 2, y: wy + 2, w: 5, h: 5 }, '#ffe8a088');
+    fillRect(g, { x: wx0 + 14, y: wy, w: 9, h: 9 }, c1);
+    fillRect(g, { x: wx0 + 16, y: wy + 2, w: 5, h: 5 }, '#a0fff888');
+    if (wide) fillRect(g, { x: wx0 + 28, y: wy + 1, w: 7, h: 7 }, c0);
+  }
+}
+
+function paintFavelaRoofProps(g: PixelGrid, style: number, w: number, h: number): void {
+  fillRect(g, { x: 16, y: h - 22, w: 12, h: 18 }, '#100818');
+  fillRect(g, { x: 24, y: h - 14, w: 2, h: 2 }, Palette.gold);
+  if (style % 2 === 0) {
+    fillRect(g, { x: 10, y: 2, w: 12, h: 8 }, '#4a6070');
+    fillRect(g, { x: 11, y: 3, w: 10, h: 2 }, '#7ab');
+    return;
+  }
+  fillRect(g, { x: w - 20, y: 4, w: 10, h: 6 }, '#3a4858');
+  fillRect(g, { x: w - 18, y: 1, w: 2, h: 8 }, '#889');
+}
+
 function stall(style: number): PixelGrid {
-  const w = 56;
-  const h = 52;
+  const w = 48 + (style % 4) * 4;
+  const h = 48 + (style % 3) * 4;
   const g = empty(w, h, 'transparent');
   const awning = [
     Palette.brasilYellow,
@@ -414,19 +457,27 @@ function stall(style: number): PixelGrid {
     '#e050a0',
     '#40c070',
   ][style % 8]!;
-  fillRect(g, { x: 12, y: 28, w: 38, h: 20 }, Palette.shadow);
-  fillRect(g, { x: 4, y: 24, w: 36, h: 22 }, Palette.botecoWood);
-  fillRect(g, { x: 4, y: 24, w: 3, h: 22 }, '#00000055');
-  fillRect(g, { x: 40, y: 26, w: 8, h: 20 }, '#00000066');
-  for (let i = 0; i < 10; i += 1) {
-    fillRect(g, { x: 2 + i * 4, y: 8, w: 4, h: 18 }, i % 2 === 0 ? awning : '#1a1020');
+  const bodyW = w - 12;
+  fillRect(g, { x: 10, y: h - 24, w: bodyW, h: 18 }, Palette.shadow);
+  fillRect(g, { x: 4, y: h - 28, w: bodyW - 4, h: 22 }, Palette.botecoWood);
+  fillRect(g, { x: 4, y: h - 28, w: 3, h: 22 }, '#00000055');
+  fillRect(g, { x: w - 12, y: h - 26, w: 8, h: 20 }, '#00000066');
+  const stripes = Math.floor((w - 4) / 4);
+  for (let i = 0; i < stripes; i += 1) {
+    fillRect(
+      g,
+      { x: 2 + i * 4, y: 6, w: 4, h: h - 34 },
+      i % 2 === 0 ? awning : '#1a1020',
+    );
   }
-  fillRect(g, { x: 40, y: 10, w: 10, h: 16 }, awning);
-  fillRect(g, { x: 6, y: 24, w: 2, h: 5 }, '#889');
-  fillRect(g, { x: 36, y: 24, w: 2, h: 5 }, '#889');
-  fillRect(g, { x: 12, y: 32, w: 8, h: 8 }, Palette.windowLit);
-  fillRect(g, { x: 24, y: 32, w: 8, h: 8 }, Palette.gold);
-  fillRect(g, { x: 14, y: 42, w: 16, h: 3 }, '#1a1008');
+  fillRect(g, { x: w - 14, y: 8, w: 10, h: 14 }, awning);
+  fillRect(g, { x: 8, y: h - 20, w: 7, h: 7 }, Palette.windowLit);
+  fillRect(
+    g,
+    { x: 20, y: h - 20, w: 7, h: 7 },
+    style % 2 ? Palette.gold : Palette.neonCyan,
+  );
+  fillRect(g, { x: 12, y: h - 8, w: 14, h: 3 }, '#1a1008');
   return g;
 }
 
