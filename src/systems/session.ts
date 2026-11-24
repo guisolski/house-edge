@@ -417,7 +417,11 @@ export class GameSession {
     if (!canAfford(this.player.getStats().credits, stake)) return false;
     const losses = this.lossesByBet.get(bet.id) ?? 0;
     this.player.addCredits(-stake);
-    const result = resolveBet(bet, this.rng, stake, losses, this.upgrades.luckBonus());
+    const result = resolveBet(bet, this.rng, {
+      stake,
+      consecutiveLosses: losses,
+      luckBonus: this.upgrades.luckBonus(),
+    });
     this.player.addCredits(result.payout);
     const rep =
       (result.won ? bet.reputationDeltaWin : bet.reputationDeltaLose) +

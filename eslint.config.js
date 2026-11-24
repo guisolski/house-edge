@@ -59,6 +59,7 @@ export default tseslint.config(
         { max: 120, skipBlankLines: true, skipComments: true },
       ],
       complexity: ['error', 18],
+      'max-depth': ['error', 5],
     },
   },
   {

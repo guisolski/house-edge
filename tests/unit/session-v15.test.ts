@@ -12,7 +12,6 @@ class MemoryStorage {
     this.data.set(key, value);
   }
   removeItem(key: string): void {
-    this.data.removeItem?.(key);
     this.data.delete(key);
   }
 }

@@ -41,13 +41,10 @@ export function resolveBet(
   opts: ResolveOpts | number = {},
 ): BetResult {
   const o: ResolveOpts = typeof opts === 'number' ? { stake: opts } : opts;
-  return rollBet(
-    bet,
-    rng,
-    o.stake ?? bet.stake,
-    o.consecutiveLosses ?? 0,
-    o.luckBonus ?? 0,
-  );
+  return rollBet(bet, rng, o.stake ?? bet.stake, {
+    losses: o.consecutiveLosses ?? 0,
+    luck: o.luckBonus ?? 0,
+  });
 }
 
 function rollBet(

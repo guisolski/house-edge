@@ -57,8 +57,7 @@ describe('betting', () => {
     const win = resolveBet(
       { ...pixo, odds: { numerator: 1, denominator: 1 }, houseEdge: 0 },
       createRng(1),
-      10,
-      5,
+      { stake: 10, consecutiveLosses: 5 },
     );
     expect(typeof win.won).toBe('boolean');
     expect(formatWinChance(pixo.odds, pixo.houseEdge, 2, true)).toMatch(/%$/);
