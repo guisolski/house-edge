@@ -8,18 +8,18 @@ Independent check against v1.8.0 feedback (art 5/10, bugs 4–8).
 
 ## Before → After
 
-| Item | v1.8 / ask | v1.9 result |
-| --- | --- | --- |
-| Morro height | Flat bands | Blocked 3-row cliff faces + dark brick overlays + central 4-tile stairs spine. Height reads more, but faces still compete with neon accents / house sprites — not a full “favela step” look. |
-| Left window column | Full-height cyan/yellow strip | Solid edge wall + brick blocked fill; left cyan residue ≈0 in pixel sample. Residual vertical accents can still read as a strip. |
-| Fair ground | Speckled plaza + yellow-window bands | Plaza fill + quiet feira asphalt (no yellow lane hatch). Stalls still share a base silhouette (awning recolors/size variants only). |
-| Sprite repetition | High | Building flips + style recolors + stall size variants. Still repetitive at a glance. |
-| Camera north | Player half off-screen | Camera Y pad ≈ half viewport; north shot shows map void above while player stays on-screen. |
-| E range / prompt | ~50px / Nobody in range | `INTERACT_RANGE=3.5`; on-screen `E (Name)` when in range. |
-| NPC collision | Inconsistent | All NPCs non-blocking (walk-through). |
-| Side Jobs Close | Closed everything | Esc → Side Jobs → Close returns to **Menu**. |
-| ATM vs story | Side bet stole E | Story-available NPCs preferred; ATM moved to (38,17); incomplete beats no longer fall through to rematch. |
-| Story length | Toward ~20 min | Extra dialogue + `avenida-radar` beat via Mensageiro. |
+| Item               | v1.8 / ask                           | v1.9 result                                                                                                                                                                                  |
+| ------------------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Morro height       | Flat bands                           | Blocked 3-row cliff faces + dark brick overlays + central 4-tile stairs spine. Height reads more, but faces still compete with neon accents / house sprites — not a full “favela step” look. |
+| Left window column | Full-height cyan/yellow strip        | Solid edge wall + brick blocked fill; left cyan residue ≈0 in pixel sample. Residual vertical accents can still read as a strip.                                                             |
+| Fair ground        | Speckled plaza + yellow-window bands | Plaza fill + quiet feira asphalt (no yellow lane hatch). Stalls still share a base silhouette (awning recolors/size variants only).                                                          |
+| Sprite repetition  | High                                 | Building flips + style recolors + stall size variants. Still repetitive at a glance.                                                                                                         |
+| Camera north       | Player half off-screen               | Camera Y pad ≈ half viewport; north shot shows map void above while player stays on-screen.                                                                                                  |
+| E range / prompt   | ~50px / Nobody in range              | `INTERACT_RANGE=3.5`; on-screen `E (Name)` when in range.                                                                                                                                    |
+| NPC collision      | Inconsistent                         | All NPCs non-blocking (walk-through).                                                                                                                                                        |
+| Side Jobs Close    | Closed everything                    | Esc → Side Jobs → Close returns to **Menu**.                                                                                                                                                 |
+| ATM vs story       | Side bet stole E                     | Story-available NPCs preferred; ATM moved to (38,17); incomplete beats no longer fall through to rematch.                                                                                    |
+| Story length       | Toward ~20 min                       | Extra dialogue + `avenida-radar` beat via Mensageiro.                                                                                                                                        |
 
 ## Automated
 
