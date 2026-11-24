@@ -181,6 +181,7 @@ export function paintJobs(
 ): void {
   clearNode(panel);
   panel.appendChild(el('h2', '', UI.grind));
+  panel.appendChild(el('p', 'hint', '[SAFE] = flat pay · [BET] = opens a wager panel'));
   const s = session.player.getStats();
   const jobs = listJobs(s.districtId, s.reputation);
   if (!jobs.length) panel.appendChild(el('p', '', UI.noJobs));

@@ -10,27 +10,26 @@ type Rect = { x: number; y: number; w: number; h: number };
 
 export type TileDistrict = 'morro' | 'feira' | 'avenida' | 'torre' | 'default';
 
-/** LD-5: readable 3/4 player (~40px tall) with idle bob / walk cycle. */
+/** LD-5: readable 3/4 player (~1.5× prior) with idle bob / walk cycle. */
 export function makePlayerSprite(frame = 0): PixelGrid {
-  const g = empty(22, 38, 'transparent');
+  const g = empty(32, 54, 'transparent');
   const bob = frame % 2;
   const y0 = bob;
-  // hair / face
-  fillRect(g, { x: 7, y: 2 + y0, w: 8, h: 8 }, Palette.brasilYellow);
-  fillRect(g, { x: 6, y: 3 + y0, w: 10, h: 2 }, '#c4a020');
-  fillRect(g, { x: 8, y: 5 + y0, w: 2, h: 2 }, '#1a1020');
-  fillRect(g, { x: 12, y: 5 + y0, w: 2, h: 2 }, '#1a1020');
-  if (bob === 0) fillRect(g, { x: 9, y: 8 + y0, w: 4, h: 1 }, '#c45a7a');
-  fillRect(g, { x: 5, y: 10 + y0, w: 13, h: 11 }, Palette.neonMagenta);
-  fillRect(g, { x: 7, y: 11 + y0, w: 9, h: 4 }, Palette.brasilBlue);
-  fillRect(g, { x: 6, y: 15 + y0, w: 11, h: 1 }, Palette.brasilYellow);
-  fillRect(g, { x: 2, y: 11 + y0 + bob, w: 3, h: 8 }, Palette.neonMagenta);
-  fillRect(g, { x: 17, y: 11 + y0 + (1 - bob), w: 3, h: 8 }, Palette.neonMagenta);
+  fillRect(g, { x: 10, y: 2 + y0, w: 12, h: 12 }, Palette.brasilYellow);
+  fillRect(g, { x: 9, y: 3 + y0, w: 14, h: 3 }, '#c4a020');
+  fillRect(g, { x: 12, y: 7 + y0, w: 3, h: 3 }, '#1a1020');
+  fillRect(g, { x: 18, y: 7 + y0, w: 3, h: 3 }, '#1a1020');
+  if (bob === 0) fillRect(g, { x: 13, y: 11 + y0, w: 6, h: 2 }, '#c45a7a');
+  fillRect(g, { x: 8, y: 14 + y0, w: 16, h: 16 }, Palette.neonMagenta);
+  fillRect(g, { x: 10, y: 16 + y0, w: 12, h: 5 }, Palette.brasilBlue);
+  fillRect(g, { x: 9, y: 22 + y0, w: 14, h: 2 }, Palette.brasilYellow);
+  fillRect(g, { x: 3, y: 16 + y0 + bob, w: 5, h: 12 }, Palette.neonMagenta);
+  fillRect(g, { x: 24, y: 16 + y0 + (1 - bob), w: 5, h: 12 }, Palette.neonMagenta);
   const leg = bob;
-  fillRect(g, { x: 6 + leg, y: 21 + y0, w: 4, h: 11 }, '#1a2040');
-  fillRect(g, { x: 12 - leg, y: 21 + y0, w: 4, h: 11 }, '#1a2040');
-  fillRect(g, { x: 6 + leg, y: 31 + y0, w: 4, h: 4 }, '#0a0a12');
-  fillRect(g, { x: 12 - leg, y: 31 + y0, w: 4, h: 4 }, '#0a0a12');
+  fillRect(g, { x: 10 + leg, y: 30 + y0, w: 5, h: 16 }, '#1a2040');
+  fillRect(g, { x: 18 - leg, y: 30 + y0, w: 5, h: 16 }, '#1a2040');
+  fillRect(g, { x: 10 + leg, y: 45 + y0, w: 5, h: 5 }, '#0a0a12');
+  fillRect(g, { x: 18 - leg, y: 45 + y0, w: 5, h: 5 }, '#0a0a12');
   return g;
 }
 
@@ -42,26 +41,26 @@ function paintNpcHead(
   y0: number,
 ): void {
   if (npcId === 'dona-nair') {
-    fillRect(g, { x: 6, y: headY + y0, w: 10, h: 3 }, '#1faa5a');
-    fillRect(g, { x: 7, y: headY + 3 + y0, w: 8, h: 7 }, accent);
+    fillRect(g, { x: 9, y: headY + y0, w: 14, h: 4 }, '#1faa5a');
+    fillRect(g, { x: 10, y: headY + 4 + y0, w: 12, h: 10 }, accent);
     return;
   }
   if (npcId === 'capita') {
-    fillRect(g, { x: 5, y: headY + y0, w: 12, h: 4 }, '#1a2810');
-    fillRect(g, { x: 7, y: headY + 3 + y0, w: 8, h: 6 }, accent);
+    fillRect(g, { x: 8, y: headY + y0, w: 16, h: 5 }, '#1a2810');
+    fillRect(g, { x: 10, y: headY + 4 + y0, w: 12, h: 9 }, accent);
     return;
   }
   if (npcId === 'luna' || npcId === 'luna-feira') {
-    fillRect(g, { x: 6, y: headY + y0, w: 10, h: 9 }, '#141828');
-    fillRect(g, { x: 8, y: headY + 2 + y0, w: 6, h: 5 }, accent);
+    fillRect(g, { x: 9, y: headY + y0, w: 14, h: 12 }, '#141828');
+    fillRect(g, { x: 12, y: headY + 3 + y0, w: 8, h: 7 }, accent);
     return;
   }
   if (npcId === 'ceo') {
-    fillRect(g, { x: 7, y: headY + y0, w: 8, h: 7 }, '#2a1020');
-    fillRect(g, { x: 6, y: headY + 1 + y0, w: 10, h: 2 }, '#1a0818');
+    fillRect(g, { x: 10, y: headY + y0, w: 12, h: 10 }, '#2a1020');
+    fillRect(g, { x: 9, y: headY + 1 + y0, w: 14, h: 3 }, '#1a0818');
     return;
   }
-  fillRect(g, { x: 7, y: headY + y0, w: 8, h: 7 }, accent);
+  fillRect(g, { x: 10, y: headY + y0, w: 12, h: 10 }, accent);
 }
 
 function npcCoat(npcId: string | undefined): string {
@@ -74,7 +73,7 @@ type NpcLayout = { tall: boolean; headY: number; bodyY: number; legY: number };
 
 function npcLayout(npcId: string | undefined): NpcLayout {
   const tall = npcId === 'seu-ze' || npcId === 'ceo';
-  return { tall, headY: tall ? 1 : 2, bodyY: tall ? 11 : 10, legY: tall ? 23 : 21 };
+  return { tall, headY: tall ? 1 : 2, bodyY: tall ? 15 : 14, legY: tall ? 32 : 30 };
 }
 
 function paintNpcBody(
@@ -86,29 +85,29 @@ function paintNpcBody(
   bob: number,
 ): void {
   const coat = npcCoat(npcId);
-  const h = layout.tall ? 12 : 10;
-  fillRect(g, { x: 5, y: layout.bodyY + y0, w: 13, h }, coat);
-  fillRect(g, { x: 6, y: layout.bodyY + 2 + y0, w: 11, h: 2 }, accent);
-  fillRect(g, { x: 2, y: layout.bodyY + 1 + y0 + bob, w: 3, h: 7 }, coat);
-  fillRect(g, { x: 17, y: layout.bodyY + 1 + y0 + (1 - bob), w: 3, h: 7 }, coat);
-  fillRect(g, { x: 6 + bob, y: layout.legY + y0, w: 4, h }, Palette.asphalt);
-  fillRect(g, { x: 12 - bob, y: layout.legY + y0, w: 4, h }, Palette.asphalt);
+  const h = layout.tall ? 16 : 14;
+  fillRect(g, { x: 8, y: layout.bodyY + y0, w: 16, h }, coat);
+  fillRect(g, { x: 9, y: layout.bodyY + 3 + y0, w: 14, h: 3 }, accent);
+  fillRect(g, { x: 3, y: layout.bodyY + 1 + y0 + bob, w: 5, h: 10 }, coat);
+  fillRect(g, { x: 24, y: layout.bodyY + 1 + y0 + (1 - bob), w: 5, h: 10 }, coat);
+  fillRect(g, { x: 10 + bob, y: layout.legY + y0, w: 5, h: 16 }, Palette.asphalt);
+  fillRect(g, { x: 18 - bob, y: layout.legY + y0, w: 5, h: 16 }, Palette.asphalt);
   if (npcId === 'bia')
-    fillRect(g, { x: 5, y: layout.bodyY - 1 + y0, w: 13, h: 2 }, Palette.neonMagenta);
+    fillRect(g, { x: 8, y: layout.bodyY - 1 + y0, w: 16, h: 3 }, Palette.neonMagenta);
 }
 
 export function makeNpcSprite(accent: string, frame = 0, npcId?: string): PixelGrid {
   const layout = npcLayout(npcId);
-  const g = empty(22, layout.tall ? 42 : 38, 'transparent');
+  const g = empty(32, layout.tall ? 58 : 54, 'transparent');
   const bob = frame % 2;
   const y0 = bob;
 
   paintNpcHead(g, accent, npcId, layout.headY, y0);
-  fillRect(g, { x: 8, y: layout.headY + 4 + y0, w: 2, h: bob === 0 ? 2 : 1 }, '#111018');
-  fillRect(g, { x: 12, y: layout.headY + 4 + y0, w: 2, h: bob === 0 ? 2 : 1 }, '#111018');
+  fillRect(g, { x: 12, y: layout.headY + 5 + y0, w: 3, h: bob === 0 ? 3 : 1 }, '#111018');
+  fillRect(g, { x: 18, y: layout.headY + 5 + y0, w: 3, h: bob === 0 ? 3 : 1 }, '#111018');
   paintNpcBody(g, accent, npcId, layout, y0, bob);
   if (npcId === 'seu-ze')
-    fillRect(g, { x: 8, y: layout.headY - 1 + y0, w: 6, h: 2 }, '#4a3820');
+    fillRect(g, { x: 11, y: layout.headY - 1 + y0, w: 10, h: 3 }, '#4a3820');
   return g;
 }
 
@@ -144,10 +143,9 @@ export function makeAsphalt(variant: TileDistrict = 'default'): PixelGrid {
   for (let i = 0; i < 16; i += 3) {
     fillRect(g, { x: 0, y: i, w: 16, h: 1 }, Palette.asphalt);
   }
-  fillRect(g, { x: 7, y: 0, w: 2, h: 16 }, Palette.asphaltLine);
-  for (let i = 0; i < 16; i += 5) {
-    fillRect(g, { x: 7, y: i, w: 2, h: 2 }, Palette.brasilYellow);
-  }
+  fillRect(g, { x: 7, y: 0, w: 2, h: 16 }, '#ffffff10');
+  fillRect(g, { x: 7, y: 4, w: 2, h: 2 }, Palette.brasilYellow);
+  fillRect(g, { x: 7, y: 12, w: 2, h: 2 }, Palette.brasilYellow);
   fillRect(g, { x: 1, y: 3, w: 1, h: 1 }, '#2a2a40');
   fillRect(g, { x: 14, y: 10, w: 1, h: 1 }, '#101018');
   paintAsphaltVariant(g, variant);
@@ -174,33 +172,23 @@ export function makeSidewalk(variant: TileDistrict = 'default'): PixelGrid {
 }
 
 export function makeAlley(variant: TileDistrict = 'default'): PixelGrid {
-  const g = empty(16, 16, variant === 'torre' ? '#180c18' : '#0c0c14');
+  // Quiet hillside / service lane — no bar/window-dot fills.
+  const g = empty(16, 16, variant === 'torre' ? '#180c18' : '#12141c');
   fillRect(g, { x: 0, y: 14, w: 16, h: 2 }, Palette.plantDark);
-  fillRect(
-    g,
-    { x: 2, y: 2, w: 2, h: 2 },
-    variant === 'morro' ? Palette.neonMagenta : '#334',
-  );
-  fillRect(g, { x: 11, y: 6, w: 3, h: 1 }, Palette.pixo);
-  fillRect(g, { x: 4, y: 10, w: 8, h: 1 }, '#2a2040');
-  if (variant === 'morro') {
-    for (let x = 0; x < 16; x += 4) {
-      fillRect(g, { x, y: 1, w: 1, h: 12 }, '#445');
-    }
-  }
+  fillRect(g, { x: 3, y: 5, w: 1, h: 1 }, '#2a2a38');
+  fillRect(g, { x: 11, y: 9, w: 1, h: 1 }, '#222830');
   return g;
 }
 
 function makeFeiraPlaza(): PixelGrid {
-  // Soft cobble — avoid barcode stripes that wash out UI text.
+  // Quiet paved plaza — no polka-dot filler.
   const g = empty(16, 16, '#1c1c28');
-  for (let y = 0; y < 16; y += 4) {
-    for (let x = 0; x < 16; x += 4) {
-      fillRect(g, { x, y, w: 3, h: 3 }, '#282838');
-      fillRect(g, { x: x + 1, y: y + 1, w: 1, h: 1 }, '#3a3a4a');
-    }
-  }
-  fillRect(g, { x: 0, y: 7, w: 16, h: 1 }, '#2bfff222');
+  fillRect(g, { x: 0, y: 0, w: 16, h: 1 }, '#282838');
+  fillRect(g, { x: 0, y: 15, w: 16, h: 1 }, '#282838');
+  fillRect(g, { x: 0, y: 0, w: 1, h: 16 }, '#282838');
+  fillRect(g, { x: 15, y: 0, w: 1, h: 16 }, '#282838');
+  fillRect(g, { x: 4, y: 8, w: 1, h: 1 }, '#2a2a38');
+  fillRect(g, { x: 11, y: 5, w: 1, h: 1 }, '#2a2a38');
   return g;
 }
 
@@ -240,20 +228,53 @@ export function makeGrass(): PixelGrid {
   return g;
 }
 
-export function makeBlocked(variant: TileDistrict = 'default'): PixelGrid {
-  const g = empty(16, 16, '#0a0810');
-  const brick =
-    variant === 'torre' ? '#1a1020' : variant === 'morro' ? '#2a2830' : '#181620';
-  for (let y = 0; y < 16; y += 4) {
-    fillRect(g, { x: 0, y, w: 16, h: 3 }, brick);
-    fillRect(g, { x: 0, y: y + 3, w: 16, h: 1 }, '#0a0814');
+function blockedWallColor(variant: TileDistrict): string {
+  if (variant === 'torre') return '#1a1020';
+  if (variant === 'morro') return '#2a2430';
+  if (variant === 'feira') return '#241c18';
+  return '#181e28';
+}
+
+function paintBlockedFacade(g: PixelGrid, variant: TileDistrict): void {
+  if (variant === 'morro') {
+    fillRect(g, { x: 2, y: 4, w: 5, h: 5 }, Palette.windowLit);
+    fillRect(g, { x: 9, y: 4, w: 5, h: 5 }, Palette.neonCyan);
+    fillRect(g, { x: 5, y: 10, w: 6, h: 4 }, '#100818');
+    return;
+  }
+  if (variant === 'feira') {
+    fillRect(g, { x: 1, y: 2, w: 14, h: 3 }, Palette.brasilYellow);
+    fillRect(g, { x: 3, y: 8, w: 4, h: 4 }, Palette.windowLit);
+    fillRect(g, { x: 9, y: 8, w: 4, h: 4 }, Palette.gold);
+    return;
   }
   if (variant === 'torre') {
     fillRect(g, { x: 0, y: 0, w: 16, h: 1 }, Palette.gold);
-    fillRect(g, { x: 0, y: 15, w: 16, h: 1 }, Palette.gold);
-  } else if (variant === 'morro') {
-    fillRect(g, { x: 1, y: 2, w: 14, h: 1 }, '#667');
+    fillRect(g, { x: 3, y: 5, w: 10, h: 6 }, Palette.neonMagenta);
+    return;
   }
+  fillRect(g, { x: 2, y: 3, w: 12, h: 2 }, Palette.neonCyan);
+  fillRect(g, { x: 3, y: 7, w: 10, h: 6 }, '#2a4060');
+}
+
+export function makeBlocked(variant: TileDistrict = 'default'): PixelGrid {
+  // Solid facade / wall face — not brick window-dot filler.
+  const g = empty(16, 16, blockedWallColor(variant));
+  fillRect(g, { x: 0, y: 0, w: 16, h: 2 }, '#00000044');
+  fillRect(g, { x: 0, y: 14, w: 16, h: 2 }, Palette.shadow);
+  paintBlockedFacade(g, variant);
+  return g;
+}
+
+/** Terrace retaining lip: front face + drop shadow below. */
+export function makeRetainingWall(): PixelGrid {
+  const g = empty(16, 20, 'transparent');
+  fillRect(g, { x: 0, y: 0, w: 16, h: 6 }, '#3a3848');
+  fillRect(g, { x: 0, y: 0, w: 16, h: 2 }, '#5a5868');
+  fillRect(g, { x: 0, y: 6, w: 16, h: 8 }, '#1a1820');
+  fillRect(g, { x: 0, y: 14, w: 16, h: 6 }, Palette.shadow);
+  fillRect(g, { x: 1, y: 8, w: 2, h: 2 }, Palette.neonMagenta);
+  fillRect(g, { x: 12, y: 9, w: 2, h: 2 }, Palette.neonCyan);
   return g;
 }
 
@@ -314,108 +335,138 @@ export function makeBuilding(
   return corpBlock(style);
 }
 
+function paintFavelaShell(
+  g: PixelGrid,
+  wall: string,
+  roof: string,
+  fw: number,
+  fh: number,
+  w: number,
+): void {
+  fillRect(g, { x: 10, y: 24, w: fw, h: fh }, Palette.shadow);
+  fillRect(g, { x: 4, y: 20, w: fw, h: fh }, wall);
+  fillRect(g, { x: 4, y: 20, w: 3, h: fh }, '#00000055');
+  fillRect(g, { x: 4 + fw, y: 22, w: 8, h: fh - 2 }, '#00000066');
+  fillRect(g, { x: 2, y: 10, w: fw + 4, h: 12 }, roof);
+  fillRect(g, { x: fw, y: 12, w: 12, h: 10 }, roof);
+  for (let i = 0; i < 10; i += 1) {
+    fillRect(g, { x: 2, y: 11 + i, w: fw + 4, h: 1 }, i % 2 ? '#ffffff22' : '#00000033');
+  }
+  fillRect(g, { x: 8, y: 6, w: 18, h: 5 }, '#4a4858');
+  fillRect(g, { x: w - 16, y: 2, w: 2, h: 12 }, '#889');
+  fillRect(g, { x: w - 18, y: 2, w: 6, h: 2 }, Palette.neonLime);
+}
+
 function favelaHouse(style: number): PixelGrid {
-  const g = empty(40, 52, 'transparent');
-  const wall = [Palette.wallWarm, Palette.botecoWood, '#3a2840', '#243040'][style % 4]!;
-  const roof = [Palette.roofPink, Palette.roofCyan, '#c45818', '#6a2a80'][style % 4]!;
-  // drop shadow
-  fillRect(g, { x: 8, y: 22, w: 30, h: 28 }, Palette.shadow);
-  // 3/4 front facade
-  fillRect(g, { x: 4, y: 18, w: 28, h: 30 }, wall);
-  fillRect(g, { x: 4, y: 18, w: 2, h: 30 }, '#00000055');
-  // side face (depth)
-  fillRect(g, { x: 32, y: 20, w: 6, h: 28 }, '#00000066');
-  for (let i = 0; i < 7; i += 1) {
-    fillRect(g, { x: 32, y: 22 + i * 4, w: 6, h: 1 }, '#ffffff11');
-  }
-  // corrugated roof (angled 3/4)
-  fillRect(g, { x: 2, y: 10, w: 34, h: 10 }, roof);
-  fillRect(g, { x: 30, y: 12, w: 8, h: 8 }, roof);
-  for (let i = 0; i < 8; i += 1) {
-    fillRect(g, { x: 2, y: 11 + i, w: 34, h: 1 }, i % 2 ? '#ffffff22' : '#00000033');
-  }
-  // windows + glow
-  fillRect(g, { x: 8, y: 24, w: 7, h: 7 }, Palette.windowLit);
-  fillRect(g, { x: 9, y: 25, w: 5, h: 5 }, '#ffe8a0');
-  fillRect(g, { x: 20, y: 24, w: 7, h: 7 }, Palette.neonCyan);
-  fillRect(g, { x: 21, y: 25, w: 5, h: 5 }, '#a0fff8');
-  // door
-  fillRect(g, { x: 14, y: 34, w: 8, h: 14 }, '#100818');
-  fillRect(g, { x: 19, y: 40, w: 2, h: 2 }, Palette.gold);
-  // water tank + antenna on roof
+  const wide = style % 3 === 0;
+  const tall = style % 2 === 1;
+  const w = wide ? 56 : 48;
+  const h = tall ? 72 : 64;
+  const g = empty(w, h, 'transparent');
+  const wall = [
+    Palette.wallWarm,
+    Palette.botecoWood,
+    '#3a2840',
+    '#243040',
+    '#4a3028',
+    '#2a3848',
+    '#503848',
+    '#283828',
+  ][style % 8]!;
+  const roof = [
+    Palette.roofPink,
+    Palette.roofCyan,
+    '#c45818',
+    '#6a2a80',
+    '#e8a020',
+    '#3080a0',
+    '#a03060',
+    '#4060a0',
+  ][style % 8]!;
+  const fw = w - 14;
+  const fh = h - 28;
+  paintFavelaShell(g, wall, roof, fw, fh, w);
+  fillRect(g, { x: 10, y: 28, w: 10, h: 10 }, Palette.windowLit);
+  fillRect(g, { x: 12, y: 30, w: 6, h: 6 }, '#ffe8a0');
+  fillRect(g, { x: 26, y: 28, w: 10, h: 10 }, Palette.neonCyan);
+  fillRect(g, { x: 28, y: 30, w: 6, h: 6 }, '#a0fff8');
+  if (wide) fillRect(g, { x: 40, y: 28, w: 8, h: 8 }, Palette.windowLit);
+  fillRect(g, { x: 18, y: h - 22, w: 12, h: 18 }, '#100818');
+  fillRect(g, { x: 26, y: h - 14, w: 2, h: 2 }, Palette.gold);
   if (style % 2 === 0) {
-    fillRect(g, { x: 8, y: 4, w: 10, h: 8 }, '#4a6070');
-    fillRect(g, { x: 9, y: 5, w: 8, h: 2 }, '#7ab');
+    fillRect(g, { x: 10, y: 2, w: 12, h: 8 }, '#4a6070');
+    fillRect(g, { x: 11, y: 3, w: 10, h: 2 }, '#7ab');
   }
-  fillRect(g, { x: 28, y: 2, w: 2, h: 10 }, '#889');
-  fillRect(g, { x: 26, y: 2, w: 6, h: 2 }, Palette.neonLime);
   return g;
 }
 
 function stall(style: number): PixelGrid {
-  const g = empty(44, 44, 'transparent');
+  const w = 56;
+  const h = 52;
+  const g = empty(w, h, 'transparent');
   const awning = [
     Palette.brasilYellow,
     Palette.neonMagenta,
     Palette.neonCyan,
     Palette.brasilGreen,
-  ][style % 4]!;
-  // drop shadow
-  fillRect(g, { x: 10, y: 24, w: 30, h: 16 }, Palette.shadow);
-  // counter / booth body
-  fillRect(g, { x: 4, y: 20, w: 28, h: 18 }, Palette.botecoWood);
-  fillRect(g, { x: 4, y: 20, w: 2, h: 18 }, '#00000055');
-  // side depth face
-  fillRect(g, { x: 32, y: 22, w: 6, h: 16 }, '#00000066');
-  // striped awning (3/4)
-  for (let i = 0; i < 8; i += 1) {
-    fillRect(g, { x: 2 + i * 4, y: 8, w: 4, h: 14 }, i % 2 === 0 ? awning : '#1a1020');
+    '#ff8c42',
+    '#4a6cff',
+    '#e050a0',
+    '#40c070',
+  ][style % 8]!;
+  fillRect(g, { x: 12, y: 28, w: 38, h: 20 }, Palette.shadow);
+  fillRect(g, { x: 4, y: 24, w: 36, h: 22 }, Palette.botecoWood);
+  fillRect(g, { x: 4, y: 24, w: 3, h: 22 }, '#00000055');
+  fillRect(g, { x: 40, y: 26, w: 8, h: 20 }, '#00000066');
+  for (let i = 0; i < 10; i += 1) {
+    fillRect(g, { x: 2 + i * 4, y: 8, w: 4, h: 18 }, i % 2 === 0 ? awning : '#1a1020');
   }
-  fillRect(g, { x: 30, y: 10, w: 8, h: 12 }, awning);
-  // poles
-  fillRect(g, { x: 5, y: 20, w: 2, h: 4 }, '#889');
-  fillRect(g, { x: 29, y: 20, w: 2, h: 4 }, '#889');
-  // goods / windows
-  fillRect(g, { x: 10, y: 26, w: 6, h: 6 }, Palette.windowLit);
-  fillRect(g, { x: 20, y: 26, w: 6, h: 6 }, Palette.gold);
+  fillRect(g, { x: 40, y: 10, w: 10, h: 16 }, awning);
+  fillRect(g, { x: 6, y: 24, w: 2, h: 5 }, '#889');
+  fillRect(g, { x: 36, y: 24, w: 2, h: 5 }, '#889');
+  fillRect(g, { x: 12, y: 32, w: 8, h: 8 }, Palette.windowLit);
+  fillRect(g, { x: 24, y: 32, w: 8, h: 8 }, Palette.gold);
+  fillRect(g, { x: 14, y: 42, w: 16, h: 3 }, '#1a1008');
   return g;
 }
 
 function glassTower(style: number): PixelGrid {
-  const g = empty(40, 68, 'transparent');
-  fillRect(g, { x: 14, y: 14, w: 22, h: 50 }, Palette.shadow);
-  fillRect(g, { x: 6, y: 10, w: 24, h: 52 }, Palette.concrete);
-  fillRect(g, { x: 30, y: 12, w: 6, h: 50 }, '#00000066');
+  const w = style % 2 ? 56 : 48;
+  const h = style % 3 === 0 ? 96 : 80;
+  const g = empty(w, h, 'transparent');
+  fillRect(g, { x: 14, y: 16, w: w - 20, h: h - 20 }, Palette.shadow);
+  fillRect(g, { x: 6, y: 12, w: w - 20, h: h - 16 }, Palette.concrete);
+  fillRect(g, { x: w - 14, y: 14, w: 8, h: h - 18 }, '#00000066');
   fillRect(
     g,
-    { x: 4, y: 4, w: 28, h: 8 },
+    { x: 4, y: 4, w: w - 16, h: 10 },
     style % 2 ? Palette.neonCyan : Palette.neonMagenta,
   );
   fillRect(
     g,
-    { x: 30, y: 6, w: 8, h: 6 },
+    { x: w - 14, y: 6, w: 10, h: 8 },
     style % 2 ? Palette.neonCyan : Palette.neonMagenta,
   );
-  for (let y = 14; y < 56; y += 6) {
-    fillRect(g, { x: 8, y, w: 20, h: 3 }, '#3a80a0');
-    fillRect(g, { x: 8, y: y + 2, w: 20, h: 1 }, '#1a3040');
+  for (let y = 16; y < h - 20; y += 7) {
+    fillRect(g, { x: 10, y, w: w - 28, h: 4 }, '#3a80a0');
+    fillRect(g, { x: 10, y: y + 3, w: w - 28, h: 1 }, '#1a3040');
   }
-  fillRect(g, { x: 14, y: 50, w: 8, h: 12 }, '#08060e');
+  fillRect(g, { x: Math.floor(w / 2) - 6, y: h - 22, w: 12, h: 16 }, '#08060e');
   return g;
 }
 
 function corpBlock(style: number): PixelGrid {
-  const g = empty(52, 60, 'transparent');
-  fillRect(g, { x: 12, y: 18, w: 36, h: 38 }, Palette.shadow);
-  fillRect(g, { x: 4, y: 12, w: 36, h: 40 }, style % 2 ? '#1a1028' : '#121828');
-  fillRect(g, { x: 40, y: 14, w: 6, h: 38 }, '#00000066');
-  fillRect(g, { x: 2, y: 6, w: 40, h: 8 }, Palette.neonMagenta);
-  fillRect(g, { x: 40, y: 8, w: 8, h: 6 }, Palette.neonMagenta);
-  for (let y = 16; y < 48; y += 8) {
-    fillRect(g, { x: 8, y, w: 10, h: 5 }, Palette.neonCyan);
-    fillRect(g, { x: 26, y, w: 10, h: 5 }, Palette.windowLit);
+  const g = empty(64, 72, 'transparent');
+  fillRect(g, { x: 14, y: 20, w: 44, h: 48 }, Palette.shadow);
+  fillRect(g, { x: 4, y: 14, w: 44, h: 50 }, style % 2 ? '#1a1028' : '#121828');
+  fillRect(g, { x: 48, y: 16, w: 8, h: 48 }, '#00000066');
+  fillRect(g, { x: 2, y: 6, w: 48, h: 10 }, Palette.neonMagenta);
+  fillRect(g, { x: 48, y: 8, w: 10, h: 8 }, Palette.neonMagenta);
+  for (let y = 18; y < 56; y += 9) {
+    fillRect(g, { x: 10, y, w: 12, h: 6 }, Palette.neonCyan);
+    fillRect(g, { x: 30, y, w: 12, h: 6 }, Palette.windowLit);
   }
-  fillRect(g, { x: 16, y: 40, w: 12, h: 12 }, '#08060e');
+  fillRect(g, { x: 20, y: 48, w: 14, h: 16 }, '#08060e');
   return g;
 }
 

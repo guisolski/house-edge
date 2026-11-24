@@ -23,6 +23,7 @@ import {
   makeNpcSprite,
   makePlayerSprite,
   makePlaza,
+  makeRetainingWall,
   makeSidewalk,
   makeStairs,
   makeStreetLamp,
@@ -35,8 +36,8 @@ const TILE = 16;
 const SCALE = 3;
 const TILE_PX = TILE * SCALE;
 const RAIN_COUNT = 8;
-const MAX_LIGHTS = 6;
-const GLOW_R = 72;
+const MAX_LIGHTS = 4;
+const GLOW_R = 56;
 
 export type WorldView = {
   canvas: HTMLCanvasElement;
@@ -159,10 +160,18 @@ function bakeAll(): Baked {
     ],
     npc: new Map(),
     building: {
-      morro: [0, 1, 2, 3].map((s) => bakeSprite(makeBuilding(s, 'morro'), SCALE)),
-      feira: [0, 1, 2, 3].map((s) => bakeSprite(makeBuilding(s, 'feira'), SCALE)),
-      avenida: [0, 1, 2, 3].map((s) => bakeSprite(makeBuilding(s, 'avenida'), SCALE)),
-      torre: [0, 1, 2, 3].map((s) => bakeSprite(makeBuilding(s, 'torre'), SCALE)),
+      morro: [0, 1, 2, 3, 4, 5, 6, 7].map((s) =>
+        bakeSprite(makeBuilding(s, 'morro'), SCALE),
+      ),
+      feira: [0, 1, 2, 3, 4, 5, 6, 7].map((s) =>
+        bakeSprite(makeBuilding(s, 'feira'), SCALE),
+      ),
+      avenida: [0, 1, 2, 3, 4, 5, 6, 7].map((s) =>
+        bakeSprite(makeBuilding(s, 'avenida'), SCALE),
+      ),
+      torre: [0, 1, 2, 3, 4, 5, 6, 7].map((s) =>
+        bakeSprite(makeBuilding(s, 'torre'), SCALE),
+      ),
     },
     exit: bakeSprite(makeExitPad(), SCALE),
     landmark: new Map([
@@ -214,19 +223,43 @@ function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCa
   const viewCamY = cam.y - pad.padY;
   const district = state.session.world.get(stats.districtId);
   ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = Palette.nightSky;
-  if (district?.color) {
-    ctx.fillStyle = blendVoid(district.color);
-  }
+  ctx.fillStyle = district?.color ? blendVoid(district.color) : Palette.nightSky;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   const layer = state.mapCache?.layer;
   if (layer) ctx.drawImage(layer, -viewCamX, -viewCamY);
   drawActors(ctx, state, frame, viewCamX, viewCamY);
-  drawFewLights(ctx, state, stats.x, stats.y, viewCamX, viewCamY);
-  if ((frame & 1) === 0) drawRain(ctx, frame);
+  paintPlayOverlays({
+    ctx,
+    state,
+    px: stats.x,
+    py: stats.y,
+    camX: viewCamX,
+    camY: viewCamY,
+    frame,
+    map,
+    baked,
+  });
   drawMarker(ctx, state, viewCamX, viewCamY, frame);
   if (showFps) drawFpsOverlay(ctx, sample);
   return cam;
+}
+
+function paintPlayOverlays(o: {
+  ctx: CanvasRenderingContext2D;
+  state: ViewState;
+  px: number;
+  py: number;
+  camX: number;
+  camY: number;
+  frame: number;
+  map: MapDef;
+  baked: Baked;
+}): void {
+  if (o.state.session.ui.is('play')) {
+    drawFewLights(o.ctx, o.state, o.px, o.py, o.camX, o.camY);
+    if ((o.frame & 1) === 0) drawRain(o.ctx, o.frame);
+  }
+  paintSignsScreen(o.ctx, o.map, o.baked, o.camX, o.camY);
 }
 
 function ensureMapCache(state: ViewState, map: MapDef, baked: Baked): void {
@@ -250,13 +283,30 @@ function bakeMapLayer(map: MapDef, baked: Baked): HTMLCanvasElement {
   if (!ctx) return layer;
   ctx.imageSmoothingEnabled = false;
   paintTiles(ctx, map, tiles);
+  paintTerraceEdges(ctx, map);
   paintBuildings(ctx, map, baked);
-  paintSigns(ctx, map, baked);
+  // Signs painted each frame on top — keep cache key warm in bakeAll.
+  for (const s of map.signs) {
+    const key = `${s.label}|${s.color}`;
+    if (!baked.sign.has(key)) baked.sign.set(key, bakeSignWithText(s.label, s.color));
+  }
   paintProps(ctx, map, baked);
   paintLandmark(ctx, map, baked);
   ctx.fillStyle = '#2bfff210';
   ctx.fillRect(0, 0, layer.width, layer.height);
   return layer;
+}
+
+function paintTerraceEdges(ctx: CanvasRenderingContext2D, map: MapDef): void {
+  if (!map.terraceEdges?.length) return;
+  const wall = bakeSprite(makeRetainingWall(), SCALE);
+  for (const y of map.terraceEdges) {
+    for (let x = 1; x < map.width - 1; x += 1) {
+      const kind = tileAt(map, x, y);
+      if (kind === 'stairs' || kind === 'exit') continue;
+      blitImage(ctx, wall, x * TILE_PX, y * TILE_PX + TILE_PX - 8);
+    }
+  }
 }
 
 function paintTiles(
@@ -279,7 +329,13 @@ function paintBuildings(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked
   }
 }
 
-function paintSigns(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): void {
+function paintSignsScreen(
+  ctx: CanvasRenderingContext2D,
+  map: MapDef,
+  baked: Baked,
+  camX: number,
+  camY: number,
+): void {
   for (const s of map.signs) {
     const key = `${s.label}|${s.color}`;
     let img = baked.sign.get(key);
@@ -287,7 +343,7 @@ function paintSigns(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): v
       img = bakeSignWithText(s.label, s.color);
       baked.sign.set(key, img);
     }
-    blitImage(ctx, img, s.x * TILE_PX, s.y * TILE_PX - 28);
+    blitImage(ctx, img, s.x * TILE_PX - camX, s.y * TILE_PX - 28 - camY);
   }
 }
 
@@ -368,6 +424,34 @@ function npcSprite(baked: Baked, npc: WorldNpc, frame: number): HTMLCanvasElemen
   return img;
 }
 
+function drawPlayerMarker(o: {
+  ctx: CanvasRenderingContext2D;
+  x: number;
+  y: number;
+  img: HTMLCanvasElement;
+  camX: number;
+  camY: number;
+  bob: number;
+}): void {
+  const px = o.x * TILE_PX - o.camX + o.img.width / 2;
+  const py = o.y * TILE_PX - o.camY + TILE_PX - 4;
+  o.ctx.strokeStyle = Palette.brasilYellow;
+  o.ctx.lineWidth = 3;
+  o.ctx.beginPath();
+  o.ctx.ellipse(px, py, 18, 8, 0, 0, Math.PI * 2);
+  o.ctx.stroke();
+  o.ctx.fillStyle = '#ffdf0044';
+  o.ctx.fill();
+  const ay = o.y * TILE_PX - o.camY - (o.img.height - TILE_PX) + o.bob - 10;
+  o.ctx.fillStyle = Palette.brasilYellow;
+  o.ctx.beginPath();
+  o.ctx.moveTo(px, ay);
+  o.ctx.lineTo(px - 6, ay - 10);
+  o.ctx.lineTo(px + 6, ay - 10);
+  o.ctx.closePath();
+  o.ctx.fill();
+}
+
 function drawActors(
   ctx: CanvasRenderingContext2D,
   state: ViewState,
@@ -388,15 +472,13 @@ function drawActors(
       img: npcSprite(baked, npc, anim),
     });
   }
-  actors.push({
-    y: stats.y,
-    x: stats.x,
-    img: baked.player[anim]!,
-  });
+  const playerImg = baked.player[anim]!;
+  actors.push({ y: stats.y, x: stats.x, img: playerImg });
   actors.sort((a, b) => a.y - b.y || a.x - b.x);
   const vw = ctx.canvas.width;
   const vh = ctx.canvas.height;
   const bob = Math.sin(frame / 12) * 1.5;
+  drawPlayerMarker({ ctx, x: stats.x, y: stats.y, img: playerImg, camX, camY, bob });
   for (const it of actors) {
     const ox = it.x * TILE_PX - camX;
     const oy = it.y * TILE_PX - camY - (it.img.height - TILE_PX) + bob;

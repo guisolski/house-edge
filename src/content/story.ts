@@ -211,10 +211,31 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     ],
   },
   {
+    id: 'feira-courier',
+    title: 'Calçadão courier tip',
+    districtId: 'feira-central',
+    requiredFlags: ['forro_ok'],
+    setsFlags: ['courier_ok'],
+    dialogue: [
+      {
+        speaker: 'Lavador da Feira',
+        text: 'Party’s loud enough. Luna’s waiting with the pendrive — but militia sniffs USB heat.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Then I need a clean walk to her. Any cover?',
+      },
+      {
+        speaker: 'Lavador da Feira',
+        text: 'Stay on the asphalt strip. Stalls block the side alleys. She’s east of the FEIRA sign.',
+      },
+    ],
+  },
+  {
     id: 'prova-luna',
     title: 'Pendrive on a freela',
     districtId: 'feira-central',
-    requiredFlags: ['forro_ok'],
+    requiredFlags: ['courier_ok'],
     setsFlags: ['unlocked_avenida', 'tem_prova'],
     betId: 'prova-vazamento',
     unlocksDistrict: 'avenida-odds',

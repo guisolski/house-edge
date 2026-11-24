@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] — 2026-11-24
+
+### Changed
+
+- Art v1.8: hillside Morro terraces/retaining walls, bigger 3/4 buildings, player marker + larger characters, signs on top; Feira/Avenida facade edges; no window-dot fills.
+- Bugs: objective uses district/NPC names + redirect toast; Side Jobs [SAFE] / [BET] labels; Feira NPCs on street; bet-panel glow skip for FPS.
+
 ## [1.7.0] — 2026-11-24
 
 ### Changed

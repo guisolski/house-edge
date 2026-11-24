@@ -85,15 +85,16 @@ describe('maps and interaction', () => {
     expect(tileAt(torre, 0, 0)).toBe('blocked');
     expect(tileAt(torre, 0, 13)).toBe('blocked');
     expect(tileAt(torre, 8, 13)).not.toBe('blocked');
-    expect(tileAt(map, 38, 14)).toBe('exit');
+    expect(tileAt(map, 38, 15)).toBe('exit');
     expect(map.buildings.length).toBeGreaterThan(8);
     expect(map.props.length).toBeGreaterThan(5);
     expect(map.signs.every((s) => s.label.length > 2)).toBe(true);
+    expect(map.terraceEdges?.length ?? 0).toBeGreaterThan(0);
     const npcs = districtNpcs();
     const exits = districtExits();
     expect(nearestNpc(npcs, 'morro-neon', 13, 14)?.id).toBe('dona-nair');
     expect(nearestNpc(npcs, 'morro-neon', 0, 0)).toBeNull();
-    expect(nearestExit(exits, 'morro-neon', 38, 14)?.toDistrict).toBe('feira-central');
+    expect(nearestExit(exits, 'morro-neon', 38, 15)?.toDistrict).toBe('feira-central');
     expect(nearestExit(exits, 'morro-neon', 0, 0)).toBeNull();
     expect(inRange({ x: 0, y: 0, tx: 1, ty: 0 })).toBe(true);
   });
@@ -153,7 +154,7 @@ describe('objectives', () => {
       exits,
       unlocked: (id) => id === 'feira-central',
     });
-    expect(travel.text).toContain('Travel');
+    expect(travel.text).toMatch(/Central Fair|Go to/);
     const done = currentObjective({
       beats: STORY_BEATS,
       completed: STORY_BEATS.map((b) => b.id),
@@ -211,7 +212,7 @@ describe('session deep paths', () => {
     const session = new GameSession(10);
     session.startNew();
     session.world.unlock('feira-central');
-    session.player.setPosition(38, 14);
+    session.player.setPosition(38, 15);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
     expect(session.interact()).toBe(true);
     expect(session.player.getStats().districtId).toBe('feira-central');
@@ -247,7 +248,7 @@ describe('session deep paths', () => {
     session.story.setFlag('falou_nair', true);
     session.story.setFlag('antena_ok', true);
     session.story.setFlag('conheceu_luna', true);
-    session.player.setPosition(26, 14);
+    session.player.setPosition(26, 16);
     expect(session.nearbyNpc()?.id).toBe('luna');
     expect(session.interact()).toBe(false);
   });

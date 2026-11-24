@@ -319,6 +319,11 @@ export class GameSession {
     const betId = this.pendingBetAfterDialogue;
     this.pendingBetAfterDialogue = null;
     if (!betId) {
+      // Dialogue-only beat: finish it instead of leaving it hanging.
+      if (this.pendingStoryBeat) {
+        this.finishBeat(this.pendingStoryBeat);
+        this.pendingStoryBeat = null;
+      }
       this.ui.backToPlay();
       return false;
     }
@@ -445,8 +450,9 @@ export class GameSession {
     }
     if (npc.jobBetId) return this.offerBet(npc.jobBetId);
     if (npc.safeJobId) return this.doSafeJob(npc.safeJobId);
+    const tip = this.objective().text;
     this.bus.emit('ui:toast', {
-      message: `${npc.name}: Come back later.`,
+      message: `${npc.name}: Not now — ${tip}`,
       kind: 'info',
     });
     return false;
