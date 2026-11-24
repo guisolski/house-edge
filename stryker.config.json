@@ -13,7 +13,6 @@
     "src/systems/world.ts",
     "src/systems/upgrade.ts",
     "src/systems/save.ts",
-    "src/systems/session.ts",
     "!src/**/*.d.ts"
   ],
   "ignorePatterns": ["dist", "coverage", "reports", "e2e", "docs", "public"],
