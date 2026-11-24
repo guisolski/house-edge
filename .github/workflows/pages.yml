@@ -19,7 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Requires Pages source = GitHub Actions (one-time repo setting).
+      # enablement may fail for GitHub App tokens; continue so a later
+      # run succeeds after the owner enables Pages in Settings.
       - uses: actions/configure-pages@v5
+        continue-on-error: true
         with:
           enablement: true
       - uses: actions/setup-node@v4

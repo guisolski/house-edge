@@ -24,6 +24,13 @@ Live URL: <https://guisolski.github.io/house-edge/>
 
 ## GitHub Pages setup
 
+**One-time owner action required:** open
+[Settings → Pages](https://github.com/guisolski/house-edge/settings/pages)
+and set **Source** to **GitHub Actions**. The Cursor/GitHub App token cannot
+create the Pages site (`403 Resource not accessible by integration`). After
+that, every push to `main` deploys automatically.
+
+
 1. Push to `main` on <https://github.com/guisolski/house-edge>.
 2. In the GitHub repo: **Settings → Pages → Source = GitHub Actions**.
 3. Workflow `.github/workflows/pages.yml` builds and deploys the `dist/` artifact
