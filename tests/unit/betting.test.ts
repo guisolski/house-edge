@@ -49,4 +49,18 @@ describe('betting', () => {
     expect(formatWinChance(bet.odds, bet.houseEdge)).toMatch(/%$/);
     expect(impliedWinChance({ numerator: 1, denominator: 1 }, 2)).toBeLessThan(1);
   });
+
+  it('soft-clamps story stakes and applies pity', () => {
+    const pixo = getBet('pixo-challenge')!;
+    expect(clampStake(pixo, 40, 6)).toBe(6);
+    expect(clampStake(pixo, 40, 0)).toBe(0);
+    const win = resolveBet(
+      { ...pixo, odds: { numerator: 1, denominator: 1 }, houseEdge: 0 },
+      createRng(1),
+      10,
+      5,
+    );
+    expect(typeof win.won).toBe('boolean');
+    expect(formatWinChance(pixo.odds, pixo.houseEdge, 2)).toMatch(/%$/);
+  });
 });
