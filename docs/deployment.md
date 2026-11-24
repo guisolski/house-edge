@@ -22,28 +22,25 @@ BASE_PATH=/house-edge/
 
 Live URL: <https://guisolski.github.io/house-edge/>
 
-## GitHub Pages setup
+## GitHub Pages
 
-**One-time owner action required:** open
-[Settings → Pages](https://github.com/guisolski/house-edge/settings/pages)
-and set **Source** to **GitHub Actions**. The Cursor/GitHub App token cannot
-create the Pages site (`403 Resource not accessible by integration`). After
-that, every push to `main` deploys automatically.
+GitHub Pages is **enabled** on
+[guisolski/house-edge](https://github.com/guisolski/house-edge)
+with **Source = GitHub Actions**.
 
+Every push to `main` (or a manual `workflow_dispatch`) builds with
+`BASE_PATH=/house-edge/` and deploys via
+`.github/workflows/pages.yml` using `actions/configure-pages`,
+`actions/upload-pages-artifact`, and `actions/deploy-pages`.
 
-1. Push to `main` on <https://github.com/guisolski/house-edge>.
-2. In the GitHub repo: **Settings → Pages → Source = GitHub Actions**.
-3. Workflow `.github/workflows/pages.yml` builds and deploys the `dist/` artifact
-   using `actions/configure-pages`, `actions/upload-pages-artifact`, and `actions/deploy-pages`.
-4. Site URL: <https://guisolski.github.io/house-edge/>
-
-Manual dispatch is enabled (`workflow_dispatch`).
+Site URL: <https://guisolski.github.io/house-edge/>
 
 ```bash
 make deploy
 ```
 
-`make deploy` builds the static site and prints the Pages instructions (actual publish is the Actions workflow).
+`make deploy` builds the static site locally and prints Pages instructions
+(actual publish is the Actions workflow).
 
 ## Optional Docker
 
