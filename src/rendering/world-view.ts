@@ -30,6 +30,7 @@ import {
   makeStreetLamp,
   makeWaterTank,
   makeWire,
+  type StairSide,
   type TileDistrict,
 } from './pixel-gen';
 
@@ -46,6 +47,8 @@ export type WorldView = {
   getFps: () => FpsSample;
   setShowFps: (on: boolean) => void;
   invalidateMap: () => void;
+  /** Share of the most-common RGB along an edge band (void detector). */
+  edgeFlatRatio: (edge: 'top' | 'left' | 'bottom' | 'right') => number;
 };
 
 type Baked = {
@@ -64,8 +67,6 @@ type MapCache = {
   layer: HTMLCanvasElement;
 };
 
-type ActorItem = { y: number; x: number; img: HTMLCanvasElement };
-
 export function createWorldView(session: GameSession): WorldView {
   const state = makeViewState(session);
   window.addEventListener('resize', () => {
@@ -81,8 +82,58 @@ export function createWorldView(session: GameSession): WorldView {
       state.showFps = on;
     },
     getFps: () => state.lastSample,
+    edgeFlatRatio: (edge) => measureEdgeFlatRatio(state.canvas, edge),
     draw: (frame, now) => drawOnce(state, frame, now),
   };
+}
+
+function edgeBandOrigin(
+  canvas: HTMLCanvasElement,
+  edge: 'top' | 'left' | 'bottom' | 'right',
+  band: number,
+): { horiz: boolean; a0: number; limit: number } {
+  const horiz = edge === 'top' || edge === 'bottom';
+  if (edge === 'top') return { horiz, a0: 0, limit: canvas.width };
+  if (edge === 'left') return { horiz, a0: 0, limit: canvas.height };
+  if (edge === 'bottom') return { horiz, a0: canvas.height - band, limit: canvas.width };
+  return { horiz, a0: canvas.width - band, limit: canvas.height };
+}
+
+function measureEdgeFlatRatio(
+  canvas: HTMLCanvasElement,
+  edge: 'top' | 'left' | 'bottom' | 'right',
+): number {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return 1;
+  const band = 12;
+  const origin = edgeBandOrigin(canvas, edge, band);
+  const counts = sampleEdgeColors(ctx, origin, band);
+  let topN = 0;
+  let total = 0;
+  for (const n of counts.values()) {
+    topN = Math.max(topN, n);
+    total += n;
+  }
+  if (total === 0) return 1;
+  return topN / total;
+}
+
+function sampleEdgeColors(
+  ctx: CanvasRenderingContext2D,
+  origin: { horiz: boolean; a0: number; limit: number },
+  band: number,
+): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (let i = 0; i < origin.limit; i += 8) {
+    for (let j = 0; j < band; j += 2) {
+      const x = origin.horiz ? i : origin.a0 + j;
+      const y = origin.horiz ? origin.a0 + j : i;
+      const d = ctx.getImageData(x, y, 1, 1).data;
+      const key = `${d[0]},${d[1]},${d[2]}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+  }
+  return counts;
 }
 
 type ViewState = {
@@ -96,7 +147,6 @@ type ViewState = {
   lastSample: FpsSample;
   resizeW: number;
   resizeH: number;
-  actors: ActorItem[];
   marker: { x: number; y: number; districtId: string } | null;
   markerFrame: number;
 };
@@ -117,7 +167,6 @@ function makeViewState(session: GameSession): ViewState {
     lastSample: { fps: 60, frameMs: 16, avgFps: 60, avgFrameMs: 16 },
     resizeW: 0,
     resizeH: 0,
-    actors: [],
     marker: null,
     markerFrame: -1,
   };
@@ -219,13 +268,12 @@ function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCa
     viewH: canvas.height,
     tilePx: TILE_PX,
   });
-  // Screen-space camera: world - viewCam (+ letterbox via negative cam when padded).
+  // Screen-space camera: world - viewCam (+ letterbox via pad when map < view).
   const viewCamX = cam.x - pad.padX;
   const viewCamY = cam.y - pad.padY;
-  const district = state.session.world.get(stats.districtId);
   ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = district?.color ? blendVoid(district.color) : Palette.nightSky;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Never fill with flat district brand colours — dark themed scenery only.
+  paintBackdrop(ctx, canvas.width, canvas.height, stats.districtId);
   const layer = state.mapCache?.layer;
   if (layer) ctx.drawImage(layer, -viewCamX, -viewCamY);
   drawActors(ctx, state, frame, viewCamX, viewCamY);
@@ -271,8 +319,52 @@ function ensureMapCache(state: ViewState, map: MapDef, baked: Baked): void {
   };
 }
 
-function blendVoid(districtColor: string): string {
-  return districtColor.length >= 7 ? `${districtColor}22` : Palette.nightSky;
+function paintBackdrop(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  districtId: DistrictId,
+): void {
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, '#05040c');
+  grad.addColorStop(0.5, Palette.nightSky);
+  grad.addColorStop(1, '#0c1014');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+  paintSceneryBand(ctx, w, h, districtId);
+}
+
+/** Varied skyline silhouettes so letterbox edges are never a single flat colour. */
+function paintSceneryBand(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  districtId: DistrictId,
+): void {
+  const accent =
+    districtId === 'torre-casa'
+      ? '#3a2040'
+      : districtId === 'avenida-odds'
+        ? '#142038'
+        : districtId === 'feira-central'
+          ? '#1a1820'
+          : '#12141c';
+  for (let i = 0; i < 18; i += 1) {
+    const bw = 18 + ((i * 17) % 40);
+    const bh = 30 + ((i * 29) % 90);
+    const x = ((i * 73) % (w + 40)) - 20;
+    const y = h - bh - ((i * 13) % 24);
+    ctx.fillStyle = i % 3 === 0 ? accent : '#0a0c14';
+    ctx.fillRect(x, y, bw, bh);
+    if (i % 2 === 0) {
+      ctx.fillStyle = '#2bfff211';
+      ctx.fillRect(x + 4, y + 8, 3, 3);
+    }
+  }
+  for (let i = 0; i < 24; i += 1) {
+    ctx.fillStyle = '#ffffff22';
+    ctx.fillRect((i * 97) % w, (i * 53) % Math.floor(h / 2), 2, 2);
+  }
 }
 
 function bakeMapLayer(map: MapDef, baked: Baked): HTMLCanvasElement {
@@ -284,6 +376,7 @@ function bakeMapLayer(map: MapDef, baked: Baked): HTMLCanvasElement {
   if (!ctx) return layer;
   ctx.imageSmoothingEnabled = false;
   paintTiles(ctx, map, tiles);
+  paintStairSides(ctx, map);
   paintMapEdges(ctx, map);
   paintTerraceEdges(ctx, map);
   paintBuildings(ctx, map, baked);
@@ -315,14 +408,24 @@ function paintTerraceEdges(ctx: CanvasRenderingContext2D, map: MapDef): void {
 
 /** Solid border walls — kills the full-height window-dot column look. */
 function paintMapEdges(ctx: CanvasRenderingContext2D, map: MapDef): void {
-  const edge = bakeSprite(makeEdgeWall(), SCALE);
+  const edges = [0, 1, 2, 3].map((s) => bakeSprite(makeEdgeWall(s), SCALE));
   for (let y = 0; y < map.height; y += 1) {
-    blitImage(ctx, edge, 0, y * TILE_PX);
-    blitImage(ctx, edge, (map.width - 1) * TILE_PX, y * TILE_PX);
+    blitImage(ctx, edges[y % edges.length]!, 0, y * TILE_PX);
+    blitImage(
+      ctx,
+      edges[(y + 1) % edges.length]!,
+      (map.width - 1) * TILE_PX,
+      y * TILE_PX,
+    );
   }
   for (let x = 0; x < map.width; x += 1) {
-    blitImage(ctx, edge, x * TILE_PX, 0);
-    blitImage(ctx, edge, x * TILE_PX, (map.height - 1) * TILE_PX);
+    blitImage(ctx, edges[x % edges.length]!, x * TILE_PX, 0);
+    blitImage(
+      ctx,
+      edges[(x + 2) % edges.length]!,
+      x * TILE_PX,
+      (map.height - 1) * TILE_PX,
+    );
   }
 }
 
@@ -334,6 +437,25 @@ function paintTiles(
   for (let y = 0; y < map.height; y += 1) {
     for (let x = 0; x < map.width; x += 1) {
       blitImage(ctx, tiles[tileAt(map, x, y)], x * TILE_PX, y * TILE_PX);
+    }
+  }
+}
+
+/** Overpaint outer stair columns with railing variants so art matches collision. */
+function paintStairSides(ctx: CanvasRenderingContext2D, map: MapDef): void {
+  const v = districtTileVariant(map.districtId);
+  const baked: Record<StairSide, HTMLCanvasElement> = {
+    mid: bakeSprite(makeStairs(v, 'mid'), SCALE),
+    left: bakeSprite(makeStairs(v, 'left'), SCALE),
+    right: bakeSprite(makeStairs(v, 'right'), SCALE),
+  };
+  for (let y = 0; y < map.height; y += 1) {
+    for (let x = 0; x < map.width; x += 1) {
+      if (tileAt(map, x, y) !== 'stairs') continue;
+      const left = tileAt(map, x - 1, y) === 'stairs';
+      const right = tileAt(map, x + 1, y) === 'stairs';
+      const side: StairSide = !left ? 'left' : !right ? 'right' : 'mid';
+      blitImage(ctx, baked[side], x * TILE_PX, y * TILE_PX);
     }
   }
 }
@@ -480,6 +602,13 @@ function drawPlayerMarker(o: {
   o.ctx.fill();
 }
 
+type ActorBlit = {
+  y: number;
+  x: number;
+  img: HTMLCanvasElement;
+  player?: boolean;
+};
+
 function drawActors(
   ctx: CanvasRenderingContext2D,
   state: ViewState,
@@ -487,33 +616,51 @@ function drawActors(
   camX: number,
   camY: number,
 ): void {
-  const { session, baked, actors } = state;
+  const { session, baked } = state;
   const stats = session.player.getStats();
-  // Idle bob / blink cycle — visible even when standing still.
   const anim = Math.floor(frame / 10) % 2;
-  actors.length = 0;
+  const actors: ActorBlit[] = [];
   for (const npc of session.npcs) {
     if (npc.districtId !== stats.districtId) continue;
-    actors.push({
-      y: npc.y,
-      x: npc.x,
-      img: npcSprite(baked, npc, anim),
-    });
+    actors.push({ y: npc.y, x: npc.x, img: npcSprite(baked, npc, anim) });
   }
   const playerImg = baked.player[anim]!;
-  actors.push({ y: stats.y, x: stats.x, img: playerImg });
+  actors.push({ y: stats.y, x: stats.x, img: playerImg, player: true });
+  // Lower on screen (higher tile y) draws in front when sprites overlap.
   actors.sort((a, b) => a.y - b.y || a.x - b.x);
   const vw = ctx.canvas.width;
   const vh = ctx.canvas.height;
   const bob = Math.sin(frame / 12) * 1.5;
-  drawPlayerMarker({ ctx, x: stats.x, y: stats.y, img: playerImg, camX, camY, bob });
   for (const it of actors) {
-    const ox = it.x * TILE_PX - camX;
-    const oy = it.y * TILE_PX - camY - (it.img.height - TILE_PX) + bob;
-    if (ox + it.img.width < 0 || oy + it.img.height < 0) continue;
-    if (ox > vw || oy > vh) continue;
-    blitImage(ctx, it.img, ox, oy);
+    blitActor({ ctx, it, camX, camY, bob, vw, vh });
   }
+}
+
+function blitActor(o: {
+  ctx: CanvasRenderingContext2D;
+  it: ActorBlit;
+  camX: number;
+  camY: number;
+  bob: number;
+  vw: number;
+  vh: number;
+}): void {
+  const ox = o.it.x * TILE_PX - o.camX;
+  const oy = o.it.y * TILE_PX - o.camY - (o.it.img.height - TILE_PX) + o.bob;
+  if (ox + o.it.img.width < 0 || oy + o.it.img.height < 0) return;
+  if (ox > o.vw || oy > o.vh) return;
+  if (o.it.player) {
+    drawPlayerMarker({
+      ctx: o.ctx,
+      x: o.it.x,
+      y: o.it.y,
+      img: o.it.img,
+      camX: o.camX,
+      camY: o.camY,
+      bob: o.bob,
+    });
+  }
+  blitImage(o.ctx, o.it.img, ox, oy);
 }
 
 type GlowBlit = {

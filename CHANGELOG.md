@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] — 2026-11-24
+
+### Fixed
+
+- Camera clamped to map bounds in every district — no flat green/blue/magenta void at edges; letterbox uses dark themed scenery.
+- Morro stair collision matches the 6-tile walkable spine (railings mark the edges).
+- Dialogue: only the focused button is highlighted; hidden modals clear stale DOM nodes.
+- Actor draw order y-sorts so the lower sprite is in front when overlapping.
+
+### Changed
+
+- Morro: darker retaining faces + stronger shadows, houses overlapping terrace heights, stair step shading + railings.
+- Casa Suprema: luxury casino interior (carpet, tables/VIP booths, chandelier) instead of glass towers.
+
 ## [1.9.0] — 2026-11-24
 
 ### Changed

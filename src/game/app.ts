@@ -110,6 +110,8 @@ function exposeHarness(
     forceMode: (mode: 'keyboard' | 'touch' | 'gamepad') => modes.force(mode),
     getFps: (): FpsSample => world.getFps(),
     setShowFps: (on: boolean) => world.setShowFps(on),
+    edgeFlatRatio: (edge: 'top' | 'left' | 'bottom' | 'right') =>
+      world.edgeFlatRatio(edge),
   };
 }
 

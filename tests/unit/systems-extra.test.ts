@@ -102,6 +102,13 @@ describe('maps and interaction', () => {
     expect(map.props.length).toBeGreaterThan(5);
     expect(map.signs.every((s) => s.label.length > 2)).toBe(true);
     expect(map.terraceEdges?.length ?? 0).toBeGreaterThan(0);
+    // Stair spine is 6 tiles wide and walkable through cliff rows.
+    for (let x = 18; x <= 23; x += 1) {
+      expect(tileAt(map, x, 5)).toBe('stairs');
+      expect(isWalkable(map, x, 5)).toBe(true);
+    }
+    expect(isWalkable(map, 17, 5)).toBe(false);
+    expect(isWalkable(map, 24, 5)).toBe(false);
     const npcs = districtNpcs();
     const exits = districtExits();
     expect(nearestNpc({ npcs, districtId: 'morro-neon', x: 13, y: 14 })?.id).toBe(
@@ -154,8 +161,8 @@ describe('maps and interaction', () => {
       viewH: 540,
       tilePx: 48,
     });
-    // North edge: camera scrolls above y=0 so the player stays on-screen.
-    expect(north.y).toBeLessThan(0);
+    // North edge: camera stays within map — no off-world void strip.
+    expect(north.y).toBe(0);
     const pad = viewportPadding({
       mapW: 20,
       mapH: 26,

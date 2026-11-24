@@ -291,19 +291,29 @@ canvas.excalibur-game {
 }
 
 .btn {
-  border: 1px solid var(--green);
-  background: #002776cc;
+  border: 1px solid #3a3a55;
+  background: #12182acc;
   color: var(--text);
   padding: 0.55rem 0.9rem;
   cursor: pointer;
   font-weight: 700;
+  box-shadow: none;
+  opacity: 0.88;
 }
 
-.btn:hover,
+/* Only the focused control reads as selected — hover stays quieter. */
+.btn:hover {
+  border-color: var(--cyan);
+  opacity: 1;
+}
+
+.btn:focus,
 .btn:focus-visible {
   border-color: var(--yellow);
   box-shadow: 0 0 12px var(--magenta);
   outline: none;
+  opacity: 1;
+  background: #002776ee;
 }
 
 .btn:disabled {

@@ -1,40 +1,34 @@
-# Playtest report — House Edge 1.9.0
+# Playtest report — House Edge 1.10.0
 
-Independent check against v1.8.0 feedback (art 5/10, bugs 4–8).
+Independent check against v1.9.0 feedback (void edges, stairs collision, dialog highlight, y-sort, art).
 
 ## Verdict
 
-**Bugs: PASS.** **Art: ~6/10** (better than 5, still short of a clean hillside read). Console: **0 errors**.
+**Bugs: PASS.** **Art: ~6.5/10** (void gone; Morro/Casa clearer; still not a polished favela/casino). Console: **0 errors**. FPS ~60.
 
 ## Before → After
 
-| Item               | v1.8 / ask                           | v1.9 result                                                                                                                                                                                  |
-| ------------------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Morro height       | Flat bands                           | Blocked 3-row cliff faces + dark brick overlays + central 4-tile stairs spine. Height reads more, but faces still compete with neon accents / house sprites — not a full “favela step” look. |
-| Left window column | Full-height cyan/yellow strip        | Solid edge wall + brick blocked fill; left cyan residue ≈0 in pixel sample. Residual vertical accents can still read as a strip.                                                             |
-| Fair ground        | Speckled plaza + yellow-window bands | Plaza fill + quiet feira asphalt (no yellow lane hatch). Stalls still share a base silhouette (awning recolors/size variants only).                                                          |
-| Sprite repetition  | High                                 | Building flips + style recolors + stall size variants. Still repetitive at a glance.                                                                                                         |
-| Camera north       | Player half off-screen               | Camera Y pad ≈ half viewport; north shot shows map void above while player stays on-screen.                                                                                                  |
-| E range / prompt   | ~50px / Nobody in range              | `INTERACT_RANGE=3.5`; on-screen `E (Name)` when in range.                                                                                                                                    |
-| NPC collision      | Inconsistent                         | All NPCs non-blocking (walk-through).                                                                                                                                                        |
-| Side Jobs Close    | Closed everything                    | Esc → Side Jobs → Close returns to **Menu**.                                                                                                                                                 |
-| ATM vs story       | Side bet stole E                     | Story-available NPCs preferred; ATM moved to (38,17); incomplete beats no longer fall through to rematch.                                                                                    |
-| Story length       | Toward ~20 min                       | Extra dialogue + `avenida-radar` beat via Mensageiro.                                                                                                                                        |
+| Item          | v1.9 / ask                              | v1.10 result                                                                                          |
+| ------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Map-edge void | Flat green/blue/magenta beyond world    | Camera clamped to map; dark scenery backdrop (never brand flat fill). E2e edge-flatness assert added. |
+| Morro stairs  | Edges not walkable (~100px from center) | 6-tile spine (18–23) + rail columns; climb works across full visible width.                           |
+| Dialog focus  | Both Take/Walk highlighted              | Only `:focus` gets yellow/magenta; idle buttons muted grey. Hidden modals clear DOM.                  |
+| Y-sort        | Overlap order wrong                     | Actors sorted by tile y; marker drawn with player in the same pass.                                   |
+| Morro depth   | Flat bands / grey stair column          | Darker retaining faces + stronger lip/shadow; step-shaded stairs + light rails. Still banded.         |
+| Casa Tower    | Same tower look as Odds Avenue          | Carpet floor, gaming tables / VIP booths, chandelier landmark, gold accents. Still simple.            |
 
 ## Automated
 
 - `npm test` — pass (coverage ≥90%)
 - `npm run lint` — pass
-- `make playtest` — 7/7 pass (golden path, FPS, story-complete, mobile dialogue)
+- `make playtest` / `make e2e` — including edge-not-flat assertion
 
 ## Honest art note
 
-Prior agent 7.5 was too high; independent 5/10 on v1.8 was fair. This pass lands around **6/10**: stepped cliffs and calmer Fair are real, but Morro still skews “banded grid with neon” more than organic stacked favela, and Fair stalls remain same-shaped.
+Void fix is the biggest visual win. Stairs and Casa are readable as distinct from Avenue, but Morro still reads as horizontal terraces more than an organic hillside, and Casa furniture is blocky. Independent art ~6.5/10 — not claiming 8+.
 
 ## Shots
 
-- `01-morro-terraces.png` — cliffs + central stairs + E prompt
-- `05-e-prompt.png` — `E (Dona Nair)`
-- `06-morro-north-edge.png` — north camera scroll
-- `07-jobs-close-menu.png` — Close → Menu
-- `08-central-fair.png` — quieter plaza ground
+- `08-morro-north-no-void.png` — north edge without green void
+- `09-avenida-north-no-void.png` — Odds Avenue north
+- `10-casa-edges-no-void.png` — Casa left/bottom without magenta bars

@@ -282,12 +282,15 @@ function paintBrickCourses(g: PixelGrid, brick: string, brick2: string): void {
 /** Tall terrace retaining face (≈3 tiles) + drop shadow onto level below. */
 export function makeRetainingWall(variant = 0): PixelGrid {
   const g = empty(16, 48, 'transparent');
-  const brick = variant % 2 === 0 ? '#1a1418' : '#141018';
-  const brick2 = variant % 2 === 0 ? '#22181c' : '#1a1418';
-  fillRect(g, { x: 0, y: 0, w: 16, h: 5 }, '#6a6878');
-  fillRect(g, { x: 0, y: 1, w: 16, h: 1 }, '#8a8898');
-  fillRect(g, { x: 0, y: 5, w: 16, h: 30 }, brick);
+  const brick = variant % 2 === 0 ? '#121014' : '#0e0c10';
+  const brick2 = variant % 2 === 0 ? '#1a1418' : '#141018';
+  fillRect(g, { x: 0, y: 0, w: 16, h: 6 }, '#7a7888');
+  fillRect(g, { x: 0, y: 1, w: 16, h: 2 }, '#a8a6b8');
+  fillRect(g, { x: 0, y: 5, w: 16, h: 1 }, '#2a2830');
+  fillRect(g, { x: 0, y: 6, w: 16, h: 28 }, brick);
   paintBrickCourses(g, brick, brick2);
+  fillRect(g, { x: 0, y: 6, w: 3, h: 28 }, '#00000088');
+  fillRect(g, { x: 13, y: 6, w: 3, h: 28 }, '#00000055');
   fillRect(
     g,
     { x: 3, y: 14, w: 2, h: 2 },
@@ -298,39 +301,72 @@ export function makeRetainingWall(variant = 0): PixelGrid {
     { x: 11, y: 24, w: 2, h: 2 },
     variant % 3 === 1 ? Palette.neonCyan : '#2a2030',
   );
-  fillRect(g, { x: 0, y: 35, w: 16, h: 13 }, '#00000099');
-  fillRect(g, { x: 0, y: 35, w: 16, h: 4 }, '#000000cc');
+  fillRect(g, { x: 0, y: 34, w: 16, h: 14 }, '#000000bb');
+  fillRect(g, { x: 0, y: 34, w: 16, h: 5 }, '#000000ee');
   return g;
 }
 
-/** Solid map-border wall — no window-dot column. */
-export function makeEdgeWall(): PixelGrid {
-  const g = empty(16, 16, '#0c0a10');
+/** Solid map-border wall — no window-dot column; varied so edges are not flat. */
+export function makeEdgeWall(seed = 0): PixelGrid {
+  const g = empty(16, 16, seed % 2 === 0 ? '#0c0a10' : '#100e14');
   fillRect(g, { x: 0, y: 0, w: 16, h: 2 }, '#18161c');
   fillRect(g, { x: 0, y: 14, w: 16, h: 2 }, '#000000');
   fillRect(g, { x: 0, y: 7, w: 16, h: 1 }, '#06050a');
-  fillRect(g, { x: 6, y: 3, w: 4, h: 1 }, '#1a1820');
+  fillRect(g, { x: 2 + (seed % 5), y: 3, w: 3, h: 1 }, '#1a1820');
+  fillRect(g, { x: 9, y: 10, w: 2, h: 2 }, seed % 3 === 0 ? '#2bfff222' : '#1a1820');
+  fillRect(g, { x: 4, y: 12, w: 1, h: 1 }, '#ff2bd622');
   return g;
 }
 
-export function makeStairs(variant: TileDistrict = 'default'): PixelGrid {
-  const g = empty(16, 16, variant === 'morro' ? '#3a3848' : Palette.concrete);
-  for (let i = 0; i < 4; i += 1) {
-    fillRect(g, { x: 0, y: i * 4, w: 16, h: 3 }, Palette.curb);
-    fillRect(g, { x: 0, y: i * 4 + 3, w: 16, h: 1 }, Palette.wetAsphalt);
-  }
+export type StairSide = 'mid' | 'left' | 'right';
+
+/** Stair tread with step shading; outer sides get rail posts. */
+export function makeStairs(
+  variant: TileDistrict = 'default',
+  side: StairSide = 'mid',
+): PixelGrid {
+  const base = variant === 'morro' ? '#3a3848' : Palette.concrete;
+  const g = empty(16, 16, base);
+  paintStairTreads(g);
+  if (side !== 'mid') paintStairRail(g, side);
   return g;
+}
+
+function paintStairTreads(g: PixelGrid): void {
+  for (let i = 0; i < 4; i += 1) {
+    const y = i * 4;
+    fillRect(g, { x: 0, y, w: 16, h: 2 }, '#5a5868');
+    fillRect(g, { x: 0, y: y + 2, w: 16, h: 1 }, '#2a2838');
+    fillRect(g, { x: 0, y: y + 3, w: 16, h: 1 }, '#121018');
+  }
+}
+
+function paintStairRail(g: PixelGrid, side: 'left' | 'right'): void {
+  const x0 = side === 'left' ? 0 : 12;
+  fillRect(g, { x: x0, y: 0, w: 4, h: 16 }, '#121018');
+  fillRect(g, { x: x0 + 1, y: 0, w: 2, h: 16 }, '#9a98a8');
+  fillRect(g, { x: x0 + 1, y: 0, w: 1, h: 16 }, '#c8c6d8');
+  for (let y = 0; y < 16; y += 4) {
+    fillRect(g, { x: x0, y, w: 4, h: 2 }, '#e8e6f0');
+    fillRect(g, { x: x0, y: y + 1, w: 4, h: 1 }, '#5a5868');
+  }
 }
 
 export function makeInterior(variant: TileDistrict = 'default'): PixelGrid {
-  const g = empty(16, 16, variant === 'torre' ? '#160c18' : '#12101c');
-  fillRect(g, { x: 0, y: 0, w: 16, h: 1 }, variant === 'torre' ? '#4a2040' : '#2a1840');
-  fillRect(g, { x: 0, y: 8, w: 16, h: 1 }, '#1a1028');
   if (variant === 'torre') {
-    for (let x = 2; x < 14; x += 5) {
-      fillRect(g, { x, y: 3, w: 2, h: 2 }, '#ff2bd633');
-    }
+    // Deep red casino carpet with gold diamond accents.
+    const g = empty(16, 16, '#2a0814');
+    fillRect(g, { x: 0, y: 0, w: 16, h: 16 }, '#3a1020');
+    fillRect(g, { x: 0, y: 0, w: 16, h: 1 }, '#5a1830');
+    fillRect(g, { x: 0, y: 8, w: 16, h: 1 }, '#1a0810');
+    fillRect(g, { x: 7, y: 3, w: 2, h: 2 }, '#ffdf0044');
+    fillRect(g, { x: 3, y: 11, w: 2, h: 2 }, '#ffdf0033');
+    fillRect(g, { x: 12, y: 11, w: 2, h: 2 }, '#ffdf0033');
+    return g;
   }
+  const g = empty(16, 16, '#12101c');
+  fillRect(g, { x: 0, y: 0, w: 16, h: 1 }, '#2a1840');
+  fillRect(g, { x: 0, y: 8, w: 16, h: 1 }, '#1a1028');
   return g;
 }
 
@@ -526,18 +562,39 @@ function glassTower(style: number): PixelGrid {
   return g;
 }
 
+/** Casa Suprema furniture — gaming tables / VIP booths, not glass towers. */
 function corpBlock(style: number): PixelGrid {
-  const g = empty(64, 72, 'transparent');
-  fillRect(g, { x: 14, y: 20, w: 44, h: 48 }, Palette.shadow);
-  fillRect(g, { x: 4, y: 14, w: 44, h: 50 }, style % 2 ? '#1a1028' : '#121828');
-  fillRect(g, { x: 48, y: 16, w: 8, h: 48 }, '#00000066');
-  fillRect(g, { x: 2, y: 6, w: 48, h: 10 }, Palette.neonMagenta);
-  fillRect(g, { x: 48, y: 8, w: 10, h: 8 }, Palette.neonMagenta);
-  for (let y = 18; y < 56; y += 9) {
-    fillRect(g, { x: 10, y, w: 12, h: 6 }, Palette.neonCyan);
-    fillRect(g, { x: 30, y, w: 12, h: 6 }, Palette.windowLit);
-  }
-  fillRect(g, { x: 20, y: 48, w: 14, h: 16 }, '#08060e');
+  if (style % 2 === 1) return vipBooth(style);
+  return casinoTable(style);
+}
+
+function casinoTable(style: number): PixelGrid {
+  const w = 56 + (style % 3) * 4;
+  const h = 40;
+  const g = empty(w, h, 'transparent');
+  fillRect(g, { x: 8, y: 22, w: w - 16, h: 14 }, '#00000088');
+  fillRect(g, { x: 6, y: 14, w: w - 12, h: 18 }, '#0e3a22');
+  fillRect(g, { x: 4, y: 12, w: w - 8, h: 4 }, Palette.gold);
+  fillRect(g, { x: 4, y: 28, w: w - 8, h: 3 }, Palette.gold);
+  fillRect(g, { x: 10, y: 16, w: w - 20, h: 10 }, '#124828');
+  fillRect(g, { x: 14, y: 18, w: 4, h: 4 }, '#ffdf00');
+  fillRect(g, { x: w - 22, y: 18, w: 4, h: 4 }, Palette.neonMagenta);
+  fillRect(g, { x: Math.floor(w / 2) - 3, y: 19, w: 6, h: 6 }, '#f4f1ff');
+  return g;
+}
+
+function vipBooth(style: number): PixelGrid {
+  const w = 52;
+  const h = 48;
+  const g = empty(w, h, 'transparent');
+  fillRect(g, { x: 6, y: 10, w: 40, h: 34 }, '#00000066');
+  fillRect(g, { x: 4, y: 6, w: 40, h: 36 }, style % 4 === 1 ? '#2a1020' : '#1a0814');
+  fillRect(g, { x: 2, y: 4, w: 44, h: 6 }, Palette.gold);
+  fillRect(g, { x: 8, y: 14, w: 32, h: 10 }, '#4a1830');
+  fillRect(g, { x: 10, y: 28, w: 28, h: 8 }, '#3a1020');
+  fillRect(g, { x: 14, y: 18, w: 6, h: 4 }, Palette.gold);
+  fillRect(g, { x: 28, y: 18, w: 6, h: 4 }, Palette.neonCyan);
+  fillRect(g, { x: 20, y: 36, w: 12, h: 4 }, '#ffdf0066');
   return g;
 }
 
@@ -553,7 +610,21 @@ export function makeNeonSign(labelColor: string): PixelGrid {
 
 export function makeLandmark(kind: string): PixelGrid {
   const g = empty(40, 72, 'transparent');
-  if (kind === 'led-tower' || kind === 'casa-tower') {
+  if (kind === 'casa-tower') {
+    // Chandelier — gold arms + warm glow, not another glass tower.
+    fillRect(g, { x: 18, y: 2, w: 4, h: 14 }, Palette.gold);
+    fillRect(g, { x: 8, y: 14, w: 24, h: 4 }, Palette.gold);
+    fillRect(g, { x: 6, y: 18, w: 28, h: 6 }, '#c4a020');
+    for (let i = 0; i < 5; i += 1) {
+      const x = 8 + i * 6;
+      fillRect(g, { x, y: 24, w: 3, h: 18 }, Palette.gold);
+      fillRect(g, { x: x - 1, y: 40, w: 5, h: 5 }, '#ffe8a0');
+      fillRect(g, { x, y: 42, w: 3, h: 3 }, '#ffffff');
+    }
+    fillRect(g, { x: 14, y: 20, w: 12, h: 4 }, '#ffdf0088');
+    return g;
+  }
+  if (kind === 'led-tower') {
     fillRect(g, { x: 12, y: 8, w: 16, h: 60 }, Palette.concrete);
     fillRect(g, { x: 8, y: 2, w: 24, h: 10 }, Palette.neonMagenta);
     for (let y = 16; y < 64; y += 5) {

@@ -95,6 +95,96 @@ test.describe('Playtest golden path', () => {
   });
 });
 
+type EdgeSide = 'top' | 'left' | 'bottom' | 'right';
+
+/** Fail if a canvas edge strip is dominated by one flat RGB colour (void bug). */
+async function assertEdgeNotFlat(page: Page, edge: EdgeSide): Promise<void> {
+  const ratio = await page.evaluate((which) => {
+    const edgeApi = (
+      window as unknown as {
+        __HOUSE_EDGE__: { edgeFlatRatio: (e: string) => number };
+      }
+    ).__HOUSE_EDGE__;
+    return edgeApi.edgeFlatRatio(which);
+  }, edge);
+  expect(ratio, `${edge} edge flat=${ratio}`).toBeLessThan(0.82);
+}
+
+test.describe('Camera bounds — no flat void', () => {
+  test('district edges are not a single flat colour', async ({ page }) => {
+    await startGame(page);
+    await forceMode(page, 'keyboard');
+
+    // Morro north + west
+    await walkTo(page, 20, 1);
+    await page.waitForTimeout(200);
+    await page.screenshot({ path: path.join(ART, '08-morro-north-no-void.png') });
+    await assertEdgeNotFlat(page, 'top');
+    await walkTo(page, 1, 15);
+    await page.waitForTimeout(150);
+    await assertEdgeNotFlat(page, 'left');
+
+    // Travel through districts and sample edges
+    await page.evaluate(() => {
+      const s = (
+        window as unknown as {
+          __HOUSE_EDGE__: {
+            session: {
+              world: { unlock: (id: string) => boolean };
+              travelTo: (id: string) => boolean;
+              player: { setPosition: (x: number, y: number) => void };
+            };
+          };
+        }
+      ).__HOUSE_EDGE__.session;
+      s.world.unlock('feira-central');
+      s.world.unlock('avenida-odds');
+      s.world.unlock('torre-casa');
+      s.travelTo('feira-central');
+      s.player.setPosition(2, 13);
+    });
+    await page.waitForTimeout(200);
+    await assertEdgeNotFlat(page, 'left');
+
+    await page.evaluate(() => {
+      const s = (
+        window as unknown as {
+          __HOUSE_EDGE__: {
+            session: {
+              travelTo: (id: string) => boolean;
+              player: { setPosition: (x: number, y: number) => void };
+            };
+          };
+        }
+      ).__HOUSE_EDGE__.session;
+      s.travelTo('avenida-odds');
+      s.player.setPosition(6, 2);
+    });
+    await page.waitForTimeout(200);
+    await page.screenshot({ path: path.join(ART, '09-avenida-north-no-void.png') });
+    await assertEdgeNotFlat(page, 'top');
+
+    await page.evaluate(() => {
+      const s = (
+        window as unknown as {
+          __HOUSE_EDGE__: {
+            session: {
+              travelTo: (id: string) => boolean;
+              player: { setPosition: (x: number, y: number) => void };
+            };
+          };
+        }
+      ).__HOUSE_EDGE__.session;
+      s.travelTo('torre-casa');
+      s.player.setPosition(2, 20);
+    });
+    await page.waitForTimeout(200);
+    await page.screenshot({ path: path.join(ART, '10-casa-edges-no-void.png') });
+    await assertEdgeNotFlat(page, 'left');
+    await assertEdgeNotFlat(page, 'bottom');
+  });
+});
+
 test.describe('Playtest input modes', () => {
   test('touch mode chrome', async ({ page }) => {
     await startGame(page);

@@ -127,6 +127,7 @@ function baseShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudHa
   return {
     root: p.root,
     showTitle: (hasSave) => {
+      fillTitle(p.title, session);
       only(p, 'title');
       const cont = p.title.querySelectorAll('button')[1] as HTMLButtonElement;
       if (cont) cont.disabled = !hasSave;
@@ -161,7 +162,7 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
         },
       });
     },
-    showMenu: (open) => toggleMenu(p, open),
+    showMenu: (open) => toggleMenu(p, open, session, h),
     showBet: () => {
       only(p, 'bet');
       paintBet(p.bet, session, () => h.syncScreen());
@@ -186,13 +187,24 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
   };
 }
 
-function toggleMenu(p: Parts, open: boolean): void {
+function toggleMenu(
+  p: Parts,
+  open: boolean,
+  session?: GameSession,
+  h?: HudHandles,
+): void {
+  if (open && session && h) {
+    fillMenu(p.menu, session, h);
+    only(p, 'menu');
+    focusFirst(p.menu);
+    return;
+  }
   if (open) {
     only(p, 'menu');
     focusFirst(p.menu);
-  } else {
-    only(p, 'play');
+    return;
   }
+  only(p, 'play');
 }
 
 let endingArtCanvas: HTMLCanvasElement | null = null;
@@ -269,18 +281,6 @@ function syncFromUi(h: HudHandles, p: Parts, session: GameSession): void {
 }
 
 function only(p: Parts, which: string): void {
-  const nodes = [
-    p.title,
-    p.play,
-    p.menu,
-    p.dialogue,
-    p.bet,
-    p.travel,
-    p.jobs,
-    p.upgrades,
-    p.ending,
-  ];
-  hideAll(nodes);
   const map: Record<string, HTMLElement> = {
     title: p.title,
     play: p.play,
@@ -292,6 +292,12 @@ function only(p: Parts, which: string): void {
     upgrades: p.upgrades,
     ending: p.ending,
   };
+  hideAll(Object.values(map));
+  // Drop stale buttons/headings from hidden modals so focus/DOM stay clean.
+  for (const [name, node] of Object.entries(map)) {
+    if (name === which || name === 'play') continue;
+    clearNode(node);
+  }
   setVisible(map[which]!, true);
   blurIfHidden();
 }

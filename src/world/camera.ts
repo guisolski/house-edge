@@ -1,4 +1,4 @@
-/** LD-6: camera follows player, clamped to map (with sprite overhang pad). */
+/** LD-6: camera follows player, clamped to map (no off-map void). */
 
 export type Camera = {
   x: number;
@@ -16,13 +16,14 @@ export type FollowArgs = {
   tilePx: number;
 };
 
-/** Extra camera slack so tall sprites near map edges are not clipped. */
-export const CAMERA_SPRITE_PAD = 96;
-
 export function createCamera(): Camera {
   return { x: 0, y: 0 };
 }
 
+/**
+ * Follow the player, clamped to world bounds.
+ * Never scrolls past the map — letterbox when the map is smaller than the view.
+ */
 export function followPlayer(args: FollowArgs): Camera {
   void args.cam;
   const worldW = args.mapW * args.tilePx;
@@ -31,15 +32,11 @@ export function followPlayer(args: FollowArgs): Camera {
   const focusY = args.playerY * args.tilePx + args.tilePx / 2;
   const targetX = focusX - args.viewW / 2;
   const targetY = focusY - args.viewH / 2;
-  // Y pad grows with viewport so the player stays on-screen at the north edge.
-  // Keep X pad modest so side letterboxing does not open a green void column.
-  const padX = CAMERA_SPRITE_PAD;
-  const padY = Math.max(CAMERA_SPRITE_PAD, Math.floor(args.viewH / 2) - args.tilePx);
-  const maxX = Math.max(-padX, worldW - args.viewW + padX);
-  const maxY = Math.max(-padY, worldH - args.viewH + padY);
+  const maxX = Math.max(0, worldW - args.viewW);
+  const maxY = Math.max(0, worldH - args.viewH);
   return {
-    x: clamp(targetX, -padX, maxX),
-    y: clamp(targetY, -padY, maxY),
+    x: clamp(targetX, 0, maxX),
+    y: clamp(targetY, 0, maxY),
   };
 }
 

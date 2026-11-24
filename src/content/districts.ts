@@ -39,7 +39,7 @@ export const DISTRICTS: readonly DistrictDef[] = [
   {
     id: 'torre-casa',
     name: 'Casa Suprema Tower',
-    blurb: 'Corporate casino floor — the final table.',
+    blurb: 'Luxury casino floor — carpet, VIP tables, chandelier glow.',
     unlockFlag: 'unlocked_torre',
     width: 40,
     height: 24,

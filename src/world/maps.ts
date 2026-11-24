@@ -158,27 +158,34 @@ function morroHouseSpots(): {
   bw: number;
   bh: number;
 }[] {
-  // Irregular footprints overlapping terrace lips — keep clear of left border.
+  // Irregular footprints hanging over terrace lips — clear of stairs (18..23) + NPC/spawn tiles.
   return [
-    { x: 3, y: 1, style: 0, bw: 3, bh: 2 },
-    { x: 7, y: 2, style: 5, bw: 2, bh: 2 },
-    { x: 11, y: 1, style: 2, bw: 3, bh: 2 },
-    { x: 24, y: 1, style: 1, bw: 3, bh: 2 },
-    { x: 28, y: 2, style: 4, bw: 2, bh: 2 },
-    { x: 32, y: 1, style: 6, bw: 3, bh: 2 },
-    { x: 36, y: 2, style: 3, bw: 2, bh: 2 },
-    { x: 3, y: 7, style: 3, bw: 2, bh: 2 },
-    { x: 6, y: 8, style: 0, bw: 3, bh: 2 },
+    // Ridge (keep antena clear at 10,10 — houses above cliff y=4).
+    { x: 2, y: 1, style: 0, bw: 3, bh: 2 },
+    { x: 6, y: 2, style: 5, bw: 2, bh: 2 },
+    { x: 12, y: 1, style: 2, bw: 3, bh: 2 },
+    { x: 25, y: 1, style: 1, bw: 3, bh: 2 },
+    { x: 29, y: 2, style: 4, bw: 2, bh: 2 },
+    { x: 33, y: 1, style: 6, bw: 3, bh: 2 },
+    { x: 37, y: 2, style: 3, bw: 2, bh: 2 },
+    // Mid terrace (fio at 18,10 is on stairs; antena 10,10 stays open).
+    { x: 2, y: 7, style: 3, bw: 2, bh: 2 },
+    { x: 5, y: 8, style: 0, bw: 3, bh: 2 },
     { x: 12, y: 7, style: 6, bw: 2, bh: 2 },
-    { x: 24, y: 8, style: 2, bw: 3, bh: 2 },
-    { x: 29, y: 7, style: 5, bw: 2, bh: 2 },
-    { x: 34, y: 8, style: 1, bw: 3, bh: 2 },
-    { x: 3, y: 19, style: 4, bw: 3, bh: 2 },
-    { x: 8, y: 20, style: 7, bw: 2, bh: 2 },
-    { x: 12, y: 19, style: 0, bw: 3, bh: 2 },
-    { x: 24, y: 20, style: 3, bw: 2, bh: 2 },
-    { x: 28, y: 19, style: 6, bw: 3, bh: 2 },
-    { x: 34, y: 20, style: 2, bw: 3, bh: 2 },
+    { x: 25, y: 8, style: 5, bw: 3, bh: 2 },
+    { x: 30, y: 7, style: 1, bw: 2, bh: 2 },
+    { x: 34, y: 8, style: 7, bw: 3, bh: 2 },
+    // Street band — leave spawn (8,15), dona (13,14), luna (26,16), ze (30,16), catador (4,16).
+    { x: 2, y: 14, style: 4, bw: 2, bh: 2 },
+    { x: 15, y: 16, style: 6, bw: 2, bh: 2 },
+    { x: 33, y: 14, style: 2, bw: 3, bh: 2 },
+    // Lower terrace
+    { x: 3, y: 20, style: 1, bw: 3, bh: 2 },
+    { x: 8, y: 21, style: 7, bw: 2, bh: 2 },
+    { x: 12, y: 20, style: 4, bw: 3, bh: 2 },
+    { x: 25, y: 21, style: 0, bw: 2, bh: 2 },
+    { x: 29, y: 20, style: 6, bw: 3, bh: 2 },
+    { x: 34, y: 21, style: 2, bw: 3, bh: 2 },
   ];
 }
 
@@ -226,9 +233,9 @@ function layoutMorroTerraces(tiles: TileKind[], w: number, h: number): void {
   rect({ tiles, w, x0: 1, y0: 14, x1: w - 2, y1: 17, kind: 'asphalt' });
   rect({ tiles, w, x0: 1, y0: 18, x1: w - 2, y1: 19, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: 20, x1: w - 2, y1: h - 2, kind: 'sidewalk' });
-  // ONE wide central staircase spine (4 tiles) climbing the whole hill.
-  const spine = 19;
-  for (let x = spine; x < spine + 4; x += 1) {
+  // Wide central staircase (6 tiles) — collision matches visible stair art + rails.
+  const spine = 18;
+  for (let x = spine; x < spine + 6; x += 1) {
     vStrip(tiles, w, x, 3, 20, 'stairs');
   }
   rect({ tiles, w, x0: 10, y0: 14, x1: 17, y1: 17, kind: 'plaza' });
@@ -409,24 +416,26 @@ function buildAvenida(): MapDef {
 function buildTorre(): MapDef {
   const w = 40;
   const h = 24;
+  // Luxury casino floor — carpet interior, not another neon boulevard.
   const tiles = fill(w, h, 'interior');
   const buildings: MapDef['buildings'] = [];
   const props: MapDef['props'] = [];
   seal(tiles, w, h);
-  rect({ tiles, w, x0: 3, y0: 10, x1: 36, y1: 15, kind: 'asphalt' });
-  hStrip(tiles, w, 9, 3, 36, 'plaza');
-  hStrip(tiles, w, 16, 3, 36, 'plaza');
-  paintExitPad(tiles, w, 1, 13);
-  const blocks: { x: number; y: number; style: number }[] = [
-    { x: 5, y: 2, style: 0 },
-    { x: 12, y: 1, style: 1 },
-    { x: 20, y: 2, style: 2 },
-    { x: 28, y: 1, style: 3 },
-    { x: 6, y: 17, style: 4 },
-    { x: 18, y: 17, style: 5 },
-    { x: 28, y: 17, style: 6 },
+  rect({ tiles, w, x0: 2, y0: 2, x1: w - 3, y1: h - 3, kind: 'interior' });
+  rect({ tiles, w, x0: 4, y0: 10, x1: 35, y1: 14, kind: 'plaza' });
+  paintExitPad(tiles, w, 1, 12);
+  // Tables / VIP booths (torre sprites = casino furniture, not towers).
+  const tables: { x: number; y: number; style: number; bw: number; bh: number }[] = [
+    { x: 5, y: 4, style: 0, bw: 3, bh: 2 },
+    { x: 12, y: 3, style: 1, bw: 4, bh: 2 },
+    { x: 20, y: 4, style: 2, bw: 3, bh: 2 },
+    { x: 28, y: 3, style: 3, bw: 4, bh: 2 },
+    { x: 6, y: 16, style: 4, bw: 3, bh: 2 },
+    { x: 14, y: 17, style: 5, bw: 4, bh: 2 },
+    { x: 24, y: 16, style: 6, bw: 3, bh: 2 },
+    { x: 31, y: 17, style: 7, bw: 3, bh: 2 },
   ];
-  for (const b of blocks) {
+  for (const b of tables) {
     houseBlock({
       tiles,
       w,
@@ -435,12 +444,12 @@ function buildTorre(): MapDef {
       y: b.y,
       style: b.style,
       kind: 'torre',
-      bw: 4,
-      bh: 3,
+      bw: b.bw,
+      bh: b.bh,
     });
   }
-  for (let x = 8; x < 34; x += 4) props.push({ x, y: 11, kind: 'lamp' });
-  props.push({ x: 16, y: 13, kind: 'crate' });
+  for (let x = 8; x < 34; x += 5) props.push({ x, y: 11, kind: 'lamp' });
+  props.push({ x: 18, y: 12, kind: 'crate' }, { x: 22, y: 13, kind: 'kiosk' });
   return {
     districtId: 'torre-casa',
     width: w,
@@ -448,10 +457,10 @@ function buildTorre(): MapDef {
     tiles,
     buildings,
     signs: [
-      { x: 14, y: 9, label: 'CASA SUPREMA', color: '#ff2bd6' },
+      { x: 14, y: 9, label: 'CASA SUPREMA', color: '#ffdf00' },
       { x: 24, y: 12, label: 'VIP TABLE', color: '#ffdf00' },
     ],
     props,
-    landmark: { x: 18, y: 4, kind: 'casa-tower' },
+    landmark: { x: 18, y: 8, kind: 'casa-tower' },
   };
 }
