@@ -32,6 +32,21 @@ export function followPlayer(args: FollowArgs): Camera {
   };
 }
 
+export type ViewportPadArgs = Pick<
+  FollowArgs,
+  'mapW' | 'mapH' | 'viewW' | 'viewH' | 'tilePx'
+>;
+
+/** Letterbox offset when the map is smaller than the viewport. */
+export function viewportPadding(args: ViewportPadArgs): { padX: number; padY: number } {
+  const worldW = args.mapW * args.tilePx;
+  const worldH = args.mapH * args.tilePx;
+  return {
+    padX: worldW < args.viewW ? (args.viewW - worldW) / 2 : 0,
+    padY: worldH < args.viewH ? (args.viewH - worldH) / 2 : 0,
+  };
+}
+
 function clamp(v: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, v));
 }

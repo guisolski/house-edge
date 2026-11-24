@@ -34,7 +34,7 @@ describe('StorySystem', () => {
     bus.on('story:ended', ended);
     const story = new StorySystem(bus, STORY_BEATS);
     story.hydrate(
-      { unlocked_torre: true, escandalo_aberto: true },
+      { unlocked_torre: true, escandalo_aberto: true, vip_pass: true },
       STORY_BEATS.filter((b) => b.id !== 'torre-final').map((b) => b.id),
     );
     const beat = story.startBeat('torre-final');
@@ -54,7 +54,7 @@ describe('WorldSystem', () => {
     expect(world.unlock('feira-central')).toBe(true);
     expect(unlocked).toHaveBeenCalled();
     expect(world.unlock('feira-central')).toBe(false);
-    expect(world.clampPosition('morro-neon', -5, 99)).toEqual({ x: 0, y: 27 });
+    expect(world.clampPosition('morro-neon', -5, 99)).toEqual({ x: 0, y: 29 });
     world.hydrate(['morro-neon']);
     world.syncFromFlags((f) => f === 'unlocked_feira');
     expect(world.isUnlocked('feira-central')).toBe(true);

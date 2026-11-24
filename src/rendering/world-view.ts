@@ -1,12 +1,15 @@
 import { Palette } from '../content/palette';
+import type { DistrictId } from '../core/types';
 import type { GameSession } from '../systems/session';
-import { createCamera, followPlayer } from '../world/camera';
+import type { WorldNpc } from '../systems/interaction';
+import { createCamera, followPlayer, viewportPadding } from '../world/camera';
 import { tileAt, type MapDef, type TileKind } from '../world/maps';
 import { bakeSprite, blitImage } from './bake';
 import { FpsMeter, type FpsSample } from './fps';
 import {
   makeAlley,
   makeAsphalt,
+  makeBlocked,
   makeBuilding,
   makeExitPad,
   makeGrass,
@@ -21,13 +24,14 @@ import {
   makeSidewalk,
   makeStairs,
   makeWire,
+  type TileDistrict,
 } from './pixel-gen';
 
 const TILE = 16;
 const SCALE = 3;
 const TILE_PX = TILE * SCALE;
 const RAIN_COUNT = 8;
-const MAX_LIGHTS = 2;
+const MAX_LIGHTS = 6;
 const GLOW_R = 72;
 
 export type WorldView = {
@@ -39,7 +43,6 @@ export type WorldView = {
 };
 
 type Baked = {
-  tiles: Record<TileKind, HTMLCanvasElement>;
   player: HTMLCanvasElement[];
   npc: Map<string, HTMLCanvasElement>;
   building: Record<string, HTMLCanvasElement[]>;
@@ -120,20 +123,31 @@ function drawOnce(state: ViewState, frame: number, now: number): FpsSample {
   return state.lastSample;
 }
 
-function bakeAll(): Baked {
-  const tiles: Record<TileKind, HTMLCanvasElement> = {
-    asphalt: bakeSprite(makeAsphalt(), SCALE),
-    sidewalk: bakeSprite(makeSidewalk(), SCALE),
-    alley: bakeSprite(makeAlley(), SCALE),
-    plaza: bakeSprite(makePlaza(), SCALE),
+function districtTileVariant(districtId: DistrictId): TileDistrict {
+  if (districtId === 'morro-neon') return 'morro';
+  if (districtId === 'feira-central') return 'feira';
+  if (districtId === 'avenida-odds') return 'avenida';
+  if (districtId === 'torre-casa') return 'torre';
+  return 'default';
+}
+
+function bakeDistrictTiles(districtId: DistrictId): Record<TileKind, HTMLCanvasElement> {
+  const v = districtTileVariant(districtId);
+  return {
+    asphalt: bakeSprite(makeAsphalt(v), SCALE),
+    sidewalk: bakeSprite(makeSidewalk(v), SCALE),
+    alley: bakeSprite(makeAlley(v), SCALE),
+    plaza: bakeSprite(makePlaza(v), SCALE),
     grass: bakeSprite(makeGrass(), SCALE),
-    stairs: bakeSprite(makeStairs(), SCALE),
-    interior: bakeSprite(makeInterior(), SCALE),
-    blocked: bakeSprite(makeGrass(), SCALE),
+    stairs: bakeSprite(makeStairs(v), SCALE),
+    interior: bakeSprite(makeInterior(v), SCALE),
+    blocked: bakeSprite(makeBlocked(v), SCALE),
     exit: bakeSprite(makeExitPad(), SCALE),
   };
+}
+
+function bakeAll(): Baked {
   return {
-    tiles,
     player: [
       bakeSprite(makePlayerSprite(0), SCALE),
       bakeSprite(makePlayerSprite(1), SCALE),
@@ -145,7 +159,7 @@ function bakeAll(): Baked {
       avenida: [0, 1, 2, 3].map((s) => bakeSprite(makeBuilding(s, 'avenida'), SCALE)),
       torre: [0, 1, 2, 3].map((s) => bakeSprite(makeBuilding(s, 'torre'), SCALE)),
     },
-    exit: tiles.exit,
+    exit: bakeSprite(makeExitPad(), SCALE),
     landmark: new Map([
       ['led-tower', bakeSprite(makeLandmark('led-tower'), SCALE)],
       ['calcadao', bakeSprite(makeLandmark('calcadao'), SCALE)],
@@ -180,15 +194,28 @@ function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCa
     viewH: canvas.height,
     tilePx: TILE_PX,
   });
+  const pad = viewportPadding({
+    mapW: map.width,
+    mapH: map.height,
+    viewW: canvas.width,
+    viewH: canvas.height,
+    tilePx: TILE_PX,
+  });
+  const ox = pad.padX - cam.x;
+  const oy = pad.padY - cam.y;
+  const district = state.session.world.get(stats.districtId);
   ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = Palette.void;
+  ctx.fillStyle = Palette.nightSky;
+  if (district?.color) {
+    ctx.fillStyle = blendVoid(district.color);
+  }
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   const layer = state.mapCache?.layer;
-  if (layer) ctx.drawImage(layer, -cam.x, -cam.y);
-  drawActors(ctx, state, frame, cam.x, cam.y);
-  drawFewLights(ctx, state, stats.x, stats.y, cam.x, cam.y);
+  if (layer) ctx.drawImage(layer, ox, oy);
+  drawActors(ctx, state, frame, ox, oy);
+  drawFewLights(ctx, state, stats.x, stats.y, ox, oy);
   if ((frame & 1) === 0) drawRain(ctx, frame);
-  drawMarker(ctx, state, cam.x, cam.y, frame);
+  drawMarker(ctx, state, ox, oy, frame);
   if (showFps) drawFpsOverlay(ctx, sample);
   return cam;
 }
@@ -201,14 +228,19 @@ function ensureMapCache(state: ViewState, map: MapDef, baked: Baked): void {
   };
 }
 
+function blendVoid(districtColor: string): string {
+  return districtColor.length >= 7 ? `${districtColor}22` : Palette.nightSky;
+}
+
 function bakeMapLayer(map: MapDef, baked: Baked): HTMLCanvasElement {
+  const tiles = bakeDistrictTiles(map.districtId);
   const layer = document.createElement('canvas');
   layer.width = map.width * TILE_PX;
   layer.height = map.height * TILE_PX;
   const ctx = layer.getContext('2d');
   if (!ctx) return layer;
   ctx.imageSmoothingEnabled = false;
-  paintTiles(ctx, map, baked);
+  paintTiles(ctx, map, tiles);
   paintBuildings(ctx, map, baked);
   paintSigns(ctx, map, baked);
   paintProps(ctx, map, baked);
@@ -218,10 +250,14 @@ function bakeMapLayer(map: MapDef, baked: Baked): HTMLCanvasElement {
   return layer;
 }
 
-function paintTiles(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): void {
+function paintTiles(
+  ctx: CanvasRenderingContext2D,
+  map: MapDef,
+  tiles: Record<TileKind, HTMLCanvasElement>,
+): void {
   for (let y = 0; y < map.height; y += 1) {
     for (let x = 0; x < map.width; x += 1) {
-      blitImage(ctx, baked.tiles[tileAt(map, x, y)], x * TILE_PX, y * TILE_PX);
+      blitImage(ctx, tiles[tileAt(map, x, y)], x * TILE_PX, y * TILE_PX);
     }
   }
 }
@@ -297,11 +333,11 @@ function glowSprite(baked: Baked, color: string): HTMLCanvasElement {
   return img;
 }
 
-function npcSprite(baked: Baked, color: string, frame: number): HTMLCanvasElement {
-  const key = `${color}:${frame % 2}`;
+function npcSprite(baked: Baked, npc: WorldNpc, frame: number): HTMLCanvasElement {
+  const key = `${npc.id}:${frame % 2}`;
   let img = baked.npc.get(key);
   if (!img) {
-    img = bakeSprite(makeNpcSprite(color, frame % 2), SCALE);
+    img = bakeSprite(makeNpcSprite(npc.color, frame % 2, npc.id), SCALE);
     baked.npc.set(key, img);
   }
   return img;
@@ -324,7 +360,7 @@ function drawActors(
     actors.push({
       y: npc.y,
       x: npc.x,
-      img: npcSprite(baked, npc.color, anim),
+      img: npcSprite(baked, npc, anim),
     });
   }
   actors.push({
@@ -345,6 +381,61 @@ function drawActors(
   }
 }
 
+type GlowBlit = {
+  ctx: CanvasRenderingContext2D;
+  baked: Baked;
+  color: string;
+  wx: number;
+  wy: number;
+  camX: number;
+  camY: number;
+};
+
+function blitGlow(g: GlowBlit): void {
+  g.ctx.drawImage(glowSprite(g.baked, g.color), g.wx - g.camX - GLOW_R, g.wy - g.camY - GLOW_R);
+}
+
+function paintWorldGlows(
+  ctx: CanvasRenderingContext2D,
+  baked: Baked,
+  map: MapDef,
+  camX: number,
+  camY: number,
+): void {
+  let n = 0;
+  for (const s of map.signs) {
+    if (n >= MAX_LIGHTS - 2) break;
+    blitGlow({ ctx, baked, color: s.color, wx: s.x * TILE_PX + 28, wy: s.y * TILE_PX, camX, camY });
+    n += 1;
+  }
+  if (n < MAX_LIGHTS - 1) {
+    const c = map.landmark.kind.includes('casa') ? Palette.gold : Palette.neonCyan;
+    blitGlow({
+      ctx,
+      baked,
+      color: c,
+      wx: map.landmark.x * TILE_PX + 8,
+      wy: map.landmark.y * TILE_PX,
+      camX,
+      camY,
+    });
+    n += 1;
+  }
+  for (const p of map.props) {
+    if (n >= MAX_LIGHTS - 1 || p.kind !== 'kiosk') continue;
+    blitGlow({
+      ctx,
+      baked,
+      color: Palette.brasilYellow,
+      wx: p.x * TILE_PX + 8,
+      wy: p.y * TILE_PX - 12,
+      camX,
+      camY,
+    });
+    n += 1;
+  }
+}
+
 function drawFewLights(
   ctx: CanvasRenderingContext2D,
   state: ViewState,
@@ -356,19 +447,16 @@ function drawFewLights(
   const map = state.session.getMap();
   const { baked } = state;
   ctx.globalCompositeOperation = 'lighter';
-  let n = 0;
-  for (const s of map.signs) {
-    if (n >= MAX_LIGHTS - 1) break;
-    const img = glowSprite(baked, s.color);
-    ctx.drawImage(img, s.x * TILE_PX + 24 - camX - GLOW_R, s.y * TILE_PX - camY - GLOW_R);
-    n += 1;
-  }
-  const playerGlow = glowSprite(baked, Palette.neonMagenta);
-  ctx.drawImage(
-    playerGlow,
-    px * TILE_PX + 20 - camX - GLOW_R,
-    py * TILE_PX + 10 - camY - GLOW_R,
-  );
+  paintWorldGlows(ctx, baked, map, camX, camY);
+  blitGlow({
+    ctx,
+    baked,
+    color: Palette.neonMagenta,
+    wx: px * TILE_PX + 20,
+    wy: py * TILE_PX + 10,
+    camX,
+    camY,
+  });
   ctx.globalCompositeOperation = 'source-over';
 }
 

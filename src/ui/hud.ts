@@ -12,6 +12,8 @@ import {
   paintJobs,
   paintTravel,
 } from './panels';
+import { bakeSprite } from '../rendering/bake';
+import { makeEndingScene } from '../rendering/pixel-gen';
 
 export type HudHandles = {
   root: HTMLElement;
@@ -173,10 +175,23 @@ function toggleMenu(p: Parts, open: boolean): void {
   }
 }
 
+let endingArtCanvas: HTMLCanvasElement | null = null;
+
+function endingArt(): HTMLCanvasElement {
+  if (!endingArtCanvas) endingArtCanvas = bakeSprite(makeEndingScene(), 2);
+  return endingArtCanvas;
+}
+
 function showEnding(p: Parts, session: GameSession, text: string): void {
   only(p, 'ending');
   clearNode(p.ending);
+  const art = el('canvas', 'ending-art') as HTMLCanvasElement;
+  const src = endingArt();
+  art.width = src.width;
+  art.height = src.height;
+  art.getContext('2d')?.drawImage(src, 0, 0);
   p.ending.append(
+    art,
     el('h2', '', UI.wonEnding),
     el('p', '', text === UI.wonEnding ? UI.endingBlurb : text),
     button(UI.playAgain, () => {

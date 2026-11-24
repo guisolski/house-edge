@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   makeAsphalt,
+  makeBlocked,
   makeBuilding,
+  makeEndingScene,
   makeExitPad,
   makeLandmark,
   makeNeonSign,
@@ -13,9 +15,10 @@ import {
 
 describe('pixel-gen', () => {
   it('builds procedural grids with night cyberpunk accents', () => {
-    expect(makePlayerSprite().width).toBe(20);
-    expect(makePlayerSprite().height).toBe(34);
-    expect(makeNpcSprite('#fff').height).toBe(34);
+    expect(makePlayerSprite().width).toBe(22);
+    expect(makePlayerSprite().height).toBe(38);
+    expect(makeNpcSprite('#fff').height).toBe(38);
+    expect(makeNpcSprite('#fff', 0, 'seu-ze').height).toBe(42);
     expect(makeAsphalt().pixels.length).toBe(256);
     expect(makePlaza().pixels.length).toBe(256);
     expect(makeStairs().pixels.length).toBe(256);
@@ -24,5 +27,8 @@ describe('pixel-gen', () => {
     expect(makeNeonSign('#ff2bd6').width).toBeGreaterThan(8);
     expect(makeLandmark('led-tower').height).toBeGreaterThan(16);
     expect(makeExitPad().width).toBe(16);
+    expect(makeBlocked('torre').pixels.length).toBe(256);
+    expect(makeEndingScene().width).toBeGreaterThan(200);
+    expect(makePlaza('feira').pixels[0]).toBeDefined();
   });
 });

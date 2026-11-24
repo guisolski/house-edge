@@ -9,7 +9,7 @@ import {
   nearestNpc,
 } from '../../src/systems/interaction';
 import { buildDistrictMap, isWalkable, tileAt } from '../../src/world/maps';
-import { createCamera, followPlayer } from '../../src/world/camera';
+import { createCamera, followPlayer, viewportPadding } from '../../src/world/camera';
 import { currentObjective } from '../../src/systems/objectives';
 import { STORY_BEATS } from '../../src/content/story';
 import { GameSession } from '../../src/systems/session';
@@ -73,11 +73,19 @@ describe('maps and interaction', () => {
     expect(buildDistrictMap('feira-central').props.length).toBeGreaterThan(0);
     expect(buildDistrictMap('avenida-odds').buildings[0]?.kind).toBe('avenida');
     expect(buildDistrictMap('torre-casa').landmark.kind).toBe('casa-tower');
-    expect(map.width).toBeGreaterThan(20);
+    expect(map.width).toBeGreaterThanOrEqual(40);
+    expect(tileAt(map, 1, 15)).not.toBe('grass');
     expect(isWalkable(map, 8, 15)).toBe(true);
+    expect(isWalkable(map, 13, 14)).toBe(true);
     expect(tileAt(map, -1, 0)).toBe('blocked');
     expect(tileAt(map, 0, 0)).toBe('blocked');
     expect(tileAt(map, 1, 14)).not.toBe('blocked');
+    const torre = buildDistrictMap('torre-casa');
+    expect(torre.width).toBeGreaterThanOrEqual(40);
+    expect(tileAt(torre, 0, 0)).toBe('blocked');
+    expect(tileAt(torre, 1, 1)).toBe('blocked');
+    expect(tileAt(torre, 0, 13)).not.toBe('grass');
+    expect(tileAt(map, 38, 14)).toBe('exit');
     const npcs = districtNpcs();
     const exits = districtExits();
     expect(nearestNpc(npcs, 'morro-neon', 13, 14)?.id).toBe('dona-nair');
@@ -100,6 +108,14 @@ describe('maps and interaction', () => {
     });
     expect(cam.x).toBeGreaterThanOrEqual(0);
     expect(cam.y).toBeGreaterThanOrEqual(0);
+    const pad = viewportPadding({
+      mapW: 20,
+      mapH: 26,
+      viewW: 1280,
+      viewH: 540,
+      tilePx: 48,
+    });
+    expect(pad.padX).toBeGreaterThan(0);
   });
 });
 
@@ -120,7 +136,15 @@ describe('objectives', () => {
     expect(obj.targetX).toBe(13);
     const travel = currentObjective({
       beats: STORY_BEATS,
-      completed: ['intro-laje', 'boteco-nair', 'luna-beco', 'seu-ze-banca'],
+      completed: [
+        'intro-laje',
+        'boteco-nair',
+        'morro-antena',
+        'luna-beco',
+        'morro-fios',
+        'morro-laje-mark',
+        'seu-ze-banca',
+      ],
       flags: () => true,
       districtId: 'morro-neon',
       npcs,

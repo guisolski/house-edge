@@ -74,6 +74,7 @@ canvas.excalibur-game {
 .bet-panel,
 .travel-panel,
 .jobs-panel,
+.upgrades-panel,
 .ending-panel {
   position: absolute;
   left: 50%;
@@ -91,12 +92,21 @@ canvas.excalibur-game {
   gap: 0.55rem;
 }
 
+.ending-panel .ending-art {
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  border: 1px solid #2bfff244;
+  border-radius: 4px;
+}
+
 /* Keep dialogue / modals above the virtual stick + action buttons on touch. */
 .hud[data-input-mode='touch'] .dialogue-panel,
 .hud[data-input-mode='touch'] .bet-panel,
 .hud[data-input-mode='touch'] .menu-panel,
 .hud[data-input-mode='touch'] .travel-panel,
-.hud[data-input-mode='touch'] .jobs-panel {
+.hud[data-input-mode='touch'] .jobs-panel,
+.hud[data-input-mode='touch'] .upgrades-panel {
   top: 34%;
   max-height: min(48vh, 380px);
   z-index: 12;
@@ -144,6 +154,7 @@ canvas.excalibur-game {
 .bet-panel[hidden],
 .travel-panel[hidden],
 .jobs-panel[hidden],
+.upgrades-panel[hidden],
 .ending-panel[hidden],
 .play-hud[hidden],
 .interact-prompt[hidden],
