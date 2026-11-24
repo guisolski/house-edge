@@ -8,17 +8,17 @@ Date: 2026-11-24
 
 ## Checks
 
-| Area | Result |
-| --- | --- |
-| Softlock / odd jobs | PASS — world givers + cooldown/cap |
-| Story length | PASS — 18 beats, mid-twist, upgrades menu |
-| Visuals | IMPROVED — dense Morro/Fair/Avenue/Tower; ending art |
-| Tower void | PASS — nightSky letterbox + larger torre |
-| Mobile bet / WASD | PASS — sticky footer, hints hidden on touch |
-| NPC collision | PASS |
-| Exit pads | PASS — auto-travel on exit tiles everywhere |
-| Pity | PASS — story gates only, cap 62% |
-| FPS | PASS — ≥50 desktop + 4× throttle |
+| Area                | Result                                               |
+| ------------------- | ---------------------------------------------------- |
+| Softlock / odd jobs | PASS — world givers + cooldown/cap                   |
+| Story length        | PASS — 18 beats, mid-twist, upgrades menu            |
+| Visuals             | IMPROVED — dense Morro/Fair/Avenue/Tower; ending art |
+| Tower void          | PASS — nightSky letterbox + larger torre             |
+| Mobile bet / WASD   | PASS — sticky footer, hints hidden on touch          |
+| NPC collision       | PASS                                                 |
+| Exit pads           | PASS — auto-travel on exit tiles everywhere          |
+| Pity                | PASS — story gates only, cap 62%                     |
+| FPS                 | PASS — ≥50 desktop + 4× throttle                     |
 
 ## Gaps (honest)
 
