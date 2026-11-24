@@ -32,16 +32,16 @@ preview:
 	npm run preview
 
 deploy: build
-	@echo "Build estático pronto em dist/ (base=$(BASE_PATH))."
-	@echo "O deploy para GitHub Pages é feito pelo workflow .github/workflows/pages.yml."
-	@echo "Para publicar: faça push na branch main (ou dispare o workflow manualmente)."
-	@echo "Defina BASE_PATH=/<repo>/ ao construir para project pages, ex.:"
-	@echo "  make build BASE_PATH=/odds-neon/"
+	@echo "Static build ready in dist/ (base=$(BASE_PATH))."
+	@echo "GitHub Pages deploy runs via .github/workflows/pages.yml."
+	@echo "Push main (or dispatch the workflow) to publish."
+	@echo "For this repo use:"
+	@echo "  make build BASE_PATH=/house-edge/"
 
 docker:
-	docker build -t odds-neon:local .
-	@echo "Imagem opcional pronta. Use apenas se não for hospedar no GitHub Pages."
-	@echo "  docker run --rm -p 8080:80 odds-neon:local"
+	docker build -t house-edge:local .
+	@echo "Optional image ready (prefer GitHub Pages for hosting)."
+	@echo "  docker run --rm -p 8080:80 house-edge:local"
 
 ci:
 	npm run ci

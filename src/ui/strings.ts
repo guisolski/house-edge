@@ -1,7 +1,7 @@
 /** All player-facing UI copy (English). */
 
 export const UI = {
-  title: 'ODDS NEON',
+  title: 'HOUSE EDGE',
   tagline: 'A Brazilian megacity where every breath is a bet.',
   newGame: 'New Game',
   continue: 'Continue',

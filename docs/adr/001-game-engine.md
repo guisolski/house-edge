@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-Odds Neon needs a TypeScript-first 2D engine for pixel art, neon lighting/glow, tile-like worlds, keyboard + touch + gamepad input, audio hooks, and unit-testable game logic.
+House Edge needs a TypeScript-first 2D engine for pixel art, neon lighting/glow, tile-like worlds, keyboard + touch + gamepad input, audio hooks, and unit-testable game logic.
 
 Candidates researched:
 

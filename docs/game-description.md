@@ -1,6 +1,6 @@
 # Game description
 
-**Odds Neon** is a top-down cyberpunk adventure set in a futuristic Brazilian megacity where betting corporations rewrote daily life. Buying water, crossing a street, or talking to a neighbor means placing a bet.
+**House Edge** is a top-down cyberpunk adventure set in a futuristic Brazilian megacity where betting corporations rewrote daily life. Buying water, crossing a street, or talking to a neighbor means placing a bet.
 
 You play **Rita Odds**, a debt-ridden runner from **Morro Neon**, climbing through connected districts toward **Casa Suprema Tower**. The main story is a short campaign (~20 minutes) wrapped around a grind loop of side jobs, credits, reputation, and upgrades.
 

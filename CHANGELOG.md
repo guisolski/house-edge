@@ -5,11 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] — 2026-11-24
+
+### Changed
+
+- Renamed the game from **Odds Neon** to **House Edge** across UI, package name (`house-edge`), docs, and save-key namespace.
+- GitHub Pages base path fixed to `/house-edge/` for https://guisolski.github.io/house-edge/.
+
 ## [1.0.0] — 2026-11-24
 
 ### Added
 
-- Playable Odds Neon campaign (~20 minute story) across four Brazilian cyberpunk districts.
+- Playable House Edge campaign (~20 minute story) across four Brazilian cyberpunk districts.
 - Betting-centric gameplay loop with grind jobs and upgrades.
 - Excalibur.js shell, procedural pixel art, procedural synthwave audio.
 - Keyboard, touch, and gamepad input.

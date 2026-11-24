@@ -6,26 +6,29 @@ Primary host: **GitHub Pages** (static site). Docker/nginx is optional/secondary
 
 Vite reads `BASE_PATH` (default `/`).
 
-GitHub project pages need the repo subpath, e.g. `/odds-neon/`.
+This repo is published as a project site at `/house-edge/`:
 
 ```bash
-make build BASE_PATH=/odds-neon/
+make build BASE_PATH=/house-edge/
 # or
-BASE_PATH=/odds-neon/ npm run build
+BASE_PATH=/house-edge/ npm run build
 ```
 
-The Pages workflow sets:
+The Pages workflow hardcodes:
 
 ```bash
-BASE_PATH=/${{ github.event.repository.name }}/
+BASE_PATH=/house-edge/
 ```
+
+Live URL: <https://guisolski.github.io/house-edge/>
 
 ## GitHub Pages setup
 
-1. Push to `main`.
+1. Push to `main` on <https://github.com/guisolski/house-edge>.
 2. In the GitHub repo: **Settings → Pages → Source = GitHub Actions**.
-3. Workflow `.github/workflows/pages.yml` builds and deploys the `dist/` artifact.
-4. Site URL: `https://<user>.github.io/<repo>/`
+3. Workflow `.github/workflows/pages.yml` builds and deploys the `dist/` artifact
+   using `actions/configure-pages`, `actions/upload-pages-artifact`, and `actions/deploy-pages`.
+4. Site URL: <https://guisolski.github.io/house-edge/>
 
 Manual dispatch is enabled (`workflow_dispatch`).
 
@@ -42,12 +45,12 @@ If you need a container instead of Pages:
 ```bash
 make build BASE_PATH=/
 make docker
-docker run --rm -p 8080:80 odds-neon:local
+docker run --rm -p 8080:80 house-edge:local
 ```
 
 ## Local preview of production build
 
 ```bash
-make build BASE_PATH=/
+make build BASE_PATH=/house-edge/
 make preview
 ```

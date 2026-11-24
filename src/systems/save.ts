@@ -1,7 +1,7 @@
 import type { GameSave, PlayerStats, DistrictId } from '../core/types';
 
 export const SAVE_VERSION = 1 as const;
-const STORAGE_KEY = 'odds-neon-save-v1';
+const STORAGE_KEY = 'house-edge-save-v1';
 
 export function createDefaultSave(): GameSave {
   return {

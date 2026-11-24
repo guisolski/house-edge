@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -26,7 +27,7 @@ jobs:
       - run: npm ci
       - name: Build static site for GitHub Pages
         env:
-          BASE_PATH: /${{ github.event.repository.name }}/
+          BASE_PATH: /house-edge/
         run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

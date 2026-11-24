@@ -1,4 +1,4 @@
-# Agent instructions — Odds Neon
+# Agent instructions — House Edge
 
 Follow these rules for every change.
 

@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Odds Neon core flows', () => {
+test.describe('House Edge core flows', () => {
   test('boots title screen and starts a new game', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'ODDS NEON' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'HOUSE EDGE' })).toBeVisible();
     await page.getByRole('button', { name: 'New Game' }).click();
     await expect(page.locator('.play-hud')).toBeVisible();
     await expect(page.locator('.stats')).toContainText('Credits');

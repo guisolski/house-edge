@@ -1,4 +1,4 @@
-# Odds Neon
+# House Edge
 
 Top-down cyberpunk bets in a Brazilian megacity. Every interaction is a wager. Play Rita Odds from Morro Neon to Casa Suprema Tower.
 
@@ -28,8 +28,10 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123).
 ## GitHub Pages
 
 ```bash
-make build BASE_PATH=/<repo-name>/
+make build BASE_PATH=/house-edge/
 ```
+
+Repo: [guisolski/house-edge](https://github.com/guisolski/house-edge) — site: [guisolski.github.io/house-edge](https://guisolski.github.io/house-edge/)
 
 Enable **Settings → Pages → GitHub Actions**. Workflow: `.github/workflows/pages.yml`.
 
