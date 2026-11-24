@@ -4,7 +4,7 @@ test.describe('House Edge core flows', () => {
   test('boots title screen and starts a new game', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'HOUSE EDGE' })).toBeVisible();
-    await expect(page.locator('.version')).toContainText('v1.5');
+    await expect(page.locator('.version')).toContainText('v1.6');
     await page.getByRole('button', { name: 'New Game' }).click();
     await expect(page.locator('.play-hud')).toBeVisible();
     await expect(page.locator('.stats')).toContainText('Credits');

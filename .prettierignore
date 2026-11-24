@@ -7,3 +7,6 @@ package-lock.json
 playwright-report
 test-results
 CHANGELOG.md
+public/assets/**/*.json
+public/maps/**/*.tmj
+src/content/maps/**/*.json

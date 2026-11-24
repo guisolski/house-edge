@@ -4,5 +4,13 @@
     "MD033": false,
     "MD041": false,
   },
-  "ignores": ["node_modules/**", "dist/**", "coverage/**", "reports/**", "CHANGELOG.md"],
+  "ignores": [
+    "node_modules/**",
+    "dist/**",
+    "coverage/**",
+    "reports/**",
+    "test-results/**",
+    "artifacts/**",
+    "CHANGELOG.md",
+  ],
 }

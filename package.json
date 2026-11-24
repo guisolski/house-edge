@@ -1,11 +1,12 @@
 {
   "name": "house-edge",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "description": "House Edge — cyberpunk bets in a Brazilian megacity",
   "type": "module",
   "private": true,
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 43123",
+    "assets": "python3 tools/build-assets.py",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0 --port 43124",
     "typecheck": "tsc --noEmit",

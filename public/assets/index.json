@@ -1,0 +1,10 @@
+{
+  "atlas": "assets/neon-atlas.png",
+  "meta": "assets/neon-atlas.json",
+  "maps": {
+    "morro-neon": "maps/morro-neon.tmj",
+    "feira-central": "maps/feira-central.tmj",
+    "avenida-odds": "maps/avenida-odds.tmj",
+    "torre-casa": "maps/torre-casa.tmj"
+  }
+}

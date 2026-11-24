@@ -1,0 +1,3508 @@
+{
+  "tile": 16,
+  "columns": 32,
+  "tiles": {
+    "urban_0000": {
+      "kind": "tile",
+      "gid": 1,
+      "atlas": [
+        0,
+        0
+      ]
+    },
+    "urban_0001": {
+      "kind": "tile",
+      "gid": 2,
+      "atlas": [
+        16,
+        0
+      ]
+    },
+    "urban_0002": {
+      "kind": "tile",
+      "gid": 3,
+      "atlas": [
+        32,
+        0
+      ]
+    },
+    "urban_0003": {
+      "kind": "tile",
+      "gid": 4,
+      "atlas": [
+        48,
+        0
+      ]
+    },
+    "urban_0004": {
+      "kind": "tile",
+      "gid": 5,
+      "atlas": [
+        64,
+        0
+      ]
+    },
+    "urban_0005": {
+      "kind": "tile",
+      "gid": 6,
+      "atlas": [
+        80,
+        0
+      ]
+    },
+    "urban_0006": {
+      "kind": "tile",
+      "gid": 7,
+      "atlas": [
+        96,
+        0
+      ]
+    },
+    "urban_0007": {
+      "kind": "tile",
+      "gid": 8,
+      "atlas": [
+        112,
+        0
+      ]
+    },
+    "urban_0008": {
+      "kind": "tile",
+      "gid": 9,
+      "atlas": [
+        128,
+        0
+      ]
+    },
+    "urban_0009": {
+      "kind": "tile",
+      "gid": 10,
+      "atlas": [
+        144,
+        0
+      ]
+    },
+    "urban_0010": {
+      "kind": "tile",
+      "gid": 11,
+      "atlas": [
+        160,
+        0
+      ]
+    },
+    "urban_0011": {
+      "kind": "tile",
+      "gid": 12,
+      "atlas": [
+        176,
+        0
+      ]
+    },
+    "urban_0012": {
+      "kind": "tile",
+      "gid": 13,
+      "atlas": [
+        192,
+        0
+      ]
+    },
+    "urban_0013": {
+      "kind": "tile",
+      "gid": 14,
+      "atlas": [
+        208,
+        0
+      ]
+    },
+    "urban_0014": {
+      "kind": "tile",
+      "gid": 15,
+      "atlas": [
+        224,
+        0
+      ]
+    },
+    "urban_0015": {
+      "kind": "tile",
+      "gid": 16,
+      "atlas": [
+        240,
+        0
+      ]
+    },
+    "urban_0016": {
+      "kind": "tile",
+      "gid": 17,
+      "atlas": [
+        256,
+        0
+      ]
+    },
+    "urban_0017": {
+      "kind": "tile",
+      "gid": 18,
+      "atlas": [
+        272,
+        0
+      ]
+    },
+    "urban_0018": {
+      "kind": "tile",
+      "gid": 19,
+      "atlas": [
+        288,
+        0
+      ]
+    },
+    "urban_0019": {
+      "kind": "tile",
+      "gid": 20,
+      "atlas": [
+        304,
+        0
+      ]
+    },
+    "urban_0020": {
+      "kind": "tile",
+      "gid": 21,
+      "atlas": [
+        320,
+        0
+      ]
+    },
+    "urban_0021": {
+      "kind": "tile",
+      "gid": 22,
+      "atlas": [
+        336,
+        0
+      ]
+    },
+    "urban_0022": {
+      "kind": "tile",
+      "gid": 23,
+      "atlas": [
+        352,
+        0
+      ]
+    },
+    "urban_0023": {
+      "kind": "tile",
+      "gid": 24,
+      "atlas": [
+        368,
+        0
+      ]
+    },
+    "urban_0024": {
+      "kind": "tile",
+      "gid": 25,
+      "atlas": [
+        384,
+        0
+      ]
+    },
+    "urban_0025": {
+      "kind": "tile",
+      "gid": 26,
+      "atlas": [
+        400,
+        0
+      ]
+    },
+    "urban_0026": {
+      "kind": "tile",
+      "gid": 27,
+      "atlas": [
+        416,
+        0
+      ]
+    },
+    "urban_0027": {
+      "kind": "tile",
+      "gid": 28,
+      "atlas": [
+        432,
+        0
+      ]
+    },
+    "urban_0028": {
+      "kind": "tile",
+      "gid": 29,
+      "atlas": [
+        448,
+        0
+      ]
+    },
+    "urban_0029": {
+      "kind": "tile",
+      "gid": 30,
+      "atlas": [
+        464,
+        0
+      ]
+    },
+    "urban_0030": {
+      "kind": "tile",
+      "gid": 31,
+      "atlas": [
+        480,
+        0
+      ]
+    },
+    "urban_0031": {
+      "kind": "tile",
+      "gid": 32,
+      "atlas": [
+        496,
+        0
+      ]
+    },
+    "urban_0032": {
+      "kind": "tile",
+      "gid": 33,
+      "atlas": [
+        0,
+        16
+      ]
+    },
+    "urban_0033": {
+      "kind": "tile",
+      "gid": 34,
+      "atlas": [
+        16,
+        16
+      ]
+    },
+    "urban_0034": {
+      "kind": "tile",
+      "gid": 35,
+      "atlas": [
+        32,
+        16
+      ]
+    },
+    "urban_0035": {
+      "kind": "tile",
+      "gid": 36,
+      "atlas": [
+        48,
+        16
+      ]
+    },
+    "urban_0036": {
+      "kind": "tile",
+      "gid": 37,
+      "atlas": [
+        64,
+        16
+      ]
+    },
+    "urban_0037": {
+      "kind": "tile",
+      "gid": 38,
+      "atlas": [
+        80,
+        16
+      ]
+    },
+    "urban_0038": {
+      "kind": "tile",
+      "gid": 39,
+      "atlas": [
+        96,
+        16
+      ]
+    },
+    "urban_0039": {
+      "kind": "tile",
+      "gid": 40,
+      "atlas": [
+        112,
+        16
+      ]
+    },
+    "urban_0040": {
+      "kind": "tile",
+      "gid": 41,
+      "atlas": [
+        128,
+        16
+      ]
+    },
+    "urban_0041": {
+      "kind": "tile",
+      "gid": 42,
+      "atlas": [
+        144,
+        16
+      ]
+    },
+    "urban_0042": {
+      "kind": "tile",
+      "gid": 43,
+      "atlas": [
+        160,
+        16
+      ]
+    },
+    "urban_0043": {
+      "kind": "tile",
+      "gid": 44,
+      "atlas": [
+        176,
+        16
+      ]
+    },
+    "urban_0044": {
+      "kind": "tile",
+      "gid": 45,
+      "atlas": [
+        192,
+        16
+      ]
+    },
+    "urban_0045": {
+      "kind": "tile",
+      "gid": 46,
+      "atlas": [
+        208,
+        16
+      ]
+    },
+    "urban_0046": {
+      "kind": "tile",
+      "gid": 47,
+      "atlas": [
+        224,
+        16
+      ]
+    },
+    "urban_0047": {
+      "kind": "tile",
+      "gid": 48,
+      "atlas": [
+        240,
+        16
+      ]
+    },
+    "urban_0048": {
+      "kind": "tile",
+      "gid": 49,
+      "atlas": [
+        256,
+        16
+      ]
+    },
+    "urban_0049": {
+      "kind": "tile",
+      "gid": 50,
+      "atlas": [
+        272,
+        16
+      ]
+    },
+    "urban_0050": {
+      "kind": "tile",
+      "gid": 51,
+      "atlas": [
+        288,
+        16
+      ]
+    },
+    "urban_0051": {
+      "kind": "tile",
+      "gid": 52,
+      "atlas": [
+        304,
+        16
+      ]
+    },
+    "urban_0052": {
+      "kind": "tile",
+      "gid": 53,
+      "atlas": [
+        320,
+        16
+      ]
+    },
+    "urban_0053": {
+      "kind": "tile",
+      "gid": 54,
+      "atlas": [
+        336,
+        16
+      ]
+    },
+    "urban_0054": {
+      "kind": "tile",
+      "gid": 55,
+      "atlas": [
+        352,
+        16
+      ]
+    },
+    "urban_0055": {
+      "kind": "tile",
+      "gid": 56,
+      "atlas": [
+        368,
+        16
+      ]
+    },
+    "urban_0056": {
+      "kind": "tile",
+      "gid": 57,
+      "atlas": [
+        384,
+        16
+      ]
+    },
+    "urban_0057": {
+      "kind": "tile",
+      "gid": 58,
+      "atlas": [
+        400,
+        16
+      ]
+    },
+    "urban_0058": {
+      "kind": "tile",
+      "gid": 59,
+      "atlas": [
+        416,
+        16
+      ]
+    },
+    "urban_0059": {
+      "kind": "tile",
+      "gid": 60,
+      "atlas": [
+        432,
+        16
+      ]
+    },
+    "urban_0060": {
+      "kind": "tile",
+      "gid": 61,
+      "atlas": [
+        448,
+        16
+      ]
+    },
+    "urban_0061": {
+      "kind": "tile",
+      "gid": 62,
+      "atlas": [
+        464,
+        16
+      ]
+    },
+    "urban_0062": {
+      "kind": "tile",
+      "gid": 63,
+      "atlas": [
+        480,
+        16
+      ]
+    },
+    "urban_0063": {
+      "kind": "tile",
+      "gid": 64,
+      "atlas": [
+        496,
+        16
+      ]
+    },
+    "urban_0064": {
+      "kind": "tile",
+      "gid": 65,
+      "atlas": [
+        0,
+        32
+      ]
+    },
+    "urban_0065": {
+      "kind": "tile",
+      "gid": 66,
+      "atlas": [
+        16,
+        32
+      ]
+    },
+    "urban_0066": {
+      "kind": "tile",
+      "gid": 67,
+      "atlas": [
+        32,
+        32
+      ]
+    },
+    "urban_0067": {
+      "kind": "tile",
+      "gid": 68,
+      "atlas": [
+        48,
+        32
+      ]
+    },
+    "urban_0068": {
+      "kind": "tile",
+      "gid": 69,
+      "atlas": [
+        64,
+        32
+      ]
+    },
+    "urban_0069": {
+      "kind": "tile",
+      "gid": 70,
+      "atlas": [
+        80,
+        32
+      ]
+    },
+    "urban_0070": {
+      "kind": "tile",
+      "gid": 71,
+      "atlas": [
+        96,
+        32
+      ]
+    },
+    "urban_0071": {
+      "kind": "tile",
+      "gid": 72,
+      "atlas": [
+        112,
+        32
+      ]
+    },
+    "urban_0072": {
+      "kind": "tile",
+      "gid": 73,
+      "atlas": [
+        128,
+        32
+      ]
+    },
+    "urban_0073": {
+      "kind": "tile",
+      "gid": 74,
+      "atlas": [
+        144,
+        32
+      ]
+    },
+    "urban_0074": {
+      "kind": "tile",
+      "gid": 75,
+      "atlas": [
+        160,
+        32
+      ]
+    },
+    "urban_0075": {
+      "kind": "tile",
+      "gid": 76,
+      "atlas": [
+        176,
+        32
+      ]
+    },
+    "urban_0076": {
+      "kind": "tile",
+      "gid": 77,
+      "atlas": [
+        192,
+        32
+      ]
+    },
+    "urban_0077": {
+      "kind": "tile",
+      "gid": 78,
+      "atlas": [
+        208,
+        32
+      ]
+    },
+    "urban_0078": {
+      "kind": "tile",
+      "gid": 79,
+      "atlas": [
+        224,
+        32
+      ]
+    },
+    "urban_0079": {
+      "kind": "tile",
+      "gid": 80,
+      "atlas": [
+        240,
+        32
+      ]
+    },
+    "urban_0120": {
+      "kind": "tile",
+      "gid": 81,
+      "atlas": [
+        256,
+        32
+      ]
+    },
+    "urban_0121": {
+      "kind": "tile",
+      "gid": 82,
+      "atlas": [
+        272,
+        32
+      ]
+    },
+    "urban_0122": {
+      "kind": "tile",
+      "gid": 83,
+      "atlas": [
+        288,
+        32
+      ]
+    },
+    "urban_0123": {
+      "kind": "tile",
+      "gid": 84,
+      "atlas": [
+        304,
+        32
+      ]
+    },
+    "urban_0124": {
+      "kind": "tile",
+      "gid": 85,
+      "atlas": [
+        320,
+        32
+      ]
+    },
+    "urban_0125": {
+      "kind": "tile",
+      "gid": 86,
+      "atlas": [
+        336,
+        32
+      ]
+    },
+    "urban_0126": {
+      "kind": "tile",
+      "gid": 87,
+      "atlas": [
+        352,
+        32
+      ]
+    },
+    "urban_0127": {
+      "kind": "tile",
+      "gid": 88,
+      "atlas": [
+        368,
+        32
+      ]
+    },
+    "urban_0128": {
+      "kind": "tile",
+      "gid": 89,
+      "atlas": [
+        384,
+        32
+      ]
+    },
+    "urban_0129": {
+      "kind": "tile",
+      "gid": 90,
+      "atlas": [
+        400,
+        32
+      ]
+    },
+    "urban_0130": {
+      "kind": "tile",
+      "gid": 91,
+      "atlas": [
+        416,
+        32
+      ]
+    },
+    "urban_0131": {
+      "kind": "tile",
+      "gid": 92,
+      "atlas": [
+        432,
+        32
+      ]
+    },
+    "urban_0132": {
+      "kind": "tile",
+      "gid": 93,
+      "atlas": [
+        448,
+        32
+      ]
+    },
+    "urban_0133": {
+      "kind": "tile",
+      "gid": 94,
+      "atlas": [
+        464,
+        32
+      ]
+    },
+    "urban_0134": {
+      "kind": "tile",
+      "gid": 95,
+      "atlas": [
+        480,
+        32
+      ]
+    },
+    "urban_0135": {
+      "kind": "tile",
+      "gid": 96,
+      "atlas": [
+        496,
+        32
+      ]
+    },
+    "urban_0136": {
+      "kind": "tile",
+      "gid": 97,
+      "atlas": [
+        0,
+        48
+      ]
+    },
+    "urban_0137": {
+      "kind": "tile",
+      "gid": 98,
+      "atlas": [
+        16,
+        48
+      ]
+    },
+    "urban_0138": {
+      "kind": "tile",
+      "gid": 99,
+      "atlas": [
+        32,
+        48
+      ]
+    },
+    "urban_0139": {
+      "kind": "tile",
+      "gid": 100,
+      "atlas": [
+        48,
+        48
+      ]
+    },
+    "urban_0140": {
+      "kind": "tile",
+      "gid": 101,
+      "atlas": [
+        64,
+        48
+      ]
+    },
+    "urban_0141": {
+      "kind": "tile",
+      "gid": 102,
+      "atlas": [
+        80,
+        48
+      ]
+    },
+    "urban_0142": {
+      "kind": "tile",
+      "gid": 103,
+      "atlas": [
+        96,
+        48
+      ]
+    },
+    "urban_0143": {
+      "kind": "tile",
+      "gid": 104,
+      "atlas": [
+        112,
+        48
+      ]
+    },
+    "urban_0144": {
+      "kind": "tile",
+      "gid": 105,
+      "atlas": [
+        128,
+        48
+      ]
+    },
+    "urban_0145": {
+      "kind": "tile",
+      "gid": 106,
+      "atlas": [
+        144,
+        48
+      ]
+    },
+    "urban_0146": {
+      "kind": "tile",
+      "gid": 107,
+      "atlas": [
+        160,
+        48
+      ]
+    },
+    "urban_0147": {
+      "kind": "tile",
+      "gid": 108,
+      "atlas": [
+        176,
+        48
+      ]
+    },
+    "urban_0148": {
+      "kind": "tile",
+      "gid": 109,
+      "atlas": [
+        192,
+        48
+      ]
+    },
+    "urban_0149": {
+      "kind": "tile",
+      "gid": 110,
+      "atlas": [
+        208,
+        48
+      ]
+    },
+    "urban_0150": {
+      "kind": "tile",
+      "gid": 111,
+      "atlas": [
+        224,
+        48
+      ]
+    },
+    "urban_0151": {
+      "kind": "tile",
+      "gid": 112,
+      "atlas": [
+        240,
+        48
+      ]
+    },
+    "urban_0152": {
+      "kind": "tile",
+      "gid": 113,
+      "atlas": [
+        256,
+        48
+      ]
+    },
+    "urban_0153": {
+      "kind": "tile",
+      "gid": 114,
+      "atlas": [
+        272,
+        48
+      ]
+    },
+    "urban_0154": {
+      "kind": "tile",
+      "gid": 115,
+      "atlas": [
+        288,
+        48
+      ]
+    },
+    "urban_0155": {
+      "kind": "tile",
+      "gid": 116,
+      "atlas": [
+        304,
+        48
+      ]
+    },
+    "urban_0156": {
+      "kind": "tile",
+      "gid": 117,
+      "atlas": [
+        320,
+        48
+      ]
+    },
+    "urban_0157": {
+      "kind": "tile",
+      "gid": 118,
+      "atlas": [
+        336,
+        48
+      ]
+    },
+    "urban_0158": {
+      "kind": "tile",
+      "gid": 119,
+      "atlas": [
+        352,
+        48
+      ]
+    },
+    "urban_0159": {
+      "kind": "tile",
+      "gid": 120,
+      "atlas": [
+        368,
+        48
+      ]
+    },
+    "urban_0160": {
+      "kind": "tile",
+      "gid": 121,
+      "atlas": [
+        384,
+        48
+      ]
+    },
+    "urban_0161": {
+      "kind": "tile",
+      "gid": 122,
+      "atlas": [
+        400,
+        48
+      ]
+    },
+    "urban_0162": {
+      "kind": "tile",
+      "gid": 123,
+      "atlas": [
+        416,
+        48
+      ]
+    },
+    "urban_0163": {
+      "kind": "tile",
+      "gid": 124,
+      "atlas": [
+        432,
+        48
+      ]
+    },
+    "urban_0164": {
+      "kind": "tile",
+      "gid": 125,
+      "atlas": [
+        448,
+        48
+      ]
+    },
+    "urban_0165": {
+      "kind": "tile",
+      "gid": 126,
+      "atlas": [
+        464,
+        48
+      ]
+    },
+    "urban_0166": {
+      "kind": "tile",
+      "gid": 127,
+      "atlas": [
+        480,
+        48
+      ]
+    },
+    "urban_0167": {
+      "kind": "tile",
+      "gid": 128,
+      "atlas": [
+        496,
+        48
+      ]
+    },
+    "urban_0168": {
+      "kind": "tile",
+      "gid": 129,
+      "atlas": [
+        0,
+        64
+      ]
+    },
+    "urban_0169": {
+      "kind": "tile",
+      "gid": 130,
+      "atlas": [
+        16,
+        64
+      ]
+    },
+    "urban_0170": {
+      "kind": "tile",
+      "gid": 131,
+      "atlas": [
+        32,
+        64
+      ]
+    },
+    "urban_0171": {
+      "kind": "tile",
+      "gid": 132,
+      "atlas": [
+        48,
+        64
+      ]
+    },
+    "urban_0172": {
+      "kind": "tile",
+      "gid": 133,
+      "atlas": [
+        64,
+        64
+      ]
+    },
+    "urban_0173": {
+      "kind": "tile",
+      "gid": 134,
+      "atlas": [
+        80,
+        64
+      ]
+    },
+    "urban_0174": {
+      "kind": "tile",
+      "gid": 135,
+      "atlas": [
+        96,
+        64
+      ]
+    },
+    "urban_0175": {
+      "kind": "tile",
+      "gid": 136,
+      "atlas": [
+        112,
+        64
+      ]
+    },
+    "urban_0176": {
+      "kind": "tile",
+      "gid": 137,
+      "atlas": [
+        128,
+        64
+      ]
+    },
+    "urban_0177": {
+      "kind": "tile",
+      "gid": 138,
+      "atlas": [
+        144,
+        64
+      ]
+    },
+    "urban_0178": {
+      "kind": "tile",
+      "gid": 139,
+      "atlas": [
+        160,
+        64
+      ]
+    },
+    "urban_0179": {
+      "kind": "tile",
+      "gid": 140,
+      "atlas": [
+        176,
+        64
+      ]
+    },
+    "urban_0180": {
+      "kind": "tile",
+      "gid": 141,
+      "atlas": [
+        192,
+        64
+      ]
+    },
+    "urban_0181": {
+      "kind": "tile",
+      "gid": 142,
+      "atlas": [
+        208,
+        64
+      ]
+    },
+    "urban_0182": {
+      "kind": "tile",
+      "gid": 143,
+      "atlas": [
+        224,
+        64
+      ]
+    },
+    "urban_0183": {
+      "kind": "tile",
+      "gid": 144,
+      "atlas": [
+        240,
+        64
+      ]
+    },
+    "urban_0184": {
+      "kind": "tile",
+      "gid": 145,
+      "atlas": [
+        256,
+        64
+      ]
+    },
+    "urban_0185": {
+      "kind": "tile",
+      "gid": 146,
+      "atlas": [
+        272,
+        64
+      ]
+    },
+    "urban_0186": {
+      "kind": "tile",
+      "gid": 147,
+      "atlas": [
+        288,
+        64
+      ]
+    },
+    "urban_0187": {
+      "kind": "tile",
+      "gid": 148,
+      "atlas": [
+        304,
+        64
+      ]
+    },
+    "urban_0188": {
+      "kind": "tile",
+      "gid": 149,
+      "atlas": [
+        320,
+        64
+      ]
+    },
+    "urban_0189": {
+      "kind": "tile",
+      "gid": 150,
+      "atlas": [
+        336,
+        64
+      ]
+    },
+    "urban_0190": {
+      "kind": "tile",
+      "gid": 151,
+      "atlas": [
+        352,
+        64
+      ]
+    },
+    "urban_0191": {
+      "kind": "tile",
+      "gid": 152,
+      "atlas": [
+        368,
+        64
+      ]
+    },
+    "urban_0192": {
+      "kind": "tile",
+      "gid": 153,
+      "atlas": [
+        384,
+        64
+      ]
+    },
+    "urban_0193": {
+      "kind": "tile",
+      "gid": 154,
+      "atlas": [
+        400,
+        64
+      ]
+    },
+    "urban_0194": {
+      "kind": "tile",
+      "gid": 155,
+      "atlas": [
+        416,
+        64
+      ]
+    },
+    "urban_0195": {
+      "kind": "tile",
+      "gid": 156,
+      "atlas": [
+        432,
+        64
+      ]
+    },
+    "urban_0196": {
+      "kind": "tile",
+      "gid": 157,
+      "atlas": [
+        448,
+        64
+      ]
+    },
+    "urban_0197": {
+      "kind": "tile",
+      "gid": 158,
+      "atlas": [
+        464,
+        64
+      ]
+    },
+    "urban_0198": {
+      "kind": "tile",
+      "gid": 159,
+      "atlas": [
+        480,
+        64
+      ]
+    },
+    "urban_0199": {
+      "kind": "tile",
+      "gid": 160,
+      "atlas": [
+        496,
+        64
+      ]
+    },
+    "urban_0300": {
+      "kind": "tile",
+      "gid": 161,
+      "atlas": [
+        0,
+        80
+      ]
+    },
+    "urban_0301": {
+      "kind": "tile",
+      "gid": 162,
+      "atlas": [
+        16,
+        80
+      ]
+    },
+    "urban_0302": {
+      "kind": "tile",
+      "gid": 163,
+      "atlas": [
+        32,
+        80
+      ]
+    },
+    "urban_0303": {
+      "kind": "tile",
+      "gid": 164,
+      "atlas": [
+        48,
+        80
+      ]
+    },
+    "urban_0304": {
+      "kind": "tile",
+      "gid": 165,
+      "atlas": [
+        64,
+        80
+      ]
+    },
+    "urban_0305": {
+      "kind": "tile",
+      "gid": 166,
+      "atlas": [
+        80,
+        80
+      ]
+    },
+    "urban_0306": {
+      "kind": "tile",
+      "gid": 167,
+      "atlas": [
+        96,
+        80
+      ]
+    },
+    "urban_0307": {
+      "kind": "tile",
+      "gid": 168,
+      "atlas": [
+        112,
+        80
+      ]
+    },
+    "urban_0308": {
+      "kind": "tile",
+      "gid": 169,
+      "atlas": [
+        128,
+        80
+      ]
+    },
+    "urban_0309": {
+      "kind": "tile",
+      "gid": 170,
+      "atlas": [
+        144,
+        80
+      ]
+    },
+    "urban_0310": {
+      "kind": "tile",
+      "gid": 171,
+      "atlas": [
+        160,
+        80
+      ]
+    },
+    "urban_0311": {
+      "kind": "tile",
+      "gid": 172,
+      "atlas": [
+        176,
+        80
+      ]
+    },
+    "urban_0312": {
+      "kind": "tile",
+      "gid": 173,
+      "atlas": [
+        192,
+        80
+      ]
+    },
+    "urban_0313": {
+      "kind": "tile",
+      "gid": 174,
+      "atlas": [
+        208,
+        80
+      ]
+    },
+    "urban_0314": {
+      "kind": "tile",
+      "gid": 175,
+      "atlas": [
+        224,
+        80
+      ]
+    },
+    "urban_0315": {
+      "kind": "tile",
+      "gid": 176,
+      "atlas": [
+        240,
+        80
+      ]
+    },
+    "urban_0316": {
+      "kind": "tile",
+      "gid": 177,
+      "atlas": [
+        256,
+        80
+      ]
+    },
+    "urban_0317": {
+      "kind": "tile",
+      "gid": 178,
+      "atlas": [
+        272,
+        80
+      ]
+    },
+    "urban_0318": {
+      "kind": "tile",
+      "gid": 179,
+      "atlas": [
+        288,
+        80
+      ]
+    },
+    "urban_0319": {
+      "kind": "tile",
+      "gid": 180,
+      "atlas": [
+        304,
+        80
+      ]
+    },
+    "urban_0320": {
+      "kind": "tile",
+      "gid": 181,
+      "atlas": [
+        320,
+        80
+      ]
+    },
+    "urban_0321": {
+      "kind": "tile",
+      "gid": 182,
+      "atlas": [
+        336,
+        80
+      ]
+    },
+    "urban_0322": {
+      "kind": "tile",
+      "gid": 183,
+      "atlas": [
+        352,
+        80
+      ]
+    },
+    "urban_0323": {
+      "kind": "tile",
+      "gid": 184,
+      "atlas": [
+        368,
+        80
+      ]
+    },
+    "urban_0324": {
+      "kind": "tile",
+      "gid": 185,
+      "atlas": [
+        384,
+        80
+      ]
+    },
+    "urban_0325": {
+      "kind": "tile",
+      "gid": 186,
+      "atlas": [
+        400,
+        80
+      ]
+    },
+    "urban_0326": {
+      "kind": "tile",
+      "gid": 187,
+      "atlas": [
+        416,
+        80
+      ]
+    },
+    "urban_0327": {
+      "kind": "tile",
+      "gid": 188,
+      "atlas": [
+        432,
+        80
+      ]
+    },
+    "urban_0328": {
+      "kind": "tile",
+      "gid": 189,
+      "atlas": [
+        448,
+        80
+      ]
+    },
+    "urban_0329": {
+      "kind": "tile",
+      "gid": 190,
+      "atlas": [
+        464,
+        80
+      ]
+    },
+    "urban_0330": {
+      "kind": "tile",
+      "gid": 191,
+      "atlas": [
+        480,
+        80
+      ]
+    },
+    "urban_0331": {
+      "kind": "tile",
+      "gid": 192,
+      "atlas": [
+        496,
+        80
+      ]
+    },
+    "urban_0332": {
+      "kind": "tile",
+      "gid": 193,
+      "atlas": [
+        0,
+        96
+      ]
+    },
+    "urban_0333": {
+      "kind": "tile",
+      "gid": 194,
+      "atlas": [
+        16,
+        96
+      ]
+    },
+    "urban_0334": {
+      "kind": "tile",
+      "gid": 195,
+      "atlas": [
+        32,
+        96
+      ]
+    },
+    "urban_0335": {
+      "kind": "tile",
+      "gid": 196,
+      "atlas": [
+        48,
+        96
+      ]
+    },
+    "urban_0336": {
+      "kind": "tile",
+      "gid": 197,
+      "atlas": [
+        64,
+        96
+      ]
+    },
+    "urban_0337": {
+      "kind": "tile",
+      "gid": 198,
+      "atlas": [
+        80,
+        96
+      ]
+    },
+    "urban_0338": {
+      "kind": "tile",
+      "gid": 199,
+      "atlas": [
+        96,
+        96
+      ]
+    },
+    "urban_0339": {
+      "kind": "tile",
+      "gid": 200,
+      "atlas": [
+        112,
+        96
+      ]
+    },
+    "urban_0340": {
+      "kind": "tile",
+      "gid": 201,
+      "atlas": [
+        128,
+        96
+      ]
+    },
+    "urban_0341": {
+      "kind": "tile",
+      "gid": 202,
+      "atlas": [
+        144,
+        96
+      ]
+    },
+    "urban_0342": {
+      "kind": "tile",
+      "gid": 203,
+      "atlas": [
+        160,
+        96
+      ]
+    },
+    "urban_0343": {
+      "kind": "tile",
+      "gid": 204,
+      "atlas": [
+        176,
+        96
+      ]
+    },
+    "urban_0344": {
+      "kind": "tile",
+      "gid": 205,
+      "atlas": [
+        192,
+        96
+      ]
+    },
+    "urban_0345": {
+      "kind": "tile",
+      "gid": 206,
+      "atlas": [
+        208,
+        96
+      ]
+    },
+    "urban_0346": {
+      "kind": "tile",
+      "gid": 207,
+      "atlas": [
+        224,
+        96
+      ]
+    },
+    "urban_0347": {
+      "kind": "tile",
+      "gid": 208,
+      "atlas": [
+        240,
+        96
+      ]
+    },
+    "urban_0348": {
+      "kind": "tile",
+      "gid": 209,
+      "atlas": [
+        256,
+        96
+      ]
+    },
+    "urban_0349": {
+      "kind": "tile",
+      "gid": 210,
+      "atlas": [
+        272,
+        96
+      ]
+    },
+    "urban_0350": {
+      "kind": "tile",
+      "gid": 211,
+      "atlas": [
+        288,
+        96
+      ]
+    },
+    "urban_0351": {
+      "kind": "tile",
+      "gid": 212,
+      "atlas": [
+        304,
+        96
+      ]
+    },
+    "urban_0352": {
+      "kind": "tile",
+      "gid": 213,
+      "atlas": [
+        320,
+        96
+      ]
+    },
+    "urban_0353": {
+      "kind": "tile",
+      "gid": 214,
+      "atlas": [
+        336,
+        96
+      ]
+    },
+    "urban_0354": {
+      "kind": "tile",
+      "gid": 215,
+      "atlas": [
+        352,
+        96
+      ]
+    },
+    "urban_0355": {
+      "kind": "tile",
+      "gid": 216,
+      "atlas": [
+        368,
+        96
+      ]
+    },
+    "urban_0356": {
+      "kind": "tile",
+      "gid": 217,
+      "atlas": [
+        384,
+        96
+      ]
+    },
+    "urban_0357": {
+      "kind": "tile",
+      "gid": 218,
+      "atlas": [
+        400,
+        96
+      ]
+    },
+    "urban_0358": {
+      "kind": "tile",
+      "gid": 219,
+      "atlas": [
+        416,
+        96
+      ]
+    },
+    "urban_0359": {
+      "kind": "tile",
+      "gid": 220,
+      "atlas": [
+        432,
+        96
+      ]
+    },
+    "modern_0000": {
+      "kind": "tile",
+      "gid": 221,
+      "atlas": [
+        448,
+        96
+      ]
+    },
+    "modern_0001": {
+      "kind": "tile",
+      "gid": 222,
+      "atlas": [
+        464,
+        96
+      ]
+    },
+    "modern_0002": {
+      "kind": "tile",
+      "gid": 223,
+      "atlas": [
+        480,
+        96
+      ]
+    },
+    "modern_0003": {
+      "kind": "tile",
+      "gid": 224,
+      "atlas": [
+        496,
+        96
+      ]
+    },
+    "modern_0004": {
+      "kind": "tile",
+      "gid": 225,
+      "atlas": [
+        0,
+        112
+      ]
+    },
+    "modern_0005": {
+      "kind": "tile",
+      "gid": 226,
+      "atlas": [
+        16,
+        112
+      ]
+    },
+    "modern_0006": {
+      "kind": "tile",
+      "gid": 227,
+      "atlas": [
+        32,
+        112
+      ]
+    },
+    "modern_0007": {
+      "kind": "tile",
+      "gid": 228,
+      "atlas": [
+        48,
+        112
+      ]
+    },
+    "modern_0008": {
+      "kind": "tile",
+      "gid": 229,
+      "atlas": [
+        64,
+        112
+      ]
+    },
+    "modern_0009": {
+      "kind": "tile",
+      "gid": 230,
+      "atlas": [
+        80,
+        112
+      ]
+    },
+    "modern_0010": {
+      "kind": "tile",
+      "gid": 231,
+      "atlas": [
+        96,
+        112
+      ]
+    },
+    "modern_0011": {
+      "kind": "tile",
+      "gid": 232,
+      "atlas": [
+        112,
+        112
+      ]
+    },
+    "modern_0012": {
+      "kind": "tile",
+      "gid": 233,
+      "atlas": [
+        128,
+        112
+      ]
+    },
+    "modern_0013": {
+      "kind": "tile",
+      "gid": 234,
+      "atlas": [
+        144,
+        112
+      ]
+    },
+    "modern_0014": {
+      "kind": "tile",
+      "gid": 235,
+      "atlas": [
+        160,
+        112
+      ]
+    },
+    "modern_0015": {
+      "kind": "tile",
+      "gid": 236,
+      "atlas": [
+        176,
+        112
+      ]
+    },
+    "modern_0016": {
+      "kind": "tile",
+      "gid": 237,
+      "atlas": [
+        192,
+        112
+      ]
+    },
+    "modern_0017": {
+      "kind": "tile",
+      "gid": 238,
+      "atlas": [
+        208,
+        112
+      ]
+    },
+    "modern_0018": {
+      "kind": "tile",
+      "gid": 239,
+      "atlas": [
+        224,
+        112
+      ]
+    },
+    "modern_0019": {
+      "kind": "tile",
+      "gid": 240,
+      "atlas": [
+        240,
+        112
+      ]
+    },
+    "modern_0020": {
+      "kind": "tile",
+      "gid": 241,
+      "atlas": [
+        256,
+        112
+      ]
+    },
+    "modern_0021": {
+      "kind": "tile",
+      "gid": 242,
+      "atlas": [
+        272,
+        112
+      ]
+    },
+    "modern_0022": {
+      "kind": "tile",
+      "gid": 243,
+      "atlas": [
+        288,
+        112
+      ]
+    },
+    "modern_0023": {
+      "kind": "tile",
+      "gid": 244,
+      "atlas": [
+        304,
+        112
+      ]
+    },
+    "modern_0024": {
+      "kind": "tile",
+      "gid": 245,
+      "atlas": [
+        320,
+        112
+      ]
+    },
+    "modern_0025": {
+      "kind": "tile",
+      "gid": 246,
+      "atlas": [
+        336,
+        112
+      ]
+    },
+    "modern_0026": {
+      "kind": "tile",
+      "gid": 247,
+      "atlas": [
+        352,
+        112
+      ]
+    },
+    "modern_0027": {
+      "kind": "tile",
+      "gid": 248,
+      "atlas": [
+        368,
+        112
+      ]
+    },
+    "modern_0028": {
+      "kind": "tile",
+      "gid": 249,
+      "atlas": [
+        384,
+        112
+      ]
+    },
+    "modern_0029": {
+      "kind": "tile",
+      "gid": 250,
+      "atlas": [
+        400,
+        112
+      ]
+    },
+    "modern_0030": {
+      "kind": "tile",
+      "gid": 251,
+      "atlas": [
+        416,
+        112
+      ]
+    },
+    "modern_0031": {
+      "kind": "tile",
+      "gid": 252,
+      "atlas": [
+        432,
+        112
+      ]
+    },
+    "modern_0032": {
+      "kind": "tile",
+      "gid": 253,
+      "atlas": [
+        448,
+        112
+      ]
+    },
+    "modern_0033": {
+      "kind": "tile",
+      "gid": 254,
+      "atlas": [
+        464,
+        112
+      ]
+    },
+    "modern_0034": {
+      "kind": "tile",
+      "gid": 255,
+      "atlas": [
+        480,
+        112
+      ]
+    },
+    "modern_0035": {
+      "kind": "tile",
+      "gid": 256,
+      "atlas": [
+        496,
+        112
+      ]
+    },
+    "modern_0036": {
+      "kind": "tile",
+      "gid": 257,
+      "atlas": [
+        0,
+        128
+      ]
+    },
+    "modern_0037": {
+      "kind": "tile",
+      "gid": 258,
+      "atlas": [
+        16,
+        128
+      ]
+    },
+    "modern_0038": {
+      "kind": "tile",
+      "gid": 259,
+      "atlas": [
+        32,
+        128
+      ]
+    },
+    "modern_0039": {
+      "kind": "tile",
+      "gid": 260,
+      "atlas": [
+        48,
+        128
+      ]
+    },
+    "modern_0042": {
+      "kind": "tile",
+      "gid": 261,
+      "atlas": [
+        64,
+        128
+      ]
+    },
+    "modern_0049": {
+      "kind": "tile",
+      "gid": 262,
+      "atlas": [
+        80,
+        128
+      ]
+    },
+    "modern_0056": {
+      "kind": "tile",
+      "gid": 263,
+      "atlas": [
+        96,
+        128
+      ]
+    },
+    "modern_0063": {
+      "kind": "tile",
+      "gid": 264,
+      "atlas": [
+        112,
+        128
+      ]
+    },
+    "modern_0070": {
+      "kind": "tile",
+      "gid": 265,
+      "atlas": [
+        128,
+        128
+      ]
+    },
+    "modern_0077": {
+      "kind": "tile",
+      "gid": 266,
+      "atlas": [
+        144,
+        128
+      ]
+    },
+    "modern_0084": {
+      "kind": "tile",
+      "gid": 267,
+      "atlas": [
+        160,
+        128
+      ]
+    },
+    "modern_0091": {
+      "kind": "tile",
+      "gid": 268,
+      "atlas": [
+        176,
+        128
+      ]
+    },
+    "modern_0098": {
+      "kind": "tile",
+      "gid": 269,
+      "atlas": [
+        192,
+        128
+      ]
+    },
+    "modern_0105": {
+      "kind": "tile",
+      "gid": 270,
+      "atlas": [
+        208,
+        128
+      ]
+    },
+    "modern_0112": {
+      "kind": "tile",
+      "gid": 271,
+      "atlas": [
+        224,
+        128
+      ]
+    },
+    "modern_0119": {
+      "kind": "tile",
+      "gid": 272,
+      "atlas": [
+        240,
+        128
+      ]
+    },
+    "modern_0126": {
+      "kind": "tile",
+      "gid": 273,
+      "atlas": [
+        256,
+        128
+      ]
+    },
+    "modern_0133": {
+      "kind": "tile",
+      "gid": 274,
+      "atlas": [
+        272,
+        128
+      ]
+    },
+    "modern_0140": {
+      "kind": "tile",
+      "gid": 275,
+      "atlas": [
+        288,
+        128
+      ]
+    },
+    "modern_0147": {
+      "kind": "tile",
+      "gid": 276,
+      "atlas": [
+        304,
+        128
+      ]
+    },
+    "modern_0154": {
+      "kind": "tile",
+      "gid": 277,
+      "atlas": [
+        320,
+        128
+      ]
+    },
+    "modern_0161": {
+      "kind": "tile",
+      "gid": 278,
+      "atlas": [
+        336,
+        128
+      ]
+    },
+    "modern_0168": {
+      "kind": "tile",
+      "gid": 279,
+      "atlas": [
+        352,
+        128
+      ]
+    },
+    "modern_0175": {
+      "kind": "tile",
+      "gid": 280,
+      "atlas": [
+        368,
+        128
+      ]
+    },
+    "modern_0182": {
+      "kind": "tile",
+      "gid": 281,
+      "atlas": [
+        384,
+        128
+      ]
+    },
+    "modern_0189": {
+      "kind": "tile",
+      "gid": 282,
+      "atlas": [
+        400,
+        128
+      ]
+    },
+    "modern_0196": {
+      "kind": "tile",
+      "gid": 283,
+      "atlas": [
+        416,
+        128
+      ]
+    },
+    "modern_0203": {
+      "kind": "tile",
+      "gid": 284,
+      "atlas": [
+        432,
+        128
+      ]
+    },
+    "modern_0210": {
+      "kind": "tile",
+      "gid": 285,
+      "atlas": [
+        448,
+        128
+      ]
+    },
+    "modern_0217": {
+      "kind": "tile",
+      "gid": 286,
+      "atlas": [
+        464,
+        128
+      ]
+    },
+    "modern_0224": {
+      "kind": "tile",
+      "gid": 287,
+      "atlas": [
+        480,
+        128
+      ]
+    },
+    "modern_0231": {
+      "kind": "tile",
+      "gid": 288,
+      "atlas": [
+        496,
+        128
+      ]
+    },
+    "modern_0238": {
+      "kind": "tile",
+      "gid": 289,
+      "atlas": [
+        0,
+        144
+      ]
+    },
+    "modern_0245": {
+      "kind": "tile",
+      "gid": 290,
+      "atlas": [
+        16,
+        144
+      ]
+    },
+    "modern_0252": {
+      "kind": "tile",
+      "gid": 291,
+      "atlas": [
+        32,
+        144
+      ]
+    },
+    "modern_0259": {
+      "kind": "tile",
+      "gid": 292,
+      "atlas": [
+        48,
+        144
+      ]
+    },
+    "modern_0266": {
+      "kind": "tile",
+      "gid": 293,
+      "atlas": [
+        64,
+        144
+      ]
+    },
+    "modern_0273": {
+      "kind": "tile",
+      "gid": 294,
+      "atlas": [
+        80,
+        144
+      ]
+    },
+    "modern_0280": {
+      "kind": "tile",
+      "gid": 295,
+      "atlas": [
+        96,
+        144
+      ]
+    },
+    "modern_0287": {
+      "kind": "tile",
+      "gid": 296,
+      "atlas": [
+        112,
+        144
+      ]
+    },
+    "modern_0294": {
+      "kind": "tile",
+      "gid": 297,
+      "atlas": [
+        128,
+        144
+      ]
+    },
+    "modern_0301": {
+      "kind": "tile",
+      "gid": 298,
+      "atlas": [
+        144,
+        144
+      ]
+    },
+    "modern_0308": {
+      "kind": "tile",
+      "gid": 299,
+      "atlas": [
+        160,
+        144
+      ]
+    },
+    "modern_0315": {
+      "kind": "tile",
+      "gid": 300,
+      "atlas": [
+        176,
+        144
+      ]
+    },
+    "modern_0322": {
+      "kind": "tile",
+      "gid": 301,
+      "atlas": [
+        192,
+        144
+      ]
+    },
+    "modern_0329": {
+      "kind": "tile",
+      "gid": 302,
+      "atlas": [
+        208,
+        144
+      ]
+    },
+    "modern_0336": {
+      "kind": "tile",
+      "gid": 303,
+      "atlas": [
+        224,
+        144
+      ]
+    },
+    "modern_0343": {
+      "kind": "tile",
+      "gid": 304,
+      "atlas": [
+        240,
+        144
+      ]
+    },
+    "modern_0350": {
+      "kind": "tile",
+      "gid": 305,
+      "atlas": [
+        256,
+        144
+      ]
+    },
+    "modern_0357": {
+      "kind": "tile",
+      "gid": 306,
+      "atlas": [
+        272,
+        144
+      ]
+    },
+    "modern_0364": {
+      "kind": "tile",
+      "gid": 307,
+      "atlas": [
+        288,
+        144
+      ]
+    },
+    "modern_0371": {
+      "kind": "tile",
+      "gid": 308,
+      "atlas": [
+        304,
+        144
+      ]
+    },
+    "modern_0378": {
+      "kind": "tile",
+      "gid": 309,
+      "atlas": [
+        320,
+        144
+      ]
+    },
+    "modern_0385": {
+      "kind": "tile",
+      "gid": 310,
+      "atlas": [
+        336,
+        144
+      ]
+    },
+    "modern_0392": {
+      "kind": "tile",
+      "gid": 311,
+      "atlas": [
+        352,
+        144
+      ]
+    },
+    "modern_0399": {
+      "kind": "tile",
+      "gid": 312,
+      "atlas": [
+        368,
+        144
+      ]
+    },
+    "modern_0406": {
+      "kind": "tile",
+      "gid": 313,
+      "atlas": [
+        384,
+        144
+      ]
+    },
+    "modern_0413": {
+      "kind": "tile",
+      "gid": 314,
+      "atlas": [
+        400,
+        144
+      ]
+    },
+    "modern_0420": {
+      "kind": "tile",
+      "gid": 315,
+      "atlas": [
+        416,
+        144
+      ]
+    },
+    "modern_0427": {
+      "kind": "tile",
+      "gid": 316,
+      "atlas": [
+        432,
+        144
+      ]
+    },
+    "modern_0434": {
+      "kind": "tile",
+      "gid": 317,
+      "atlas": [
+        448,
+        144
+      ]
+    },
+    "modern_0441": {
+      "kind": "tile",
+      "gid": 318,
+      "atlas": [
+        464,
+        144
+      ]
+    },
+    "modern_0448": {
+      "kind": "tile",
+      "gid": 319,
+      "atlas": [
+        480,
+        144
+      ]
+    },
+    "modern_0455": {
+      "kind": "tile",
+      "gid": 320,
+      "atlas": [
+        496,
+        144
+      ]
+    },
+    "modern_0462": {
+      "kind": "tile",
+      "gid": 321,
+      "atlas": [
+        0,
+        160
+      ]
+    },
+    "modern_0469": {
+      "kind": "tile",
+      "gid": 322,
+      "atlas": [
+        16,
+        160
+      ]
+    },
+    "modern_0476": {
+      "kind": "tile",
+      "gid": 323,
+      "atlas": [
+        32,
+        160
+      ]
+    },
+    "modern_0483": {
+      "kind": "tile",
+      "gid": 324,
+      "atlas": [
+        48,
+        160
+      ]
+    },
+    "modern_0490": {
+      "kind": "tile",
+      "gid": 325,
+      "atlas": [
+        64,
+        160
+      ]
+    },
+    "modern_0497": {
+      "kind": "tile",
+      "gid": 326,
+      "atlas": [
+        80,
+        160
+      ]
+    },
+    "modern_0504": {
+      "kind": "tile",
+      "gid": 327,
+      "atlas": [
+        96,
+        160
+      ]
+    },
+    "modern_0511": {
+      "kind": "tile",
+      "gid": 328,
+      "atlas": [
+        112,
+        160
+      ]
+    },
+    "modern_0518": {
+      "kind": "tile",
+      "gid": 329,
+      "atlas": [
+        128,
+        160
+      ]
+    },
+    "modern_0525": {
+      "kind": "tile",
+      "gid": 330,
+      "atlas": [
+        144,
+        160
+      ]
+    },
+    "modern_0532": {
+      "kind": "tile",
+      "gid": 331,
+      "atlas": [
+        160,
+        160
+      ]
+    },
+    "modern_0539": {
+      "kind": "tile",
+      "gid": 332,
+      "atlas": [
+        176,
+        160
+      ]
+    },
+    "modern_0546": {
+      "kind": "tile",
+      "gid": 333,
+      "atlas": [
+        192,
+        160
+      ]
+    },
+    "modern_0553": {
+      "kind": "tile",
+      "gid": 334,
+      "atlas": [
+        208,
+        160
+      ]
+    },
+    "modern_0560": {
+      "kind": "tile",
+      "gid": 335,
+      "atlas": [
+        224,
+        160
+      ]
+    },
+    "modern_0567": {
+      "kind": "tile",
+      "gid": 336,
+      "atlas": [
+        240,
+        160
+      ]
+    },
+    "modern_0574": {
+      "kind": "tile",
+      "gid": 337,
+      "atlas": [
+        256,
+        160
+      ]
+    },
+    "modern_0581": {
+      "kind": "tile",
+      "gid": 338,
+      "atlas": [
+        272,
+        160
+      ]
+    },
+    "modern_0588": {
+      "kind": "tile",
+      "gid": 339,
+      "atlas": [
+        288,
+        160
+      ]
+    },
+    "modern_0595": {
+      "kind": "tile",
+      "gid": 340,
+      "atlas": [
+        304,
+        160
+      ]
+    },
+    "modern_0602": {
+      "kind": "tile",
+      "gid": 341,
+      "atlas": [
+        320,
+        160
+      ]
+    },
+    "modern_0609": {
+      "kind": "tile",
+      "gid": 342,
+      "atlas": [
+        336,
+        160
+      ]
+    },
+    "modern_0616": {
+      "kind": "tile",
+      "gid": 343,
+      "atlas": [
+        352,
+        160
+      ]
+    },
+    "modern_0623": {
+      "kind": "tile",
+      "gid": 344,
+      "atlas": [
+        368,
+        160
+      ]
+    },
+    "modern_0630": {
+      "kind": "tile",
+      "gid": 345,
+      "atlas": [
+        384,
+        160
+      ]
+    },
+    "modern_0637": {
+      "kind": "tile",
+      "gid": 346,
+      "atlas": [
+        400,
+        160
+      ]
+    },
+    "modern_0644": {
+      "kind": "tile",
+      "gid": 347,
+      "atlas": [
+        416,
+        160
+      ]
+    },
+    "modern_0651": {
+      "kind": "tile",
+      "gid": 348,
+      "atlas": [
+        432,
+        160
+      ]
+    },
+    "modern_0658": {
+      "kind": "tile",
+      "gid": 349,
+      "atlas": [
+        448,
+        160
+      ]
+    },
+    "modern_0665": {
+      "kind": "tile",
+      "gid": 350,
+      "atlas": [
+        464,
+        160
+      ]
+    },
+    "modern_0672": {
+      "kind": "tile",
+      "gid": 351,
+      "atlas": [
+        480,
+        160
+      ]
+    },
+    "modern_0679": {
+      "kind": "tile",
+      "gid": 352,
+      "atlas": [
+        496,
+        160
+      ]
+    },
+    "modern_0686": {
+      "kind": "tile",
+      "gid": 353,
+      "atlas": [
+        0,
+        176
+      ]
+    },
+    "modern_0693": {
+      "kind": "tile",
+      "gid": 354,
+      "atlas": [
+        16,
+        176
+      ]
+    },
+    "modern_0700": {
+      "kind": "tile",
+      "gid": 355,
+      "atlas": [
+        32,
+        176
+      ]
+    },
+    "modern_0707": {
+      "kind": "tile",
+      "gid": 356,
+      "atlas": [
+        48,
+        176
+      ]
+    },
+    "modern_0714": {
+      "kind": "tile",
+      "gid": 357,
+      "atlas": [
+        64,
+        176
+      ]
+    },
+    "modern_0721": {
+      "kind": "tile",
+      "gid": 358,
+      "atlas": [
+        80,
+        176
+      ]
+    },
+    "modern_0728": {
+      "kind": "tile",
+      "gid": 359,
+      "atlas": [
+        96,
+        176
+      ]
+    },
+    "modern_0735": {
+      "kind": "tile",
+      "gid": 360,
+      "atlas": [
+        112,
+        176
+      ]
+    },
+    "modern_0742": {
+      "kind": "tile",
+      "gid": 361,
+      "atlas": [
+        128,
+        176
+      ]
+    },
+    "modern_0749": {
+      "kind": "tile",
+      "gid": 362,
+      "atlas": [
+        144,
+        176
+      ]
+    },
+    "modern_0756": {
+      "kind": "tile",
+      "gid": 363,
+      "atlas": [
+        160,
+        176
+      ]
+    },
+    "modern_0763": {
+      "kind": "tile",
+      "gid": 364,
+      "atlas": [
+        176,
+        176
+      ]
+    },
+    "modern_0770": {
+      "kind": "tile",
+      "gid": 365,
+      "atlas": [
+        192,
+        176
+      ]
+    },
+    "modern_0777": {
+      "kind": "tile",
+      "gid": 366,
+      "atlas": [
+        208,
+        176
+      ]
+    },
+    "modern_0784": {
+      "kind": "tile",
+      "gid": 367,
+      "atlas": [
+        224,
+        176
+      ]
+    },
+    "modern_0791": {
+      "kind": "tile",
+      "gid": 368,
+      "atlas": [
+        240,
+        176
+      ]
+    },
+    "modern_0798": {
+      "kind": "tile",
+      "gid": 369,
+      "atlas": [
+        256,
+        176
+      ]
+    },
+    "modern_0805": {
+      "kind": "tile",
+      "gid": 370,
+      "atlas": [
+        272,
+        176
+      ]
+    },
+    "modern_0812": {
+      "kind": "tile",
+      "gid": 371,
+      "atlas": [
+        288,
+        176
+      ]
+    },
+    "modern_0819": {
+      "kind": "tile",
+      "gid": 372,
+      "atlas": [
+        304,
+        176
+      ]
+    },
+    "modern_0826": {
+      "kind": "tile",
+      "gid": 373,
+      "atlas": [
+        320,
+        176
+      ]
+    },
+    "modern_0833": {
+      "kind": "tile",
+      "gid": 374,
+      "atlas": [
+        336,
+        176
+      ]
+    },
+    "modern_0840": {
+      "kind": "tile",
+      "gid": 375,
+      "atlas": [
+        352,
+        176
+      ]
+    },
+    "modern_0847": {
+      "kind": "tile",
+      "gid": 376,
+      "atlas": [
+        368,
+        176
+      ]
+    },
+    "modern_0854": {
+      "kind": "tile",
+      "gid": 377,
+      "atlas": [
+        384,
+        176
+      ]
+    },
+    "modern_0861": {
+      "kind": "tile",
+      "gid": 378,
+      "atlas": [
+        400,
+        176
+      ]
+    },
+    "modern_0868": {
+      "kind": "tile",
+      "gid": 379,
+      "atlas": [
+        416,
+        176
+      ]
+    },
+    "modern_0875": {
+      "kind": "tile",
+      "gid": 380,
+      "atlas": [
+        432,
+        176
+      ]
+    },
+    "modern_0882": {
+      "kind": "tile",
+      "gid": 381,
+      "atlas": [
+        448,
+        176
+      ]
+    },
+    "modern_0889": {
+      "kind": "tile",
+      "gid": 382,
+      "atlas": [
+        464,
+        176
+      ]
+    },
+    "modern_0896": {
+      "kind": "tile",
+      "gid": 383,
+      "atlas": [
+        480,
+        176
+      ]
+    },
+    "modern_0903": {
+      "kind": "tile",
+      "gid": 384,
+      "atlas": [
+        496,
+        176
+      ]
+    },
+    "modern_0910": {
+      "kind": "tile",
+      "gid": 385,
+      "atlas": [
+        0,
+        192
+      ]
+    },
+    "modern_0917": {
+      "kind": "tile",
+      "gid": 386,
+      "atlas": [
+        16,
+        192
+      ]
+    },
+    "modern_0924": {
+      "kind": "tile",
+      "gid": 387,
+      "atlas": [
+        32,
+        192
+      ]
+    },
+    "modern_0931": {
+      "kind": "tile",
+      "gid": 388,
+      "atlas": [
+        48,
+        192
+      ]
+    },
+    "modern_0938": {
+      "kind": "tile",
+      "gid": 389,
+      "atlas": [
+        64,
+        192
+      ]
+    },
+    "modern_0945": {
+      "kind": "tile",
+      "gid": 390,
+      "atlas": [
+        80,
+        192
+      ]
+    },
+    "modern_0952": {
+      "kind": "tile",
+      "gid": 391,
+      "atlas": [
+        96,
+        192
+      ]
+    },
+    "modern_0959": {
+      "kind": "tile",
+      "gid": 392,
+      "atlas": [
+        112,
+        192
+      ]
+    },
+    "modern_0966": {
+      "kind": "tile",
+      "gid": 393,
+      "atlas": [
+        128,
+        192
+      ]
+    },
+    "modern_0973": {
+      "kind": "tile",
+      "gid": 394,
+      "atlas": [
+        144,
+        192
+      ]
+    },
+    "modern_0980": {
+      "kind": "tile",
+      "gid": 395,
+      "atlas": [
+        160,
+        192
+      ]
+    },
+    "modern_0987": {
+      "kind": "tile",
+      "gid": 396,
+      "atlas": [
+        176,
+        192
+      ]
+    },
+    "modern_0994": {
+      "kind": "tile",
+      "gid": 397,
+      "atlas": [
+        192,
+        192
+      ]
+    },
+    "modern_1001": {
+      "kind": "tile",
+      "gid": 398,
+      "atlas": [
+        208,
+        192
+      ]
+    },
+    "modern_1008": {
+      "kind": "tile",
+      "gid": 399,
+      "atlas": [
+        224,
+        192
+      ]
+    },
+    "modern_1015": {
+      "kind": "tile",
+      "gid": 400,
+      "atlas": [
+        240,
+        192
+      ]
+    },
+    "modern_1022": {
+      "kind": "tile",
+      "gid": 401,
+      "atlas": [
+        256,
+        192
+      ]
+    },
+    "modern_1029": {
+      "kind": "tile",
+      "gid": 402,
+      "atlas": [
+        272,
+        192
+      ]
+    },
+    "market_0": {
+      "kind": "sprite",
+      "file": "sprites/market_0.png",
+      "w": 32,
+      "h": 32,
+      "gid": 403,
+      "atlas": [
+        288,
+        192
+      ]
+    },
+    "market_1": {
+      "kind": "sprite",
+      "file": "sprites/market_1.png",
+      "w": 32,
+      "h": 32,
+      "gid": 404,
+      "atlas": [
+        304,
+        192
+      ]
+    },
+    "market_2": {
+      "kind": "sprite",
+      "file": "sprites/market_2.png",
+      "w": 32,
+      "h": 32,
+      "gid": 405,
+      "atlas": [
+        320,
+        192
+      ]
+    },
+    "void": {
+      "kind": "tile",
+      "gid": 406,
+      "atlas": [
+        336,
+        192
+      ]
+    },
+    "asphalt": {
+      "kind": "tile",
+      "gid": 407,
+      "atlas": [
+        352,
+        192
+      ]
+    },
+    "asphalt_line": {
+      "kind": "tile",
+      "gid": 408,
+      "atlas": [
+        368,
+        192
+      ]
+    },
+    "sidewalk": {
+      "kind": "tile",
+      "gid": 409,
+      "atlas": [
+        384,
+        192
+      ]
+    },
+    "alley": {
+      "kind": "tile",
+      "gid": 410,
+      "atlas": [
+        400,
+        192
+      ]
+    },
+    "plaza": {
+      "kind": "tile",
+      "gid": 411,
+      "atlas": [
+        416,
+        192
+      ]
+    },
+    "stairs": {
+      "kind": "tile",
+      "gid": 412,
+      "atlas": [
+        432,
+        192
+      ]
+    },
+    "grass_night": {
+      "kind": "tile",
+      "gid": 413,
+      "atlas": [
+        448,
+        192
+      ]
+    },
+    "interior": {
+      "kind": "tile",
+      "gid": 414,
+      "atlas": [
+        464,
+        192
+      ]
+    },
+    "exit": {
+      "kind": "tile",
+      "gid": 415,
+      "atlas": [
+        480,
+        192
+      ]
+    },
+    "blocked": {
+      "kind": "tile",
+      "gid": 416,
+      "atlas": [
+        496,
+        192
+      ]
+    },
+    "ai_favela": {
+      "kind": "sprite",
+      "file": "sprites/ai_favela.png",
+      "w": 48,
+      "h": 48,
+      "gid": 417,
+      "atlas": [
+        0,
+        208
+      ]
+    },
+    "ai_boteco": {
+      "kind": "sprite",
+      "file": "sprites/ai_boteco.png",
+      "w": 40,
+      "h": 40,
+      "gid": 418,
+      "atlas": [
+        16,
+        208
+      ]
+    },
+    "stall_0": {
+      "kind": "sprite",
+      "file": "sprites/stall_0.png",
+      "w": 32,
+      "h": 32,
+      "gid": 419,
+      "atlas": [
+        32,
+        208
+      ]
+    },
+    "stall_1": {
+      "kind": "sprite",
+      "file": "sprites/stall_1.png",
+      "w": 32,
+      "h": 32,
+      "gid": 420,
+      "atlas": [
+        48,
+        208
+      ]
+    },
+    "stall_2": {
+      "kind": "sprite",
+      "file": "sprites/stall_2.png",
+      "w": 32,
+      "h": 32,
+      "gid": 421,
+      "atlas": [
+        64,
+        208
+      ]
+    },
+    "sign_boteco": {
+      "kind": "sprite",
+      "file": "sprites/sign_boteco.png",
+      "w": 48,
+      "h": 48,
+      "gid": 422,
+      "atlas": [
+        80,
+        208
+      ]
+    },
+    "sign_laje": {
+      "kind": "sprite",
+      "file": "sprites/sign_laje.png",
+      "w": 48,
+      "h": 48,
+      "gid": 423,
+      "atlas": [
+        96,
+        208
+      ]
+    },
+    "sign_odds": {
+      "kind": "sprite",
+      "file": "sprites/sign_odds.png",
+      "w": 48,
+      "h": 48,
+      "gid": 424,
+      "atlas": [
+        112,
+        208
+      ]
+    },
+    "sign_casa": {
+      "kind": "sprite",
+      "file": "sprites/sign_casa.png",
+      "w": 48,
+      "h": 48,
+      "gid": 425,
+      "atlas": [
+        128,
+        208
+      ]
+    },
+    "npc_0": {
+      "kind": "sprite",
+      "file": "sprites/npc_0.png",
+      "w": 24,
+      "h": 24,
+      "gid": 426,
+      "atlas": [
+        144,
+        208
+      ]
+    },
+    "npc_1": {
+      "kind": "sprite",
+      "file": "sprites/npc_1.png",
+      "w": 24,
+      "h": 24,
+      "gid": 427,
+      "atlas": [
+        160,
+        208
+      ]
+    },
+    "npc_2": {
+      "kind": "sprite",
+      "file": "sprites/npc_2.png",
+      "w": 24,
+      "h": 24,
+      "gid": 428,
+      "atlas": [
+        176,
+        208
+      ]
+    },
+    "npc_3": {
+      "kind": "sprite",
+      "file": "sprites/npc_3.png",
+      "w": 24,
+      "h": 24,
+      "gid": 429,
+      "atlas": [
+        192,
+        208
+      ]
+    },
+    "npc_4": {
+      "kind": "sprite",
+      "file": "sprites/npc_4.png",
+      "w": 24,
+      "h": 24,
+      "gid": 430,
+      "atlas": [
+        208,
+        208
+      ]
+    },
+    "npc_5": {
+      "kind": "sprite",
+      "file": "sprites/npc_5.png",
+      "w": 24,
+      "h": 24,
+      "gid": 431,
+      "atlas": [
+        224,
+        208
+      ]
+    }
+  }
+}
