@@ -1,47 +1,40 @@
-# Playtest report — House Edge 1.8.0
+# Playtest report — House Edge 1.9.0
 
-Date: 2026-11-24
+Independent check against v1.8.0 feedback (art 5/10, bugs 4–8).
 
-## Summary
+## Verdict
 
-**PASS** vs independent v1.7.0 playtest (art 4/10). Morro is now terraced hillside with retaining-wall lips and a central stair spine; Feira/Avenida use facade edge bands instead of window-dot alley fills; buildings are larger 3/4 volumes; player has ground ring + arrow and ~1.5× sprites; signs draw above glow. Objective copy names districts/NPCs; Side Jobs labeled [SAFE]/[BET]; Feira NPCs on the street; glow skipped while bet panel open. FPS still ~60 in play. Honest: still hand-pixel, not Kenney-sheet density.
+**Bugs: PASS.** **Art: ~6/10** (better than 5, still short of a clean hillside read). Console: **0 errors**.
 
-## Before (v1.7 live — owner shots)
+## Before → After
 
-| Issue           | Observed                                                                     |
-| --------------- | ---------------------------------------------------------------------------- |
-| Morro           | Flat grid of identical tiny houses; window-dot / ladder fills between lanes  |
-| Feira / Avenida | Large green-dashed / window-dot placeholder bands                            |
-| Buildings       | Small icons on a grid                                                        |
-| Player          | Hard to spot; no marker; ODDS sign occluded by glow                          |
-| Objective       | Stale “Travel to feira-central via exit”; Luna “Come back later” with no tip |
-| Side Jobs       | “Boteco water rotation” opens a bet with no SAFE/BET label                   |
-| Fair NPCs       | Behind stalls → “Nobody in range”                                            |
-| FPS             | Dip to ~47 when bet panel opens                                              |
+| Item | v1.8 / ask | v1.9 result |
+| --- | --- | --- |
+| Morro height | Flat bands | Blocked 3-row cliff faces + dark brick overlays + central 4-tile stairs spine. Height reads more, but faces still compete with neon accents / house sprites — not a full “favela step” look. |
+| Left window column | Full-height cyan/yellow strip | Solid edge wall + brick blocked fill; left cyan residue ≈0 in pixel sample. Residual vertical accents can still read as a strip. |
+| Fair ground | Speckled plaza + yellow-window bands | Plaza fill + quiet feira asphalt (no yellow lane hatch). Stalls still share a base silhouette (awning recolors/size variants only). |
+| Sprite repetition | High | Building flips + style recolors + stall size variants. Still repetitive at a glance. |
+| Camera north | Player half off-screen | Camera Y pad ≈ half viewport; north shot shows map void above while player stays on-screen. |
+| E range / prompt | ~50px / Nobody in range | `INTERACT_RANGE=3.5`; on-screen `E (Name)` when in range. |
+| NPC collision | Inconsistent | All NPCs non-blocking (walk-through). |
+| Side Jobs Close | Closed everything | Esc → Side Jobs → Close returns to **Menu**. |
+| ATM vs story | Side bet stole E | Story-available NPCs preferred; ATM moved to (38,17); incomplete beats no longer fall through to rematch. |
+| Story length | Toward ~20 min | Extra dialogue + `avenida-radar` beat via Mensageiro. |
 
-## After (v1.8)
+## Automated
 
-| Check                 | Result                                                               |
-| --------------------- | -------------------------------------------------------------------- |
-| Morro hillside        | PASS — dirt fill, terrace lips, central spine, irregular house sizes |
-| No placeholder fills  | PASS — blocked tiles are facades; alley quiet; edge bands are walls  |
-| Bigger 3/4 buildings  | PASS — favela 48–56px, stalls 56px, towers taller                    |
-| Player marker + scale | PASS — yellow ring + arrow; 32×54 sprites                            |
-| Signs on top          | PASS — painted after actors/glow                                     |
-| Objective             | PASS — “Go to Central Fair — talk to Kiko…”; Luna toast redirects    |
-| Side Jobs labels      | PASS — `[SAFE]` / `[BET]` + menu hint                                |
-| NPC access            | PASS — Feira NPCs on asphalt; range 2.1                              |
-| Bet panel FPS         | PASS — skip world glow/rain while modal open                         |
-| Story length          | PASS — added `feira-courier` dialogue beat                           |
-| Gates                 | PASS — unit + playtest 7/7                                           |
+- `npm test` — pass (coverage ≥90%)
+- `npm run lint` — pass
+- `make playtest` — 7/7 pass (golden path, FPS, story-complete, mobile dialogue)
 
-## Screenshots
+## Honest art note
 
-- Before: owner `morro-neon.png`, `central-fair.png`, `odds-avenue.png`
-- After: `v18-desktop-morro.png`, `v18-desktop-feira.png`, `v18-desktop-avenida.png`
+Prior agent 7.5 was too high; independent 5/10 on v1.8 was fair. This pass lands around **6/10**: stepped cliffs and calmer Fair are real, but Morro still skews “banded grid with neon” more than organic stacked favela, and Fair stalls remain same-shaped.
 
-## Honest gaps
+## Shots
 
-- Morro terraces read as hillside better than v1.7, but still a top-down schematic — not a painted isometric favela.
-- Character art remains blocky rectangles at larger size.
-- Bet-panel FPS fix is “skip glow,” not a full UI perf pass.
+- `01-morro-terraces.png` — cliffs + central stairs + E prompt
+- `05-e-prompt.png` — `E (Dona Nair)`
+- `06-morro-north-edge.png` — north camera scroll
+- `07-jobs-close-menu.png` — Close → Menu
+- `08-central-fair.png` — quieter plaza ground
