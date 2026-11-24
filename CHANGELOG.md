@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] — 2026-11-24
+
+### Added
+
+- Research docs under `docs/research/` (game design, level design, UX/input) with cited guidelines (GD/LD/UX/LT).
+- Input-adaptive HUD: keyboard hints, touch analog stick + actions, gamepad hints + menu focus nav; live device switching.
+- Proximity interactions, bet modal with stake/odds/roll, camera-follow district maps, objective markers.
+- `make playtest` Playwright golden path with keyboard / touch / gamepad screenshots.
+
+### Fixed
+
+- Stacked menus, free bets without NPC range, missing travel/jobs flows, placeholder-only streets.
+
 ## [1.1.0] — 2026-11-24
 
 ### Changed

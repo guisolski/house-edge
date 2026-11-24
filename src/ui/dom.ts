@@ -15,5 +15,7 @@ export function clearNode(node: HTMLElement): void {
 
 export function setVisible(node: HTMLElement, visible: boolean): void {
   node.hidden = !visible;
+  // Author `display:flex` otherwise overrides the [hidden] UA rule.
+  node.style.display = visible ? '' : 'none';
   node.setAttribute('aria-hidden', visible ? 'false' : 'true');
 }

@@ -19,6 +19,7 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123).
 | `make dev`      | Vite dev server (port 43123)                |
 | `make test`     | Unit tests + coverage gates                 |
 | `make e2e`      | Playwright flows                            |
+| `make playtest` | Golden-path browser playtest + screenshots  |
 | `make mutation` | Stryker mutation tests                      |
 | `make lint`     | ESLint + Prettier + markdownlint            |
 | `make build`    | Production static build (`BASE_PATH` aware) |
@@ -40,6 +41,13 @@ Details: [docs/deployment.md](docs/deployment.md).
 ## Docs
 
 See `INIT.md` → `AGENTS.md` and the `docs/` folder (story, world, betting, art, audio, architecture, testing, ADRs).
+
+Design research that drove the 1.2 rework:
+
+- [docs/research/game-design.md](docs/research/game-design.md)
+- [docs/research/level-design.md](docs/research/level-design.md)
+- [docs/research/ux-input.md](docs/research/ux-input.md)
+- [docs/controls.md](docs/controls.md)
 
 ## Stack
 

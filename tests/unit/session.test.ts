@@ -48,12 +48,23 @@ describe('GameSession basics', () => {
     expect(session.placeBet('agua-gelada')).toBe(true);
   });
 
-  it('runs story beats and unlocks districts', () => {
+  it('runs story beats via proximity dialogue flow', () => {
     const session = new GameSession(2);
     session.startNew();
-    expect(session.runStoryBeat('intro-laje')).toBe(true);
     expect(session.story.getFlag('conheceu_rita')).toBe(true);
+    expect(session.runStoryBeat('boteco-nair')).toBe(true);
+    expect(session.ui.is('dialogue')).toBe(true);
+    expect(session.getDialogue().length).toBeGreaterThan(0);
     expect(session.availableStory().length).toBeGreaterThan(0);
+  });
+
+  it('interacts with nearby npc and blocks out of range', () => {
+    const session = new GameSession(7);
+    session.startNew();
+    expect(session.interact()).toBe(false);
+    session.player.setPosition(14, 15);
+    expect(session.nearbyNpc()?.id).toBe('dona-nair');
+    expect(session.interact()).toBe(true);
   });
 });
 
@@ -81,5 +92,14 @@ describe('GameSession persistence', () => {
 
   it('tryLoad returns false without save', () => {
     expect(new GameSession(4).tryLoad()).toBe(false);
+  });
+
+  it('opens travel/jobs/menu only from play', () => {
+    const session = new GameSession(8);
+    session.startNew();
+    expect(session.openMenu()).toBe(true);
+    expect(session.openTravel()).toBe(false);
+    session.closeModal();
+    expect(session.openJobs()).toBe(true);
   });
 });

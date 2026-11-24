@@ -7,7 +7,7 @@ const START: PlayerStats = {
   agua: 1,
   fichas: 3,
   x: 8,
-  y: 10,
+  y: 15,
   districtId: 'morro-neon',
 };
 

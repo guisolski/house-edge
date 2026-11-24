@@ -7,6 +7,7 @@ test.describe('House Edge core flows', () => {
     await page.getByRole('button', { name: 'New Game' }).click();
     await expect(page.locator('.play-hud')).toBeVisible();
     await expect(page.locator('.stats')).toContainText('Credits');
+    await expect(page.locator('.objective')).toContainText('Dona Nair');
   });
 
   test('moves via keyboard and opens menu', async ({ page }) => {
@@ -19,17 +20,29 @@ test.describe('House Edge core flows', () => {
     await expect(page.locator('.menu-panel')).toBeHidden();
   });
 
-  test('runs a bet interaction from the HUD', async ({ page }) => {
+  test('opens side jobs from menu and offers a bet', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'New Game' }).click();
+    await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Side Jobs' }).click();
-    await expect(page.locator('.toast')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.jobs-panel')).toBeVisible();
+    await page.getByRole('button', { name: 'Boteco water rotation' }).click();
+    await expect(page.locator('.bet-panel')).toBeVisible();
+    await expect(page.locator('.bet-panel')).toContainText('Stake');
   });
 
-  test('mobile viewport shows touch controls', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
+  test('touch mode shows virtual stick and actions', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'New Game' }).click();
+    await page.evaluate(() => {
+      (
+        window as unknown as {
+          __HOUSE_EDGE__: { forceMode: (m: string) => void };
+        }
+      ).__HOUSE_EDGE__.forceMode('touch');
+    });
     await expect(page.locator('.touch-controls')).toBeVisible();
+    await expect(page.locator('.stick-zone')).toBeVisible();
+    await expect(page.locator('.touch-btn').first()).toBeVisible();
   });
 });

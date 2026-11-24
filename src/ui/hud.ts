@@ -2,8 +2,16 @@ import { el, clearNode, setVisible } from './dom';
 import { UI } from './strings';
 import type { GameSession } from '../systems/session';
 import type { DialogueLine } from '../core/types';
-import { listJobs } from '../systems/grind';
-import { UPGRADES } from '../systems/upgrade';
+import type { InputMode } from '../systems/input-mode';
+import { focusNext, focusPrev, activateFocused } from './focus';
+import {
+  button,
+  focusFirst,
+  paintBet,
+  paintDialogue,
+  paintJobs,
+  paintTravel,
+} from './panels';
 
 export type HudHandles = {
   root: HTMLElement;
@@ -13,56 +21,190 @@ export type HudHandles = {
   showDialogue: (lines: DialogueLine[]) => void;
   showToast: (message: string, kind: string) => void;
   showMenu: (open: boolean) => void;
+  showBet: () => void;
+  showTravel: () => void;
+  showJobs: () => void;
   showEnding: (text: string) => void;
+  setInputMode: (mode: InputMode) => void;
+  updatePrompt: () => void;
+  syncScreen: () => void;
+  gamepadNav: (dir: 'up' | 'down' | 'confirm' | 'back') => void;
 };
 
-export function createHud(session: GameSession, mount: HTMLElement): HudHandles {
-  const root = el('div', 'hud');
-  mount.appendChild(root);
-  const parts = mountPanels(session, root);
-  return makeHandles(session, parts);
-}
-
-function mountPanels(session: GameSession, root: HTMLElement): PanelParts {
-  const title = buildTitle(session);
-  const play = buildPlay(session);
-  const menu = buildMenu(session);
-  const dialogue = el('div', 'dialogue-panel');
-  const toast = el('div', 'toast');
-  const ending = el('div', 'ending-panel');
-  root.append(title, play, menu, dialogue, toast, ending);
-  setVisible(play, false);
-  setVisible(menu, false);
-  setVisible(dialogue, false);
-  setVisible(ending, false);
-  return { title, play, menu, dialogue, toast, ending, root };
-}
-
-type PanelParts = {
+type Parts = {
   root: HTMLElement;
   title: HTMLElement;
   play: HTMLElement;
   menu: HTMLElement;
   dialogue: HTMLElement;
+  bet: HTMLElement;
+  travel: HTMLElement;
+  jobs: HTMLElement;
   toast: HTMLElement;
   ending: HTMLElement;
+  prompt: HTMLElement;
+  hints: HTMLElement;
+  objective: HTMLElement;
+  stats: HTMLElement;
 };
 
-function makeHandles(session: GameSession, p: PanelParts): HudHandles {
+export function createHud(session: GameSession, mount: HTMLElement): HudHandles {
+  const parts = emptyParts();
+  const handles = makeHandles(session, parts);
+  wireDom(session, parts, handles);
+  mount.appendChild(parts.root);
+  return handles;
+}
+
+function emptyParts(): Parts {
+  const root = el('div', 'hud');
+  root.dataset.inputMode = 'keyboard';
   return {
-    root: p.root,
-    showTitle: (hasSave) => revealTitle(p.title, p.play, hasSave),
-    showHud: () => revealPlay(p.title, p.play),
-    updateStats: () => refreshStats(p.play, session),
-    showDialogue: (lines) => paintDialogue(p.dialogue, lines),
-    showToast: (message, kind) => paintToast(p.toast, message, kind),
-    showMenu: (open) => setVisible(p.menu, open),
-    showEnding: (text) => paintEnding(p.ending, text),
+    root,
+    title: el('section', 'title-screen'),
+    play: el('section', 'play-hud'),
+    menu: el('section', 'menu-panel'),
+    dialogue: el('div', 'dialogue-panel'),
+    bet: el('div', 'bet-panel'),
+    travel: el('div', 'travel-panel'),
+    jobs: el('div', 'jobs-panel'),
+    toast: el('div', 'toast'),
+    ending: el('div', 'ending-panel'),
+    prompt: el('div', 'interact-prompt'),
+    hints: el('div', 'input-hints', UI.hintKeyboard),
+    objective: el('div', 'objective', ''),
+    stats: el('div', 'stats', ''),
   };
 }
 
-function buildTitle(session: GameSession): HTMLElement {
-  const panel = el('section', 'title-screen');
+function wireDom(session: GameSession, p: Parts, h: HudHandles): void {
+  p.play.append(p.stats, p.objective, p.hints);
+  fillTitle(p.title, session);
+  fillMenu(p.menu, session, h);
+  appendAll(p);
+  hideAll([p.play, p.menu, p.dialogue, p.bet, p.travel, p.jobs, p.ending, p.prompt]);
+}
+
+function appendAll(p: Parts): void {
+  p.root.append(
+    p.title,
+    p.play,
+    p.menu,
+    p.dialogue,
+    p.bet,
+    p.travel,
+    p.jobs,
+    p.toast,
+    p.ending,
+    p.prompt,
+  );
+}
+
+function makeHandles(session: GameSession, p: Parts): HudHandles {
+  const h = {} as HudHandles;
+  Object.assign(h, baseShows(session, p, h), modalShows(session, p, h));
+  return h;
+}
+
+function baseShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudHandles> {
+  return {
+    root: p.root,
+    showTitle: (hasSave) => {
+      only(p, 'title');
+      const cont = p.title.querySelectorAll('button')[1] as HTMLButtonElement;
+      if (cont) cont.disabled = !hasSave;
+    },
+    showHud: () => {
+      only(p, 'play');
+      refresh(p, session);
+    },
+    updateStats: () => refresh(p, session),
+    showToast: (message, kind) => paintToast(p.toast, message, kind),
+    setInputMode: (mode) => applyMode(p, mode),
+    updatePrompt: () => paintPrompt(p.prompt, session),
+    syncScreen: () => syncFromUi(h, p, session),
+    gamepadNav: (dir) => navModal(h, p, session, dir),
+  };
+}
+
+function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudHandles> {
+  return {
+    showDialogue: (lines) => {
+      only(p, 'dialogue');
+      paintDialogue(p.dialogue, lines, () => {
+        session.closeModal();
+        h.syncScreen();
+      });
+    },
+    showMenu: (open) => toggleMenu(p, open),
+    showBet: () => {
+      only(p, 'bet');
+      paintBet(p.bet, session, () => h.syncScreen());
+      focusFirst(p.bet);
+    },
+    showTravel: () => {
+      only(p, 'travel');
+      paintTravel(p.travel, session, () => h.syncScreen());
+      focusFirst(p.travel);
+    },
+    showJobs: () => {
+      only(p, 'jobs');
+      paintJobs(p.jobs, session, () => h.syncScreen());
+      focusFirst(p.jobs);
+    },
+    showEnding: (text) => showEnding(p, text),
+  };
+}
+
+function toggleMenu(p: Parts, open: boolean): void {
+  if (open) {
+    only(p, 'menu');
+    focusFirst(p.menu);
+  } else {
+    only(p, 'play');
+  }
+}
+
+function showEnding(p: Parts, text: string): void {
+  only(p, 'ending');
+  clearNode(p.ending);
+  p.ending.append(el('h2', '', UI.wonEnding), el('p', '', text));
+}
+
+function syncFromUi(h: HudHandles, p: Parts, session: GameSession): void {
+  const screen = session.ui.get();
+  if (screen === 'play') h.showHud();
+  if (screen === 'menu') h.showMenu(true);
+  if (screen === 'travel') h.showTravel();
+  if (screen === 'jobs') h.showJobs();
+  if (screen === 'bet') h.showBet();
+  if (screen === 'dialogue') h.showDialogue(session.getDialogue());
+  refresh(p, session);
+  paintPrompt(p.prompt, session);
+}
+
+function only(p: Parts, which: string): void {
+  const nodes = [p.title, p.play, p.menu, p.dialogue, p.bet, p.travel, p.jobs, p.ending];
+  hideAll(nodes);
+  const map: Record<string, HTMLElement> = {
+    title: p.title,
+    play: p.play,
+    menu: p.menu,
+    dialogue: p.dialogue,
+    bet: p.bet,
+    travel: p.travel,
+    jobs: p.jobs,
+    ending: p.ending,
+  };
+  setVisible(map[which]!, true);
+}
+
+function hideAll(nodes: HTMLElement[]): void {
+  for (const n of nodes) setVisible(n, false);
+}
+
+function fillTitle(panel: HTMLElement, session: GameSession): void {
+  clearNode(panel);
   panel.append(
     el('h1', 'logo', UI.title),
     el('p', 'tagline', UI.tagline),
@@ -70,73 +212,59 @@ function buildTitle(session: GameSession): HTMLElement {
     button(UI.continue, () => {
       if (!session.tryLoad()) session.startNew();
     }),
-    el('p', 'hint', UI.controlsHint),
   );
-  return panel;
 }
 
-function buildPlay(session: GameSession): HTMLElement {
-  const panel = el('section', 'play-hud');
-  panel.append(
-    el('div', 'stats', ''),
-    button(UI.story, () => runAvailableStory(session)),
-    button(UI.grind, () => runFirstJob(session)),
-    button(UI.travel, () => travelNext(session)),
-    button(UI.menu, () => emitMenu(session, true)),
-  );
-  return panel;
-}
-
-function buildMenu(session: GameSession): HTMLElement {
-  const panel = el('section', 'menu-panel');
+function fillMenu(panel: HTMLElement, session: GameSession, h: HudHandles): void {
+  clearNode(panel);
   panel.append(
     el('h2', '', UI.menu),
-    button(UI.resume, () => emitMenu(session, false)),
-    button(UI.mute, () => toggleMute(session)),
-    button(UI.upgrades, () => buyFirstUpgrade(session)),
-    el('p', 'hint', UI.gamepadHint),
+    button(UI.resume, () => {
+      session.closeModal();
+      h.showMenu(false);
+    }),
+    button(UI.travel, () => openFromMenu(session, h, 'travel')),
+    button(UI.grind, () => openFromMenu(session, h, 'jobs')),
+    button(UI.mute, () => session.setMuted(!session.getAudio().muted)),
+    el('p', 'hint menu-hint', UI.hintGamepad),
   );
-  return panel;
 }
 
-function button(label: string, onClick: () => void): HTMLButtonElement {
-  const btn = el('button', 'btn', label);
-  btn.type = 'button';
-  btn.addEventListener('click', onClick);
-  return btn;
+function openFromMenu(
+  session: GameSession,
+  h: HudHandles,
+  kind: 'travel' | 'jobs',
+): void {
+  session.closeModal();
+  if (kind === 'travel' && session.openTravel()) h.showTravel();
+  if (kind === 'jobs' && session.openJobs()) h.showJobs();
 }
 
-function emitMenu(session: GameSession, open: boolean): void {
-  session.bus.emit('ui:menu', { open, screen: 'pause' });
-}
-
-function revealTitle(title: HTMLElement, play: HTMLElement, hasSave: boolean): void {
-  setVisible(title, true);
-  setVisible(play, false);
-  const cont = title.querySelectorAll('button')[1] as HTMLButtonElement | undefined;
-  if (cont) cont.disabled = !hasSave;
-}
-
-function revealPlay(title: HTMLElement, play: HTMLElement): void {
-  setVisible(title, false);
-  setVisible(play, true);
-}
-
-function refreshStats(play: HTMLElement, session: GameSession): void {
-  const stats = play.querySelector('.stats');
-  if (!stats) return;
+function refresh(p: Parts, session: GameSession): void {
   const s = session.player.getStats();
   const district = session.world.get(s.districtId)?.name ?? s.districtId;
-  stats.textContent = `${district} · ${UI.credits} ${s.credits} · ${UI.reputation} ${s.reputation}`;
+  p.stats.textContent = `${district} · ${UI.credits} ${s.credits} · ${UI.reputation} ${s.reputation}`;
+  p.objective.textContent = `▸ ${session.objective().text}`;
 }
 
-function paintDialogue(panel: HTMLElement, lines: DialogueLine[]): void {
-  clearNode(panel);
-  setVisible(panel, true);
-  for (const line of lines) {
-    panel.appendChild(el('p', 'line', `${line.speaker}: ${line.text}`));
+function paintPrompt(prompt: HTMLElement, session: GameSession): void {
+  if (!session.ui.is('play')) {
+    setVisible(prompt, false);
+    return;
   }
-  panel.appendChild(button(UI.close, () => setVisible(panel, false)));
+  const exit = session.nearbyExit();
+  const npc = session.nearbyNpc();
+  if (exit) {
+    prompt.textContent = UI.promptExit;
+    setVisible(prompt, true);
+    return;
+  }
+  if (npc) {
+    prompt.textContent = `${UI.promptTalk} (${npc.name})`;
+    setVisible(prompt, true);
+    return;
+  }
+  setVisible(prompt, false);
 }
 
 function paintToast(toast: HTMLElement, message: string, kind: string): void {
@@ -146,50 +274,40 @@ function paintToast(toast: HTMLElement, message: string, kind: string): void {
   window.setTimeout(() => setVisible(toast, false), 2200);
 }
 
-function paintEnding(panel: HTMLElement, text: string): void {
-  clearNode(panel);
-  panel.append(el('h2', '', UI.wonEnding), el('p', '', text));
-  setVisible(panel, true);
+function applyMode(p: Parts, mode: InputMode): void {
+  p.root.dataset.inputMode = mode;
+  p.hints.textContent =
+    mode === 'gamepad'
+      ? UI.hintGamepad
+      : mode === 'touch'
+        ? UI.hintTouch
+        : UI.hintKeyboard;
 }
 
-function runAvailableStory(session: GameSession): void {
-  const beat = session.availableStory()[0];
-  if (!beat) {
-    session.bus.emit('ui:toast', { message: UI.noStory, kind: 'info' });
-    return;
+function navModal(
+  h: HudHandles,
+  p: Parts,
+  session: GameSession,
+  dir: 'up' | 'down' | 'confirm' | 'back',
+): void {
+  const panel = activePanel(p, session);
+  if (!panel) return;
+  if (dir === 'up') focusPrev(panel);
+  if (dir === 'down') focusNext(panel);
+  if (dir === 'confirm') activateFocused(panel);
+  if (dir === 'back') {
+    session.closeModal();
+    h.syncScreen();
   }
-  session.runStoryBeat(beat.id);
 }
 
-function runFirstJob(session: GameSession): void {
-  const s = session.player.getStats();
-  const job = listJobs(s.districtId, s.reputation)[0];
-  if (!job) {
-    session.bus.emit('ui:toast', { message: UI.noJobs, kind: 'info' });
-    return;
-  }
-  session.placeBet(job.betId);
-}
-
-function travelNext(session: GameSession): void {
-  const unlocked = session.world.unlockedList();
-  const current = session.player.getStats().districtId;
-  const next = unlocked.find((d) => d.id !== current) ?? unlocked[0];
-  if (next) session.travelTo(next.id);
-}
-
-function toggleMute(session: GameSession): void {
-  session.setMuted(!session.getAudio().muted);
-}
-
-function buyFirstUpgrade(session: GameSession): void {
-  const def = UPGRADES[0];
-  if (!def) return;
-  const credits = session.player.getStats().credits;
-  if (credits < def.cost) {
-    session.bus.emit('ui:toast', { message: 'Need more credits.', kind: 'danger' });
-    return;
-  }
-  session.player.addCredits(-def.cost);
-  session.bus.emit('ui:toast', { message: `Bought ${def.name}`, kind: 'success' });
+function activePanel(p: Parts, session: GameSession): HTMLElement | null {
+  const s = session.ui.get();
+  if (s === 'menu') return p.menu;
+  if (s === 'bet') return p.bet;
+  if (s === 'travel') return p.travel;
+  if (s === 'jobs') return p.jobs;
+  if (s === 'dialogue') return p.dialogue;
+  if (s === 'title') return p.title;
+  return null;
 }

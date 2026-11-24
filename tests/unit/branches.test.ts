@@ -53,12 +53,14 @@ describe('session branches', () => {
     clearStorage(mem);
   });
 
-  it('fails story beat when bet cannot be afforded', () => {
+  it('opens dialogue then backs out when bet cannot be afforded', () => {
     const session = new GameSession(5);
     session.startNew();
-    session.runStoryBeat('intro-laje');
     session.player.addCredits(-session.player.getStats().credits);
-    expect(session.runStoryBeat('boteco-nair')).toBe(false);
+    expect(session.runStoryBeat('boteco-nair')).toBe(true);
+    session.closeModal();
+    expect(session.getPendingBet()).toBeNull();
+    expect(session.ui.is('play')).toBe(true);
     expect(session.runStoryBeat('missing')).toBe(false);
   });
 

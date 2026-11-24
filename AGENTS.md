@@ -28,8 +28,16 @@ Follow these rules for every change.
 - Excalibur.js shell + pure logic systems.
 - Playable story (~20 min) + grind loop.
 - Desktop, mobile touch, gamepad.
-- Procedural/original pixel art and audio; credit any external permissive assets in docs.
+- Pixel art must look good in a real browser (readable streets, buildings,
+  neon, NPCs); credit any external permissive assets in docs.
 - Ship as a static site for **GitHub Pages** with configurable `BASE_PATH`.
+
+## Playtest (mandatory)
+
+Before claiming any gameplay/UI/art change is done, follow
+[`.cursor/skills/playtest/SKILL.md`](.cursor/skills/playtest/SKILL.md).
+Run `make playtest`, play the game yourself in a browser, and keep console clean.
+**If it does not work in the browser, it is not done — do not push.**
 
 ## Releases
 
@@ -42,8 +50,9 @@ make install
 make dev
 make test
 make e2e
+make playtest
 make mutation
 make lint
-make build BASE_PATH=/<repo>/
+make build BASE_PATH=/house-edge/
 make deploy
 ```

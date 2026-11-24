@@ -1,0 +1,43 @@
+/** UX-5: one modal context at a time. */
+
+export type UiScreen =
+  'title' | 'play' | 'dialogue' | 'bet' | 'menu' | 'travel' | 'jobs' | 'ending';
+
+export class UiStateMachine {
+  private screen: UiScreen = 'title';
+
+  get(): UiScreen {
+    return this.screen;
+  }
+
+  is(screen: UiScreen): boolean {
+    return this.screen === screen;
+  }
+
+  canOpenModal(): boolean {
+    return this.screen === 'play';
+  }
+
+  go(screen: UiScreen): boolean {
+    if (screen === this.screen) return true;
+    if (!this.allowed(this.screen, screen)) return false;
+    this.screen = screen;
+    return true;
+  }
+
+  backToPlay(): void {
+    if (this.screen !== 'title' && this.screen !== 'ending') {
+      this.screen = 'play';
+    }
+  }
+
+  private allowed(from: UiScreen, to: UiScreen): boolean {
+    if (to === 'title' || to === 'ending') return true;
+    if (from === 'title') return to === 'play';
+    if (to === 'play') return true;
+    if (from === 'play') return true;
+    // GD-3 / UX-5: dialogue can hand off into a bet modal.
+    if (from === 'dialogue' && to === 'bet') return true;
+    return false;
+  }
+}

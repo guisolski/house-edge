@@ -1,29 +1,39 @@
-# Controls
+# Controls — House Edge
 
-## Keyboard
+Input-adaptive UI (see `docs/research/ux-input.md` — UX-1…UX-7).
 
-| Input         | Action                   |
-| ------------- | ------------------------ |
-| WASD / Arrows | Move                     |
-| E / Space     | Interact / advance story |
-| F             | Quick bet (water odd)    |
-| Esc           | Menu                     |
-| M             | Mute toggle              |
+## Keyboard / mouse
+
+- **WASD / arrows** — move
+- **E / Space** — interact (NPC or district exit in range)
+- **F** — bet when near a job NPC / confirm bet modal
+- **Esc** — pause menu (Travel, Side Jobs, Mute)
+- **M** — mute
+
+On-screen touch buttons stay hidden. Keyboard hint strip stays in the HUD.
 
 ## Touch
 
-On coarse pointers / narrow viewports, on-screen pad and action buttons appear.
+- Analog stick (bottom-left) — move
+- **Interact / Bet / Menu** action buttons (bottom-right)
+- Menus are fully tappable
+
+Touch chrome appears only while the active input mode is touch.
 
 ## Gamepad
 
-| Input              | Action   |
-| ------------------ | -------- |
-| Left stick / d-pad | Move     |
-| A (button 0)       | Interact |
-| B (button 1)       | Bet      |
-| Start              | Menu     |
-| Select             | Mute     |
+- Left stick / D-pad — move (or menu focus when a modal is open)
+- **A** — interact / confirm focused button
+- **B** — bet / back
+- **Start** — menu
+- **Select** — mute
 
-## Accessibility notes
+Touch chrome hidden; gamepad hint strip shown.
 
-Canvas scales with `object-fit: contain`. HUD buttons remain clickable on desktop without touch UI.
+## Mode switching
+
+The last used device wins after a short debounce (~350ms) so mixed chatter does not flicker the HUD.
+
+## Accessibility
+
+Canvas scales with `object-fit: contain`. Desktop HUD remains mouse-clickable without touch chrome.

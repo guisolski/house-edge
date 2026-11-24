@@ -52,7 +52,7 @@ canvas.excalibur-game {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   image-rendering: pixelated;
   z-index: 1;
 }
@@ -71,16 +71,38 @@ canvas.excalibur-game {
 .title-screen,
 .menu-panel,
 .dialogue-panel,
+.bet-panel,
+.travel-panel,
+.jobs-panel,
 .ending-panel {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   width: min(520px, 92vw);
+  max-height: 80vh;
+  overflow: auto;
   padding: 1.25rem 1.5rem;
   background: var(--panel);
   border: 2px solid var(--cyan);
   box-shadow: 0 0 24px #2bfff266;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.title-screen[hidden],
+.menu-panel[hidden],
+.dialogue-panel[hidden],
+.bet-panel[hidden],
+.travel-panel[hidden],
+.jobs-panel[hidden],
+.ending-panel[hidden],
+.play-hud[hidden],
+.interact-prompt[hidden],
+.toast[hidden],
+.touch-controls[hidden] {
+  display: none !important;
 }
 
 .logo {
@@ -93,7 +115,8 @@ canvas.excalibur-game {
 
 .tagline,
 .hint,
-.line {
+.line,
+.objective {
   line-height: 1.4;
 }
 
@@ -107,12 +130,33 @@ canvas.excalibur-game {
   gap: 0.5rem;
   padding: 0.75rem;
   background: linear-gradient(to bottom, #07060fdd, transparent);
+  pointer-events: none;
+}
+
+.play-hud * {
+  pointer-events: none;
 }
 
 .stats {
   flex: 1 1 100%;
   font-weight: 700;
   text-shadow: 0 0 8px var(--cyan);
+}
+
+.objective {
+  flex: 1 1 100%;
+  color: var(--yellow);
+  font-weight: 600;
+}
+
+.input-hints {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  color: var(--cyan);
+}
+
+.hud[data-input-mode='touch'] .input-hints {
+  display: none;
 }
 
 .btn {
@@ -128,6 +172,12 @@ canvas.excalibur-game {
 .btn:focus-visible {
   border-color: var(--yellow);
   box-shadow: 0 0 12px var(--magenta);
+  outline: none;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .toast {
@@ -138,6 +188,7 @@ canvas.excalibur-game {
   padding: 0.6rem 1rem;
   background: #12121cee;
   border: 1px solid var(--cyan);
+  z-index: 8;
 }
 
 .toast-danger {
@@ -148,27 +199,94 @@ canvas.excalibur-game {
   border-color: var(--green);
 }
 
+.interact-prompt {
+  position: absolute;
+  left: 50%;
+  bottom: 22%;
+  transform: translateX(-50%);
+  padding: 0.45rem 0.9rem;
+  background: #12121cee;
+  border: 1px solid var(--yellow);
+  color: var(--yellow);
+  font-weight: 700;
+  pointer-events: none;
+  z-index: 6;
+}
+
+/* UX-3 / UX-7: touch chrome only when mode=touch */
 .touch-controls {
   position: absolute;
-  inset: auto 0 0 0;
-  z-index: 6;
-  display: none;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.4rem;
-  padding: 0.6rem;
-  background: #07060fbb;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
 }
 
-.touch {
-  min-height: 48px;
-  border: 1px solid var(--cyan);
-  background: #12121ccc;
+.stick-zone {
+  position: absolute;
+  left: 1rem;
+  bottom: 1.25rem;
+  width: 148px;
+  height: 148px;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.stick-base {
+  position: absolute;
+  inset: 16px;
+  border-radius: 50%;
+  border: 2px solid #2bfff288;
+  background: radial-gradient(circle at 40% 35%, #2bfff222, #07060fcc);
+  box-shadow: inset 0 0 18px #002776aa;
+}
+
+.stick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(145deg, #2bfff2, #009c3b);
+  border: 2px solid #ffdf00;
+  box-shadow: 0 0 14px #2bfff266;
+}
+
+.touch-actions {
+  position: absolute;
+  right: 1rem;
+  bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  pointer-events: auto;
+}
+
+.touch-btn {
+  min-width: 96px;
+  min-height: 52px;
+  border-radius: 12px;
+  border: 2px solid var(--cyan);
+  background: #12121cee;
   color: var(--text);
-  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  touch-action: manipulation;
 }
 
-@media (max-width: 900px), (pointer: coarse) {
-  .touch-controls {
-    display: grid;
-  }
+.touch-btn:active {
+  border-color: var(--yellow);
+  box-shadow: 0 0 16px var(--magenta);
+}
+
+.hud[data-input-mode='keyboard'] ~ .touch-controls,
+.hud[data-input-mode='gamepad'] ~ .touch-controls {
+  display: none;
+}
+
+.bet-roll {
+  font-size: 1.25rem;
+  letter-spacing: 0.2em;
+  color: var(--magenta);
 }

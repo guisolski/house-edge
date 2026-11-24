@@ -9,15 +9,34 @@ import { DISTRICTS } from '../content/districts';
 import { STORY_BEATS } from '../content/story';
 import { getBet } from '../content/bets';
 import { createDefaultSave, loadFromStorage, saveToStorage } from './save';
+import { UiStateMachine } from './ui-state';
+import {
+  districtExits,
+  districtNpcs,
+  nearestExit,
+  nearestNpc,
+  type DistrictExit,
+  type WorldNpc,
+} from './interaction';
+import { buildDistrictMap, isWalkable, type MapDef } from '../world/maps';
+import { currentObjective, type Objective } from './objectives';
 
 export class GameSession {
   readonly bus: EventBus;
   readonly player: PlayerSystem;
   readonly story: StorySystem;
   readonly world: WorldSystem;
+  readonly ui: UiStateMachine;
+  readonly npcs: WorldNpc[] = districtNpcs();
+  readonly exits: DistrictExit[] = districtExits();
+  private maps = new Map<DistrictId, MapDef>();
   private rng: Rng;
   private muted = false;
   private masterVolume = 0.7;
+  private pendingBetId: string | null = null;
+  private pendingStoryBeat: string | null = null;
+  private pendingBetAfterDialogue: string | null = null;
+  private lastDialogue: import('../core/types').DialogueLine[] = [];
 
   constructor(seed = 42, bus = new EventBus()) {
     this.bus = bus;
@@ -25,17 +44,26 @@ export class GameSession {
     this.player = new PlayerSystem(bus);
     this.story = new StorySystem(bus, STORY_BEATS);
     this.world = new WorldSystem(bus, DISTRICTS);
+    this.ui = new UiStateMachine();
+    for (const d of DISTRICTS) this.maps.set(d.id, buildDistrictMap(d.id));
   }
 
   startNew(): void {
     this.applySave(createDefaultSave());
+    this.ui.go('play');
+    this.story.completeBeat('intro-laje');
     this.bus.emit('game:started', { newGame: true });
+    this.bus.emit('ui:toast', {
+      message: 'Find Dona Nair at the boteco (follow the marker).',
+      kind: 'info',
+    });
   }
 
   tryLoad(): boolean {
     const save = loadFromStorage();
     if (!save) return false;
     this.applySave(save);
+    this.ui.go('play');
     this.bus.emit('game:started', { newGame: false });
     return true;
   }
@@ -45,10 +73,19 @@ export class GameSession {
     this.bus.emit('game:saved', { slot: 1 });
   }
 
-  move(dx: number, dy: number): void {
+  getMap(): MapDef {
+    const id = this.player.getStats().districtId;
+    return this.maps.get(id) ?? buildDistrictMap(id);
+  }
+
+  move(dx: number, dy: number): boolean {
+    if (!this.ui.is('play')) return false;
     const s = this.player.getStats();
-    const next = this.world.clampPosition(s.districtId, s.x + dx, s.y + dy);
-    this.player.setPosition(next.x, next.y);
+    const nx = s.x + dx;
+    const ny = s.y + dy;
+    if (!isWalkable(this.getMap(), nx, ny)) return false;
+    this.player.setPosition(nx, ny);
+    return true;
   }
 
   travelTo(districtId: DistrictId): boolean {
@@ -57,40 +94,132 @@ export class GameSession {
     if (!district) return false;
     this.player.setDistrict(districtId);
     this.player.setPosition(district.spawn.x, district.spawn.y);
+    this.ui.go('play');
     return true;
   }
 
-  placeBet(betId: string, stakeOverride?: number): boolean {
-    const bet = getBet(betId);
-    if (!bet) return false;
-    const stake = stakeOverride ?? bet.stake;
-    const credits = this.player.getStats().credits;
-    if (!canAfford(credits, stake)) {
-      this.bus.emit('ui:toast', {
-        message: 'Not enough credits, parça.',
-        kind: 'danger',
-      });
+  nearbyNpc(): WorldNpc | null {
+    const s = this.player.getStats();
+    return nearestNpc(this.npcs, s.districtId, s.x, s.y);
+  }
+
+  nearbyExit(): DistrictExit | null {
+    const s = this.player.getStats();
+    const exit = nearestExit(this.exits, s.districtId, s.x, s.y);
+    if (!exit) return null;
+    return this.world.isUnlocked(exit.toDistrict) ? exit : null;
+  }
+
+  interact(): boolean {
+    if (!this.ui.is('play')) return false;
+    const exit = this.nearbyExit();
+    if (exit) return this.travelTo(exit.toDistrict);
+    const npc = this.nearbyNpc();
+    if (!npc) {
+      this.bus.emit('ui:toast', { message: 'Nobody in range.', kind: 'info' });
       return false;
     }
-    return this.settleBet(bet, stake);
+    return this.interactNpc(npc);
   }
 
-  runStoryBeat(beatId: string): boolean {
-    const beat = this.story.startBeat(beatId);
-    if (!beat) return false;
-    for (const line of beat.dialogue) {
-      this.bus.emit('ui:dialogue', { speaker: line.speaker, text: line.text });
+  offerBet(betId: string): boolean {
+    const bet = getBet(betId);
+    if (!bet) return false;
+    if (!canAfford(this.player.getStats().credits, bet.stake)) {
+      this.bus.emit('ui:toast', { message: 'Not enough credits.', kind: 'danger' });
+      return false;
     }
-    if (beat.betId) {
-      const ok = this.placeBet(beat.betId);
-      if (!ok) return false;
-    }
-    this.finishBeat(beat.id);
-    return true;
+    this.pendingBetId = betId;
+    this.bus.emit('bet:offered', { betId, title: bet.title });
+    return this.ui.go('bet');
+  }
+
+  /** Instant settle helper for tests / grind shortcuts. */
+  placeBet(betId: string, stakeOverride?: number): boolean {
+    if (!this.offerBet(betId)) return false;
+    return this.confirmBet(stakeOverride);
+  }
+
+  confirmBet(stakeOverride?: number): boolean {
+    const betId = this.pendingBetId;
+    if (!betId) return false;
+    const bet = getBet(betId);
+    if (!bet) return false;
+    const ok = this.settleBet(bet, stakeOverride ?? bet.stake);
+    this.pendingBetId = null;
+    this.ui.go('play');
+    return ok;
+  }
+
+  cancelBet(): void {
+    this.pendingBetId = null;
+    this.pendingStoryBeat = null;
+    this.ui.go('play');
+  }
+
+  getPendingBet(): BetDefinition | null {
+    return this.pendingBetId ? (getBet(this.pendingBetId) ?? null) : null;
   }
 
   availableStory(): ReturnType<StorySystem['availableBeats']> {
     return this.story.availableBeats(this.player.getStats().districtId);
+  }
+
+  runStoryBeat(beatId: string): boolean {
+    return this.beginStoryBeat(beatId);
+  }
+
+  getDialogue(): import('../core/types').DialogueLine[] {
+    return this.lastDialogue;
+  }
+
+  objective(): Objective {
+    const s = this.player.getStats();
+    return currentObjective({
+      beats: STORY_BEATS,
+      completed: this.story.getCompleted(),
+      flags: (f) => this.story.getFlag(f),
+      districtId: s.districtId,
+      npcs: this.npcs,
+      exits: this.exits,
+      unlocked: (id) => this.world.isUnlocked(id as DistrictId),
+    });
+  }
+
+  openMenu(): boolean {
+    return this.ui.canOpenModal() && this.ui.go('menu');
+  }
+
+  openTravel(): boolean {
+    return this.ui.canOpenModal() && this.ui.go('travel');
+  }
+
+  openJobs(): boolean {
+    return this.ui.canOpenModal() && this.ui.go('jobs');
+  }
+
+  closeModal(): void {
+    if (this.ui.is('dialogue')) {
+      this.advanceDialogue();
+      return;
+    }
+    this.ui.backToPlay();
+  }
+
+  private advanceDialogue(): void {
+    if (this.pendingBetAfterDialogue) {
+      const betId = this.pendingBetAfterDialogue;
+      this.pendingBetAfterDialogue = null;
+      if (this.offerBet(betId)) return;
+      this.pendingStoryBeat = null;
+      this.ui.backToPlay();
+      return;
+    }
+    if (this.pendingStoryBeat) {
+      this.finishBeat(this.pendingStoryBeat);
+      this.pendingStoryBeat = null;
+    }
+    this.ui.backToPlay();
   }
 
   setMuted(muted: boolean): void {
@@ -119,7 +248,44 @@ export class GameSession {
     };
   }
 
+  private interactNpc(npc: WorldNpc): boolean {
+    this.bus.emit('npc:interacted', { npcId: npc.id });
+    if (npc.beatId) {
+      const available = this.story.availableBeats(npc.districtId);
+      if (available.some((b) => b.id === npc.beatId)) {
+        return this.beginStoryBeat(npc.beatId);
+      }
+    }
+    if (npc.jobBetId) return this.offerBet(npc.jobBetId);
+    this.bus.emit('ui:toast', {
+      message: `${npc.name}: Come back later.`,
+      kind: 'info',
+    });
+    return false;
+  }
+
+  private beginStoryBeat(beatId: string): boolean {
+    const beat = this.story.startBeat(beatId);
+    if (!beat) return false;
+    this.pendingStoryBeat = beatId;
+    this.pendingBetAfterDialogue = beat.betId ?? null;
+    this.lastDialogue = [...beat.dialogue];
+    this.ui.go('dialogue');
+    for (const line of beat.dialogue) {
+      this.bus.emit('ui:dialogue', { speaker: line.speaker, text: line.text });
+    }
+    return true;
+  }
+
+  /** Call after bet resolves when a story beat was pending. */
+  finishPendingStory(): void {
+    if (!this.pendingStoryBeat) return;
+    this.finishBeat(this.pendingStoryBeat);
+    this.pendingStoryBeat = null;
+  }
+
   private settleBet(bet: BetDefinition, stake: number): boolean {
+    if (!canAfford(this.player.getStats().credits, stake)) return false;
     this.player.addCredits(-stake);
     const result = resolveBet(bet, this.rng, stake);
     this.player.addCredits(result.payout);
@@ -131,13 +297,13 @@ export class GameSession {
       payout: result.payout,
       stake,
     });
-    this.afterBetFlags(bet, result.won);
+    if (result.won) this.applyBetWins(bet);
     this.toastBet(result.won, result.payout);
+    this.finishPendingStory();
     return true;
   }
 
-  private afterBetFlags(bet: BetDefinition, won: boolean): void {
-    if (!won) return;
+  private applyBetWins(bet: BetDefinition): void {
     if (bet.unlocksFlag) this.story.setFlag(bet.unlocksFlag, true);
     if (bet.unlocksDistrict) this.world.unlock(bet.unlocksDistrict);
   }
