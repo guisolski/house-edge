@@ -3,8 +3,14 @@ import { UI } from './strings';
 import type { GameSession } from '../systems/session';
 import type { DialogueLine } from '../core/types';
 import { listJobs } from '../systems/grind';
-import { formatOdds, formatWinChance, applyHouseFlavor } from '../systems/betting';
+import {
+  formatOdds,
+  formatWinChance,
+  applyHouseFlavor,
+  isSoftStakeBet,
+} from '../systems/betting';
 import { DISTRICTS } from '../content/districts';
+import { UPGRADES } from '../systems/upgrade';
 
 export function button(label: string, onClick: () => void): HTMLButtonElement {
   const btn = el('button', 'btn', label);
@@ -59,7 +65,9 @@ function appendBetDetails(
 ): void {
   const stakeLine = el('p', 'stake-line', '');
   const losses = session.getBetLosses(bet.id);
-  const pity = losses > 0 ? ` · pity +${losses * 10}%` : '';
+  const story = isSoftStakeBet(bet);
+  const pityStacks = story ? Math.min(2, losses) : 0;
+  const pity = pityStacks > 0 ? ` · pity +${pityStacks * 8}%` : '';
   const writeStake = (): void => {
     stakeLine.textContent = `Stake: ${session.getPendingStake()} credits`;
   };
@@ -71,7 +79,7 @@ function appendBetDetails(
     el(
       'p',
       '',
-      `Win chance ${formatWinChance(bet.odds, bet.houseEdge, losses)} · Odds ${formatOdds(bet.odds)}${pity}`,
+      `Win chance ${formatWinChance(bet.odds, bet.houseEdge, losses, story)} · Odds ${formatOdds(bet.odds)}${pity}`,
     ),
     el('p', '', applyHouseFlavor(bet.houseEdge)),
     stakeControls(session, writeStake),
@@ -180,6 +188,35 @@ export function paintJobs(
         if (job.betId && session.offerBet(job.betId)) after();
       }),
     );
+  }
+  panel.appendChild(
+    button(UI.close, () => {
+      session.closeModal();
+      after();
+    }),
+  );
+}
+
+export function paintUpgrades(
+  panel: HTMLElement,
+  session: GameSession,
+  after: () => void,
+): void {
+  clearNode(panel);
+  panel.appendChild(el('h2', '', UI.upgrades));
+  const credits = session.player.getStats().credits;
+  for (const def of UPGRADES) {
+    const level = session.upgrades.getLevel(def.id);
+    const cost = session.upgrades.nextCost(def.id);
+    const maxed = level >= def.maxLevel;
+    const label = maxed
+      ? `${def.name} · Lv ${level} (max)`
+      : `${def.name} · Lv ${level} → ${cost}cr`;
+    const btn = button(label, () => {
+      if (session.buyUpgrade(def.id)) paintUpgrades(panel, session, after);
+    });
+    btn.disabled = maxed || !session.upgrades.canBuy(def.id, credits);
+    panel.append(btn, el('p', 'hint', def.description));
   }
   panel.appendChild(
     button(UI.close, () => {

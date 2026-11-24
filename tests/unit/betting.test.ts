@@ -61,6 +61,6 @@ describe('betting', () => {
       5,
     );
     expect(typeof win.won).toBe('boolean');
-    expect(formatWinChance(pixo.odds, pixo.houseEdge, 2)).toMatch(/%$/);
+    expect(formatWinChance(pixo.odds, pixo.houseEdge, 2, true)).toMatch(/%$/);
   });
 });

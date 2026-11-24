@@ -5,6 +5,7 @@ import { canAfford, clampStake, resolveBet } from './betting';
 import { PlayerSystem } from './player';
 import { StorySystem } from './story';
 import { WorldSystem } from './world';
+import { UpgradeSystem } from './upgrade';
 import { DISTRICTS } from '../content/districts';
 import { STORY_BEATS } from '../content/story';
 import { getBet } from '../content/bets';
@@ -22,11 +23,15 @@ import {
 import { buildDistrictMap, isWalkable, tileAt, type MapDef } from '../world/maps';
 import { currentObjective, type Objective } from './objectives';
 
+const SAFE_JOB_COOLDOWN_MS = 10_000;
+const SAFE_JOB_CAP = 6;
+
 export class GameSession {
   readonly bus: EventBus;
   readonly player: PlayerSystem;
   readonly story: StorySystem;
   readonly world: WorldSystem;
+  readonly upgrades: UpgradeSystem;
   readonly ui: UiStateMachine;
   readonly npcs: WorldNpc[] = districtNpcs();
   readonly exits: DistrictExit[] = districtExits();
@@ -40,6 +45,8 @@ export class GameSession {
   private pendingBetAfterDialogue: string | null = null;
   private lastDialogue: import('../core/types').DialogueLine[] = [];
   private lossesByBet = new Map<string, number>();
+  private safeJobUses = 0;
+  private lastSafeJobMs = 0;
 
   constructor(seed = 42, bus = new EventBus()) {
     this.bus = bus;
@@ -47,6 +54,7 @@ export class GameSession {
     this.player = new PlayerSystem(bus);
     this.story = new StorySystem(bus, STORY_BEATS);
     this.world = new WorldSystem(bus, DISTRICTS);
+    this.upgrades = new UpgradeSystem();
     this.ui = new UiStateMachine();
     for (const d of DISTRICTS) this.maps.set(d.id, buildDistrictMap(d.id));
   }
@@ -88,14 +96,12 @@ export class GameSession {
     const nx = Math.max(0, Math.min(map.width - 1, s.x + dx));
     const ny = Math.max(0, Math.min(map.height - 1, s.y + dy));
     if (!isWalkable(map, nx, ny)) return false;
+    if (this.npcBlocks(nx, ny)) return false;
     this.player.setPosition(nx, ny);
-    // Stepping onto an unlocked exit pad travels immediately.
+    // All districts: stepping onto an unlocked exit pad travels (consistent).
     if (tileAt(map, nx, ny) === 'exit') {
       const exit = this.nearbyExit();
-      if (exit) {
-        this.travelTo(exit.toDistrict);
-        return true;
-      }
+      if (exit) return this.travelTo(exit.toDistrict);
     }
     return true;
   }
@@ -140,8 +146,9 @@ export class GameSession {
     const credits = this.player.getStats().credits;
     const stake = clampStake(bet, bet.stake, credits);
     if (!canAfford(credits, stake)) {
+      const giver = this.safeJobHint();
       this.bus.emit('ui:toast', {
-        message: 'Not enough credits — open Side Jobs for Odd jobs (safe pay).',
+        message: `Not enough credits — talk to ${giver} (safe odd jobs) or Esc → Side Jobs.`,
         kind: 'danger',
       });
       return false;
@@ -152,16 +159,56 @@ export class GameSession {
     return this.ui.go('bet');
   }
 
-  /** Guaranteed credits — never softlocks the player. */
+  /** Guaranteed credits — cooldown + daily cap so it can't be farmed forever. */
   doSafeJob(jobId: string): boolean {
     const job = getJob(jobId);
     if (!job?.flatPay) return false;
-    this.player.addCredits(job.flatPay);
+    if (this.safeJobUses >= SAFE_JOB_CAP) {
+      this.bus.emit('ui:toast', {
+        message: 'Odd jobs are tapped out — try a real bet or story beat.',
+        kind: 'info',
+      });
+      return false;
+    }
+    const now = Date.now();
+    if (now - this.lastSafeJobMs < SAFE_JOB_COOLDOWN_MS) {
+      this.bus.emit('ui:toast', {
+        message: 'Catch your breath — odd jobs need a short cooldown.',
+        kind: 'info',
+      });
+      return false;
+    }
+    const pay = job.flatPay + this.upgrades.getLevel('bolso') * 40;
+    this.player.addCredits(pay);
+    this.safeJobUses += 1;
+    this.lastSafeJobMs = now;
     this.bus.emit('ui:toast', {
-      message: `Earned ${job.flatPay} credits (safe odd jobs).`,
+      message: `Earned ${pay} credits (safe odd jobs · ${this.safeJobUses}/${SAFE_JOB_CAP}).`,
       kind: 'success',
     });
     this.ui.go('play');
+    return true;
+  }
+
+  openUpgrades(): boolean {
+    return this.ui.canOpenModal() && this.ui.go('upgrades');
+  }
+
+  buyUpgrade(id: import('./upgrade').UpgradeId): boolean {
+    const cost = this.upgrades.buy(id, this.player.getStats().credits);
+    if (cost === null) {
+      this.bus.emit('ui:toast', {
+        message: 'Cannot buy that upgrade.',
+        kind: 'danger',
+      });
+      return false;
+    }
+    this.player.addCredits(-cost);
+    this.persist();
+    this.bus.emit('ui:toast', {
+      message: `Bought upgrade (${cost} credits).`,
+      kind: 'success',
+    });
     return true;
   }
 
@@ -325,6 +372,7 @@ export class GameSession {
       unlockedDistricts: this.world.exportUnlocked(),
       muted: this.muted,
       masterVolume: this.masterVolume,
+      upgrades: this.upgrades.export(),
     };
   }
 
@@ -337,6 +385,7 @@ export class GameSession {
       }
     }
     if (npc.jobBetId) return this.offerBet(npc.jobBetId);
+    if (npc.safeJobId) return this.doSafeJob(npc.safeJobId);
     this.bus.emit('ui:toast', {
       message: `${npc.name}: Come back later.`,
       kind: 'info',
@@ -368,11 +417,12 @@ export class GameSession {
     if (!canAfford(this.player.getStats().credits, stake)) return false;
     const losses = this.lossesByBet.get(bet.id) ?? 0;
     this.player.addCredits(-stake);
-    const result = resolveBet(bet, this.rng, stake, losses);
+    const result = resolveBet(bet, this.rng, stake, losses, this.upgrades.luckBonus());
     this.player.addCredits(result.payout);
-    this.player.addReputation(
-      result.won ? bet.reputationDeltaWin : bet.reputationDeltaLose,
-    );
+    const rep =
+      (result.won ? bet.reputationDeltaWin : bet.reputationDeltaLose) +
+      (result.won ? this.upgrades.fameBonus() : 0);
+    this.player.addReputation(rep);
     // Apply story/ending first so UI listeners see `ending` before bet:resolved.
     this.afterBetResolved(bet, result.won);
     this.bus.emit('bet:resolved', {
@@ -381,8 +431,20 @@ export class GameSession {
       payout: result.payout,
       stake,
     });
-    this.toastBet(result.won, result.payout, losses);
+    // Skip win toast on ending so it doesn't overlap the ending panel.
+    if (!this.ui.is('ending')) this.toastBet(result.won, result.payout, losses);
     return true;
+  }
+
+  private npcBlocks(x: number, y: number): boolean {
+    const id = this.player.getStats().districtId;
+    return this.npcs.some((n) => n.districtId === id && n.x === x && n.y === y);
+  }
+
+  private safeJobHint(): string {
+    const id = this.player.getStats().districtId;
+    const giver = this.npcs.find((n) => n.districtId === id && n.safeJobId);
+    return giver?.name ?? 'the odd-job worker';
   }
 
   private afterBetResolved(bet: BetDefinition, won: boolean): void {
@@ -426,8 +488,11 @@ export class GameSession {
     this.story.hydrate(save.flags, save.completedBeats);
     this.world.hydrate(save.unlockedDistricts);
     this.world.syncFromFlags((f) => this.story.getFlag(f));
+    this.upgrades.hydrate(save.upgrades ?? {});
     this.muted = save.muted;
     this.masterVolume = save.masterVolume;
+    this.safeJobUses = 0;
+    this.lastSafeJobMs = 0;
     this.emitVolume();
   }
 

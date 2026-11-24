@@ -11,6 +11,7 @@ import {
   paintDialogue,
   paintJobs,
   paintTravel,
+  paintUpgrades,
 } from './panels';
 import { bakeSprite } from '../rendering/bake';
 import { makeEndingScene } from '../rendering/pixel-gen';
@@ -26,6 +27,7 @@ export type HudHandles = {
   showBet: () => void;
   showTravel: () => void;
   showJobs: () => void;
+  showUpgrades: () => void;
   showEnding: (text: string) => void;
   setInputMode: (mode: InputMode) => void;
   updatePrompt: () => void;
@@ -42,6 +44,7 @@ type Parts = {
   bet: HTMLElement;
   travel: HTMLElement;
   jobs: HTMLElement;
+  upgrades: HTMLElement;
   toast: HTMLElement;
   ending: HTMLElement;
   prompt: HTMLElement;
@@ -70,6 +73,7 @@ function emptyParts(): Parts {
     bet: el('div', 'bet-panel'),
     travel: el('div', 'travel-panel'),
     jobs: el('div', 'jobs-panel'),
+    upgrades: el('div', 'upgrades-panel'),
     toast: el('div', 'toast'),
     ending: el('div', 'ending-panel'),
     prompt: el('div', 'interact-prompt'),
@@ -84,7 +88,17 @@ function wireDom(session: GameSession, p: Parts, h: HudHandles): void {
   fillTitle(p.title, session);
   fillMenu(p.menu, session, h);
   appendAll(p);
-  hideAll([p.play, p.menu, p.dialogue, p.bet, p.travel, p.jobs, p.ending, p.prompt]);
+  hideAll([
+    p.play,
+    p.menu,
+    p.dialogue,
+    p.bet,
+    p.travel,
+    p.jobs,
+    p.upgrades,
+    p.ending,
+    p.prompt,
+  ]);
 }
 
 function appendAll(p: Parts): void {
@@ -96,6 +110,7 @@ function appendAll(p: Parts): void {
     p.bet,
     p.travel,
     p.jobs,
+    p.upgrades,
     p.toast,
     p.ending,
     p.prompt,
@@ -162,6 +177,11 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
       paintJobs(p.jobs, session, () => h.syncScreen());
       focusFirst(p.jobs);
     },
+    showUpgrades: () => {
+      only(p, 'upgrades');
+      paintUpgrades(p.upgrades, session, () => h.syncScreen());
+      focusFirst(p.upgrades);
+    },
     showEnding: (text) => showEnding(p, session, text),
   };
 }
@@ -210,6 +230,7 @@ function syncFromUi(h: HudHandles, p: Parts, session: GameSession): void {
   if (screen === 'menu') h.showMenu(true);
   if (screen === 'travel') h.showTravel();
   if (screen === 'jobs') h.showJobs();
+  if (screen === 'upgrades') h.showUpgrades();
   if (screen === 'bet') h.showBet();
   if (screen === 'dialogue') h.showDialogue(session.getDialogue());
   refresh(p, session);
@@ -217,7 +238,17 @@ function syncFromUi(h: HudHandles, p: Parts, session: GameSession): void {
 }
 
 function only(p: Parts, which: string): void {
-  const nodes = [p.title, p.play, p.menu, p.dialogue, p.bet, p.travel, p.jobs, p.ending];
+  const nodes = [
+    p.title,
+    p.play,
+    p.menu,
+    p.dialogue,
+    p.bet,
+    p.travel,
+    p.jobs,
+    p.upgrades,
+    p.ending,
+  ];
   hideAll(nodes);
   const map: Record<string, HTMLElement> = {
     title: p.title,
@@ -227,6 +258,7 @@ function only(p: Parts, which: string): void {
     bet: p.bet,
     travel: p.travel,
     jobs: p.jobs,
+    upgrades: p.upgrades,
     ending: p.ending,
   };
   setVisible(map[which]!, true);
@@ -275,6 +307,7 @@ function fillMenu(panel: HTMLElement, session: GameSession, h: HudHandles): void
     }),
     button(UI.travel, () => openFromMenu(session, h, 'travel')),
     button(UI.grind, () => openFromMenu(session, h, 'jobs')),
+    button(UI.upgrades, () => openFromMenu(session, h, 'upgrades')),
     button(UI.mute, () => session.setMuted(!session.getAudio().muted)),
     el('p', 'hint menu-hint', menuHintFor(panel)),
   );
@@ -290,11 +323,12 @@ function menuHintFor(panel: HTMLElement): string {
 function openFromMenu(
   session: GameSession,
   h: HudHandles,
-  kind: 'travel' | 'jobs',
+  kind: 'travel' | 'jobs' | 'upgrades',
 ): void {
   session.closeModal();
   if (kind === 'travel' && session.openTravel()) h.showTravel();
   if (kind === 'jobs' && session.openJobs()) h.showJobs();
+  if (kind === 'upgrades' && session.openUpgrades()) h.showUpgrades();
 }
 
 function refresh(p: Parts, session: GameSession): void {
@@ -325,6 +359,10 @@ function paintPrompt(prompt: HTMLElement, session: GameSession): void {
 }
 
 function paintToast(toast: HTMLElement, message: string, kind: string): void {
+  if (!message) {
+    setVisible(toast, false);
+    return;
+  }
   toast.className = `toast toast-${kind}`;
   toast.textContent = message;
   setVisible(toast, true);

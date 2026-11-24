@@ -125,18 +125,40 @@ canvas.excalibur-game {
   flex-direction: column;
 }
 
+.hud[data-input-mode='touch'] .bet-panel {
+  top: 28%;
+  max-height: min(56vh, 440px);
+  padding-top: 0.85rem;
+}
+
+.hud[data-input-mode='touch'] .bet-panel h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  padding-right: 0.25rem;
+}
+
 .hud[data-input-mode='touch'] .bet-actions {
-  order: -1;
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: #12121cee;
-  padding-bottom: 0.35rem;
+  order: 0;
+  position: static;
+  background: transparent;
+  padding-top: 0.45rem;
+  padding-bottom: 0.15rem;
 }
 
 .hud[data-input-mode='touch'] .bet-panel .line,
 .hud[data-input-mode='touch'] .bet-panel p:nth-of-type(n + 3) {
   font-size: 0.9rem;
+}
+
+.hud[data-input-mode='touch'] .input-hints {
+  display: none !important;
+}
+
+.hud[data-input-mode='touch'] .objective {
+  font-size: 0.82rem;
+  max-width: min(92vw, 420px);
+  overflow-wrap: anywhere;
+  line-height: 1.25;
 }
 
 .hud[data-input-mode='touch'] .toast {

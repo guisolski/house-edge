@@ -14,11 +14,15 @@ export function clearNode(node: HTMLElement): void {
 }
 
 export function setVisible(node: HTMLElement, visible: boolean): void {
+  // Blur before inert/hide so we never leave focus inside a hidden tree.
+  if (!visible && node.contains(document.activeElement)) {
+    (document.activeElement as HTMLElement | null)?.blur();
+  }
   node.hidden = !visible;
   // Author `display:flex` otherwise overrides the [hidden] UA rule.
   node.style.display = visible ? '' : 'none';
-  node.setAttribute('aria-hidden', visible ? 'false' : 'true');
-  // Prevent focused controls inside hidden panels (aria-hidden focus warning).
+  // Prefer `inert` over aria-hidden to avoid focus-in-hidden warnings.
+  node.removeAttribute('aria-hidden');
   if ('inert' in node) {
     (node as HTMLElement & { inert: boolean }).inert = !visible;
   }

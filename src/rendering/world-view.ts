@@ -201,8 +201,9 @@ function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCa
     viewH: canvas.height,
     tilePx: TILE_PX,
   });
-  const ox = pad.padX - cam.x;
-  const oy = pad.padY - cam.y;
+  // Screen-space camera: world - viewCam (+ letterbox via negative cam when padded).
+  const viewCamX = cam.x - pad.padX;
+  const viewCamY = cam.y - pad.padY;
   const district = state.session.world.get(stats.districtId);
   ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = Palette.nightSky;
@@ -211,11 +212,11 @@ function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCa
   }
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   const layer = state.mapCache?.layer;
-  if (layer) ctx.drawImage(layer, ox, oy);
-  drawActors(ctx, state, frame, ox, oy);
-  drawFewLights(ctx, state, stats.x, stats.y, ox, oy);
+  if (layer) ctx.drawImage(layer, -viewCamX, -viewCamY);
+  drawActors(ctx, state, frame, viewCamX, viewCamY);
+  drawFewLights(ctx, state, stats.x, stats.y, viewCamX, viewCamY);
   if ((frame & 1) === 0) drawRain(ctx, frame);
-  drawMarker(ctx, state, ox, oy, frame);
+  drawMarker(ctx, state, viewCamX, viewCamY, frame);
   if (showFps) drawFpsOverlay(ctx, sample);
   return cam;
 }
@@ -392,7 +393,11 @@ type GlowBlit = {
 };
 
 function blitGlow(g: GlowBlit): void {
-  g.ctx.drawImage(glowSprite(g.baked, g.color), g.wx - g.camX - GLOW_R, g.wy - g.camY - GLOW_R);
+  g.ctx.drawImage(
+    glowSprite(g.baked, g.color),
+    g.wx - g.camX - GLOW_R,
+    g.wy - g.camY - GLOW_R,
+  );
 }
 
 function paintWorldGlows(
@@ -405,7 +410,15 @@ function paintWorldGlows(
   let n = 0;
   for (const s of map.signs) {
     if (n >= MAX_LIGHTS - 2) break;
-    blitGlow({ ctx, baked, color: s.color, wx: s.x * TILE_PX + 28, wy: s.y * TILE_PX, camX, camY });
+    blitGlow({
+      ctx,
+      baked,
+      color: s.color,
+      wx: s.x * TILE_PX + 28,
+      wy: s.y * TILE_PX,
+      camX,
+      camY,
+    });
     n += 1;
   }
   if (n < MAX_LIGHTS - 1) {
@@ -421,6 +434,17 @@ function paintWorldGlows(
     });
     n += 1;
   }
+  paintKioskGlows(ctx, baked, map, camX, camY, n);
+}
+
+function paintKioskGlows(
+  ctx: CanvasRenderingContext2D,
+  baked: Baked,
+  map: MapDef,
+  camX: number,
+  camY: number,
+  n: number,
+): number {
   for (const p of map.props) {
     if (n >= MAX_LIGHTS - 1 || p.kind !== 'kiosk') continue;
     blitGlow({
@@ -434,6 +458,7 @@ function paintWorldGlows(
     });
     n += 1;
   }
+  return n;
 }
 
 function drawFewLights(

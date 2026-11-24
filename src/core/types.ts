@@ -88,4 +88,5 @@ export type GameSave = {
   unlockedDistricts: DistrictId[];
   muted: boolean;
   masterVolume: number;
+  upgrades?: Record<string, number>;
 };

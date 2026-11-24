@@ -1,7 +1,15 @@
 /** UX-5: one modal context at a time. */
 
 export type UiScreen =
-  'title' | 'play' | 'dialogue' | 'bet' | 'menu' | 'travel' | 'jobs' | 'ending';
+  | 'title'
+  | 'play'
+  | 'dialogue'
+  | 'bet'
+  | 'menu'
+  | 'travel'
+  | 'jobs'
+  | 'upgrades'
+  | 'ending';
 
 export class UiStateMachine {
   private screen: UiScreen = 'title';

@@ -34,6 +34,8 @@ function wireLifecycle(
   });
   session.bus.on('story:ended', () => {
     if (!session.ui.is('ending')) session.ui.go('ending');
+    // Clear any lingering bet toast before the ending panel.
+    hud.showToast('', 'info');
     hud.showEnding(UI.wonEnding);
   });
   session.bus.on('input:action', (p) => {

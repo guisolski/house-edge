@@ -83,4 +83,15 @@ export default tseslint.config(
       'max-params': ['error', 6],
     },
   },
+
+  {
+    files: ['src/systems/session.ts', 'src/rendering/world-view.ts'],
+    rules: {
+      'max-lines-per-function': [
+        'error',
+        { max: 50, skipBlankLines: true, skipComments: true },
+      ],
+      'max-params': ['error', 6],
+    },
+  },
 );

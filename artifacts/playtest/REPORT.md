@@ -1,28 +1,26 @@
-# Playtest report — House Edge 1.4.0
+# Playtest report — House Edge 1.5.0
 
 Date: 2026-11-24
 
 ## Summary
 
-**PASS** for owner blockers after v1.4. Softlock cleared, story gates completable (Monte Carlo + live playthrough), ending panel sticks, mobile dialogue above controls, FPS ~60.
+**PASS** for owner blockers after v1.5: longer story (~18 beats + twist + upgrades), denser district art, tower void letterbox, mobile UI, NPC collision, story-only pity, odd-job cooldown + world NPCs.
 
-## Blockers
+## Checks
 
-| #   | Issue                          | Result                                                   |
-| --- | ------------------------------ | -------------------------------------------------------- |
-| 1   | Softlock 0 credits / neg rep   | PASS — Odd jobs (safe pay) always available              |
-| 2   | Gate bet too harsh             | PASS — pixo ~46% + pity; median story bets ≤22 / 80 sims |
-| 3   | Dialogue spoilers              | PASS — outcome lines removed / softened                  |
-| 4   | Fair edge walk-off             | PASS — sealed borders + exit auto-travel                 |
-| 5   | Mobile dialogue under controls | PASS — panel above stick                                 |
-| 6   | Favicon / aria                 | PASS — `%BASE_URL%` icons; title blur on New Game        |
-| 7   | NPC idle + menu speed          | PASS — bob/blink; shorter bet reveal                     |
-| 8   | Visual polish                  | IMPROVED (still procedural ~7/10)                        |
+| Area | Result |
+| --- | --- |
+| Softlock / odd jobs | PASS — world givers + cooldown/cap |
+| Story length | PASS — 18 beats, mid-twist, upgrades menu |
+| Visuals | IMPROVED — dense Morro/Fair/Avenue/Tower; ending art |
+| Tower void | PASS — nightSky letterbox + larger torre |
+| Mobile bet / WASD | PASS — sticky footer, hints hidden on touch |
+| NPC collision | PASS |
+| Exit pads | PASS — auto-travel on exit tiles everywhere |
+| Pity | PASS — story gates only, cap 62% |
+| FPS | PASS — ≥50 desktop + 4× throttle |
 
-## Performance
+## Gaps (honest)
 
-Desktop + 4× CPU throttle avg FPS ≥50 (observed ~60).
-
-## Evidence
-
-`make playtest` (golden path, FPS, throttle, full story ending, mobile dialogue).
+- Art still procedural (better than 5/10, not hand-painted AAA).
+- Full ~20 min depends on player exploration/grind; golden path with retries is longer than v1.4 but short if every bet wins first try.

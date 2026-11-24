@@ -8,6 +8,7 @@ export type WorldNpc = {
   y: number;
   beatId?: string;
   jobBetId?: string;
+  safeJobId?: string;
   color: string;
 };
 
@@ -34,6 +35,16 @@ const NPCS: readonly WorldNpc[] = [
     color: '#1faa5a',
   },
   {
+    id: 'antena-tech',
+    name: 'Antena Tech',
+    districtId: 'morro-neon',
+    x: 10,
+    y: 8,
+    beatId: 'morro-antena',
+    jobBetId: 'antena-sinal',
+    color: '#b8ff2b',
+  },
+  {
     id: 'luna',
     name: 'Luna Pixel',
     districtId: 'morro-neon',
@@ -41,6 +52,16 @@ const NPCS: readonly WorldNpc[] = [
     y: 14,
     beatId: 'luna-beco',
     color: '#2bfff2',
+  },
+  {
+    id: 'fio-ladrao',
+    name: 'Fio Ladrão',
+    districtId: 'morro-neon',
+    x: 22,
+    y: 10,
+    beatId: 'morro-fios',
+    jobBetId: 'fio-corrida',
+    color: '#ff8c42',
   },
   {
     id: 'seu-ze',
@@ -53,6 +74,15 @@ const NPCS: readonly WorldNpc[] = [
     color: '#ffdf00',
   },
   {
+    id: 'catador-morro',
+    name: 'Catador do Morro',
+    districtId: 'morro-neon',
+    x: 6,
+    y: 17,
+    safeJobId: 'safe-morro-neon',
+    color: '#a0a0a0',
+  },
+  {
     id: 'kiko',
     name: 'Kiko',
     districtId: 'feira-central',
@@ -61,6 +91,17 @@ const NPCS: readonly WorldNpc[] = [
     beatId: 'feira-kiko',
     jobBetId: 'pastel-surpresa',
     color: '#f5c518',
+  },
+  {
+    id: 'catador-feira',
+    name: 'Catador da Feira',
+    districtId: 'feira-central',
+    x: 20,
+    y: 18,
+    beatId: 'feira-catador',
+    jobBetId: 'feira-garrafa',
+    safeJobId: 'safe-feira-central',
+    color: '#7bc96f',
   },
   {
     id: 'bia',
@@ -72,6 +113,16 @@ const NPCS: readonly WorldNpc[] = [
     color: '#ff6eb4',
   },
   {
+    id: 'forro-dj',
+    name: 'DJ Forró',
+    districtId: 'feira-central',
+    x: 28,
+    y: 18,
+    beatId: 'feira-forro',
+    jobBetId: 'forro-crowd',
+    color: '#d946ef',
+  },
+  {
     id: 'luna-feira',
     name: 'Luna Pixel',
     districtId: 'feira-central',
@@ -79,6 +130,25 @@ const NPCS: readonly WorldNpc[] = [
     y: 15,
     beatId: 'prova-luna',
     color: '#2bfff2',
+  },
+  {
+    id: 'lavador-feira',
+    name: 'Lavador da Feira',
+    districtId: 'feira-central',
+    x: 14,
+    y: 22,
+    safeJobId: 'safe-feira-central',
+    color: '#6ec8e8',
+  },
+  {
+    id: 'mole-contact',
+    name: 'Mole Contact',
+    districtId: 'avenida-odds',
+    x: 20,
+    y: 12,
+    beatId: 'avenida-twist',
+    jobBetId: 'twist-vazamento',
+    color: '#888888',
   },
   {
     id: 'capita',
@@ -91,6 +161,26 @@ const NPCS: readonly WorldNpc[] = [
     color: '#b8ff2b',
   },
   {
+    id: 'influencer',
+    name: 'Odds Influencer',
+    districtId: 'avenida-odds',
+    x: 36,
+    y: 14,
+    beatId: 'avenida-influencer',
+    jobBetId: 'influencer-duelo',
+    color: '#ff2bd6',
+  },
+  {
+    id: 'atm-hacker',
+    name: 'ATM Hacker',
+    districtId: 'avenida-odds',
+    x: 32,
+    y: 13,
+    beatId: 'avenida-atm',
+    jobBetId: 'avenida-atm',
+    color: '#ff3b5c',
+  },
+  {
     id: 'margin',
     name: 'Dr. Margin',
     districtId: 'avenida-odds',
@@ -100,6 +190,25 @@ const NPCS: readonly WorldNpc[] = [
     color: '#4a6cff',
   },
   {
+    id: 'mensageiro-avenida',
+    name: 'Mensageiro',
+    districtId: 'avenida-odds',
+    x: 8,
+    y: 11,
+    safeJobId: 'safe-avenida-odds',
+    color: '#c9b037',
+  },
+  {
+    id: 'vip-host',
+    name: 'VIP Host',
+    districtId: 'torre-casa',
+    x: 14,
+    y: 10,
+    beatId: 'torre-vip',
+    jobBetId: 'torre-vip',
+    color: '#ffd700',
+  },
+  {
     id: 'ceo',
     name: 'Augusto Casa',
     districtId: 'torre-casa',
@@ -107,6 +216,15 @@ const NPCS: readonly WorldNpc[] = [
     y: 13,
     beatId: 'torre-final',
     color: '#ff3b5c',
+  },
+  {
+    id: 'busboy-torre',
+    name: 'Busboy',
+    districtId: 'torre-casa',
+    x: 24,
+    y: 16,
+    safeJobId: 'safe-torre-casa',
+    color: '#9aa0a6',
   },
 ];
 

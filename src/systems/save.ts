@@ -20,6 +20,7 @@ export function createDefaultSave(): GameSave {
     unlockedDistricts: ['morro-neon'],
     muted: false,
     masterVolume: 0.7,
+    upgrades: {},
   };
 }
 
@@ -67,5 +68,6 @@ function normalizeSave(data: Partial<GameSave>): GameSave {
     unlockedDistricts: (data.unlockedDistricts as DistrictId[]) ?? ['morro-neon'],
     muted: data.muted ?? false,
     masterVolume: data.masterVolume ?? 0.7,
+    upgrades: data.upgrades ?? {},
   };
 }

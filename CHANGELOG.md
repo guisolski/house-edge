@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] — 2026-11-24
+
+### Added
+
+- Expanded story (~18 beats) with mid-game twist, side quests, and Esc → Upgrades.
+- Dense district maps, unique tiles, larger NPC silhouettes, ending art scene.
+- World odd-job NPCs with cooldown/cap; NPC tile collision.
+
+### Fixed
+
+- Tower letterbox void; mobile bet clipping / WASD on touch; pity story-only (cap 62%).
+- Ending toast overlap; title version; aria focus warning via inert.
+
 ## [1.4.0] — 2026-11-24
 
 ### Fixed

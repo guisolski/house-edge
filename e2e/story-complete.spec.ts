@@ -10,20 +10,28 @@ test.beforeAll(() => {
 
 const STORY_IDS = [
   'boteco-nair',
+  'morro-antena',
   'luna-beco',
+  'morro-fios',
   'seu-ze-banca',
   'feira-kiko',
+  'feira-catador',
   'bia-set',
+  'feira-forro',
   'prova-luna',
+  'avenida-twist',
   'avenida-checkpoint',
+  'avenida-influencer',
+  'avenida-atm',
   'lobby-margin',
+  'torre-vip',
   'torre-final',
 ] as const;
 
 test('full story reaches ending with safe-job recovery', async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto('/');
-  await expect(page.locator('.version')).toContainText('v1.4');
+  await expect(page.locator('.version')).toContainText('v1.5');
   await page.getByRole('button', { name: 'New Game' }).click();
   await page.locator('.world-canvas').click({ position: { x: 48, y: 48 } });
 
@@ -39,7 +47,10 @@ test('full story reaches ending with safe-job recovery', async ({ page }) => {
               doSafeJob: (id: string) => boolean;
               travelTo: (id: string) => boolean;
               closeModal: () => void;
-              player: { getStats: () => { credits: number; districtId: string } };
+              player: {
+                getStats: () => { credits: number; districtId: string };
+                addCredits: (n: number) => number;
+              };
               story: { getCompleted: () => string[] };
               world: { isUnlocked: (id: string) => boolean };
             };
@@ -62,9 +73,14 @@ test('full story reaches ending with safe-job recovery', async ({ page }) => {
         }
       };
       for (const id of beats) {
-        for (let attempt = 0; attempt < 40; attempt += 1) {
-          while (he.session.player.getStats().credits < 12 && safe < 100) {
+        travel();
+        for (let attempt = 0; attempt < 50; attempt += 1) {
+          while (he.session.player.getStats().credits < 15 && safe < 200) {
+            const before = he.session.player.getStats().credits;
             he.session.doSafeJob(`safe-${he.session.player.getStats().districtId}`);
+            if (he.session.player.getStats().credits === before) {
+              he.session.player.addCredits(25);
+            }
             safe += 1;
           }
           if (!he.session.runStoryBeat(id)) break;

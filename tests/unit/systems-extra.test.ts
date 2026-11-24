@@ -142,7 +142,6 @@ describe('objectives', () => {
         'morro-antena',
         'luna-beco',
         'morro-fios',
-        'morro-laje-mark',
         'seu-ze-banca',
       ],
       flags: () => true,
@@ -239,10 +238,11 @@ describe('session deep paths', () => {
   it('toasts come-back-later when npc beat is done and no job', () => {
     const session = new GameSession(13);
     session.startNew();
-    for (const id of ['boteco-nair', 'luna-beco']) {
+    for (const id of ['boteco-nair', 'morro-antena', 'luna-beco']) {
       session.story.completeBeat(id);
     }
     session.story.setFlag('falou_nair', true);
+    session.story.setFlag('antena_ok', true);
     session.story.setFlag('conheceu_luna', true);
     session.player.setPosition(26, 14);
     expect(session.nearbyNpc()?.id).toBe('luna');

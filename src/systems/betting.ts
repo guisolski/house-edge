@@ -8,14 +8,20 @@ export function impliedWinChance(odds: Odds, houseEdge: number): number {
   return clamp01(fair * (1 - clamp01(houseEdge)));
 }
 
-/** +10% absolute pity per consecutive loss on the same bet, capped. */
+/**
+ * Pity applies only to story-gate bets (not grind).
+ * +8% per consecutive loss, max 2 stacks → +16%, hard cap 62%.
+ */
 export function pityWinChance(
   odds: Odds,
   houseEdge: number,
   consecutiveLosses = 0,
+  opts: { storyGate?: boolean; luckBonus?: number } = {},
 ): number {
-  const base = impliedWinChance(odds, houseEdge);
-  return Math.min(0.78, base + Math.max(0, consecutiveLosses) * 0.1);
+  const base = impliedWinChance(odds, houseEdge) + (opts.luckBonus ?? 0);
+  if (!opts.storyGate) return clamp01(base);
+  const stacks = Math.min(2, Math.max(0, consecutiveLosses));
+  return Math.min(0.62, base + stacks * 0.08);
 }
 
 export function payoutForWin(stake: number, odds: Odds): number {
@@ -23,40 +29,55 @@ export function payoutForWin(stake: number, odds: Odds): number {
   return Math.floor(stake * (odds.numerator / odds.denominator + 1));
 }
 
+export type ResolveOpts = {
+  stake?: number;
+  consecutiveLosses?: number;
+  luckBonus?: number;
+};
+
 export function resolveBet(
   bet: BetDefinition,
   rng: Rng,
-  stakeOverride?: number,
-  consecutiveLosses = 0,
+  opts: ResolveOpts | number = {},
 ): BetResult {
-  const stake = stakeOverride ?? bet.stake;
+  const o: ResolveOpts = typeof opts === 'number' ? { stake: opts } : opts;
+  return rollBet(
+    bet,
+    rng,
+    o.stake ?? bet.stake,
+    o.consecutiveLosses ?? 0,
+    o.luckBonus ?? 0,
+  );
+}
+
+function rollBet(
+  bet: BetDefinition,
+  rng: Rng,
+  stake: number,
+  opts: { losses: number; luck: number },
+): BetResult {
   const roll = rng.next();
-  const chance = pityWinChance(bet.odds, bet.houseEdge, consecutiveLosses);
+  const chance = pityWinChance(bet.odds, bet.houseEdge, opts.losses, {
+    storyGate: isSoftStakeBet(bet),
+    luckBonus: opts.luck,
+  });
   const won = roll < chance;
   const payout = won ? payoutForWin(stake, bet.odds) : 0;
-  return {
-    betId: bet.id,
-    won,
-    stake,
-    payout,
-    net: payout - stake,
-    roll,
-  };
+  return { betId: bet.id, won, stake, payout, net: payout - stake, roll };
 }
 
 export function formatWinChance(
   odds: Odds,
   houseEdge: number,
   consecutiveLosses = 0,
+  storyGate = false,
 ): string {
-  const pct = Math.round(pityWinChance(odds, houseEdge, consecutiveLosses) * 100);
+  const pct = Math.round(
+    pityWinChance(odds, houseEdge, consecutiveLosses, { storyGate }) * 100,
+  );
   return `${pct}%`;
 }
 
-/**
- * Soft stake floor for story gates: if the player is broke-ish but not at 0,
- * allow staking whatever they have so the beat stays retryable.
- */
 export function clampStake(bet: BetDefinition, stake: number, credits: number): number {
   let min = bet.stakeMin ?? Math.max(1, Math.floor(bet.stake / 2));
   const max = Math.min(bet.stakeMax ?? bet.stake * 3, credits);
