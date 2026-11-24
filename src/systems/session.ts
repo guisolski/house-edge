@@ -25,6 +25,8 @@ import { currentObjective, type Objective } from './objectives';
 
 const SAFE_JOB_COOLDOWN_MS = 10_000;
 const SAFE_JOB_CAP = 6;
+/** Soft floor matching common story/grind stakes (e.g. água gelada). */
+const BROKE_STAKE_FLOOR = 8;
 
 export class GameSession {
   readonly bus: EventBus;
@@ -123,9 +125,56 @@ export class GameSession {
 
   nearbyExit(): DistrictExit | null {
     const s = this.player.getStats();
+    // Prompt / interact only when standing on an exit tile (matches the pad visual).
+    if (tileAt(this.getMap(), s.x, s.y) !== 'exit') return null;
     const exit = nearestExit(this.exits, s.districtId, s.x, s.y);
     if (!exit) return null;
     return this.world.isUnlocked(exit.toDistrict) ? exit : null;
+  }
+
+  /** Dismiss ending and keep the completed save for side jobs / grind. */
+  continueExploring(): boolean {
+    if (!this.ui.is('ending')) return false;
+    this.persist();
+    if (!this.ui.go('play')) return false;
+    this.bus.emit('game:started', { newGame: false });
+    return true;
+  }
+
+  /** Nearest odd-job giver (same district first). */
+  nearestSafeJobNpc(): WorldNpc | null {
+    const s = this.player.getStats();
+    const givers = this.npcs.filter((n) => n.safeJobId);
+    const here = givers.filter((n) => n.districtId === s.districtId);
+    const pool = here.length > 0 ? here : givers;
+    if (pool.length === 0) return null;
+    let best = pool[0]!;
+    let bestD = Infinity;
+    for (const n of pool) {
+      const d = n.districtId === s.districtId ? Math.hypot(n.x - s.x, n.y - s.y) : 1000;
+      if (d < bestD) {
+        best = n;
+        bestD = d;
+      }
+    }
+    return best;
+  }
+
+  /** Credits below the soft story/grind stake floor. */
+  isBroke(): boolean {
+    return this.player.getStats().credits < BROKE_STAKE_FLOOR;
+  }
+
+  brokeHintText(): string | null {
+    if (!this.isBroke()) return null;
+    const giver = this.nearestSafeJobNpc();
+    if (!giver) {
+      return 'Broke — open Esc → Side Jobs for safe pay.';
+    }
+    const same = giver.districtId === this.player.getStats().districtId;
+    return same
+      ? `Broke — talk to ${giver.name} for safe odd jobs (marker).`
+      : `Broke — find ${giver.name} (${giver.districtId}) for safe odd jobs.`;
   }
 
   interact(): boolean {
@@ -146,9 +195,8 @@ export class GameSession {
     const credits = this.player.getStats().credits;
     const stake = clampStake(bet, bet.stake, credits);
     if (!canAfford(credits, stake)) {
-      const giver = this.safeJobHint();
       this.bus.emit('ui:toast', {
-        message: `Not enough credits — talk to ${giver} (safe odd jobs) or Esc → Side Jobs.`,
+        message: this.brokeHintText() ?? 'Not enough credits — find an odd-job NPC.',
         kind: 'danger',
       });
       return false;
@@ -305,6 +353,17 @@ export class GameSession {
 
   objective(): Objective {
     const s = this.player.getStats();
+    const broke = this.brokeHintText();
+    if (broke) {
+      const giver = this.nearestSafeJobNpc();
+      const same = giver?.districtId === s.districtId;
+      return {
+        text: broke,
+        targetX: same ? giver!.x : undefined,
+        targetY: same ? giver!.y : undefined,
+        districtId: giver?.districtId ?? s.districtId,
+      };
+    }
     return currentObjective({
       beats: STORY_BEATS,
       completed: this.story.getCompleted(),
@@ -443,12 +502,6 @@ export class GameSession {
   private npcBlocks(x: number, y: number): boolean {
     const id = this.player.getStats().districtId;
     return this.npcs.some((n) => n.districtId === id && n.x === x && n.y === y);
-  }
-
-  private safeJobHint(): string {
-    const id = this.player.getStats().districtId;
-    const giver = this.npcs.find((n) => n.districtId === id && n.safeJobId);
-    return giver?.name ?? 'the odd-job worker';
   }
 
   private afterBetResolved(bet: BetDefinition, won: boolean): void {

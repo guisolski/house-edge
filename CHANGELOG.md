@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2] — 2026-11-24
+
+### Added
+
+- Ending **Continue exploring** keeps the completed save so side jobs/grind stay reachable; **Play again** requires confirm.
+
+### Fixed
+
+- Exit Travel prompt only when standing on the exit pad tile (hitbox matches visual).
+- Broke objective/toast points at the nearest odd-job NPC when credits are under the stake floor.
+- Mobile objective font size raised for readability.
+- Title/touch: drop aria-hidden focus warnings (no aria-hidden on hidden UI).
+
 ## [1.5.1] — 2026-11-24
 
 ### Fixed

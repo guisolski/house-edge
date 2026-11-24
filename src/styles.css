@@ -197,10 +197,19 @@ canvas.excalibur-game {
 }
 
 .hud[data-input-mode='touch'] .objective {
-  font-size: 0.82rem;
+  font-size: 1rem;
   max-width: min(92vw, 420px);
   overflow-wrap: anywhere;
-  line-height: 1.25;
+  line-height: 1.35;
+}
+
+.ending-actions {
+  margin-top: 0.35rem;
+}
+
+.ending-confirm {
+  color: var(--yellow);
+  font-weight: 600;
 }
 
 .hud[data-input-mode='touch'] .toast {

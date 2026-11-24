@@ -108,7 +108,12 @@ test('full story reaches ending with safe-job recovery', async ({ page }) => {
   await expect(page.locator('.ending-panel:not([hidden])')).toBeVisible({
     timeout: 3000,
   });
+  await expect(page.getByRole('button', { name: 'Continue exploring' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Play again' })).toBeVisible();
   await page.screenshot({ path: path.join(ART, '10-story-ending.png') });
+  await page.getByRole('button', { name: 'Continue exploring' }).click();
+  await expect(page.locator('.play-hud:not([hidden])')).toBeVisible();
+  await expect(page.locator('.ending-panel')).toBeHidden();
   expect(
     errors.filter((e) => !e.includes('favicon.ico')),
     errors.join('\n'),

@@ -26,8 +26,12 @@ export function mountTouchControls(
   return {
     root,
     setVisible: (visible) => {
+      if (!visible && root.contains(document.activeElement)) {
+        (document.activeElement as HTMLElement | null)?.blur();
+      }
       root.hidden = !visible;
-      root.setAttribute('aria-hidden', visible ? 'false' : 'true');
+      root.removeAttribute('aria-hidden');
+      root.style.display = visible ? '' : 'none';
     },
   };
 }

@@ -182,7 +182,7 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
       paintUpgrades(p.upgrades, session, () => h.syncScreen());
       focusFirst(p.upgrades);
     },
-    showEnding: (text) => showEnding(p, session, text),
+    showEnding: (text) => showEnding(p, session, h, text),
   };
 }
 
@@ -202,8 +202,18 @@ function endingArt(): HTMLCanvasElement {
   return endingArtCanvas;
 }
 
-function showEnding(p: Parts, session: GameSession, text: string): void {
+function showEnding(p: Parts, session: GameSession, h: HudHandles, text: string): void {
   only(p, 'ending');
+  paintEnding(p, session, h, text, false);
+}
+
+function paintEnding(
+  p: Parts,
+  session: GameSession,
+  h: HudHandles,
+  text: string,
+  confirming: boolean,
+): void {
   clearNode(p.ending);
   const art = el('canvas', 'ending-art') as HTMLCanvasElement;
   const src = endingArt();
@@ -214,14 +224,35 @@ function showEnding(p: Parts, session: GameSession, text: string): void {
     art,
     el('h2', '', UI.wonEnding),
     el('p', '', text === UI.wonEnding ? UI.endingBlurb : text),
-    button(UI.playAgain, () => {
-      if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-      }
-      session.startNew();
-    }),
   );
+  if (confirming) {
+    p.ending.append(
+      el('p', 'ending-confirm', UI.playAgainConfirm),
+      button(UI.playAgainYes, () => {
+        blurActive();
+        queueMicrotask(() => session.startNew());
+      }),
+      button(UI.playAgainNo, () => paintEnding(p, session, h, text, false)),
+    );
+  } else {
+    const actions = el('div', 'panel-actions ending-actions');
+    actions.append(
+      button(UI.continueExploring, () => {
+        blurActive();
+        session.continueExploring();
+        h.syncScreen();
+      }),
+      button(UI.playAgain, () => paintEnding(p, session, h, text, true)),
+    );
+    p.ending.append(actions);
+  }
   focusFirst(p.ending);
+}
+
+function blurActive(): void {
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
+  }
 }
 
 function syncFromUi(h: HudHandles, p: Parts, session: GameSession): void {
@@ -282,17 +313,15 @@ function fillTitle(panel: HTMLElement, session: GameSession): void {
     el('p', 'tagline', UI.tagline),
     el('p', 'version', UI.version),
     button(UI.newGame, () => {
-      // Blur before hiding the title to avoid aria-hidden focus warnings.
-      if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-      }
-      session.startNew();
+      blurActive();
+      // Defer so focus leaves the title before it becomes inert/hidden.
+      queueMicrotask(() => session.startNew());
     }),
     button(UI.continue, () => {
-      if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-      }
-      if (!session.tryLoad()) session.startNew();
+      blurActive();
+      queueMicrotask(() => {
+        if (!session.tryLoad()) session.startNew();
+      });
     }),
   );
 }
