@@ -1,0 +1,45 @@
+{
+  "name": "odds-neon",
+  "version": "1.0.0",
+  "description": "Odds Neon — cyberpunk bets in a Brazilian megacity",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 43123",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 43124",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . && prettier --check . && markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#dist\" \"#coverage\" \"#reports\"",
+    "lint:fix": "eslint . --fix && prettier --write .",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "mutation": "stryker run",
+    "audit": "npm audit --audit-level=high",
+    "ci": "npm run lint && npm run typecheck && npm run test && npm run build && npm run e2e && npm run mutation"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "excalibur": "^1.0.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
+    "@stryker-mutator/core": "^10.1.1",
+    "@stryker-mutator/typescript-checker": "^10.1.1",
+    "@stryker-mutator/vitest-runner": "^10.1.1",
+    "@types/node": "^26.6.6",
+    "@vitest/coverage-v8": "^5.1.1",
+    "eslint": "^10.15.0",
+    "eslint-config-prettier": "^10.1.8",
+    "markdownlint-cli2": "^0.24.2",
+    "prettier": "^3.10.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.74.0",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  }
+}
