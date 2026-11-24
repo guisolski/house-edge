@@ -34,14 +34,20 @@ export function paintDialogue(
   },
 ): void {
   clearNode(panel);
+  const body = el('div', 'panel-body');
   for (const line of lines) {
-    panel.appendChild(el('p', 'line', `${line.speaker}: ${line.text}`));
+    body.appendChild(el('p', 'line', `${line.speaker}: ${line.text}`));
   }
+  const actions = el('div', 'panel-actions');
   if (opts.offerBet && opts.onAcceptBet) {
-    panel.append(button(UI.takeBet, opts.onAcceptBet), button(UI.walkAway, opts.onClose));
+    actions.append(
+      button(UI.takeBet, opts.onAcceptBet),
+      button(UI.walkAway, opts.onClose),
+    );
   } else {
-    panel.appendChild(button(UI.close, opts.onClose));
+    actions.appendChild(button(UI.close, opts.onClose));
   }
+  panel.append(body, actions);
   focusFirst(panel);
 }
 
@@ -53,8 +59,9 @@ export function paintBet(
   clearNode(panel);
   const bet = session.getPendingBet();
   if (!bet) return;
-  appendBetDetails(panel, session, bet);
-  panel.append(betActionRow(panel, session, after));
+  const body = el('div', 'panel-body');
+  appendBetDetails(body, session, bet);
+  panel.append(body, betActionRow(panel, session, after));
   panel.scrollTop = 0;
 }
 
@@ -74,14 +81,14 @@ function appendBetDetails(
   writeStake();
   panel.append(
     el('h2', '', bet.title),
-    el('p', '', bet.description),
+    el('p', 'bet-desc', bet.description),
     stakeLine,
     el(
       'p',
       '',
       `Win chance ${formatWinChance(bet.odds, bet.houseEdge, losses, story)} · Odds ${formatOdds(bet.odds)}${pity}`,
     ),
-    el('p', '', applyHouseFlavor(bet.houseEdge)),
+    el('p', 'bet-flavor', applyHouseFlavor(bet.houseEdge)),
     stakeControls(session, writeStake),
     el('div', 'bet-roll', 'Ready to roll'),
   );
@@ -92,7 +99,7 @@ function betActionRow(
   session: GameSession,
   after: () => void,
 ): HTMLElement {
-  const actions = el('div', 'bet-actions');
+  const actions = el('div', 'bet-actions panel-actions');
   actions.append(
     button(UI.confirmBet, () => {
       animateRoll(panel, () => {

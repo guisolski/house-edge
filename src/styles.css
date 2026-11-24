@@ -100,6 +100,22 @@ canvas.excalibur-game {
   border-radius: 4px;
 }
 
+.panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-height: 0;
+}
+
+.panel-actions,
+.bet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  padding-top: 0.35rem;
+}
+
 /* Keep dialogue / modals above the virtual stick + action buttons on touch. */
 .hud[data-input-mode='touch'] .dialogue-panel,
 .hud[data-input-mode='touch'] .bet-panel,
@@ -107,47 +123,73 @@ canvas.excalibur-game {
 .hud[data-input-mode='touch'] .travel-panel,
 .hud[data-input-mode='touch'] .jobs-panel,
 .hud[data-input-mode='touch'] .upgrades-panel {
-  top: 34%;
-  max-height: min(48vh, 380px);
+  top: 30%;
+  max-height: min(52vh, 420px);
+  overflow: hidden;
   z-index: 12;
+  padding: 0.75rem 0.9rem 0.65rem;
 }
 
-.bet-actions {
+.hud[data-input-mode='touch'] .dialogue-panel,
+.hud[data-input-mode='touch'] .bet-panel {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.4rem;
+}
+
+.hud[data-input-mode='touch'] .panel-body {
+  flex: 1 1 auto;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  gap: 0.35rem;
+  padding-right: 0.15rem;
+}
+
+.hud[data-input-mode='touch'] .panel-actions,
+.hud[data-input-mode='touch'] .bet-actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
   padding-top: 0.35rem;
+  border-top: 1px solid #2bfff233;
+  background: var(--panel);
 }
 
-/* On touch, keep actions visible at the top of the scrollable panel. */
-.hud[data-input-mode='touch'] .bet-panel {
-  display: flex;
-  flex-direction: column;
-}
-
-.hud[data-input-mode='touch'] .bet-panel {
-  top: 28%;
-  max-height: min(56vh, 440px);
-  padding-top: 0.85rem;
+.hud[data-input-mode='touch'] .panel-actions .btn,
+.hud[data-input-mode='touch'] .bet-actions .btn {
+  flex: 1 1 42%;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.55rem;
 }
 
 .hud[data-input-mode='touch'] .bet-panel h2 {
   margin: 0;
-  font-size: 1.05rem;
-  padding-right: 0.25rem;
+  font-size: 1rem;
+  line-height: 1.2;
 }
 
-.hud[data-input-mode='touch'] .bet-actions {
-  order: 0;
-  position: static;
-  background: transparent;
-  padding-top: 0.45rem;
-  padding-bottom: 0.15rem;
+.hud[data-input-mode='touch'] .bet-panel .bet-desc,
+.hud[data-input-mode='touch'] .bet-panel .bet-flavor {
+  font-size: 0.85rem;
+  margin: 0;
 }
 
-.hud[data-input-mode='touch'] .bet-panel .line,
-.hud[data-input-mode='touch'] .bet-panel p:nth-of-type(n + 3) {
-  font-size: 0.9rem;
+.hud[data-input-mode='touch'] .bet-panel .bet-roll {
+  font-size: 0.85rem;
+}
+
+@media (max-height: 680px) {
+  .hud[data-input-mode='touch'] .dialogue-panel,
+  .hud[data-input-mode='touch'] .bet-panel {
+    top: 26%;
+    max-height: min(58vh, 360px);
+  }
+
+  .hud[data-input-mode='touch'] .bet-panel .bet-flavor,
+  .hud[data-input-mode='touch'] .bet-panel .bet-roll {
+    display: none;
+  }
 }
 
 .hud[data-input-mode='touch'] .input-hints {
