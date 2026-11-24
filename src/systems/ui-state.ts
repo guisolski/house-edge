@@ -51,9 +51,9 @@ export class UiStateMachine {
   }
 
   private allowed(from: UiScreen, to: UiScreen): boolean {
+    if (from === 'title') return to === 'play';
     if (to === 'title' || to === 'ending' || to === 'play' || from === 'play')
       return true;
-    if (from === 'title') return to === 'play';
     return EXTRA.has(`${from}>${to}`);
   }
 }
