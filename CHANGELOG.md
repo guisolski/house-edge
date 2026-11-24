@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] — 2026-11-24
+
+### Changed
+
+- Art cleanup: drop muddy AI sprites; hand-authored 3/4 buildings, crisp bitmap-font signs, unified character scale, glowing stair exits, denser Morro terraces + props. See `docs/credits.md`.
+
 ## [1.6.0] — 2026-11-24
 
 ### Changed

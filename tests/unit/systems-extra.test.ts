@@ -86,8 +86,9 @@ describe('maps and interaction', () => {
     expect(tileAt(torre, 0, 13)).toBe('blocked');
     expect(tileAt(torre, 8, 13)).not.toBe('blocked');
     expect(tileAt(map, 38, 14)).toBe('exit');
-    expect(map.visualGids?.length).toBe(map.width * map.height);
-    expect((map.decor?.length ?? 0) + map.signs.length).toBeGreaterThan(0);
+    expect(map.buildings.length).toBeGreaterThan(8);
+    expect(map.props.length).toBeGreaterThan(5);
+    expect(map.signs.every((s) => s.label.length > 2)).toBe(true);
     const npcs = districtNpcs();
     const exits = districtExits();
     expect(nearestNpc(npcs, 'morro-neon', 13, 14)?.id).toBe('dona-nair');

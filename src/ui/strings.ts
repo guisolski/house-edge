@@ -24,7 +24,7 @@ export const UI = {
   cancel: 'Cancel',
   stakeUp: 'Stake +',
   stakeDown: 'Stake −',
-  version: 'v1.6.0',
+  version: 'v1.7.0',
   wonEnding: 'The Casa falls. The table is yours.',
   endingBlurb:
     'Funk and samba take the streets. Side Jobs stay open if you want another round.',

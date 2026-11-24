@@ -5,19 +5,14 @@ import type { WorldNpc } from '../systems/interaction';
 import { createCamera, followPlayer, viewportPadding } from '../world/camera';
 import { tileAt, type MapDef, type TileKind } from '../world/maps';
 import { bakeSprite, blitImage } from './bake';
-import {
-  atlasReadySync,
-  blitAtlasTile,
-  blitNamedSprite,
-  loadAtlas,
-  type AtlasReady,
-} from './atlas';
 import { FpsMeter, type FpsSample } from './fps';
+import { drawPixelText, measurePixelText } from './pixel-font';
 import {
   makeAlley,
   makeAsphalt,
   makeBlocked,
   makeBuilding,
+  makeCrate,
   makeExitPad,
   makeGrass,
   makeInterior,
@@ -30,6 +25,8 @@ import {
   makePlaza,
   makeSidewalk,
   makeStairs,
+  makeStreetLamp,
+  makeWaterTank,
   makeWire,
   type TileDistrict,
 } from './pixel-gen';
@@ -56,7 +53,7 @@ type Baked = {
   exit: HTMLCanvasElement;
   landmark: Map<string, HTMLCanvasElement>;
   sign: Map<string, HTMLCanvasElement>;
-  props: Record<'moto' | 'kiosk' | 'wire', HTMLCanvasElement>;
+  props: Record<'moto' | 'kiosk' | 'wire' | 'tank' | 'lamp' | 'crate', HTMLCanvasElement>;
   glow: Map<string, HTMLCanvasElement>;
 };
 
@@ -122,10 +119,6 @@ function makeViewState(session: GameSession): ViewState {
     marker: null,
     markerFrame: -1,
   };
-  // Preload CC0/AI atlas; invalidate baked map layers when ready.
-  void loadAtlas().then(() => {
-    state.mapCache = null;
-  });
   return state;
 }
 
@@ -183,6 +176,9 @@ function bakeAll(): Baked {
       moto: bakeSprite(makeMoto(), SCALE),
       kiosk: bakeSprite(makeKiosk(), SCALE),
       wire: bakeSprite(makeWire(), SCALE),
+      tank: bakeSprite(makeWaterTank(), SCALE),
+      lamp: bakeSprite(makeStreetLamp(), SCALE),
+      crate: bakeSprite(makeCrate(), SCALE),
     },
     glow: new Map(),
   };
@@ -253,40 +249,14 @@ function bakeMapLayer(map: MapDef, baked: Baked): HTMLCanvasElement {
   const ctx = layer.getContext('2d');
   if (!ctx) return layer;
   ctx.imageSmoothingEnabled = false;
-  const atlas = atlasReadySync();
-  if (atlas && map.visualGids?.length) {
-    paintAtlasTiles(ctx, map, atlas);
-  } else {
-    paintTiles(ctx, map, tiles);
-  }
+  paintTiles(ctx, map, tiles);
   paintBuildings(ctx, map, baked);
-  if (atlas) paintDecor(ctx, map, atlas);
-  paintSigns(ctx, map, baked, atlas);
+  paintSigns(ctx, map, baked);
   paintProps(ctx, map, baked);
-  paintLandmark(ctx, map, baked, atlas);
+  paintLandmark(ctx, map, baked);
   ctx.fillStyle = '#2bfff210';
   ctx.fillRect(0, 0, layer.width, layer.height);
   return layer;
-}
-
-function paintAtlasTiles(
-  ctx: CanvasRenderingContext2D,
-  map: MapDef,
-  atlas: AtlasReady,
-): void {
-  const gids = map.visualGids!;
-  for (let y = 0; y < map.height; y += 1) {
-    for (let x = 0; x < map.width; x += 1) {
-      const gid = gids[y * map.width + x] ?? 0;
-      blitAtlasTile(ctx, atlas, gid, x * TILE_PX, y * TILE_PX, SCALE);
-    }
-  }
-}
-
-function paintDecor(ctx: CanvasRenderingContext2D, map: MapDef, atlas: AtlasReady): void {
-  for (const d of map.decor ?? []) {
-    blitNamedSprite(ctx, atlas, d.sprite, d.x * TILE_PX, d.y * TILE_PX, SCALE);
-  }
 }
 
 function paintTiles(
@@ -302,49 +272,15 @@ function paintTiles(
 }
 
 function paintBuildings(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): void {
-  const atlas = atlasReadySync();
   for (const b of map.buildings) {
-    if (atlas) {
-      paintAtlasBuilding(ctx, atlas, b);
-      continue;
-    }
     const set = baked.building[b.kind] ?? baked.building.morro!;
     const spr = set[b.style % set.length]!;
     blitImage(ctx, spr, b.x * TILE_PX, b.y * TILE_PX - spr.height + TILE_PX);
   }
 }
 
-function paintAtlasBuilding(
-  ctx: CanvasRenderingContext2D,
-  atlas: AtlasReady,
-  b: MapDef['buildings'][number],
-): void {
-  const baseGid = 40 + (b.style % 8) * 3;
-  for (let dy = 0; dy < b.h; dy += 1) {
-    for (let dx = 0; dx < b.w; dx += 1) {
-      blitAtlasTile(
-        ctx,
-        atlas,
-        baseGid + dx + dy,
-        (b.x + dx) * TILE_PX,
-        (b.y + dy) * TILE_PX - TILE_PX,
-        SCALE,
-      );
-    }
-  }
-}
-
-function paintSigns(
-  ctx: CanvasRenderingContext2D,
-  map: MapDef,
-  baked: Baked,
-  atlas: AtlasReady | null,
-): void {
+function paintSigns(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): void {
   for (const s of map.signs) {
-    if (atlas && s.sprite && atlas.sprites.has(s.sprite)) {
-      blitNamedSprite(ctx, atlas, s.sprite, s.x * TILE_PX, s.y * TILE_PX, SCALE);
-      continue;
-    }
     const key = `${s.label}|${s.color}`;
     let img = baked.sign.get(key);
     if (!img) {
@@ -361,23 +297,7 @@ function paintProps(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): v
   }
 }
 
-function paintLandmark(
-  ctx: CanvasRenderingContext2D,
-  map: MapDef,
-  baked: Baked,
-  atlas: AtlasReady | null,
-): void {
-  if (atlas && map.landmark.sprite && atlas.sprites.has(map.landmark.sprite)) {
-    blitNamedSprite(
-      ctx,
-      atlas,
-      map.landmark.sprite,
-      map.landmark.x * TILE_PX,
-      map.landmark.y * TILE_PX,
-      SCALE,
-    );
-    return;
-  }
+function paintLandmark(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): void {
   const lm = baked.landmark.get(map.landmark.kind) ?? baked.landmark.get('led-tower')!;
   blitImage(
     ctx,
@@ -387,18 +307,34 @@ function paintLandmark(
   );
 }
 
+/** Crisp pixel sign: 5×7 bitmap font at integer scale (never downscaled AI art). */
 function bakeSignWithText(label: string, color: string): HTMLCanvasElement {
-  const base = bakeSprite(makeNeonSign(color), SCALE);
-  const ctx = base.getContext('2d');
-  if (ctx) {
-    ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = '#f4f4ff';
-    ctx.font = 'bold 14px monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(label, base.width / 2, base.height / 2 + 1);
-  }
-  return base;
+  const pad = 3;
+  const up = 3;
+  const { w: textW, h: textH } = measurePixelText(label);
+  const tw = Math.max(40, textW + pad * 2);
+  const th = textH + pad * 2;
+  const raw = document.createElement('canvas');
+  raw.width = tw;
+  raw.height = th;
+  const rctx = raw.getContext('2d');
+  if (!rctx) return bakeSprite(makeNeonSign(color), SCALE);
+  rctx.imageSmoothingEnabled = false;
+  rctx.fillStyle = '#0a0a18';
+  rctx.fillRect(0, 0, tw, th);
+  rctx.fillStyle = color;
+  rctx.fillRect(1, 1, tw - 2, th - 2);
+  rctx.fillStyle = '#0a0a18';
+  rctx.fillRect(2, 2, tw - 4, th - 4);
+  drawPixelText(rctx, label, Math.floor((tw - textW) / 2), pad, '#f4f4ff');
+  const out = document.createElement('canvas');
+  out.width = tw * up;
+  out.height = th * up;
+  const octx = out.getContext('2d');
+  if (!octx) return raw;
+  octx.imageSmoothingEnabled = false;
+  octx.drawImage(raw, 0, 0, out.width, out.height);
+  return out;
 }
 
 function glowSprite(baked: Baked, color: string): HTMLCanvasElement {
@@ -422,35 +358,11 @@ function glowSprite(baked: Baked, color: string): HTMLCanvasElement {
   return img;
 }
 
-const NPC_SPRITE_INDEX: Record<string, string> = {
-  'dona-nair': 'npc_0',
-  'antena-tech': 'npc_1',
-  luna: 'npc_2',
-  ceo: 'npc_3',
-  'vip-host': 'npc_4',
-  'busboy-torre': 'npc_5',
-};
-
 function npcSprite(baked: Baked, npc: WorldNpc, frame: number): HTMLCanvasElement {
   const key = `${npc.id}:${frame % 2}`;
   let img = baked.npc.get(key);
   if (img) return img;
-  const atlas = atlasReadySync();
-  const sprName = NPC_SPRITE_INDEX[npc.id];
-  if (atlas && sprName && atlas.sprites.has(sprName)) {
-    const src = atlas.sprites.get(sprName)!;
-    const c = document.createElement('canvas');
-    c.width = Math.max(TILE_PX, src.width * SCALE);
-    c.height = Math.max(TILE_PX, src.height * SCALE);
-    const g = c.getContext('2d');
-    if (g) {
-      g.imageSmoothingEnabled = false;
-      const bob = frame % 2;
-      g.drawImage(src, 0, bob, c.width, c.height - bob);
-    }
-    baked.npc.set(key, c);
-    return c;
-  }
+  // Same 22×38 hand-authored base as the player — recolored per NPC.
   img = bakeSprite(makeNpcSprite(npc.color, frame % 2, npc.id), SCALE);
   baked.npc.set(key, img);
   return img;

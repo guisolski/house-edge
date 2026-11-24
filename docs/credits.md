@@ -1,39 +1,28 @@
 # Credits & licenses — House Edge art
 
-All third-party packs used here are **CC0 1.0** (public domain dedication) or project-original / AI-generated as noted. Attribution is not required for CC0; we credit authors anyway.
+Runtime art in **v1.7+** is **hand-authored pixel art** (project original in `src/rendering/pixel-gen.ts`) plus optional CC0 reference packs under `vendor/cc0/` for provenance. Muddy AI→pixel conversions from v1.6 were **removed from the runtime**.
 
-## CC0 pixel-art packs
+## CC0 packs (vendor / reference — free / permissive)
 
-| Pack                          | Author      | License | Source                                                                    | Use in House Edge                                            |
-| ----------------------------- | ----------- | ------- | ------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| RPG Urban Pack                | Kenney      | CC0 1.0 | [OpenGameArt](https://opengameart.org/content/rpg-urban-pack)             | Roads, sidewalks, urban props → neon atlas (`urban_*` tiles) |
-| Roguelike Modern City         | Kenney      | CC0 1.0 | [OpenGameArt](https://opengameart.org/content/roguelike-modern-city-pack) | City sheet subsample → neon atlas (`modern_*` tiles)         |
-| (12×12) City Tiles - Top Down | FisherG     | CC0     | [OpenGameArt](https://opengameart.org/content/12x12-city-tiles-top-down)  | Vendor reference / character walking strip                   |
-| Market Stand                  | Reflextions | CC0     | [OpenGameArt](https://opengameart.org/content/market-stand)               | Feira stalls (`market_0..2` sprites)                         |
+| Pack                  | Author      | License | Source                                                                    | Notes                                          |
+| --------------------- | ----------- | ------- | ------------------------------------------------------------------------- | ---------------------------------------------- |
+| RPG Urban Pack        | Kenney      | CC0 1.0 | [OpenGameArt](https://opengameart.org/content/rpg-urban-pack)             | Vendor tilemap kept for future curation        |
+| Roguelike Modern City | Kenney      | CC0 1.0 | [OpenGameArt](https://opengameart.org/content/roguelike-modern-city-pack) | Vendor sheet kept                              |
+| (12×12) City Tiles    | FisherG     | CC0     | [OpenGameArt](https://opengameart.org/content/12x12-city-tiles-top-down)  | Character strips for reference                 |
+| Market Stand          | Reflextions | CC0     | [OpenGameArt](https://opengameart.org/content/market-stand)               | Market stall PNGs in vendor / optional sprites |
 
-Vendor mirrors (source files kept for provenance): `vendor/cc0/`.
+## Runtime (v1.7 cleanup)
 
-## Adaptation
+- **Tiles / buildings / props / exit stairs / characters**: hand-drawn grids in `pixel-gen.ts` (strict neon palette)
+- **Signs**: crisp integer-scale monospace bitmap labels (readable at game zoom)
+- **Maps**: hand-composed terraces in `src/world/maps.ts` (Morro = hillside stairs + stacked houses + wires/tanks)
 
-- Runtime atlas: `public/assets/neon-atlas.png` (+ `neon-atlas.json`)
-- Build: `python3 tools/build-assets.py` (Pillow) — remaps tiles to the House Edge neon-night palette, 16×16 grid, consistent dark outlines via quantization
-- Hand-composed Tiled maps: `public/maps/*.tmj` → baked MapDef JSON in `src/content/maps/`
+## Not used at runtime
 
-## AI-generated assets (then pixel-cleaned)
+- v1.6 AI JPEG sources may remain in `vendor/cc0/ai-source/` for history only; they are not loaded by the game.
+- `neon-atlas.png` / `atlas.ts` are unused leftovers from v1.6 (safe to ignore until removed).
 
-Generated with Cursor `GenerateImage`, then palette-reduced / grid-aligned by `tools/build-assets.py` into `public/assets/sprites/`.
+## Original / procedural
 
-| Asset        | File(s)                                                              | Purpose                       |
-| ------------ | -------------------------------------------------------------------- | ----------------------------- |
-| Favela stack | `ai_favela.png` (from `ai-favela-stack.jpg`)                         | Morro hillside stacked houses |
-| Boteco       | `ai_boteco.png`                                                      | Dona Nair boteco exterior     |
-| Feira stalls | `stall_0.png` … `stall_2.png`                                        | Central Fair market stalls    |
-| Neon signs   | `sign_boteco.png`, `sign_laje.png`, `sign_odds.png`, `sign_casa.png` | District signage              |
-| NPC sheet    | `npc_0.png` … `npc_5.png`                                            | Distinct NPC silhouettes      |
-
-Source JPEGs: `vendor/cc0/ai-source/`.
-
-## Original / procedural (still used)
-
-- Player sprite, some building silhouettes, rain/glow FX, ending art scene — `src/rendering/pixel-gen.ts` (project original)
+- Player + NPC sprites, favela / market / corp buildings, rain/glow FX, ending art — `src/rendering/pixel-gen.ts`
 - Brasil accent palette — `src/content/palette.ts`

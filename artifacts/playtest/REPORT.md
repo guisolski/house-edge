@@ -1,30 +1,44 @@
-# Playtest report — House Edge 1.6.0
+# Playtest report — House Edge 1.7.0 (art cleanup)
 
 Date: 2026-11-24
 
 ## Summary
 
-**PASS** for art-direction slice: CC0 packs + AI pixel props, neon atlas, Tiled maps per district, 60 FPS desktop/mobile. Visual denseness improved vs v1.5 green/flat fields, but AI→pixel cleanup is still lossy — not hand-painted favela quality.
+**PASS** for cleanup vs v1.6.0 owner screenshots. Muddy AI sprites removed. Signs use a 5×7 bitmap font at integer scale and are readable (`BOTECO NAIR`, `LAJE BET`, `FEIRA`, `ODDS 24h`, `CASA SUPREMA`). Buildings are hand 3/4 facades (doors/windows/roofs/shadows). Player and NPCs share one 22×38 base. Exit pads are cyan stairs + lit doorway (not a green rectangle). Morro has terraces, stair spines, stacked houses, wires, tanks. FPS ~60. Honest: Morro reads as terraced neon hillside more than photographic favela; ground tiles still look procedural.
 
-## Checks
+## Before (v1.6.0 — owner screenshots)
 
-| Item               | Result                                                 |
-| ------------------ | ------------------------------------------------------ |
-| CC0 packs credited | PASS — `docs/credits.md`                               |
-| Neon atlas + scale | PASS — 16×16 atlas, neon remap                         |
-| AI Brazilian props | PASS — favela/boteco/stalls/signs/NPCs documented      |
-| Tiled maps         | PASS — `public/maps/*.tmj` + `src/content/maps/*.json` |
-| FPS                | PASS — ~60 avg all districts (desktop + mobile)        |
-| `make playtest`    | PASS — 7/7                                             |
-| Console            | PASS — no errors on district travel                    |
+| Issue      | Observed                                                              |
+| ---------- | --------------------------------------------------------------------- |
+| Signs      | Garbled / bloomed (`BOT N`, `CAS SUPR`) — downscaled AI images        |
+| Decor      | Muddy grey mound (Morro), brown stall blobs (Feira)                   |
+| Buildings  | Flat magenta/teal striped rectangles (atlas road GIDs as "buildings") |
+| Exit       | Bright green placeholder rectangle                                    |
+| Floor      | Large empty dark voids                                                |
+| Scale      | Large player vs tiny NPC clusters                                     |
+| Morro read | Floating blocks in space — not a hillside favela                      |
+
+## After (v1.7.0)
+
+| Check                  | Result                                                                    |
+| ---------------------- | ------------------------------------------------------------------------- |
+| No muddy AI in runtime | PASS — AI sprite files removed; atlas unused                              |
+| Readable signs         | PASS — crisp bitmap font; occasional NPC/player occlusion                 |
+| 3/4 buildings          | PASS — houses/stalls/towers with facade, roof, shadow, side face          |
+| Character scale        | PASS — same 22×38 base @ SCALE 3                                          |
+| Exit pads              | PASS — stair steps + magenta/yellow doorway (not green rect)              |
+| Floor fill             | PASS — wires, tanks, lamps, crates; Feira cobble softened                 |
+| Morro hillside         | PASS with caveat — terraces + stairs readable; silhouette variety limited |
+| FPS                    | PASS — 59–60 avg (desktop + mobile shot)                                  |
+| Gates / story          | PASS — unit + e2e gates                                                   |
 
 ## Screenshots
 
-- Desktop: `v16-desktop-{morro,feira,avenida,torre}.png`
-- Mobile: `v16-mobile-{morro,feira,avenida,torre}.png`
+- Before: owner `morro.png`, `feira.png` (v1.6)
+- After: `v17-desktop-morro.png`, `v17-desktop-feira.png`, `v17-desktop-avenida.png`, `v17-desktop-torre.png`, `v17-mobile-morro.png`
 
-## Gaps (honest)
+## Honest gaps remaining
 
-- AI photo-like sources quantize into muddy blobs; favela stacks need further manual pixel polish or better source sheets.
-- Districts still read sparse in places; Kenney road tiles help more than AI buildings currently.
-- Owner art direction can iterate on atlas contents without another systems rewrite.
+- Hand-pixel buildings beat muddy AI, but denser CC0 sheet drops (Kenney/LPC) would still raise quality.
+- Signs can be occluded by actors; z-order/placement polish left.
+- Feira/Avenida grounds are better than barcode stripes but still tile-procedural, not painted market floors.
