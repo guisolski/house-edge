@@ -160,7 +160,7 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
       paintJobs(p.jobs, session, () => h.syncScreen());
       focusFirst(p.jobs);
     },
-    showEnding: (text) => showEnding(p, text),
+    showEnding: (text) => showEnding(p, session, text),
   };
 }
 
@@ -173,10 +173,20 @@ function toggleMenu(p: Parts, open: boolean): void {
   }
 }
 
-function showEnding(p: Parts, text: string): void {
+function showEnding(p: Parts, session: GameSession, text: string): void {
   only(p, 'ending');
   clearNode(p.ending);
-  p.ending.append(el('h2', '', UI.wonEnding), el('p', '', text));
+  p.ending.append(
+    el('h2', '', UI.wonEnding),
+    el('p', '', text === UI.wonEnding ? UI.endingBlurb : text),
+    button(UI.playAgain, () => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      session.startNew();
+    }),
+  );
+  focusFirst(p.ending);
 }
 
 function syncFromUi(h: HudHandles, p: Parts, session: GameSession): void {
@@ -224,8 +234,17 @@ function fillTitle(panel: HTMLElement, session: GameSession): void {
     el('h1', 'logo', UI.title),
     el('p', 'tagline', UI.tagline),
     el('p', 'version', UI.version),
-    button(UI.newGame, () => session.startNew()),
+    button(UI.newGame, () => {
+      // Blur before hiding the title to avoid aria-hidden focus warnings.
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      session.startNew();
+    }),
     button(UI.continue, () => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
       if (!session.tryLoad()) session.startNew();
     }),
   );

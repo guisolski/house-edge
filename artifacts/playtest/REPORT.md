@@ -1,38 +1,28 @@
-# Playtest report — House Edge 1.3.0
+# Playtest report — House Edge 1.4.0
 
 Date: 2026-11-24
 
 ## Summary
 
-**PASS** — golden path, three input modes, desktop FPS budget, and 4× CPU throttle FPS budget verified. Browser profile held ~60 FPS desktop and under 4×/6× CPU throttle. Console clean.
+**PASS** for owner blockers after v1.4. Softlock cleared, story gates completable (Monte Carlo + live playthrough), ending panel sticks, mobile dialogue above controls, FPS ~60.
+
+## Blockers
+
+| #   | Issue                          | Result                                                   |
+| --- | ------------------------------ | -------------------------------------------------------- |
+| 1   | Softlock 0 credits / neg rep   | PASS — Odd jobs (safe pay) always available              |
+| 2   | Gate bet too harsh             | PASS — pixo ~46% + pity; median story bets ≤22 / 80 sims |
+| 3   | Dialogue spoilers              | PASS — outcome lines removed / softened                  |
+| 4   | Fair edge walk-off             | PASS — sealed borders + exit auto-travel                 |
+| 5   | Mobile dialogue under controls | PASS — panel above stick                                 |
+| 6   | Favicon / aria                 | PASS — `%BASE_URL%` icons; title blur on New Game        |
+| 7   | NPC idle + menu speed          | PASS — bob/blink; shorter bet reveal                     |
+| 8   | Visual polish                  | IMPROVED (still procedural ~7/10)                        |
 
 ## Performance
 
-| Scenario                                | Avg FPS | Frame ms | Result     |
-| --------------------------------------- | ------- | -------- | ---------- |
-| Desktop scripted walk (`make playtest`) | ~60     | ~16      | PASS (≥50) |
-| 4× CPU throttle walk                    | ~59–60  | ~16–17   | PASS (≥50) |
-| 6× CPU throttle (extra)                 | ~60     | ~16–17   | PASS       |
+Desktop + 4× CPU throttle avg FPS ≥50 (observed ~60).
 
-F3 FPS overlay sits bottom-left (clear of the play HUD).
+## Evidence
 
-## Steps
-
-| Step                              | Result | Evidence                                   |
-| --------------------------------- | ------ | ------------------------------------------ |
-| Title + version `v1.3.0`          | pass   | title / browser                            |
-| New Game → play HUD               | pass   | `01-title-play-keyboard.png`               |
-| Walk / Shift run                  | pass   | browser video                              |
-| Proximity prompt at NPC           | pass   | `02-prompt-npc.png` (+ trailing flush fix) |
-| Dialogue Take the bet / Walk away | pass   | `03-dialogue.png`                          |
-| Bet stake +/− + win chance        | pass   | `04-bet.png`                               |
-| Travel UI                         | pass   | `05-travel.png`                            |
-| World / camera                    | pass   | `06-world-art.png`                         |
-| Touch stick + actions             | pass   | `mobile-01-touch.png`                      |
-| Gamepad hints + menu nav          | pass   | `gamepad-01-play.png`                      |
-| FPS walk budget                   | pass   | `07-fps-walk.png`                          |
-
-## Gaps / follow-ups
-
-- District art can still deepen beyond procedural tiles.
-- Mutation suite optional before release tags (`make mutation`).
+`make playtest` (golden path, FPS, throttle, full story ending, mobile dialogue).

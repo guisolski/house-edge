@@ -28,7 +28,7 @@ describe('betting', () => {
     expect(bet).toBeDefined();
     const result = resolveBet(bet!, createRng(10));
     expect(result.betId).toBe('agua-gelada');
-    expect(result.stake).toBe(10);
+    expect(result.stake).toBe(bet!.stake);
     expect(typeof result.won).toBe('boolean');
   });
 

@@ -1,16 +1,35 @@
-import type { BetDefinition } from '../core/types';
+import type { BetDefinition, DistrictId } from '../core/types';
 import { BETS } from '../content/bets';
 
 export type GrindJob = {
   id: string;
   label: string;
-  betId: string;
+  /** If set, opens a bet. Otherwise pays flatPay with no risk. */
+  betId?: string;
+  /** Guaranteed credits for safe odd jobs (no stake). */
+  flatPay?: number;
   minReputation: number;
   districtId: string;
 };
 
-/** Jobs in every district so Side Jobs is never empty once unlocked. */
-const JOBS: readonly GrindJob[] = [
+const DISTRICTS: DistrictId[] = [
+  'morro-neon',
+  'feira-central',
+  'avenida-odds',
+  'torre-casa',
+];
+
+/** Safe odd jobs — always available even at negative rep / 0 credits. */
+const SAFE_JOBS: readonly GrindJob[] = DISTRICTS.map((districtId) => ({
+  id: `safe-${districtId}`,
+  label: 'Odd jobs (safe pay, no bet)',
+  flatPay: 20,
+  minReputation: -999,
+  districtId,
+}));
+
+/** Riskier betting jobs (need enough credits + rep). */
+const BET_JOBS: readonly GrindJob[] = [
   {
     id: 'job-agua',
     label: 'Boteco water rotation',
@@ -29,7 +48,7 @@ const JOBS: readonly GrindJob[] = [
     id: 'job-corrida',
     label: 'Laje moto dash',
     betId: 'corrida-moto',
-    minReputation: 3,
+    minReputation: 2,
     districtId: 'morro-neon',
   },
   {
@@ -50,7 +69,7 @@ const JOBS: readonly GrindJob[] = [
     id: 'job-samba',
     label: 'Forró set odds',
     betId: 'samba-odds',
-    minReputation: 2,
+    minReputation: 1,
     districtId: 'feira-central',
   },
   {
@@ -78,20 +97,28 @@ const JOBS: readonly GrindJob[] = [
     id: 'job-duelo-grind',
     label: 'Rematch at the high table',
     betId: 'duelo-casa',
-    minReputation: 5,
+    minReputation: 3,
     districtId: 'torre-casa',
   },
 ];
+
+const JOBS: readonly GrindJob[] = [...SAFE_JOBS, ...BET_JOBS];
 
 export function listJobs(districtId: string, reputation: number): GrindJob[] {
   return JOBS.filter((j) => j.districtId === districtId && reputation >= j.minReputation);
 }
 
+export function getJob(id: string): GrindJob | undefined {
+  return JOBS.find((j) => j.id === id);
+}
+
 export function jobBet(job: GrindJob): BetDefinition | undefined {
+  if (!job.betId) return undefined;
   return BETS.find((b) => b.id === job.betId);
 }
 
 export function estimateHourly(job: GrindJob, betsPerHour = 12): number {
+  if (job.flatPay) return job.flatPay * betsPerHour;
   const bet = jobBet(job);
   if (!bet) return 0;
   const chance =

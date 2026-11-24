@@ -76,7 +76,8 @@ describe('maps and interaction', () => {
     expect(map.width).toBeGreaterThan(20);
     expect(isWalkable(map, 8, 15)).toBe(true);
     expect(tileAt(map, -1, 0)).toBe('blocked');
-    expect(tileAt(map, 0, 0)).toBe('grass');
+    expect(tileAt(map, 0, 0)).toBe('blocked');
+    expect(tileAt(map, 1, 14)).not.toBe('blocked');
     const npcs = districtNpcs();
     const exits = districtExits();
     expect(nearestNpc(npcs, 'morro-neon', 13, 14)?.id).toBe('dona-nair');

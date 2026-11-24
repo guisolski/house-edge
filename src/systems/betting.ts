@@ -1,10 +1,21 @@
 import type { BetDefinition, BetResult, Odds } from '../core/types';
 import type { Rng } from '../core/rng';
+import { STORY_GATE_BET_IDS } from '../content/bets';
 
 /** Fair probability from fractional odds after house edge. */
 export function impliedWinChance(odds: Odds, houseEdge: number): number {
   const fair = odds.denominator / (odds.numerator + odds.denominator);
   return clamp01(fair * (1 - clamp01(houseEdge)));
+}
+
+/** +10% absolute pity per consecutive loss on the same bet, capped. */
+export function pityWinChance(
+  odds: Odds,
+  houseEdge: number,
+  consecutiveLosses = 0,
+): number {
+  const base = impliedWinChance(odds, houseEdge);
+  return Math.min(0.78, base + Math.max(0, consecutiveLosses) * 0.1);
 }
 
 export function payoutForWin(stake: number, odds: Odds): number {
@@ -16,11 +27,11 @@ export function resolveBet(
   bet: BetDefinition,
   rng: Rng,
   stakeOverride?: number,
+  consecutiveLosses = 0,
 ): BetResult {
   const stake = stakeOverride ?? bet.stake;
   const roll = rng.next();
-  // Always derive from odds + house edge so UI odds match the roll.
-  const chance = impliedWinChance(bet.odds, bet.houseEdge);
+  const chance = pityWinChance(bet.odds, bet.houseEdge, consecutiveLosses);
   const won = roll < chance;
   const payout = won ? payoutForWin(stake, bet.odds) : 0;
   return {
@@ -33,15 +44,31 @@ export function resolveBet(
   };
 }
 
-export function formatWinChance(odds: Odds, houseEdge: number): string {
-  const pct = Math.round(impliedWinChance(odds, houseEdge) * 100);
+export function formatWinChance(
+  odds: Odds,
+  houseEdge: number,
+  consecutiveLosses = 0,
+): string {
+  const pct = Math.round(pityWinChance(odds, houseEdge, consecutiveLosses) * 100);
   return `${pct}%`;
 }
 
+/**
+ * Soft stake floor for story gates: if the player is broke-ish but not at 0,
+ * allow staking whatever they have so the beat stays retryable.
+ */
 export function clampStake(bet: BetDefinition, stake: number, credits: number): number {
-  const min = bet.stakeMin ?? Math.max(1, Math.floor(bet.stake / 2));
+  let min = bet.stakeMin ?? Math.max(1, Math.floor(bet.stake / 2));
   const max = Math.min(bet.stakeMax ?? bet.stake * 3, credits);
+  if (isSoftStakeBet(bet) && credits > 0 && credits < min) {
+    min = Math.max(1, credits);
+  }
+  if (max < min) return Math.max(0, credits);
   return Math.min(max, Math.max(min, stake));
+}
+
+export function isSoftStakeBet(bet: BetDefinition): boolean {
+  return bet.kind === 'story' || STORY_GATE_BET_IDS.has(bet.id);
 }
 
 export function canAfford(credits: number, stake: number): boolean {

@@ -47,12 +47,19 @@ export function paintBet(
   clearNode(panel);
   const bet = session.getPendingBet();
   if (!bet) return;
+  appendBetDetails(panel, session, bet);
+  panel.append(betActionRow(panel, session, after));
+  panel.scrollTop = 0;
+}
+
+function appendBetDetails(
+  panel: HTMLElement,
+  session: GameSession,
+  bet: NonNullable<ReturnType<GameSession['getPendingBet']>>,
+): void {
   const stakeLine = el('p', 'stake-line', '');
-  const chanceLine = el(
-    'p',
-    '',
-    `Win chance ${formatWinChance(bet.odds, bet.houseEdge)} · Odds ${formatOdds(bet.odds)}`,
-  );
+  const losses = session.getBetLosses(bet.id);
+  const pity = losses > 0 ? ` · pity +${losses * 10}%` : '';
   const writeStake = (): void => {
     stakeLine.textContent = `Stake: ${session.getPendingStake()} credits`;
   };
@@ -61,12 +68,24 @@ export function paintBet(
     el('h2', '', bet.title),
     el('p', '', bet.description),
     stakeLine,
-    chanceLine,
+    el(
+      'p',
+      '',
+      `Win chance ${formatWinChance(bet.odds, bet.houseEdge, losses)} · Odds ${formatOdds(bet.odds)}${pity}`,
+    ),
     el('p', '', applyHouseFlavor(bet.houseEdge)),
     stakeControls(session, writeStake),
     el('div', 'bet-roll', 'Ready to roll'),
   );
-  panel.append(
+}
+
+function betActionRow(
+  panel: HTMLElement,
+  session: GameSession,
+  after: () => void,
+): HTMLElement {
+  const actions = el('div', 'bet-actions');
+  actions.append(
     button(UI.confirmBet, () => {
       animateRoll(panel, () => {
         session.confirmBet();
@@ -78,6 +97,7 @@ export function paintBet(
       after();
     }),
   );
+  return actions;
 }
 
 function stakeControls(session: GameSession, writeStake: () => void): HTMLElement {
@@ -100,8 +120,8 @@ function animateRoll(panel: HTMLElement, done: () => void): void {
   if (roll) roll.textContent = '⚀ ⚁ ⚂ …';
   window.setTimeout(() => {
     if (roll) roll.textContent = 'Resolving…';
-    window.setTimeout(done, 280);
-  }, 420);
+    window.setTimeout(done, 160);
+  }, 220);
 }
 
 export function paintTravel(
@@ -152,7 +172,12 @@ export function paintJobs(
   for (const job of jobs) {
     panel.appendChild(
       button(job.label, () => {
-        if (session.offerBet(job.betId)) after();
+        if (job.flatPay) {
+          session.doSafeJob(job.id);
+          after();
+          return;
+        }
+        if (job.betId && session.offerBet(job.betId)) after();
       }),
     );
   }

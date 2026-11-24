@@ -316,7 +316,8 @@ function drawActors(
 ): void {
   const { session, baked, actors } = state;
   const stats = session.player.getStats();
-  const anim = Math.floor(frame / 8) % 2;
+  // Idle bob / blink cycle — visible even when standing still.
+  const anim = Math.floor(frame / 10) % 2;
   actors.length = 0;
   for (const npc of session.npcs) {
     if (npc.districtId !== stats.districtId) continue;
@@ -334,9 +335,10 @@ function drawActors(
   actors.sort((a, b) => a.y - b.y || a.x - b.x);
   const vw = ctx.canvas.width;
   const vh = ctx.canvas.height;
+  const bob = Math.sin(frame / 12) * 1.5;
   for (const it of actors) {
     const ox = it.x * TILE_PX - camX;
-    const oy = it.y * TILE_PX - camY - (it.img.height - TILE_PX);
+    const oy = it.y * TILE_PX - camY - (it.img.height - TILE_PX) + bob;
     if (ox + it.img.width < 0 || oy + it.img.height < 0) continue;
     if (ox > vw || oy > vh) continue;
     blitImage(ctx, it.img, ox, oy);

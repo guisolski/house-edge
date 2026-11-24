@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] — 2026-11-24
+
+### Fixed
+
+- Softlock at 0 credits / negative rep: **Odd jobs (safe pay)** always available; story stakes soft-clamp.
+- Story-gate odds rebalanced (~even money) with pity on retries; Monte Carlo completion gate.
+- Dialogue spoilers removed; map edges sealed + exit pads auto-travel.
+- Mobile dialogue sits above touch controls; favicon uses `%BASE_URL%`; title blur avoids aria-hidden focus.
+- Canvas focuses on load/click so keyboard always reaches the game; NPC idle bob/blink.
+
 ## [1.3.0] — 2026-11-24
 
 ### Performance

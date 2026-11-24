@@ -8,6 +8,7 @@ import { WorldSystem } from './world';
 import { DISTRICTS } from '../content/districts';
 import { STORY_BEATS } from '../content/story';
 import { getBet } from '../content/bets';
+import { getJob } from './grind';
 import { createDefaultSave, loadFromStorage, saveToStorage } from './save';
 import { UiStateMachine } from './ui-state';
 import {
@@ -18,7 +19,7 @@ import {
   type DistrictExit,
   type WorldNpc,
 } from './interaction';
-import { buildDistrictMap, isWalkable, type MapDef } from '../world/maps';
+import { buildDistrictMap, isWalkable, tileAt, type MapDef } from '../world/maps';
 import { currentObjective, type Objective } from './objectives';
 
 export class GameSession {
@@ -38,6 +39,7 @@ export class GameSession {
   private pendingStoryBeat: string | null = null;
   private pendingBetAfterDialogue: string | null = null;
   private lastDialogue: import('../core/types').DialogueLine[] = [];
+  private lossesByBet = new Map<string, number>();
 
   constructor(seed = 42, bus = new EventBus()) {
     this.bus = bus;
@@ -82,10 +84,19 @@ export class GameSession {
   move(dx: number, dy: number): boolean {
     if (!this.ui.is('play')) return false;
     const s = this.player.getStats();
-    const nx = s.x + dx;
-    const ny = s.y + dy;
-    if (!isWalkable(this.getMap(), nx, ny)) return false;
+    const map = this.getMap();
+    const nx = Math.max(0, Math.min(map.width - 1, s.x + dx));
+    const ny = Math.max(0, Math.min(map.height - 1, s.y + dy));
+    if (!isWalkable(map, nx, ny)) return false;
     this.player.setPosition(nx, ny);
+    // Stepping onto an unlocked exit pad travels immediately.
+    if (tileAt(map, nx, ny) === 'exit') {
+      const exit = this.nearbyExit();
+      if (exit) {
+        this.travelTo(exit.toDistrict);
+        return true;
+      }
+    }
     return true;
   }
 
@@ -129,13 +140,33 @@ export class GameSession {
     const credits = this.player.getStats().credits;
     const stake = clampStake(bet, bet.stake, credits);
     if (!canAfford(credits, stake)) {
-      this.bus.emit('ui:toast', { message: 'Not enough credits.', kind: 'danger' });
+      this.bus.emit('ui:toast', {
+        message: 'Not enough credits — open Side Jobs for Odd jobs (safe pay).',
+        kind: 'danger',
+      });
       return false;
     }
     this.pendingBetId = betId;
     this.pendingStake = stake;
     this.bus.emit('bet:offered', { betId, title: bet.title });
     return this.ui.go('bet');
+  }
+
+  /** Guaranteed credits — never softlocks the player. */
+  doSafeJob(jobId: string): boolean {
+    const job = getJob(jobId);
+    if (!job?.flatPay) return false;
+    this.player.addCredits(job.flatPay);
+    this.bus.emit('ui:toast', {
+      message: `Earned ${job.flatPay} credits (safe odd jobs).`,
+      kind: 'success',
+    });
+    this.ui.go('play');
+    return true;
+  }
+
+  getBetLosses(betId: string): number {
+    return this.lossesByBet.get(betId) ?? 0;
   }
 
   /** Instant settle helper for tests / grind shortcuts. */
@@ -157,7 +188,7 @@ export class GameSession {
     const ok = this.settleBet(bet, stake);
     this.pendingBetId = null;
     this.pendingStake = 0;
-    this.ui.go('play');
+    if (!this.ui.is('ending')) this.ui.go('play');
     return ok;
   }
 
@@ -335,29 +366,33 @@ export class GameSession {
 
   private settleBet(bet: BetDefinition, stake: number): boolean {
     if (!canAfford(this.player.getStats().credits, stake)) return false;
+    const losses = this.lossesByBet.get(bet.id) ?? 0;
     this.player.addCredits(-stake);
-    const result = resolveBet(bet, this.rng, stake);
+    const result = resolveBet(bet, this.rng, stake, losses);
     this.player.addCredits(result.payout);
     this.player.addReputation(
       result.won ? bet.reputationDeltaWin : bet.reputationDeltaLose,
     );
+    // Apply story/ending first so UI listeners see `ending` before bet:resolved.
+    this.afterBetResolved(bet, result.won);
     this.bus.emit('bet:resolved', {
       betId: bet.id,
       won: result.won,
       payout: result.payout,
       stake,
     });
-    this.afterBetResolved(bet, result.won);
-    this.toastBet(result.won, result.payout);
+    this.toastBet(result.won, result.payout, losses);
     return true;
   }
 
   private afterBetResolved(bet: BetDefinition, won: boolean): void {
     if (won) {
+      this.lossesByBet.set(bet.id, 0);
       this.applyBetWins(bet);
       this.finishPendingStory();
       return;
     }
+    this.lossesByBet.set(bet.id, (this.lossesByBet.get(bet.id) ?? 0) + 1);
     // Losses keep the story beat incomplete so the player can retry.
     this.pendingStoryBeat = null;
   }
@@ -367,9 +402,13 @@ export class GameSession {
     if (bet.unlocksDistrict) this.world.unlock(bet.unlocksDistrict);
   }
 
-  private toastBet(won: boolean, payout: number): void {
+  private toastBet(won: boolean, payout: number, priorLosses: number): void {
+    const pity =
+      !won && priorLosses + 1 > 0
+        ? ` Retry odds improve (+${(priorLosses + 1) * 10}%).`
+        : '';
     this.bus.emit('ui:toast', {
-      message: won ? `Won ${payout} credits!` : 'The house took this one.',
+      message: won ? `Won ${payout} credits!` : `The house took this one.${pity}`,
       kind: won ? 'success' : 'danger',
     });
     this.bus.emit('audio:play-sfx', { id: won ? 'win' : 'lose' });
@@ -378,6 +417,7 @@ export class GameSession {
   private finishBeat(beatId: string): void {
     const done = this.story.completeBeat(beatId);
     if (done?.unlocksDistrict) this.world.unlock(done.unlocksDistrict);
+    if (done?.isEnding) this.ui.go('ending');
     this.persist();
   }
 

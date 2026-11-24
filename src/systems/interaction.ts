@@ -122,7 +122,7 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'feira-to-morro',
     districtId: 'feira-central',
-    x: 2,
+    x: 1,
     y: 14,
     toDistrict: 'morro-neon',
     label: 'Exit → Morro Neon',
@@ -130,7 +130,7 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'feira-to-avenida',
     districtId: 'feira-central',
-    x: 39,
+    x: 40,
     y: 14,
     toDistrict: 'avenida-odds',
     label: 'Exit → Odds Avenue',
@@ -138,7 +138,7 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'avenida-to-feira',
     districtId: 'avenida-odds',
-    x: 2,
+    x: 1,
     y: 12,
     toDistrict: 'feira-central',
     label: 'Exit → Central Fair',
@@ -146,7 +146,7 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'avenida-to-torre',
     districtId: 'avenida-odds',
-    x: 41,
+    x: 42,
     y: 12,
     toDistrict: 'torre-casa',
     label: 'Exit → Casa Tower',
@@ -154,7 +154,7 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'torre-to-avenida',
     districtId: 'torre-casa',
-    x: 2,
+    x: 1,
     y: 13,
     toDistrict: 'avenida-odds',
     label: 'Exit → Odds Avenue',

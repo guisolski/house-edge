@@ -5,11 +5,13 @@ import { UpgradeSystem, UPGRADES } from '../../src/systems/upgrade';
 describe('grind', () => {
   it('lists jobs by district and reputation', () => {
     const jobs = listJobs('morro-neon', 0);
+    expect(jobs.some((j) => j.flatPay)).toBe(true);
     expect(jobs.some((j) => j.id === 'job-agua')).toBe(true);
-    expect(listJobs('morro-neon', 100).length).toBeGreaterThan(jobs.length);
-    const bet = jobBet(jobs[0]!);
-    expect(bet?.id).toBe(jobs[0]!.betId);
-    expect(estimateHourly(jobs[0]!)).toBeTypeOf('number');
+    expect(listJobs('morro-neon', 100).length).toBeGreaterThanOrEqual(jobs.length);
+    const betJob = jobs.find((j) => j.betId)!;
+    expect(jobBet(betJob)?.id).toBe(betJob.betId);
+    expect(estimateHourly(jobs.find((j) => j.flatPay)!)).toBeGreaterThan(0);
+    expect(estimateHourly(betJob)).toBeTypeOf('number');
   });
 });
 

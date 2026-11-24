@@ -41,6 +41,7 @@ export function createGameApp(host: HTMLElement): GameApp {
   const hud = createHud(session, host);
   const world = createWorldView(session);
   host.appendChild(world.canvas);
+  ensureCanvasFocus(host, world.canvas);
   const state = createActionState();
   const audio = createAudioEngine();
   const modes = new InputModeTracker(350, detectInitialMode());
@@ -48,6 +49,9 @@ export function createGameApp(host: HTMLElement): GameApp {
   touch.setVisible(false);
   wireSessionEvents(session, hud, audio, modes, touch);
   bindInputs(host, session, state, modes, world);
+  session.bus.on('game:started', () => {
+    world.canvas.focus({ preventScroll: true });
+  });
   const deps: TickDeps = {
     session,
     state,
@@ -113,6 +117,20 @@ function detectInitialMode(): 'keyboard' | 'touch' | 'gamepad' {
   if (typeof window === 'undefined') return 'keyboard';
   if (window.matchMedia('(pointer: coarse)').matches) return 'touch';
   return 'keyboard';
+}
+
+/** Playwright + desktop: keyboard must reach the game without hunting for focus. */
+function ensureCanvasFocus(host: HTMLElement, canvas: HTMLCanvasElement): void {
+  canvas.tabIndex = 0;
+  canvas.setAttribute('aria-label', 'House Edge world');
+  const focus = (): void => {
+    canvas.focus({ preventScroll: true });
+  };
+  host.addEventListener('pointerdown', focus);
+  canvas.addEventListener('pointerdown', focus);
+  window.addEventListener('focus', focus);
+  // After New Game, HUD buttons steal focus — reclaim on play start.
+  queueMicrotask(focus);
 }
 
 function makeEngine(host: HTMLElement): ex.Engine {

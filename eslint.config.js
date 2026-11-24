@@ -51,6 +51,17 @@ export default tseslint.config(
     },
   },
   {
+    // Browser evaluate payloads are intentionally self-contained.
+    files: ['e2e/story-complete.spec.ts'],
+    rules: {
+      'max-lines-per-function': [
+        'error',
+        { max: 120, skipBlankLines: true, skipComments: true },
+      ],
+      complexity: ['error', 18],
+    },
+  },
+  {
     // Presentation / wiring shells: keep readable assembly helpers slightly larger.
     files: ['src/ui/**/*.ts', 'src/game/**/*.ts', 'src/rendering/**/*.ts'],
     rules: {

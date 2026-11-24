@@ -24,8 +24,11 @@ export const UI = {
   cancel: 'Cancel',
   stakeUp: 'Stake +',
   stakeDown: 'Stake −',
-  version: 'v1.3.0',
+  version: 'v1.4.0',
   wonEnding: 'The Casa falls. The table is yours.',
+  endingBlurb:
+    'Funk and samba take the streets. Side Jobs stay open if you want another round.',
+  playAgain: 'Play again',
   hintKeyboard: 'WASD move · Shift run · E interact · Esc menu · M mute · F3 FPS',
   hintGamepad: 'Stick move · A interact · B bet · Start menu',
   hintTouch: 'Use the stick + action buttons',

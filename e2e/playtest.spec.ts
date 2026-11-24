@@ -12,6 +12,8 @@ async function startGame(page: Page): Promise<void> {
   await page.goto('/');
   await page.getByRole('button', { name: 'New Game' }).click();
   await expect(page.locator('.play-hud')).toBeVisible();
+  // Ensure keyboard reaches the game (canvas focus).
+  await page.locator('.world-canvas').click({ position: { x: 40, y: 40 } });
 }
 
 async function forceMode(

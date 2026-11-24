@@ -91,6 +91,53 @@ canvas.excalibur-game {
   gap: 0.55rem;
 }
 
+/* Keep dialogue / modals above the virtual stick + action buttons on touch. */
+.hud[data-input-mode='touch'] .dialogue-panel,
+.hud[data-input-mode='touch'] .bet-panel,
+.hud[data-input-mode='touch'] .menu-panel,
+.hud[data-input-mode='touch'] .travel-panel,
+.hud[data-input-mode='touch'] .jobs-panel {
+  top: 34%;
+  max-height: min(48vh, 380px);
+  z-index: 12;
+}
+
+.bet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-top: 0.35rem;
+}
+
+/* On touch, keep actions visible at the top of the scrollable panel. */
+.hud[data-input-mode='touch'] .bet-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.hud[data-input-mode='touch'] .bet-actions {
+  order: -1;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #12121cee;
+  padding-bottom: 0.35rem;
+}
+
+.hud[data-input-mode='touch'] .bet-panel .line,
+.hud[data-input-mode='touch'] .bet-panel p:nth-of-type(n + 3) {
+  font-size: 0.9rem;
+}
+
+.hud[data-input-mode='touch'] .toast {
+  bottom: 12.5rem;
+  z-index: 13;
+}
+
+.hud[data-input-mode='touch'] .interact-prompt {
+  bottom: 34%;
+}
+
 .title-screen[hidden],
 .menu-panel[hidden],
 .dialogue-panel[hidden],

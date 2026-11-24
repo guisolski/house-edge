@@ -32,7 +32,10 @@ function wireLifecycle(
     audio.startMusic();
     touch.setVisible(modes.get() === 'touch');
   });
-  session.bus.on('story:ended', () => hud.showEnding(UI.wonEnding));
+  session.bus.on('story:ended', () => {
+    if (!session.ui.is('ending')) session.ui.go('ending');
+    hud.showEnding(UI.wonEnding);
+  });
   session.bus.on('input:action', (p) => {
     if (p.pressed) handleAction(session, hud, p.action);
   });
@@ -72,8 +75,12 @@ function wireUi(session: GameSession, hud: HudHandles, audio: AudioEngine): void
   });
   session.bus.on('bet:offered', () => hud.showBet());
   session.bus.on('bet:resolved', () => {
-    hud.showHud();
     hud.updateStats();
+    // Ending beats already switched UI — don't clobber the ending panel.
+    if (!session.ui.is('ending')) hud.showHud();
+  });
+  session.bus.on('story:ended', () => {
+    /* showEnding also wired above; keep play HUD from racing it */
   });
   session.bus.on('audio:play-sfx', (p) => audio.playSfx(p.id));
   session.bus.on('audio:volume', (p) => audio.setVolume(p.master, p.muted));

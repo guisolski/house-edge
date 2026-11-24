@@ -80,6 +80,18 @@ function vStrip(
   for (let y = y0; y <= y1; y += 1) set(tiles, w, x, y, kind);
 }
 
+/** Outer ring is blocked so players cannot walk off the map. */
+function sealEdges(tiles: TileKind[], w: number, h: number): void {
+  for (let x = 0; x < w; x += 1) {
+    set(tiles, w, x, 0, 'blocked');
+    set(tiles, w, x, h - 1, 'blocked');
+  }
+  for (let y = 0; y < h; y += 1) {
+    set(tiles, w, 0, y, 'blocked');
+    set(tiles, w, w - 1, y, 'blocked');
+  }
+}
+
 /** Favela hillside: stairs, stacked houses, winding alleys. */
 function buildMorro(): MapDef {
   const w = 40;
@@ -104,18 +116,10 @@ function buildMorro(): MapDef {
   }
   // boteco plaza pocket
   for (let y = 13; y <= 16; y += 1) hStrip(tiles, w, y, 10, 16, 'plaza');
-  // exits
+  sealEdges(tiles, w, h);
+  // exits (inside the sealed ring)
   set(tiles, w, w - 2, 14, 'exit');
   set(tiles, w, w - 2, 15, 'exit');
-  // edge fill (no void)
-  for (let x = 0; x < w; x += 1) {
-    set(tiles, w, x, 0, 'grass');
-    set(tiles, w, x, h - 1, 'grass');
-  }
-  for (let y = 0; y < h; y += 1) {
-    set(tiles, w, 0, y, 'grass');
-    set(tiles, w, w - 1, y, 'grass');
-  }
   return {
     districtId: 'morro-neon',
     width: w,
@@ -159,16 +163,16 @@ function buildFeira(): MapDef {
   for (let y = 21; y <= 22; y += 1) hStrip(tiles, w, y, 2, w - 3, 'asphalt');
   for (let x = 2; x <= 4; x += 1) vStrip(tiles, w, x, 6, 22, 'asphalt');
   for (let x = w - 5; x <= w - 3; x += 1) vStrip(tiles, w, x, 6, 22, 'asphalt');
-  // exits
-  set(tiles, w, 2, 14, 'exit');
-  set(tiles, w, w - 3, 14, 'exit');
-  // border night plants
-  for (let x = 0; x < w; x += 1) {
-    set(tiles, w, x, 0, 'grass');
+  // decorative plant strip inside the sealed ring
+  for (let x = 1; x < w - 1; x += 1) {
     set(tiles, w, x, 1, 'grass');
-    set(tiles, w, x, h - 1, 'grass');
     set(tiles, w, x, h - 2, 'grass');
   }
+  sealEdges(tiles, w, h);
+  set(tiles, w, 1, 14, 'exit');
+  set(tiles, w, 2, 14, 'exit');
+  set(tiles, w, w - 2, 14, 'exit');
+  set(tiles, w, w - 3, 14, 'exit');
   return {
     districtId: 'feira-central',
     width: w,
@@ -211,12 +215,11 @@ function buildAvenida(): MapDef {
   // side alleys
   for (let x = 8; x <= 9; x += 1) vStrip(tiles, w, x, 3, 9, 'alley');
   for (let x = 32; x <= 33; x += 1) vStrip(tiles, w, x, 16, 22, 'alley');
+  sealEdges(tiles, w, h);
+  set(tiles, w, 1, 12, 'exit');
   set(tiles, w, 2, 12, 'exit');
+  set(tiles, w, w - 2, 12, 'exit');
   set(tiles, w, w - 3, 12, 'exit');
-  for (let x = 0; x < w; x += 1) {
-    set(tiles, w, x, 0, 'grass');
-    set(tiles, w, x, h - 1, 'grass');
-  }
   return {
     districtId: 'avenida-odds',
     width: w,
@@ -257,9 +260,8 @@ function buildTorre(): MapDef {
   // VIP rooms
   for (let y = 2; y <= 6; y += 1) hStrip(tiles, w, y, 6, 14, 'sidewalk');
   for (let y = 2; y <= 6; y += 1) hStrip(tiles, w, y, 20, 28, 'sidewalk');
-  set(tiles, w, 2, 13, 'exit');
-  set(tiles, w, 2, 14, 'exit');
-  // walls as blocked ring inside edge
+  sealEdges(tiles, w, h);
+  // inner wall ring
   for (let x = 1; x < w - 1; x += 1) {
     set(tiles, w, x, 1, 'blocked');
     set(tiles, w, x, h - 2, 'blocked');
@@ -268,7 +270,7 @@ function buildTorre(): MapDef {
     set(tiles, w, 1, y, 'blocked');
     set(tiles, w, w - 2, y, 'blocked');
   }
-  // reopen exit
+  // reopen exit corridor
   set(tiles, w, 1, 13, 'exit');
   set(tiles, w, 1, 14, 'exit');
   set(tiles, w, 2, 13, 'asphalt');

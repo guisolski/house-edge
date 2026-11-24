@@ -8,42 +8,52 @@ export type PixelGrid = {
 
 type Rect = { x: number; y: number; w: number; h: number };
 
-/** LD-5: readable 3/4 player (~32px tall). */
+/** LD-5: readable 3/4 player (~32px tall) with idle bob / walk cycle. */
 export function makePlayerSprite(frame = 0): PixelGrid {
-  const g = empty(20, 32, 'transparent');
+  const g = empty(20, 34, 'transparent');
+  const bob = frame % 2;
+  const y0 = bob;
   // hair / face
-  fillRect(g, { x: 6, y: 2, w: 8, h: 7 }, Palette.brasilYellow);
-  fillRect(g, { x: 7, y: 4, w: 2, h: 2 }, '#1a1020');
-  fillRect(g, { x: 11, y: 4, w: 2, h: 2 }, '#1a1020');
-  fillRect(g, { x: 8, y: 7, w: 4, h: 1 }, '#c45a7a');
-  // jacket
-  fillRect(g, { x: 4, y: 9, w: 12, h: 10 }, Palette.neonMagenta);
-  fillRect(g, { x: 6, y: 10, w: 8, h: 3 }, Palette.brasilBlue);
+  fillRect(g, { x: 6, y: 2 + y0, w: 8, h: 7 }, Palette.brasilYellow);
+  fillRect(g, { x: 5, y: 3 + y0, w: 10, h: 2 }, '#c4a020');
+  fillRect(g, { x: 7, y: 4 + y0, w: 2, h: 2 }, '#1a1020');
+  fillRect(g, { x: 11, y: 4 + y0, w: 2, h: 2 }, '#1a1020');
+  if (bob === 0) fillRect(g, { x: 8, y: 7 + y0, w: 4, h: 1 }, '#c45a7a');
+  // jacket + sash
+  fillRect(g, { x: 4, y: 9 + y0, w: 12, h: 10 }, Palette.neonMagenta);
+  fillRect(g, { x: 6, y: 10 + y0, w: 8, h: 3 }, Palette.brasilBlue);
+  fillRect(g, { x: 5, y: 14 + y0, w: 10, h: 1 }, Palette.brasilYellow);
+  // arms idle sway
+  fillRect(g, { x: 2, y: 10 + y0 + bob, w: 2, h: 7 }, Palette.neonMagenta);
+  fillRect(g, { x: 16, y: 10 + y0 + (1 - bob), w: 2, h: 7 }, Palette.neonMagenta);
   // legs walk
-  const leg = frame % 2 === 0 ? 0 : 1;
-  fillRect(g, { x: 5 + leg, y: 19, w: 4, h: 10 }, '#1a2040');
-  fillRect(g, { x: 11 - leg, y: 19, w: 4, h: 10 }, '#1a2040');
-  fillRect(g, { x: 5 + leg, y: 28, w: 4, h: 3 }, '#0a0a12');
-  fillRect(g, { x: 11 - leg, y: 28, w: 4, h: 3 }, '#0a0a12');
+  const leg = bob;
+  fillRect(g, { x: 5 + leg, y: 19 + y0, w: 4, h: 10 }, '#1a2040');
+  fillRect(g, { x: 11 - leg, y: 19 + y0, w: 4, h: 10 }, '#1a2040');
+  fillRect(g, { x: 5 + leg, y: 28 + y0, w: 4, h: 3 }, '#0a0a12');
+  fillRect(g, { x: 11 - leg, y: 28 + y0, w: 4, h: 3 }, '#0a0a12');
   return g;
 }
 
 export function makeNpcSprite(accent: string, frame = 0): PixelGrid {
-  const g = empty(20, 32, 'transparent');
-  fillRect(g, { x: 6, y: 2, w: 8, h: 7 }, accent);
-  fillRect(g, { x: 7, y: 4, w: 2, h: 2 }, '#111018');
-  fillRect(g, { x: 11, y: 4, w: 2, h: 2 }, '#111018');
-  fillRect(g, { x: 4, y: 9, w: 12, h: 10 }, Palette.concrete);
-  fillRect(g, { x: 5, y: 11, w: 10, h: 2 }, accent);
-  const leg = frame % 2;
-  fillRect(g, { x: 5 + leg, y: 19, w: 4, h: 10 }, Palette.asphalt);
-  fillRect(g, { x: 11 - leg, y: 19, w: 4, h: 10 }, Palette.asphalt);
+  const g = empty(20, 34, 'transparent');
+  const bob = frame % 2;
+  const y0 = bob;
+  fillRect(g, { x: 6, y: 2 + y0, w: 8, h: 7 }, accent);
+  fillRect(g, { x: 7, y: 4 + y0, w: 2, h: bob === 0 ? 2 : 1 }, '#111018');
+  fillRect(g, { x: 11, y: 4 + y0, w: 2, h: bob === 0 ? 2 : 1 }, '#111018');
+  fillRect(g, { x: 4, y: 9 + y0, w: 12, h: 10 }, Palette.concrete);
+  fillRect(g, { x: 5, y: 11 + y0, w: 10, h: 2 }, accent);
+  fillRect(g, { x: 2, y: 11 + y0 + bob, w: 2, h: 6 }, Palette.concrete);
+  fillRect(g, { x: 16, y: 11 + y0 + (1 - bob), w: 2, h: 6 }, Palette.concrete);
+  const leg = bob;
+  fillRect(g, { x: 5 + leg, y: 19 + y0, w: 4, h: 10 }, Palette.asphalt);
+  fillRect(g, { x: 11 - leg, y: 19 + y0, w: 4, h: 10 }, Palette.asphalt);
   return g;
 }
 
 export function makeAsphalt(): PixelGrid {
   const g = empty(16, 16, Palette.wetAsphalt);
-  // wet sheen stripes
   for (let i = 0; i < 16; i += 3) {
     fillRect(g, { x: 0, y: i, w: 16, h: 1 }, Palette.asphalt);
   }
@@ -51,6 +61,9 @@ export function makeAsphalt(): PixelGrid {
   for (let i = 0; i < 16; i += 5) {
     fillRect(g, { x: 7, y: i, w: 2, h: 2 }, Palette.brasilYellow);
   }
+  fillRect(g, { x: 1, y: 3, w: 1, h: 1 }, '#2a2a40');
+  fillRect(g, { x: 14, y: 10, w: 1, h: 1 }, '#101018');
+  fillRect(g, { x: 4, y: 12, w: 2, h: 1 }, '#2bfff222');
   return g;
 }
 
@@ -82,12 +95,16 @@ export function makePlaza(): PixelGrid {
   return g;
 }
 
-/** Night rooftop / hillside dirt — not bright grass. */
+/** Night rooftop / hillside dirt — textured, not bright grass. */
 export function makeGrass(): PixelGrid {
   const g = empty(16, 16, Palette.plantDark);
+  fillRect(g, { x: 0, y: 0, w: 16, h: 1 }, '#0a2818');
   fillRect(g, { x: 3, y: 5, w: 2, h: 2 }, Palette.plant);
   fillRect(g, { x: 10, y: 11, w: 2, h: 2 }, Palette.plant);
   fillRect(g, { x: 7, y: 2, w: 1, h: 1 }, '#2a5040');
+  fillRect(g, { x: 13, y: 7, w: 1, h: 1 }, '#1a4a30');
+  fillRect(g, { x: 1, y: 12, w: 2, h: 1 }, '#163828');
+  fillRect(g, { x: 8, y: 9, w: 1, h: 1 }, Palette.neonLime);
   return g;
 }
 

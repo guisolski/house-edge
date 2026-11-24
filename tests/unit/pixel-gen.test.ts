@@ -14,8 +14,8 @@ import {
 describe('pixel-gen', () => {
   it('builds procedural grids with night cyberpunk accents', () => {
     expect(makePlayerSprite().width).toBe(20);
-    expect(makePlayerSprite().height).toBe(32);
-    expect(makeNpcSprite('#fff').height).toBe(32);
+    expect(makePlayerSprite().height).toBe(34);
+    expect(makeNpcSprite('#fff').height).toBe(34);
     expect(makeAsphalt().pixels.length).toBe(256);
     expect(makePlaza().pixels.length).toBe(256);
     expect(makeStairs().pixels.length).toBe(256);

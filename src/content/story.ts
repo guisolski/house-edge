@@ -74,11 +74,11 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Rita Odds',
-        text: 'Deal. If I win, I open the road to the Central Fair.',
+        text: 'Deal. Let’s see if this race is enough to buy Luna’s chip.',
       },
       {
         speaker: 'Seu Zé',
-        text: 'Pode crer. Kiko down there sells more than pastel — he sells routes.',
+        text: 'Pode crer. Win first — routes come after.',
       },
     ],
   },
@@ -137,7 +137,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Rita Odds',
-        text: 'It opened. Odds Avenue, I’m coming — and I’m bringing the whole city on my back.',
+        text: 'If it opens, Odds Avenue is next — and I’m bringing the whole city on my back.',
       },
     ],
   },
@@ -178,7 +178,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Dr. Margin',
-        text: 'Win the hearing and the Tower’s elevator unlocks. Lose… and the scandal dies in committee.',
+        text: 'The hearing decides everything. Place your chips — the mic is already bought.',
       },
     ],
   },
