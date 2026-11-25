@@ -675,6 +675,26 @@ function pushPlayerSort(
   });
 }
 
+function inViewTile(p: {
+  tx: number;
+  ty: number;
+  camX: number;
+  camY: number;
+  vw: number;
+  vh: number;
+  pad?: number;
+}): boolean {
+  const pad = p.pad ?? 3;
+  const x = p.tx * TILE_PX - p.camX;
+  const y = p.ty * TILE_PX - p.camY;
+  return (
+    x > -TILE_PX * pad &&
+    y > -TILE_PX * pad &&
+    x < p.vw + TILE_PX * pad &&
+    y < p.vh + TILE_PX * pad
+  );
+}
+
 function pushBuildingSorts(
   items: SortBlit[],
   map: MapDef,
@@ -683,10 +703,13 @@ function pushBuildingSorts(
   camX: number,
   camY: number,
 ): void {
+  const vw = ctx.canvas.width;
+  const vh = ctx.canvas.height;
   for (const b of map.buildings) {
+    const footY = b.y + b.h - 1;
+    if (!inViewTile({ tx: b.x, ty: footY, camX, camY, vw, vh, pad: 4 })) continue;
     const set = baked.building[b.kind] ?? baked.building.morro!;
     const spr = set[b.style % set.length]!;
-    const footY = b.y + b.h - 1;
     items.push({
       y: footY,
       x: b.x,
@@ -723,7 +746,10 @@ function pushPropSorts(
   camX: number,
   camY: number,
 ): void {
+  const vw = ctx.canvas.width;
+  const vh = ctx.canvas.height;
   for (const p of map.props) {
+    if (!inViewTile({ tx: p.x, ty: p.y, camX, camY, vw, vh })) continue;
     const img = baked.props[p.kind];
     // Same foot-y anchor as buildings / actors (tall lamps, crowds, kiosks).
     items.push({

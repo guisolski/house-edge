@@ -288,36 +288,24 @@ function fillFeiraProps(props: MapDef['props']): void {
   }
   for (const [x, y] of [
     [4, 7],
-    [9, 7],
     [15, 7],
-    [20, 7],
     [25, 7],
-    [31, 7],
     [36, 7],
-    [5, 17],
     [11, 17],
-    [18, 17],
     [24, 17],
-    [30, 17],
     [36, 17],
   ] as const) {
     props.push({ x, y, kind: 'crate' });
   }
   props.push({ x: 16, y: 13, kind: 'kiosk' }, { x: 22, y: 14, kind: 'moto' });
-  props.push({ x: 12, y: 14, kind: 'kiosk' }, { x: 28, y: 14, kind: 'kiosk' });
+  props.push({ x: 28, y: 14, kind: 'kiosk' });
   for (const [x, y] of [
-    [7, 8],
     [10, 11],
-    [14, 8],
     [18, 12],
-    [22, 8],
     [26, 11],
-    [30, 8],
     [32, 13],
     [14, 16],
-    [20, 15],
     [28, 16],
-    [34, 15],
   ] as const) {
     props.push({ x, y, kind: 'crowd' });
   }

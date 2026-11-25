@@ -15,6 +15,8 @@ async function startAndWalk(page: Page): Promise<{
       }
     ).__HOUSE_EDGE__.setShowFps(true);
   });
+  // Let sprite bake + first frames settle before sampling under throttle.
+  await page.waitForTimeout(900);
   for (let i = 0; i < 30; i += 1) {
     const key = i % 2 === 0 ? 'ArrowRight' : 'ArrowUp';
     await page.keyboard.down(key);
