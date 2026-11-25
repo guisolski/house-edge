@@ -55,6 +55,18 @@ import {
   winStealth,
   type StealthProgress,
 } from './stealth';
+import {
+  advanceTutorial,
+  consumeMinigameTip,
+  createTutorialState,
+  skipTutorial,
+  tutorialFinished,
+  tutorialFlags,
+  tutorialStepId,
+  type TutorialState,
+} from './tutorial';
+import { t, tf } from '../i18n';
+import { localizeBeatDialogue, localizeHushLine } from '../i18n/localize-story';
 
 const SAFE_JOB_COOLDOWN_MS = 10_000;
 const SAFE_JOB_CAP = 6;
@@ -111,6 +123,8 @@ export class GameSession {
   /** Modal confirm (dialogue/skill): ignore Interact held at open until key-up. */
   private modalConfirmNeedsRelease = false;
   private modalConfirmArmUntil = 0;
+  /** New Game onboarding + first-time minigame tips. */
+  private tutorial: TutorialState = createTutorialState();
 
   constructor(seed = 42, bus = new EventBus()) {
     this.bus = bus;
@@ -153,13 +167,60 @@ export class GameSession {
     this.stealthProgress = null;
     this.skillStreak = 0;
     this.creditsRoll = false;
+    this.tutorial = createTutorialState();
+    // Playwright / automated runs: skip onboarding so e2e stays deterministic.
+    if (typeof navigator !== 'undefined' && navigator.webdriver) {
+      this.tutorial = skipTutorial(this.tutorial);
+      this.story.setFlag('tutorialDone', true);
+    }
     this.ui.go('play');
     this.story.completeBeat('intro-laje');
     this.bus.emit('game:started', { newGame: true });
+    if (this.tutorial.active) this.bus.emit('ui:tutorial', { active: true });
     this.bus.emit('ui:toast', {
-      message: 'Find Dona Nair at the boteco (follow the marker).',
+      message: t('ui.findNairToast'),
       kind: 'info',
     });
+  }
+
+  getTutorial(): TutorialState {
+    return this.tutorial;
+  }
+
+  tutorialStep(): string | null {
+    return tutorialStepId(this.tutorial);
+  }
+
+  advanceTutorialStep(): void {
+    this.tutorial = advanceTutorial(this.tutorial);
+    if (tutorialFinished(this.tutorial)) {
+      this.story.setFlag('tutorialDone', true);
+      this.bus.emit('ui:tutorial', { active: false });
+      this.persist();
+    } else {
+      this.bus.emit('ui:tutorial', { active: true });
+    }
+  }
+
+  skipTutorialNow(): void {
+    this.tutorial = skipTutorial(this.tutorial);
+    this.story.setFlag('tutorialDone', true);
+    this.bus.emit('ui:tutorial', { active: false });
+    this.persist();
+  }
+
+  /** First-time tip for a minigame kind; null if already seen. */
+  peekMinigameTip(kind: string): string | null {
+    const { state, tip } = consumeMinigameTip(this.tutorial, kind);
+    if (!tip) return null;
+    this.tutorial = state;
+    this.story.setFlag(`tip_${tip}`, true);
+    return tip;
+  }
+
+  /** Harness / screenshots — reinstate onboarding without wiping the save. */
+  resetTutorialForDemo(state: TutorialState): void {
+    this.tutorial = state;
   }
 
   tryLoad(): boolean {
@@ -307,6 +368,7 @@ export class GameSession {
   setRunHeld(held: boolean): void {
     if (!held) this.awaitRunRelease = false;
     this.runHeld = held;
+    this.player.setRunning(held);
   }
 
   /** True while a chase/hack/evade sequence phase owns arrow input. */
@@ -1096,7 +1158,7 @@ export class GameSession {
     return {
       version: 1,
       player: this.player.getStats(),
-      flags: this.story.exportFlags(),
+      flags: { ...this.story.exportFlags(), ...tutorialFlags(this.tutorial) },
       completedBeats: this.story.getCompleted(),
       unlockedDistricts: this.world.exportUnlocked(),
       muted: this.muted,
@@ -1106,6 +1168,7 @@ export class GameSession {
   }
 
   private interactNpc(npc: WorldNpc): boolean {
+    this.player.triggerTalk();
     this.bus.emit('npc:interacted', { npcId: npc.id });
     this.bus.emit('fx:flash', { kind: 'interact' });
     this.bus.emit('audio:play-sfx', { id: 'interact' });
@@ -1120,10 +1183,7 @@ export class GameSession {
     }
     // Neon Snap after clear: completed line only — never rematch stealth / side bet.
     if (npc.id === 'neon-snap' && this.story.getFlag('drone_ok')) {
-      return this.showNpcDoneLine(
-        npc,
-        'Already cleared those cones. Street neon owed you that shot — keep walking.',
-      );
+      return this.showNpcDoneLine(npc, t('ui.neonSnapDone'));
     }
     if (this.tryNpcStory(npc)) return true;
     if (this.npcStoryBlocksRematch(npc)) {
@@ -1203,7 +1263,10 @@ export class GameSession {
 
   private toastNpcBusy(npc: WorldNpc): void {
     this.bus.emit('ui:toast', {
-      message: `${npc.name}: Not now — ${this.objective().text}`,
+      message: tf('ui.npcBusy', {
+        name: npc.name,
+        objective: this.objective().text,
+      }),
       kind: 'info',
     });
   }
@@ -1213,16 +1276,10 @@ export class GameSession {
     if (!beat) return false;
     this.pendingStoryBeat = beatId;
     this.pendingBetAfterDialogue = beat.betId ?? null;
-    this.lastDialogue = [...beat.dialogue];
+    this.lastDialogue = localizeBeatDialogue(beatId, beat.dialogue);
     // Hush chip consequence: Augusto notices the quiet door.
     if (beatId === 'torre-final' && this.story.getFlag('neg_hush')) {
-      this.lastDialogue = [
-        {
-          speaker: 'Augusto Casa',
-          text: 'That hush chip rattles in your pocket. Security already looked away — cheap courage before the duel.',
-        },
-        ...this.lastDialogue,
-      ];
+      this.lastDialogue = [localizeHushLine(), ...this.lastDialogue];
     }
     this.ui.go('dialogue');
     for (const line of this.lastDialogue) {
@@ -1328,7 +1385,7 @@ export class GameSession {
       this.ui.go('play');
       this.bus.emit('district:entered', { districtId: 'torre-casa' });
       this.bus.emit('ui:toast', {
-        message: 'Elevator doors open on the VIP salon.',
+        message: t('ui.elevatorVipOpen'),
         kind: 'success',
       });
     };
@@ -1346,6 +1403,7 @@ export class GameSession {
     this.masterVolume = save.masterVolume;
     this.safeJobUses = 0;
     this.lastSafeJobMs = 0;
+    this.tutorial = createTutorialState(save.flags);
     this.emitVolume();
   }
 

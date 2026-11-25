@@ -41,12 +41,27 @@ import {
   makeStreetLamp,
   makeWaterTank,
   makeWire,
+  makePlant,
+  makeTrash,
+  makePuddle,
+  makeGraffiti,
+  makeAwning,
+  makeOrelhao,
+  makeVendorCart,
   type StairSide,
   type TileDistrict,
 } from './pixel-gen';
+import { makeNpcAnimFrame, makePlayerAnimFrame } from './char-sprites';
+import { npcIdleFrame, npcIdleKindFor } from '../systems/char-anim';
 
 const TILE = 16;
+/** World / building / prop bake scale (integer — pixel-perfect). */
 const SCALE = 3;
+/**
+ * Character bake scale — smaller than world so buildings read ~3–5× tall
+ * (playtest #26 / Guilherme: characters were overscaled vs houses).
+ */
+const CHAR_SCALE = 2;
 const TILE_PX = TILE * SCALE;
 const RAIN_COUNT = 8;
 const MAX_LIGHTS = 4;
@@ -78,7 +93,14 @@ type Baked = {
     | 'crate'
     | 'crowd'
     | 'barrier'
-    | 'container',
+    | 'container'
+    | 'plant'
+    | 'trash'
+    | 'puddle'
+    | 'graffiti'
+    | 'awning'
+    | 'orelhao'
+    | 'vendor',
     HTMLCanvasElement
   >;
   glow: Map<string, HTMLCanvasElement>;
@@ -245,8 +267,8 @@ function bakeDistrictTiles(districtId: DistrictId): Record<TileKind, HTMLCanvasE
 function bakeAll(): Baked {
   return {
     player: [
-      bakeSprite(makePlayerSprite(0), SCALE),
-      bakeSprite(makePlayerSprite(1), SCALE),
+      bakeSprite(makePlayerSprite(0), CHAR_SCALE),
+      bakeSprite(makePlayerSprite(1), CHAR_SCALE),
     ],
     npc: new Map(),
     building: {
@@ -281,6 +303,13 @@ function bakeAll(): Baked {
       crowd: bakeSprite(makeCrowd(), SCALE),
       barrier: bakeSprite(makeBarrier(), SCALE),
       container: bakeSprite(makeContainer(), SCALE),
+      plant: bakeSprite(makePlant(), SCALE),
+      trash: bakeSprite(makeTrash(), SCALE),
+      puddle: bakeSprite(makePuddle(), SCALE),
+      graffiti: bakeSprite(makeGraffiti(), SCALE),
+      awning: bakeSprite(makeAwning(), SCALE),
+      orelhao: bakeSprite(makeOrelhao(), SCALE),
+      vendor: bakeSprite(makeVendorCart(), SCALE),
     },
     glow: new Map(),
     mapLayers: new Map(),
@@ -380,12 +409,14 @@ function paintOneNpcTag(o: {
         : -0.35
       : 0;
   const px = (o.row.npc.x + aside) * TILE_PX + 16 - o.camX;
+  // Lift above CHAR_SCALE sprites (~108px) so tags sit above heads.
+  const tagLift = 74;
   let stack = o.i * -40;
-  let py = o.row.npc.y * TILE_PX - 28 - o.camY + avoid.dy + o.bob + stack;
+  let py = o.row.npc.y * TILE_PX - tagLift - o.camY + avoid.dy + o.bob + stack;
   for (const p of o.placed) {
     if (Math.hypot(px - p.x, py - p.y) < 32) {
       stack -= 40;
-      py = o.row.npc.y * TILE_PX - 28 - o.camY + avoid.dy + o.bob + stack;
+      py = o.row.npc.y * TILE_PX - tagLift - o.camY + avoid.dy + o.bob + stack;
     }
   }
   if (!o.row.force && o.placed.some((p) => Math.hypot(px - p.x, py - p.y) < 28)) return;
@@ -559,8 +590,8 @@ function prewarmDistricts(session: GameSession, baked: Baked): void {
   }
   baked.mapLayers.set('torre-vip', bakeMapLayer(buildTorreVip(), baked));
   for (const npc of session.npcs) {
-    npcSprite(baked, npc, 0);
-    npcSprite(baked, npc, 1);
+    npcAnimSprite(baked, npc, 0);
+    npcAnimSprite(baked, npc, 0.5);
   }
 }
 
@@ -868,13 +899,46 @@ function glowSprite(baked: Baked, color: string): HTMLCanvasElement {
   return img;
 }
 
-function npcSprite(baked: Baked, npc: WorldNpc, frame: number): HTMLCanvasElement {
-  const variant = npc.bodyVariant ?? 0;
-  const key = `${npc.id}:${variant}:${frame % 2}`;
+function playerAnimSprite(
+  baked: Baked,
+  anim: ReturnType<ViewState['session']['player']['getAnim']>,
+): HTMLCanvasElement {
+  const key = `p:${anim.dir}:${anim.mode}:${anim.frame}:${anim.bobY}:${Math.round(anim.squashX * 10)}`;
   let img = baked.npc.get(key);
   if (img) return img;
-  // Shared base with 4 body/hair/outfit variants — not just a recolor.
-  img = bakeSprite(makeNpcSprite(npc.color, frame % 2, npc.id, variant), SCALE);
+  img = bakeSprite(makePlayerAnimFrame(anim), CHAR_SCALE);
+  baked.npc.set(key, img);
+  // Keep a couple of legacy slots warm for any leftover callers.
+  baked.player[0] = img;
+  return img;
+}
+
+function npcAnimSprite(baked: Baked, npc: WorldNpc, timeS: number): HTMLCanvasElement {
+  const variant = npc.bodyVariant ?? 0;
+  if (npc.id === 'elevator' || npc.id === 'elevator-vip') {
+    const frame = Math.floor(timeS * 2) % 2;
+    const key = `${npc.id}:${variant}:elev:${frame}`;
+    let img = baked.npc.get(key);
+    if (img) return img;
+    img = bakeSprite(makeNpcSprite(npc.color, frame, npc.id, variant), CHAR_SCALE);
+    baked.npc.set(key, img);
+    return img;
+  }
+  const kind = npcIdleKindFor(npc.id);
+  const idleFr = npcIdleFrame(kind, timeS + variant * 0.37);
+  const key = `${npc.id}:${variant}:${kind}:${idleFr}`;
+  let img = baked.npc.get(key);
+  if (img) return img;
+  img = bakeSprite(
+    makeNpcAnimFrame({
+      accent: npc.color,
+      npcId: npc.id,
+      idleKind: kind,
+      idleFrame: idleFr,
+      bodyVariant: variant,
+    }),
+    CHAR_SCALE,
+  );
   baked.npc.set(key, img);
   return img;
 }
@@ -918,9 +982,10 @@ function drawSortedActors(
   const { session, baked } = state;
   const stats = session.player.getStats();
   const playing = session.ui.is('play');
-  // Under dialogs/minigames: freeze bob/aside and skip far NPCs (FPS on Odds/VIP).
-  const anim = playing ? Math.floor(frame / 8) % 2 : 0;
-  const bob = playing ? Math.sin(frame / 10) * 2 : 0;
+  // ~60fps assuming draw is called each engine tick.
+  if (playing) session.player.tickAnim(1 / 60);
+  const playerAnim = session.player.getAnim();
+  const bob = 0; // bob baked into character frames
   const view = { ctx, camX, camY, bob, vw: ctx.canvas.width, vh: ctx.canvas.height };
   const items: SortBlit[] = [];
   pushNpcSorts({
@@ -928,11 +993,11 @@ function drawSortedActors(
     session,
     baked,
     districtId: stats.districtId,
-    anim,
+    frame,
     view,
     playing,
   });
-  pushPlayerSort(items, baked, stats, anim, view);
+  pushPlayerSort(items, baked, stats, playerAnim, view);
   items.sort((a, b) => a.y - b.y || a.x - b.x);
   for (const it of items) it.draw();
 }
@@ -951,17 +1016,18 @@ function pushNpcSorts(o: {
   session: ViewState['session'];
   baked: Baked;
   districtId: string;
-  anim: number;
+  frame: number;
   view: SortView;
   playing: boolean;
 }): void {
   const me = o.session.player.getStats();
+  const timeS = o.frame / 60;
   for (const npc of o.session.floorNpcs()) {
     if (npc.districtId !== o.districtId) continue;
     const d = Math.hypot(npc.x - me.x, npc.y - me.y);
     // Modal open: only draw nearby NPCs — biggest FPS win on Odds/VIP.
     if (!o.playing && d > 8) continue;
-    const img = npcSprite(o.baked, npc, o.anim);
+    const img = npcAnimSprite(o.baked, npc, timeS);
     const near = o.playing && d < 1.35;
     const asideX = near ? (npc.x >= me.x ? 0.35 : -0.35) : 0;
     const drawX = npc.x + asideX;
@@ -988,10 +1054,10 @@ function pushPlayerSort(
   items: SortBlit[],
   baked: Baked,
   stats: { x: number; y: number },
-  anim: number,
+  anim: ReturnType<ViewState['session']['player']['getAnim']>,
   view: SortView,
 ): void {
-  const playerImg = baked.player[anim]!;
+  const playerImg = playerAnimSprite(baked, anim);
   items.push({
     y: stats.y,
     x: stats.x,

@@ -3,6 +3,7 @@ import type { HudHandles } from '../ui/hud';
 import type { AudioEngine } from '../audio/synth';
 import type { InputModeTracker } from '../systems/input-mode';
 import type { TouchControls } from '../ui/touch-controls';
+import { t } from '../i18n';
 import { UI } from '../ui/strings';
 
 export function wireSessionEvents(
@@ -28,6 +29,7 @@ function wireLifecycle(
   session.bus.on('game:started', () => {
     hud.showHud();
     hud.updateStats();
+    hud.showTutorial(session.getTutorial().active);
     hud.updatePrompt();
     audio.startMusic();
     touch.setVisible(modes.get() === 'touch');
@@ -104,12 +106,17 @@ function wireUi(session: GameSession, hud: HudHandles, audio: AudioEngine): void
     if (session.ui.is('skill')) hud.showSkill();
     else hud.showBet();
   });
-  session.bus.on('skill:started', () => {
+  session.bus.on('skill:started', (p) => {
     if (session.isStealthActive()) {
       hud.showHud();
       return;
     }
+    const tip = session.peekMinigameTip(p.kind);
+    if (tip) hud.showToast(t(`ui.minigameTip.${tip}`), 'info');
     hud.showSkill();
+  });
+  session.bus.on('ui:tutorial', (p) => {
+    hud.showTutorial(p.active);
   });
   session.bus.on('bet:resolved', () => {
     hud.updateStats();

@@ -1,58 +1,72 @@
-/** All player-facing UI copy (English). Version comes from package.json — never hardcode. */
+/** Player-facing UI copy — resolved through i18n (en / pt-BR). */
 
 import pkg from '../../package.json';
+import { t } from '../i18n';
 
-export const UI = {
-  title: 'HOUSE EDGE',
-  tagline: 'A Brazilian megacity where every breath is a bet.',
-  newGame: 'New Game',
-  continue: 'Continue',
-  resume: 'Resume',
-  menu: 'Menu',
-  mute: 'Mute',
-  unmute: 'Unmute',
-  credits: 'Credits',
-  reputation: 'Rep',
-  interact: 'Interact',
-  bet: 'Bet',
-  travel: 'Travel',
-  grind: 'Side Jobs',
-  upgrades: 'Upgrades',
-  story: 'Objective',
-  close: 'Close',
-  takeBet: 'Take the bet',
-  walkAway: 'Walk away',
-  confirmBet: 'Place bet',
-  cancel: 'Cancel',
-  stakeUp: 'Stake +',
-  stakeDown: 'Stake −',
-  version: `v${pkg.version}`,
-  wonEnding: 'The Casa falls. The table is yours.',
-  endingBlurb:
-    'Funk and samba take the streets. Visit Nair on the hill for the epilogue — then the credits roll.',
-  creditsTitle: 'HOUSE EDGE — Credits',
-  creditsThanks: 'Thanks for playing. The neon remembers.',
-  skipCredits: 'Skip credits',
-  continueExploring: 'Continue exploring',
-  playAgain: 'Play again',
-  playAgainConfirm: 'This wipes your save and restarts the story. Sure?',
-  playAgainYes: 'Wipe & restart',
-  playAgainNo: 'Back',
-  hintKeyboard: 'WASD move · Shift run · E interact · Esc menu · M mute · F3 FPS',
-  hintGamepad: 'Stick move · A interact · B bet · Start menu',
-  hintTouch: 'Use the stick + action buttons',
-  hintMenuKeyboard:
-    'Esc resume · Arrows / WASD navigate · E / Enter / Space confirm · F3 FPS',
-  hintMenuGamepad: 'B back · A confirm · Stick navigate · F3 FPS (keyboard)',
-  hintMenuTouch: 'Tap Resume or use on-screen buttons · F3 FPS (keyboard)',
-  noJobs: 'No side jobs here — raise rep or change district.',
-  noStory: 'No story beat here — follow the yellow marker.',
-  promptTalk: 'E — Talk',
-  promptExit: 'E — Travel',
-  promptBet: 'F / B — Bet',
-  lockpickHintKeyboard:
-    '←→ cycle pins · Space / click raise · Enter / Tab Submit · Esc cancel',
-  lockpickHintGamepad: 'D-pad cycle pins · A raise · Y Submit · B cancel',
-  lockpickHintTouch: 'Tap a pin to raise · Submit lock · Cancel',
-  needleMissHint: 'Miss — stop inside the green zone. Zone widened for the retry.',
-} as const;
+type UiBag = {
+  title: string;
+  tagline: string;
+  newGame: string;
+  continue: string;
+  resume: string;
+  menu: string;
+  mute: string;
+  unmute: string;
+  credits: string;
+  reputation: string;
+  interact: string;
+  bet: string;
+  travel: string;
+  grind: string;
+  upgrades: string;
+  story: string;
+  close: string;
+  takeBet: string;
+  walkAway: string;
+  confirmBet: string;
+  cancel: string;
+  stakeUp: string;
+  stakeDown: string;
+  version: string;
+  wonEnding: string;
+  endingBlurb: string;
+  creditsTitle: string;
+  creditsThanks: string;
+  skipCredits: string;
+  continueExploring: string;
+  playAgain: string;
+  playAgainConfirm: string;
+  playAgainYes: string;
+  playAgainNo: string;
+  hintKeyboard: string;
+  hintGamepad: string;
+  hintTouch: string;
+  hintMenuKeyboard: string;
+  hintMenuGamepad: string;
+  hintMenuTouch: string;
+  noJobs: string;
+  noStory: string;
+  promptTalk: string;
+  promptExit: string;
+  promptBet: string;
+  lockpickHintKeyboard: string;
+  lockpickHintGamepad: string;
+  lockpickHintTouch: string;
+  needleMissHint: string;
+  language: string;
+  languageEn: string;
+  languagePt: string;
+  settings: string;
+  tutorialSkip: string;
+  tutorialNext: string;
+  tutorialDone: string;
+};
+
+/** Live UI strings. Prefer `t('ui.*')` for new code; this keeps call sites stable. */
+export const UI: UiBag = new Proxy({} as UiBag, {
+  get(_target, prop: string | symbol): string {
+    if (typeof prop !== 'string') return '';
+    if (prop === 'version') return `v${pkg.version}`;
+    return t(`ui.${prop}`);
+  },
+});

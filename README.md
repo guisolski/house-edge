@@ -1,6 +1,6 @@
 # House Edge
 
-Top-down cyberpunk bets in a Brazilian megacity. Story gates are skill encounters (timing, choice, chase, hack, lockpick, negotiate) plus an in-world **drone stealth** corridor on Odds Avenue. Play Rita Odds from Morro Neon to Casa Suprema Tower (~22 min walking playthrough, v1.21.0).
+Top-down cyberpunk bets in a Brazilian megacity. Story gates are skill encounters (timing, choice, chase, hack, lockpick, negotiate) plus an in-world **drone stealth** corridor on Odds Avenue. Play Rita Odds from Morro Neon to Casa Suprema Tower (v1.22.0: classic JRPG scale, denser districts, 4-direction character animation, skippable tutorial, EN / pt-BR).
 
 ## Quick start
 
@@ -9,7 +9,7 @@ make install
 make dev
 ```
 
-Open [http://127.0.0.1:43123](http://127.0.0.1:43123).
+Open [http://127.0.0.1:43123](http://127.0.0.1:43123). Language defaults from `navigator.language` (pt → pt-BR); switch on the title screen or in Menu → Settings.
 
 ## Commands
 

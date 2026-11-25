@@ -26,6 +26,10 @@ export default defineConfig({
         'src/rendering/**',
         'src/ui/**',
         'src/assets/**',
+        'src/i18n/en.ts',
+        'src/i18n/pt-BR.ts',
+        'src/i18n/ui-en.ts',
+        'src/i18n/ui-pt-BR.ts',
         'src/**/*.d.ts',
       ],
       thresholds: {

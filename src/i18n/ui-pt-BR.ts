@@ -1,0 +1,121 @@
+import pkg from '../../package.json';
+
+/** Player-facing UI strings (Brazilian Portuguese). */
+export const uiPtBR = {
+  'ui.title': 'HOUSE EDGE',
+  'ui.tagline': 'Uma megacidade brasileira onde cada respiração é uma aposta.',
+  'ui.newGame': 'Novo jogo',
+  'ui.continue': 'Continuar',
+  'ui.resume': 'Retomar',
+  'ui.menu': 'Menu',
+  'ui.mute': 'Mudo',
+  'ui.unmute': 'Som',
+  'ui.credits': 'Créditos',
+  'ui.reputation': 'Rep',
+  'ui.interact': 'Interagir',
+  'ui.bet': 'Apostar',
+  'ui.travel': 'Viajar',
+  'ui.grind': 'Bicos',
+  'ui.upgrades': 'Upgrades',
+  'ui.story': 'Objetivo',
+  'ui.close': 'Fechar',
+  'ui.takeBet': 'Aceitar a aposta',
+  'ui.walkAway': 'Sair',
+  'ui.confirmBet': 'Confirmar aposta',
+  'ui.cancel': 'Cancelar',
+  'ui.stakeUp': 'Aposta +',
+  'ui.stakeDown': 'Aposta −',
+  'ui.version': `v${pkg.version}`,
+  'ui.wonEnding': 'A Casa cai. A mesa é sua.',
+  'ui.endingBlurb':
+    'Funk e samba tomam as ruas. Visite a Nair no morro para o epílogo — depois rolam os créditos.',
+  'ui.creditsTitle': 'HOUSE EDGE — Créditos',
+  'ui.creditsThanks': 'Valeu por jogar. O neon lembra.',
+  'ui.skipCredits': 'Pular créditos',
+  'ui.continueExploring': 'Continuar explorando',
+  'ui.playAgain': 'Jogar de novo',
+  'ui.playAgainConfirm': 'Isso apaga seu save e recomeça a história. Certeza?',
+  'ui.playAgainYes': 'Apagar e recomeçar',
+  'ui.playAgainNo': 'Voltar',
+  'ui.hintKeyboard':
+    'WASD mover · Shift correr · E interagir · Esc menu · M mudo · F3 FPS',
+  'ui.hintGamepad': 'Analógico mover · A interagir · B aposta · Start menu',
+  'ui.hintTouch': 'Use o analógico + botões de ação',
+  'ui.hintMenuKeyboard':
+    'Esc retomar · Setas / WASD navegar · E / Enter / Espaço confirmar · F3 FPS',
+  'ui.hintMenuGamepad': 'B voltar · A confirmar · Analógico navegar · F3 FPS (teclado)',
+  'ui.hintMenuTouch': 'Toque em Retomar ou nos botões na tela · F3 FPS (teclado)',
+  'ui.noJobs': 'Sem bicos aqui — suba a rep ou mude de distrito.',
+  'ui.noStory': 'Sem cena aqui — siga o marcador amarelo.',
+  'ui.promptTalk': 'E — Conversar',
+  'ui.promptExit': 'E — Viajar',
+  'ui.promptBet': 'F / B — Aposta',
+  'ui.lockpickHintKeyboard':
+    '←→ trocar pinos · Espaço / clique erguer · Enter / Tab Enviar · Esc cancelar',
+  'ui.lockpickHintGamepad': 'D-pad pinos · A erguer · Y Enviar · B cancelar',
+  'ui.lockpickHintTouch': 'Toque num pino para erguer · Enviar fechadura · Cancelar',
+  'ui.needleMissHint': 'Errou — pare na zona verde. A zona alarga na próxima tentativa.',
+  'ui.language': 'Idioma',
+  'ui.languageEn': 'English',
+  'ui.languagePt': 'Português (Brasil)',
+  'ui.settings': 'Configurações',
+  'ui.tutorialSkip': 'Pular',
+  'ui.tutorialNext': 'Próximo',
+  'ui.tutorialDone': 'Entendi',
+  'ui.tutorial.move.keyboard': 'WASD ou setas movem a Rita. Segure Shift para correr.',
+  'ui.tutorial.move.touch':
+    'Arraste o analógico para mover. Toque duas vezes para um sprint curto.',
+  'ui.tutorial.move.gamepad':
+    'Analógico esquerdo move a Rita. Clique no analógico para correr.',
+  'ui.tutorial.interact.keyboard': 'Pressione E perto de gente e portas para interagir.',
+  'ui.tutorial.interact.touch': 'Toque em Interagir quando o prompt aparecer.',
+  'ui.tutorial.interact.gamepad': 'Pressione A nos destaques para interagir.',
+  'ui.tutorial.objective': 'Siga o marcador amarelo da cena atual. Esc abre o menu.',
+  'ui.tutorial.bets':
+    'Apostas gastam créditos e podem subir a rep. Vença os testes de habilidade — não são moeda no ar.',
+  'ui.tutorial.creditsRep':
+    'Créditos pagam apostas; reputação libera bicos e confiança nos distritos.',
+  'ui.minigameTip.lockpick':
+    'Troque os pinos, erga cada um na altura certa e envie uma vez. Erros gastam a gazua.',
+  'ui.minigameTip.needle':
+    'Pare a agulha na zona verde. A zona pode alargar depois de um erro.',
+  'ui.minigameTip.timing':
+    'Sinta o ritmo — confirme quando o indicador entrar na janela.',
+  'ui.minigameTip.stealth':
+    'Dê o passo quando a rota estiver limpa. Um passo barulhento pode falhar tudo.',
+  'ui.minigameTip.neonSnap':
+    'Desvie dos cones do drone nos pontos cegos. Corte quando a luz piscar.',
+  'ui.minigameTip.choice':
+    'Escolha a fala que cabe no ambiente — tom errado queima o acordo.',
+  'ui.minigameTip.hack':
+    'Combine os glifos do feed antes do tempo. Toques errados disparam o alarme.',
+  'ui.minigameTip.negotiate':
+    'Leia o outro lado. Aperte quando hesitar; recue quando endurecer.',
+  'ui.minigameTip.duel':
+    'Vença cada fase: agulha, escolha e o hack. Fique calma sob as luzes.',
+  'ui.findNairToast': 'Ache a Dona Nair no boteco (siga o marcador).',
+  'ui.obj.complete': 'História completa — faça bicos ou explore.',
+  'ui.obj.freeRoam': 'Exploração livre — faça bicos ou explore',
+  'ui.obj.talkTo': 'Fale com {name} ({place})',
+  'ui.obj.exitTo': 'Saída → {place} — ache {name}',
+  'ui.obj.travelTo': 'Menu Viajar → {place} — ache {name}',
+  'ui.obj.travelMenu': 'Menu Viajar → {place}',
+  'ui.obj.unlockPath': 'Desbloqueie o caminho para {place}',
+  'ui.obj.unlockDetail': 'Termine a aposta atual.',
+  'ui.obj.actOn': '{verb} {name} ({place})',
+  'ui.obj.findLead': 'Ache a próxima pista ({place})',
+  'ui.obj.elevatorVip': 'Pegue o elevador para o salão VIP',
+  'ui.obj.elevatorFoyer': 'Volte ao elevador do foyer',
+  'ui.obj.epilogueDetail': 'Epílogo opcional na laje — ou continue nos bicos.',
+  'ui.obj.epilogueHill': 'O epílogo espera no morro com a Dona Nair.',
+  'ui.npcBusy': '{name}: Agora não — {objective}',
+  'ui.neonSnapDone':
+    'Já limpou aqueles cones. O neon da rua te devia esse lance — segue o baile.',
+  'ui.elevatorVipOpen': 'As portas do elevador abrem no salão VIP.',
+  'ui.promptTalkTouch': 'Toque — Conversar',
+  'ui.promptTalkGamepad': 'A — Conversar',
+  'ui.promptExitTouch': 'Toque — Viajar',
+  'ui.promptExitGamepad': 'A — Viajar',
+  'ui.verb.talk': 'Fale com',
+  'ui.verb.use': 'Use',
+} satisfies Record<string, string>;

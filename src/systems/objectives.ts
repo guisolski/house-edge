@@ -1,5 +1,6 @@
 import { DISTRICTS } from '../content/districts';
 import type { DistrictId, StoryBeat } from '../core/types';
+import { t, tf } from '../i18n';
 import type { WorldNpc, DistrictExit } from './interaction';
 
 /** GD-1: always show the next concrete objective with a world marker. */
@@ -36,7 +37,7 @@ export function currentObjective(ctx: ObjectiveCtx): Objective {
     return freeRoamObjective(ctx);
   }
   const next = nextBeat(ctx);
-  if (!next) return { text: 'Story complete — grind side jobs or explore.' };
+  if (!next) return { text: t('ui.obj.complete') };
   if (next.districtId !== ctx.districtId) return travelObjective(ctx, next);
   return npcObjective(ctx, next);
 }
@@ -51,8 +52,8 @@ function epilogueNpc(ctx: ObjectiveCtx): WorldNpc | undefined {
 function freeRoamTowardNair(ctx: ObjectiveCtx, epi: WorldNpc): Objective {
   if (epi.districtId === ctx.districtId) {
     return {
-      text: `Talk to ${epi.name} (${districtName(ctx.districtId)})`,
-      detail: 'Optional laje epilogue — or keep grinding.',
+      text: tf('ui.obj.talkTo', { name: epi.name, place: districtName(ctx.districtId) }),
+      detail: t('ui.obj.epilogueDetail'),
       targetName: epi.name,
       targetX: epi.x,
       targetY: epi.y,
@@ -60,32 +61,35 @@ function freeRoamTowardNair(ctx: ObjectiveCtx, epi: WorldNpc): Objective {
     };
   }
   const hop = firstHopExit(ctx, epi.districtId);
-  if (hop) {
+  if (!hop) {
     return {
-      text: `Exit → ${districtName(hop.toDistrict)} — find ${epi.name}`,
-      detail: 'Epilogue waits on the hill with Dona Nair.',
-      targetName: districtShortName(hop.toDistrict),
-      targetX: hop.x,
-      targetY: hop.y,
-      districtId: ctx.districtId,
+      text: tf('ui.obj.travelTo', {
+        place: districtName(epi.districtId),
+        name: epi.name,
+      }),
+      detail: t('ui.obj.epilogueHill'),
+      districtId: epi.districtId,
     };
   }
   return {
-    text: `Travel menu → ${districtName(epi.districtId)} — find ${epi.name}`,
-    detail: 'Epilogue waits on the hill with Dona Nair.',
-    districtId: epi.districtId,
+    text: tf('ui.obj.exitTo', { place: districtName(hop.toDistrict), name: epi.name }),
+    detail: t('ui.obj.epilogueHill'),
+    targetName: districtShortName(hop.toDistrict),
+    targetX: hop.x,
+    targetY: hop.y,
+    districtId: ctx.districtId,
   };
 }
 
 function freeRoamObjective(ctx: ObjectiveCtx): Objective {
   if (ctx.flags('epilogue_done')) {
-    return { text: 'Story complete — grind side jobs or explore.' };
+    return { text: t('ui.obj.complete') };
   }
   const epi = epilogueNpc(ctx);
   if (epi) return freeRoamTowardNair(ctx, epi);
   return {
-    text: 'Free roam — grind side jobs or explore',
-    detail: 'Epilogue waits on the hill with Dona Nair.',
+    text: t('ui.obj.freeRoam'),
+    detail: t('ui.obj.epilogueHill'),
   };
 }
 
@@ -163,45 +167,60 @@ export function firstHopExit(ctx: ObjectiveCtx, dest: string): DistrictExit | un
   return undefined;
 }
 
+function hopTravelObjective(
+  ctx: ObjectiveCtx,
+  next: StoryBeat,
+  hop: NonNullable<ReturnType<typeof firstHopExit>>,
+  npc: WorldNpc | undefined,
+): Objective {
+  const place = districtName(next.districtId);
+  const hopPlace = districtName(hop.toDistrict);
+  const direct = hop.toDistrict === next.districtId;
+  const who = npc?.name ?? place;
+  return {
+    text: direct
+      ? tf('ui.obj.talkTo', { name: who, place })
+      : tf('ui.obj.exitTo', { place: hopPlace, name: place }),
+    detail: t(`story.${next.id}.title`),
+    targetName: districtShortName(hop.toDistrict),
+    targetX: hop.x,
+    targetY: hop.y,
+    districtId: ctx.districtId,
+  };
+}
+
 function travelObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
   const place = districtName(next.districtId);
   const npc = beatNpc(ctx, next);
   const hop = firstHopExit(ctx, next.districtId);
-  if (hop) {
-    const hopPlace = districtName(hop.toDistrict);
-    const hopShort = districtShortName(hop.toDistrict);
-    const direct = hop.toDistrict === next.districtId;
-    const who = npc?.name ?? place;
-    return {
-      text: direct
-        ? `Go to ${place} — talk to ${who}`
-        : `Exit → ${hopPlace}, then ${place}`,
-      detail: next.title,
-      // Name kept for walk e2e uniqueness; paint hides it when near EXIT neon.
-      targetName: hopShort,
-      targetX: hop.x,
-      targetY: hop.y,
-      districtId: ctx.districtId,
-    };
-  }
+  if (hop) return hopTravelObjective(ctx, next, hop, npc);
   if (ctx.unlocked(next.districtId)) {
     return {
-      text: `Travel menu → ${place}`,
-      detail: npc ? `Talk to ${npc.name} · ${next.title}` : next.title,
+      text: tf('ui.obj.travelMenu', { place }),
+      detail: npc
+        ? tf('ui.obj.talkTo', { name: npc.name, place })
+        : t(`story.${next.id}.title`),
       districtId: next.districtId,
     };
   }
-  return { text: `Unlock path to ${place}`, detail: 'Finish the current bet.' };
+  return {
+    text: tf('ui.obj.unlockPath', { place }),
+    detail: t('ui.obj.unlockDetail'),
+  };
 }
 
 function npcObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
   const npc = beatNpc(ctx, next);
+  const title = t(`story.${next.id}.title`);
   if (npc) {
-    const verb = npc.id === 'elevator' || npc.id === 'elevator-vip' ? 'Use' : 'Talk to';
+    const verb =
+      npc.id === 'elevator' || npc.id === 'elevator-vip'
+        ? t('ui.verb.use')
+        : t('ui.verb.talk');
     const place = districtName(ctx.districtId);
     return {
-      text: `${verb} ${npc.name} (${place})`,
-      detail: next.title,
+      text: tf('ui.obj.actOn', { verb, name: npc.name, place }),
+      detail: title,
       targetName: npc.name,
       targetX: npc.x,
       targetY: npc.y,
@@ -213,8 +232,8 @@ function npcObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
   if (floorHop) return floorHop;
   // Last resort: never surface a bug string to the player.
   return {
-    text: `Find the next lead (${districtName(ctx.districtId)})`,
-    detail: next.title,
+    text: tf('ui.obj.findLead', { place: districtName(ctx.districtId) }),
+    detail: title,
     districtId: ctx.districtId,
   };
 }
@@ -248,11 +267,16 @@ function elevatorFloorObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective |
   const elev = casaElevatorPad(ctx, roster);
   if (!elev) return null;
   const wantVip = (target.floor ?? 'foyer') === 'vip';
+  const title = t(`story.${next.id}.title`);
   return {
     text: wantVip
-      ? `Ride elevator up — ${next.title}`
-      : `Ride elevator down — then ${target.name}`,
-    detail: next.title,
+      ? t('ui.obj.elevatorVip')
+      : tf('ui.obj.actOn', {
+          verb: t('ui.verb.use'),
+          name: target.name,
+          place: t('ui.obj.elevatorFoyer'),
+        }),
+    detail: title,
     // Must match WorldNpc.name so nearbyNpc / e2e uniqueness resolve.
     targetName: elev.name,
     targetX: elev.x,

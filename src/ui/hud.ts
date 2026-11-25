@@ -18,6 +18,12 @@ import { bakeSprite } from '../rendering/bake';
 import { makeEndingScene } from '../rendering/pixel-gen';
 import type { FpsSample } from '../rendering/fps';
 import { resolveInteractPriority } from '../systems/interact-priority';
+import { getLocale, setLocale, t, type LocaleCode } from '../i18n';
+import {
+  tutorialCopyKey,
+  tutorialStepCount,
+  type TutorialStepId,
+} from '../systems/tutorial';
 
 export type HudHandles = {
   root: HTMLElement;
@@ -34,6 +40,7 @@ export type HudHandles = {
   showUpgrades: () => void;
   showEnding: (text: string) => void;
   showCreditsRoll: () => void;
+  showTutorial: (active: boolean) => void;
   setInputMode: (mode: InputMode) => void;
   updatePrompt: () => void;
   setFps: (sample: FpsSample | null) => void;
@@ -66,6 +73,7 @@ type Parts = {
   flash: HTMLElement;
   creditsFx: HTMLElement;
   transition: HTMLElement;
+  tutorial: HTMLElement;
 };
 
 export function createHud(session: GameSession, mount: HTMLElement): HudHandles {
@@ -101,6 +109,7 @@ function emptyParts(): Parts {
     flash: el('div', 'fx-flash'),
     creditsFx: el('div', 'fx-credits'),
     transition: el('div', 'fx-transition'),
+    tutorial: el('div', 'tutorial-panel'),
   };
 }
 
@@ -142,10 +151,12 @@ function appendAll(p: Parts): void {
     p.toast,
     p.ending,
     p.prompt,
+    p.tutorial,
     p.flash,
     p.creditsFx,
     p.transition,
   );
+  setVisible(p.tutorial, false);
 }
 
 function makeHandles(session: GameSession, p: Parts): HudHandles {
@@ -160,8 +171,11 @@ function baseShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudHa
     showTitle: (hasSave) => {
       fillTitle(p.title, session);
       only(p, 'title');
-      const cont = p.title.querySelectorAll('button')[1] as HTMLButtonElement;
-      if (cont) cont.disabled = !hasSave;
+      for (const btn of p.title.querySelectorAll('button')) {
+        if (btn.textContent === UI.continue) {
+          (btn as HTMLButtonElement).disabled = !hasSave;
+        }
+      }
     },
     showHud: () => {
       only(p, 'play');
@@ -177,6 +191,7 @@ function baseShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudHa
     flash: (kind) => runFlash(p.flash, kind),
     creditPopup: (delta) => runCreditPopup(p.creditsFx, delta),
     playTransition: (kind, label) => runTransition(p.transition, kind, label),
+    showTutorial: (active) => paintTutorial(p, session, h, active),
   };
 }
 
@@ -443,6 +458,10 @@ function fillTitle(panel: HTMLElement, session: GameSession): void {
     el('h1', 'logo', UI.title),
     el('p', 'tagline', UI.tagline),
     el('p', 'version', UI.version),
+    langRow((code) => {
+      setLocale(code);
+      fillTitle(panel, session);
+    }),
     button(UI.newGame, () => {
       blurActive();
       // Defer so focus leaves the title before it becomes inert/hidden.
@@ -457,6 +476,24 @@ function fillTitle(panel: HTMLElement, session: GameSession): void {
   );
 }
 
+function langRow(onPick: (code: LocaleCode) => void): HTMLElement {
+  const row = el('div', 'lang-row');
+  row.append(
+    el('span', 'lang-label', UI.language),
+    button(UI.languageEn, () => onPick('en')),
+    button(UI.languagePt, () => onPick('pt-BR')),
+  );
+  const cur = getLocale();
+  for (const b of row.querySelectorAll('button')) {
+    const isEn = b.textContent === UI.languageEn;
+    b.classList.toggle(
+      'lang-active',
+      (isEn && cur === 'en') || (!isEn && cur === 'pt-BR'),
+    );
+  }
+  return row;
+}
+
 function fillMenu(panel: HTMLElement, session: GameSession, h: HudHandles): void {
   clearNode(panel);
   panel.append(
@@ -468,9 +505,67 @@ function fillMenu(panel: HTMLElement, session: GameSession, h: HudHandles): void
     button(UI.travel, () => openFromMenu(session, h, 'travel')),
     button(UI.grind, () => openFromMenu(session, h, 'jobs')),
     button(UI.upgrades, () => openFromMenu(session, h, 'upgrades')),
+    button(UI.settings, () => {
+      clearNode(panel);
+      panel.append(
+        el('h2', '', UI.settings),
+        langRow((code) => {
+          setLocale(code);
+          fillMenu(panel, session, h);
+          h.updateStats();
+        }),
+        button(UI.resume, () => {
+          session.closeModal();
+          h.showMenu(false);
+        }),
+      );
+      focusFirst(panel);
+    }),
     button(UI.mute, () => session.setMuted(!session.getAudio().muted)),
     el('p', 'hint menu-hint', menuHintFor(panel)),
   );
+}
+
+function paintTutorial(
+  p: Parts,
+  session: GameSession,
+  h: HudHandles,
+  active: boolean,
+): void {
+  if (!active) {
+    clearNode(p.tutorial);
+    setVisible(p.tutorial, false);
+    return;
+  }
+  const step = session.tutorialStep() as TutorialStepId | null;
+  if (!step) {
+    clearNode(p.tutorial);
+    setVisible(p.tutorial, false);
+    return;
+  }
+  const mode = (p.root.dataset.inputMode as InputMode) || 'keyboard';
+  const tut = session.getTutorial();
+  const idx = tut.stepIndex + 1;
+  clearNode(p.tutorial);
+  p.tutorial.append(
+    el('h2', '', `${UI.story} (${idx}/${tutorialStepCount()})`),
+    el('p', 'tutorial-body', t(tutorialCopyKey(step, mode))),
+  );
+  const actions = el('div', 'panel-actions');
+  const last = idx >= tutorialStepCount();
+  actions.append(
+    button(UI.tutorialSkip, () => {
+      session.skipTutorialNow();
+      h.showTutorial(false);
+    }),
+    button(last ? UI.tutorialDone : UI.tutorialNext, () => {
+      session.advanceTutorialStep();
+      h.showTutorial(session.getTutorial().active);
+    }),
+  );
+  p.tutorial.append(actions);
+  setVisible(p.tutorial, true);
+  focusFirst(p.tutorial);
 }
 
 function menuHintFor(panel: HTMLElement): string {

@@ -75,7 +75,8 @@ canvas.excalibur-game {
 .travel-panel,
 .jobs-panel,
 .upgrades-panel,
-.ending-panel {
+.ending-panel,
+.tutorial-panel {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -296,11 +297,34 @@ canvas.excalibur-game {
 .jobs-panel[hidden],
 .upgrades-panel[hidden],
 .ending-panel[hidden],
+.tutorial-panel[hidden],
 .play-hud[hidden],
 .interact-prompt[hidden],
 .toast[hidden],
 .touch-controls[hidden] {
   display: none !important;
+}
+
+.tutorial-panel {
+  top: 22%;
+  z-index: 14;
+  border-color: var(--yellow, #ffdf00);
+}
+
+.lang-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.lang-label {
+  opacity: 0.8;
+  font-size: 0.85rem;
+}
+
+.lang-active {
+  outline: 2px solid var(--yellow, #ffdf00);
 }
 
 .logo {

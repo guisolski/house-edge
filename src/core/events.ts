@@ -36,6 +36,7 @@ export type GameEvents = {
   'ui:toast': { message: string; kind: 'info' | 'success' | 'danger' };
   'ui:dialogue': { speaker: string; text: string; choices?: string[] };
   'ui:menu': { open: boolean; screen: string };
+  'ui:tutorial': { active: boolean };
   'audio:play-sfx': { id: string };
   'audio:volume': { master: number; muted: boolean };
   'input:action': { action: string; pressed: boolean };

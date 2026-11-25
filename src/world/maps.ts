@@ -23,7 +23,14 @@ export type PropKind =
   | 'crate'
   | 'crowd'
   | 'barrier'
-  | 'container';
+  | 'container'
+  | 'plant'
+  | 'trash'
+  | 'puddle'
+  | 'graffiti'
+  | 'awning'
+  | 'orelhao'
+  | 'vendor';
 
 export type MapDef = {
   districtId: DistrictId;
@@ -305,10 +312,13 @@ function fillMorroProps(props: MapDef['props']): void {
     [17, 15],
     [28, 16],
     [13, 22],
+    [22, 15],
+    [4, 22],
   ] as const) {
     props.push({ x, y, kind: 'lamp' });
   }
   props.push({ x: 18, y: 16, kind: 'moto' }, { x: 14, y: 15, kind: 'kiosk' });
+  props.push({ x: 32, y: 16, kind: 'moto' }, { x: 8, y: 22, kind: 'vendor' });
   for (const [x, y] of [
     [10, 16],
     [25, 16],
@@ -316,6 +326,36 @@ function fillMorroProps(props: MapDef['props']): void {
   ] as const) {
     props.push({ x, y, kind: 'crate' });
   }
+  for (const [x, y] of [
+    [4, 15],
+    [20, 16],
+    [36, 15],
+    [11, 22],
+  ] as const) {
+    props.push({ x, y, kind: 'plant' });
+  }
+  for (const [x, y] of [
+    [12, 15],
+    [26, 16],
+    [6, 22],
+  ] as const) {
+    props.push({ x, y, kind: 'trash' });
+  }
+  for (const [x, y] of [
+    [16, 16],
+    [30, 15],
+  ] as const) {
+    props.push({ x, y, kind: 'puddle' });
+  }
+  for (const [x, y] of [
+    [3, 8],
+    [27, 8],
+    [36, 21],
+  ] as const) {
+    props.push({ x, y, kind: 'graffiti' });
+  }
+  props.push({ x: 15, y: 14, kind: 'awning' }, { x: 24, y: 14, kind: 'awning' });
+  props.push({ x: 9, y: 15, kind: 'orelhao' }, { x: 33, y: 22, kind: 'orelhao' });
 }
 
 function paintRamp(
@@ -415,7 +455,8 @@ function fillFeiraProps(props: MapDef['props']): void {
     props.push({ x, y, kind: 'crate' });
   }
   props.push({ x: 16, y: 13, kind: 'kiosk' }, { x: 22, y: 14, kind: 'moto' });
-  props.push({ x: 28, y: 14, kind: 'kiosk' });
+  props.push({ x: 28, y: 14, kind: 'kiosk' }, { x: 12, y: 14, kind: 'vendor' });
+  props.push({ x: 34, y: 14, kind: 'moto' }, { x: 8, y: 13, kind: 'vendor' });
   for (const [x, y] of [
     [10, 11],
     [18, 12],
@@ -426,6 +467,42 @@ function fillFeiraProps(props: MapDef['props']): void {
   ] as const) {
     props.push({ x, y, kind: 'crowd' });
   }
+  for (const [x, y] of [
+    [6, 12],
+    [20, 13],
+    [30, 12],
+    [38, 16],
+  ] as const) {
+    props.push({ x, y, kind: 'plant' });
+  }
+  for (const [x, y] of [
+    [9, 13],
+    [24, 14],
+    [35, 13],
+  ] as const) {
+    props.push({ x, y, kind: 'trash' });
+  }
+  for (const [x, y] of [
+    [14, 13],
+    [26, 14],
+  ] as const) {
+    props.push({ x, y, kind: 'puddle' });
+  }
+  for (const [x, y] of [
+    [7, 8],
+    [31, 8],
+    [10, 19],
+  ] as const) {
+    props.push({ x, y, kind: 'graffiti' });
+  }
+  for (const [x, y] of [
+    [11, 10],
+    [21, 10],
+    [27, 17],
+  ] as const) {
+    props.push({ x, y, kind: 'awning' });
+  }
+  props.push({ x: 5, y: 14, kind: 'orelhao' }, { x: 33, y: 15, kind: 'orelhao' });
 }
 
 function buildFeira(): MapDef {
@@ -498,23 +575,37 @@ function buildFeira(): MapDef {
   };
 }
 
-function buildAvenida(): MapDef {
-  const w = 46;
-  const h = 24;
-  const tiles = fill(w, h, 'sidewalk');
-  const buildings: MapDef['buildings'] = [];
-  const props: MapDef['props'] = [];
-  seal(tiles, w, h);
-  // Boulevard asphalt — then seal north/south strips so only y11–12 crosses drones.
+function fillAvenidaApproachProps(props: MapDef['props']): void {
+  for (const [x, y] of [
+    [3, 11],
+    [6, 12],
+    [40, 11],
+    [37, 12],
+  ] as const) {
+    props.push({ x, y, kind: 'plant' });
+  }
+  props.push({ x: 4, y: 12, kind: 'puddle' }, { x: 39, y: 11, kind: 'puddle' });
+  props.push({ x: 5, y: 11, kind: 'trash' }, { x: 41, y: 12, kind: 'trash' });
+  props.push({ x: 3, y: 10, kind: 'orelhao' }, { x: 42, y: 10, kind: 'graffiti' });
+  props.push({ x: 7, y: 12, kind: 'awning' }, { x: 38, y: 12, kind: 'awning' });
+  props.push({ x: 9, y: 12, kind: 'vendor' });
+}
+
+function sealAvenidaLane(tiles: TileKind[], w: number, h: number): void {
   rect({ tiles, w, x0: 1, y0: 9, x1: w - 2, y1: 14, kind: 'asphalt' });
   rect({ tiles, w, x0: 1, y0: 5, x1: w - 2, y1: 8, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: 15, x1: w - 2, y1: 19, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: 1, x1: w - 2, y1: 1, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: h - 2, x1: w - 2, y1: h - 2, kind: 'blocked' });
-  // Police barrier corridor — closes Shift-run bypass on north (y9–10) & south (y13–14).
-  // Keep west/east approaches open for Fair/Torre pads (x≤10 / x≥36).
   rect({ tiles, w, x0: 12, y0: 9, x1: 34, y1: 10, kind: 'blocked' });
   rect({ tiles, w, x0: 12, y0: 13, x1: 34, y1: 14, kind: 'blocked' });
+}
+
+function placeAvenidaTowers(
+  tiles: TileKind[],
+  w: number,
+  buildings: MapDef['buildings'],
+): void {
   for (let x = 2; x <= 42; x += 4) {
     houseBlock({
       tiles,
@@ -541,17 +632,10 @@ function buildAvenida(): MapDef {
       bh: 3,
     });
   }
-  // Re-seal after houseBlock so footprints can't reopen edge lanes.
-  rect({ tiles, w, x0: 1, y0: 5, x1: w - 2, y1: 8, kind: 'blocked' });
-  rect({ tiles, w, x0: 1, y0: 15, x1: w - 2, y1: 19, kind: 'blocked' });
-  rect({ tiles, w, x0: 12, y0: 9, x1: 34, y1: 10, kind: 'blocked' });
-  rect({ tiles, w, x0: 12, y0: 13, x1: 34, y1: 14, kind: 'blocked' });
-  // Re-assert the cone corridor — never leave a mid-lane block at ~x9–11+.
-  rect({ tiles, w, x0: 1, y0: 11, x1: w - 2, y1: 12, kind: 'asphalt' });
-  paintExitPad(tiles, w, 2, 12);
-  paintExitPad(tiles, w, 43, 12);
+}
+
+function fillAvenidaLaneProps(props: MapDef['props']): void {
   for (let x = 4; x < 42; x += 6) props.push({ x, y: 11, kind: 'lamp' });
-  // Neon Snap cover crates (match stealth cover tiles) + approach prop.
   props.push(
     { x: 8, y: 11, kind: 'moto' },
     { x: 15, y: 12, kind: 'crate' },
@@ -559,14 +643,30 @@ function buildAvenida(): MapDef {
     { x: 26, y: 12, kind: 'crate' },
     { x: 31, y: 11, kind: 'crate' },
   );
-  // Solid-looking police barriers / shipping containers on sealed strips.
   for (let x = 12; x <= 34; x += 2) {
     props.push({ x, y: 9, kind: 'barrier' }, { x, y: 14, kind: 'barrier' });
   }
   for (let x = 13; x <= 33; x += 3) {
     props.push({ x, y: 10, kind: 'container' }, { x, y: 13, kind: 'container' });
   }
+  fillAvenidaApproachProps(props);
+}
 
+function buildAvenida(): MapDef {
+  const w = 46;
+  const h = 24;
+  const tiles = fill(w, h, 'sidewalk');
+  const buildings: MapDef['buildings'] = [];
+  const props: MapDef['props'] = [];
+  seal(tiles, w, h);
+  sealAvenidaLane(tiles, w, h);
+  placeAvenidaTowers(tiles, w, buildings);
+  // Re-seal after houseBlock so footprints can't reopen edge lanes.
+  sealAvenidaLane(tiles, w, h);
+  rect({ tiles, w, x0: 1, y0: 11, x1: w - 2, y1: 12, kind: 'asphalt' });
+  paintExitPad(tiles, w, 2, 12);
+  paintExitPad(tiles, w, 43, 12);
+  fillAvenidaLaneProps(props);
   return {
     districtId: 'avenida-odds',
     width: w,

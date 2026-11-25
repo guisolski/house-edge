@@ -1,5 +1,6 @@
 import type { DistrictId, PlayerStats } from '../core/types';
 import { EventBus } from '../core/event-bus';
+import { createCharAnim, tickCharAnim, type CharAnimState } from './char-anim';
 
 const START: PlayerStats = {
   credits: 120,
@@ -16,6 +17,11 @@ export class PlayerSystem {
   /** Last non-zero move facing (tile steps). Used for E-target bias. */
   private faceDx = 1;
   private faceDy = 0;
+  private anim: CharAnimState = createCharAnim('right');
+  private lastStepDx = 0;
+  private lastStepDy = 0;
+  private running = false;
+  private movedThisPulse = false;
 
   constructor(
     private readonly bus: EventBus,
@@ -32,10 +38,45 @@ export class PlayerSystem {
     return { dx: this.faceDx, dy: this.faceDy };
   }
 
+  getAnim(): CharAnimState {
+    return this.anim;
+  }
+
+  setRunning(running: boolean): void {
+    this.running = running;
+  }
+
+  /** Advance locomotion anim; call once per render frame. */
+  tickAnim(dt: number): CharAnimState {
+    const dx = this.movedThisPulse ? this.lastStepDx : 0;
+    const dy = this.movedThisPulse ? this.lastStepDy : 0;
+    this.anim = tickCharAnim(this.anim, {
+      dx,
+      dy,
+      running: this.running && this.movedThisPulse,
+      dt,
+    });
+    this.movedThisPulse = false;
+    return this.anim;
+  }
+
+  triggerTalk(): void {
+    this.anim = tickCharAnim(this.anim, {
+      dx: 0,
+      dy: 0,
+      running: false,
+      talk: true,
+      dt: 0,
+    });
+  }
+
   setFacing(dx: number, dy: number): void {
     if (!dx && !dy) return;
     this.faceDx = Math.sign(dx);
     this.faceDy = Math.sign(dy);
+    this.lastStepDx = this.faceDx;
+    this.lastStepDy = this.faceDy;
+    this.movedThisPulse = true;
   }
 
   setPosition(x: number, y: number): void {

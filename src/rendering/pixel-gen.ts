@@ -580,8 +580,10 @@ function paintFavelaShell(
 function favelaHouse(style: number): PixelGrid {
   const wide = style % 3 === 0;
   const storeys = 2 + (style % 3); // 2–4 storeys
-  const w = wide ? 56 : 44 + (style % 3) * 4;
-  const h = 40 + storeys * 22;
+  const w = wide ? 64 : 48 + (style % 3) * 4;
+  /** Storey pitch ~36px → baked houses read ~3–5× character height. */
+  const storeyH = 36;
+  const h = 48 + storeys * storeyH;
   const g = empty(w, h, 'transparent');
   const wall = [
     Palette.wallWarm,
@@ -606,7 +608,7 @@ function favelaHouse(style: number): PixelGrid {
   const fw = w - 14;
   const fh = h - 28;
   paintFavelaShell(g, wall, roof, fw, fh, w);
-  paintFavelaWindows(g, style, storeys, wide);
+  paintFavelaWindows(g, style, storeys, wide, storeyH);
   paintFavelaRoofProps(g, style, w, h);
   // Layered neighbour block for depth (less flat banding on Morro terraces).
   if (style % 2 === 0) {
@@ -622,6 +624,7 @@ function paintFavelaWindows(
   style: number,
   storeys: number,
   wide: boolean,
+  storeyH = 36,
 ): void {
   const winColors = [
     Palette.windowLit,
@@ -630,7 +633,7 @@ function paintFavelaWindows(
     Palette.neonMagenta,
   ];
   for (let s = 0; s < storeys; s += 1) {
-    const wy = 26 + s * 20;
+    const wy = 28 + s * storeyH;
     const wx0 = 8 + (style % 3);
     const c0 = winColors[(style + s) % winColors.length]!;
     const c1 = winColors[(style + s + 1) % winColors.length]!;
@@ -673,8 +676,8 @@ function paintFavelaRoofProps(g: PixelGrid, style: number, w: number, h: number)
 }
 
 function stall(style: number): PixelGrid {
-  const w = 52 + (style % 4) * 6;
-  const h = 52 + (style % 3) * 4;
+  const w = 56 + (style % 4) * 6;
+  const h = 88 + (style % 3) * 8;
   const g = empty(w, h, 'transparent');
   const awning = [
     Palette.brasilYellow,
@@ -737,8 +740,8 @@ function paintStallGoods(g: PixelGrid, style: number, w: number, h: number): voi
 }
 
 function glassTower(style: number): PixelGrid {
-  const w = style % 2 ? 56 : 48;
-  const h = style % 3 === 0 ? 96 : 80;
+  const w = style % 2 ? 60 : 52;
+  const h = style % 3 === 0 ? 160 : 132;
   const g = empty(w, h, 'transparent');
   const facade = [Palette.concrete, '#1a2838', '#281828', '#182828'][style % 4]!;
   const crown = [
@@ -841,51 +844,51 @@ function makeChandelier(): PixelGrid {
 }
 
 function makeLedLandmark(): PixelGrid {
-  const g = empty(40, 72, 'transparent');
-  fillRect(g, { x: 12, y: 8, w: 16, h: 60 }, Palette.concrete);
-  fillRect(g, { x: 8, y: 2, w: 24, h: 10 }, Palette.neonMagenta);
-  for (let y = 16; y < 64; y += 5) {
-    fillRect(g, { x: 14, y, w: 12, h: 2 }, Palette.neonCyan);
+  const g = empty(48, 120, 'transparent');
+  fillRect(g, { x: 14, y: 12, w: 20, h: 100 }, Palette.concrete);
+  fillRect(g, { x: 10, y: 2, w: 28, h: 12 }, Palette.neonMagenta);
+  for (let y = 20; y < 108; y += 5) {
+    fillRect(g, { x: 16, y, w: 16, h: 2 }, Palette.neonCyan);
   }
   return g;
 }
 
 function makeGlassLandmark(): PixelGrid {
-  const g = empty(40, 72, 'transparent');
-  fillRect(g, { x: 8, y: 4, w: 24, h: 64 }, '#1a3048');
-  fillRect(g, { x: 6, y: 0, w: 28, h: 6 }, Palette.neonCyan);
-  for (let y = 10; y < 64; y += 4) {
-    fillRect(g, { x: 10, y, w: 20, h: 2 }, '#2a80a0');
+  const g = empty(48, 120, 'transparent');
+  fillRect(g, { x: 10, y: 8, w: 28, h: 104 }, '#1a3048');
+  fillRect(g, { x: 8, y: 2, w: 32, h: 8 }, Palette.neonCyan);
+  for (let y = 14; y < 108; y += 4) {
+    fillRect(g, { x: 12, y, w: 24, h: 2 }, '#2a80a0');
   }
   return g;
 }
 
 function makeCalcadaoLandmark(): PixelGrid {
-  const g = empty(40, 72, 'transparent');
-  fillRect(g, { x: 2, y: 44, w: 36, h: 16 }, Palette.botecoWood);
-  fillRect(g, { x: 0, y: 30, w: 18, h: 16 }, Palette.brasilYellow);
-  fillRect(g, { x: 1, y: 30, w: 16, h: 2 }, '#fff6');
+  const g = empty(52, 100, 'transparent');
+  fillRect(g, { x: 2, y: 64, w: 48, h: 24 }, Palette.botecoWood);
+  fillRect(g, { x: 0, y: 42, w: 24, h: 24 }, Palette.brasilYellow);
+  fillRect(g, { x: 1, y: 42, w: 22, h: 2 }, '#fff6');
   for (let i = 0; i < 3; i += 1) {
     fillRect(
       g,
-      { x: 2 + i * 5, y: 34, w: 4, h: 8 },
+      { x: 2 + i * 7, y: 48, w: 5, h: 12 },
       i % 2 ? '#1a1020' : Palette.brasilYellow,
     );
   }
-  fillRect(g, { x: 20, y: 28, w: 18, h: 18 }, Palette.neonMagenta);
-  fillRect(g, { x: 21, y: 28, w: 16, h: 2 }, '#fff6');
+  fillRect(g, { x: 26, y: 40, w: 24, h: 26 }, Palette.neonMagenta);
+  fillRect(g, { x: 27, y: 40, w: 22, h: 2 }, '#fff6');
   for (let i = 0; i < 3; i += 1) {
     fillRect(
       g,
-      { x: 22 + i * 5, y: 32, w: 4, h: 10 },
+      { x: 28 + i * 7, y: 46, w: 5, h: 14 },
       i % 2 ? '#1a1020' : Palette.neonMagenta,
     );
   }
-  fillRect(g, { x: 6, y: 48, w: 6, h: 5 }, '#e05040');
-  fillRect(g, { x: 14, y: 48, w: 6, h: 5 }, '#40c070');
-  fillRect(g, { x: 24, y: 48, w: 6, h: 5 }, Palette.neonCyan);
-  fillRect(g, { x: 16, y: 56, w: 4, h: 8 }, '#f5c518');
-  fillRect(g, { x: 22, y: 58, w: 4, h: 6 }, '#7bc96f');
+  fillRect(g, { x: 8, y: 72, w: 8, h: 6 }, '#e05040');
+  fillRect(g, { x: 18, y: 72, w: 8, h: 6 }, '#40c070');
+  fillRect(g, { x: 32, y: 72, w: 8, h: 6 }, Palette.neonCyan);
+  fillRect(g, { x: 20, y: 82, w: 5, h: 10 }, '#f5c518');
+  fillRect(g, { x: 28, y: 84, w: 5, h: 8 }, '#7bc96f');
   return g;
 }
 
@@ -1004,6 +1007,90 @@ export function makeWire(): PixelGrid {
     if (x % 9 === 0) fillRect(g, { x, y: y + 2, w: 1, h: 3 }, '#556');
   }
   fillRect(g, { x: 0, y: 0, w: 40, h: 1 }, '#445');
+  return g;
+}
+
+/** Potted plant / sidewalk tree for district atmosphere. */
+export function makePlant(): PixelGrid {
+  const g = empty(16, 22, 'transparent');
+  fillRect(g, { x: 5, y: 14, w: 6, h: 7 }, Palette.botecoWood);
+  fillRect(g, { x: 4, y: 14, w: 8, h: 2 }, '#6a4830');
+  fillRect(g, { x: 3, y: 4, w: 10, h: 10 }, Palette.brasilGreen);
+  fillRect(g, { x: 5, y: 2, w: 6, h: 6 }, '#40a058');
+  fillRect(g, { x: 7, y: 1, w: 2, h: 3 }, '#7bc96f');
+  return g;
+}
+
+/** Trash bags / litter pile. */
+export function makeTrash(): PixelGrid {
+  const g = empty(18, 14, 'transparent');
+  fillRect(g, { x: 2, y: 6, w: 8, h: 7 }, '#2a3840');
+  fillRect(g, { x: 8, y: 4, w: 8, h: 8 }, '#3a4850');
+  fillRect(g, { x: 3, y: 5, w: 6, h: 2 }, '#556');
+  fillRect(g, { x: 10, y: 3, w: 5, h: 2 }, Palette.neonCyan);
+  fillRect(g, { x: 4, y: 10, w: 3, h: 2 }, Palette.brasilYellow);
+  return g;
+}
+
+/** Neon-reflecting street puddle. */
+export function makePuddle(): PixelGrid {
+  const g = empty(28, 12, 'transparent');
+  fillRect(g, { x: 2, y: 4, w: 24, h: 6 }, '#1a304888');
+  fillRect(g, { x: 4, y: 5, w: 8, h: 3 }, '#2bfff244');
+  fillRect(g, { x: 14, y: 6, w: 8, h: 2 }, '#ff3b5c44');
+  fillRect(g, { x: 8, y: 4, w: 10, h: 1 }, '#ffffff33');
+  return g;
+}
+
+/** Wall graffiti block (baked into map layer). */
+export function makeGraffiti(): PixelGrid {
+  const g = empty(24, 18, 'transparent');
+  fillRect(g, { x: 1, y: 2, w: 22, h: 14 }, '#1a1020aa');
+  fillRect(g, { x: 3, y: 4, w: 8, h: 8 }, Palette.neonMagenta);
+  fillRect(g, { x: 12, y: 6, w: 9, h: 7 }, Palette.neonCyan);
+  fillRect(g, { x: 5, y: 5, w: 4, h: 2 }, '#fff6');
+  fillRect(g, { x: 14, y: 8, w: 5, h: 2 }, Palette.brasilYellow);
+  return g;
+}
+
+/** Striped sidewalk awning overhang. */
+export function makeAwning(): PixelGrid {
+  const g = empty(32, 14, 'transparent');
+  for (let i = 0; i < 6; i += 1) {
+    fillRect(
+      g,
+      { x: 1 + i * 5, y: 2, w: 5, h: 10 },
+      i % 2 ? Palette.brasilYellow : Palette.neonMagenta,
+    );
+  }
+  fillRect(g, { x: 0, y: 0, w: 32, h: 3 }, '#1a1020');
+  fillRect(g, { x: 0, y: 12, w: 32, h: 1 }, '#00000066');
+  return g;
+}
+
+/** Classic Brazilian orelhão phone booth. */
+export function makeOrelhao(): PixelGrid {
+  const g = empty(18, 28, 'transparent');
+  fillRect(g, { x: 4, y: 6, w: 10, h: 18 }, Palette.neonOrange);
+  fillRect(g, { x: 3, y: 4, w: 12, h: 6 }, '#ff8c42');
+  fillRect(g, { x: 5, y: 10, w: 8, h: 8 }, '#1a2030');
+  fillRect(g, { x: 6, y: 12, w: 6, h: 4 }, Palette.neonCyan);
+  fillRect(g, { x: 7, y: 22, w: 4, h: 4 }, '#445');
+  fillRect(g, { x: 8, y: 2, w: 2, h: 3 }, '#889');
+  return g;
+}
+
+/** Street vendor cart (carrinho). */
+export function makeVendorCart(): PixelGrid {
+  const g = empty(30, 24, 'transparent');
+  fillRect(g, { x: 4, y: 10, w: 22, h: 10 }, Palette.botecoWood);
+  fillRect(g, { x: 2, y: 4, w: 26, h: 8 }, Palette.brasilYellow);
+  fillRect(g, { x: 2, y: 4, w: 26, h: 2 }, '#fff6');
+  fillRect(g, { x: 6, y: 12, w: 6, h: 5 }, '#e05040');
+  fillRect(g, { x: 14, y: 12, w: 6, h: 5 }, '#40c070');
+  fillRect(g, { x: 4, y: 18, w: 4, h: 4 }, '#222');
+  fillRect(g, { x: 22, y: 18, w: 4, h: 4 }, '#222');
+  fillRect(g, { x: 10, y: 6, w: 10, h: 2 }, Palette.neonMagenta);
   return g;
 }
 

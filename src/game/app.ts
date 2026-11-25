@@ -9,6 +9,8 @@ import { pollFirstGamepad, readGamepad } from '../input/gamepad';
 import { createAudioEngine, type AudioEngine } from '../audio/synth';
 import { loadFromStorage } from '../systems/save';
 import { InputModeTracker } from '../systems/input-mode';
+import { hydrateLocaleFromStorage } from '../i18n';
+import { createTutorialState } from '../systems/tutorial';
 import { wireSessionEvents } from './wiring';
 import type { HudHandles } from '../ui/hud';
 import type { FpsSample } from '../rendering/fps';
@@ -37,6 +39,7 @@ const WALK_MS = 52;
 const RUN_MS = 28;
 
 export function createGameApp(host: HTMLElement): GameApp {
+  hydrateLocaleFromStorage();
   const session = new GameSession(Date.now() % 100000);
   const engine = makeEngine(host);
   const hud = createHud(session, host);
@@ -124,6 +127,16 @@ function exposeHarness(
     setShowFps: (on: boolean) => world.setShowFps(on),
     edgeFlatRatio: (edge: 'top' | 'left' | 'bottom' | 'right') =>
       world.edgeFlatRatio(edge),
+    skipTutorial: () => {
+      session.skipTutorialNow();
+      hud.showTutorial(false);
+    },
+    /** Playtest / screenshot: reopen onboarding even after webdriver auto-skip. */
+    forceTutorial: () => {
+      session.story.setFlag('tutorialDone', false);
+      session.resetTutorialForDemo(createTutorialState());
+      hud.showTutorial(true);
+    },
   };
 }
 
