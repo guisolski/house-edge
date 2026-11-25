@@ -55,6 +55,7 @@ test.describe('District exits', () => {
           };
           player: {
             setPosition: (x: number, y: number) => void;
+            setFacing: (dx: number, dy: number) => void;
             getStats: () => { districtId: string };
           };
         };

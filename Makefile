@@ -30,7 +30,8 @@ mutation:
 lint:
 	npm run lint
 
-# Required before every push: lint + typecheck + npm test (CI quality unit step).
+# Required before every push: lint + typecheck + test + production build
+# (tsc --noEmit && vite build) so Pages cannot ship a broken main.
 # simple-git-hooks pre-push also runs lint.
 check:
 	npm run check

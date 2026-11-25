@@ -21,44 +21,6 @@ async function boot(page: Page): Promise<void> {
   await expect(page.locator('.play-hud')).toBeVisible();
 }
 
-type WalkSession = {
-  exits: { districtId: string; x: number; y: number; toDistrict: string }[];
-  player: {
-    setPosition: (x: number, y: number) => void;
-    setFacing: (dx: number, dy: number) => void;
-  };
-  interact: () => boolean;
-  travelTo: (id: string) => boolean;
-  move: (dx: number, dy: number) => boolean;
-};
-
-/** Stand on an exit pad and travel (E first; dwell+travelTo fallback). */
-async function tryExitPad(a: {
-  session: WalkSession;
-  obj: Obj;
-  districtId: string;
-  dist: number;
-  sleep: (ms: number) => Promise<void>;
-}): Promise<'done' | 'skip'> {
-  const { session, obj, districtId, dist, sleep } = a;
-  if (obj.targetX === undefined || obj.targetY === undefined) return 'skip';
-  const exitAtMark = session.exits.find(
-    (e) =>
-      e.districtId === districtId &&
-      Math.hypot(e.x - obj.targetX!, e.y - obj.targetY!) < 0.6,
-  );
-  if (!exitAtMark || dist > 6) return 'skip';
-  session.player.setPosition(exitAtMark.x, exitAtMark.y);
-  session.player.setFacing(exitAtMark.x < 20 ? -1 : 1, 0);
-  await sleep(30);
-  if (!session.interact()) {
-    await sleep(250);
-    session.travelTo(exitAtMark.toDistrict);
-  }
-  await sleep(20);
-  return 'done';
-}
-
 test(
   'main story reaches ending via walk + E on objective markers only',
   // eslint-disable-next-line max-lines-per-function -- story-walk harness
@@ -66,6 +28,7 @@ test(
     test.setTimeout(240_000);
     await boot(page);
 
+    // eslint-disable-next-line max-lines-per-function -- in-page story walker
     const result = await page.evaluate(async () => {
       const he = (
         window as unknown as {
@@ -89,7 +52,13 @@ test(
                 x: number;
                 y: number;
               } | null;
-              exits: { districtId: string; x: number; y: number }[];
+              travelTo: (id: string) => boolean;
+              exits: {
+                districtId: string;
+                x: number;
+                y: number;
+                toDistrict: string;
+              }[];
               npcs: {
                 id: string;
                 name: string;
@@ -120,7 +89,10 @@ test(
         }
       ).__HOUSE_EDGE__;
 
-      const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+      const sleep = (ms: number): Promise<void> =>
+        new Promise((r) => {
+          setTimeout(r, ms);
+        });
       const failures: string[] = [];
       const log: string[] = [];
       let steps = 0;
@@ -320,6 +292,8 @@ test(
           }
           break;
         }
+        const tx = obj.targetX;
+        const ty = obj.targetY;
 
         // Objective target must be uniquely marked (not competing with side cyan arrows).
         if (!obj.targetName) {
@@ -339,16 +313,20 @@ test(
           break;
         }
 
-        const dist = Math.hypot(obj.targetX - s.x, obj.targetY - s.y);
-        if (
-          (await tryExitPad({
-            session: he.session,
-            obj,
-            districtId: s.districtId,
-            dist,
-            sleep,
-          })) === 'done'
-        ) {
+        const dist = Math.hypot(tx - s.x, ty - s.y);
+        // Exit-pad objectives: stand on the pad and E (walk-in needs dwell).
+        const exitAtMark = he.session.exits.find(
+          (e) => e.districtId === s.districtId && Math.hypot(e.x - tx, e.y - ty) < 0.6,
+        );
+        if (exitAtMark && dist <= 6) {
+          he.session.player.setPosition(exitAtMark.x, exitAtMark.y);
+          he.session.player.setFacing(exitAtMark.x < 20 ? -1 : 1, 0);
+          await sleep(30);
+          if (!he.session.interact()) {
+            await sleep(250);
+            he.session.travelTo(exitAtMark.toDistrict);
+          }
+          await sleep(20);
           continue;
         }
 
@@ -361,16 +339,14 @@ test(
           }
           const npc = he.session.nearbyNpc();
           if (!npc) {
-            const step = nextStep(obj.targetX, obj.targetY);
+            const step = nextStep(tx, ty);
             if (step) {
               he.session.player.setFacing(step[0], step[1]);
               he.session.move(step[0], step[1]);
               await sleep(5);
               continue;
             }
-            failures.push(
-              `at marker (${obj.targetX},${obj.targetY}) but no interactable for: ${obj.text}`,
-            );
+            failures.push(`at marker (${tx},${ty}) but no interactable for: ${obj.text}`);
             break;
           }
           he.session.interact();
@@ -379,11 +355,9 @@ test(
           continue;
         }
 
-        const step = nextStep(obj.targetX, obj.targetY);
+        const step = nextStep(tx, ty);
         if (!step) {
-          failures.push(
-            `unreachable marker (${obj.targetX},${obj.targetY}) for: ${obj.text}`,
-          );
+          failures.push(`unreachable marker (${tx},${ty}) for: ${obj.text}`);
           break;
         }
         he.session.player.setFacing(step[0], step[1]);

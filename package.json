@@ -13,7 +13,7 @@
     "lint": "eslint . && prettier --check . && markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#dist\" \"#coverage\" \"#reports\"",
     "lint:fix": "eslint . --fix && prettier --write .",
     "format:playtest-report": "bash tools/format-playtest-report.sh",
-    "check": "npm run lint && npm run typecheck && npm test",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
     "e2e": "playwright test",
