@@ -4,6 +4,8 @@ Independent follow-up after v1.14.1 (35b0b22). Goal: dialogue keyboard/gamepad/t
 
 ## Verdict: PASS
 
+CI (`5e3fa4f`): GitHub **quality** / **build** / **deploy (Pages)** all success.
+
 ## Bugs fixed
 
 | #   | Issue                                                    | Result                                                                       |
