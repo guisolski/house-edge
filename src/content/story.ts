@@ -157,17 +157,17 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     districtId: 'morro-neon',
     requiredFlags: ['fios_ok'],
     setsFlags: ['unlocked_feira'],
-    // Playtest #28: lottery read — not a Fio-style gate chase copy.
-    betId: 'laje-lottery',
+    // Playtest #29: moto dash — distinct from Luna's rooftop lottery.
+    betId: 'corrida-moto',
     unlocksDistrict: 'feira-central',
     dialogue: [
       {
         speaker: 'Seu Zé',
-        text: 'Everything’s licensed now, kid. Want Luna’s chip? Call the unmarked draw ball.',
+        text: 'Everything’s licensed now, kid. Want Luna’s chip? Clear my moto gate on the laje first.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'Deal. Let’s see if this draw is enough to buy Luna’s chip.',
+        text: 'Deal. I’ll take the lane — pay out and point me to the Fair.',
       },
       {
         speaker: 'Seu Zé',

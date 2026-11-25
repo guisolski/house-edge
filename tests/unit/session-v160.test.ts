@@ -44,7 +44,7 @@ describe('v1.16.0 title / dialogue / pads', () => {
     expect(vis.some((l) => /Saúde|credits roll/i.test(l.text))).toBe(false);
   });
 
-  it('walk-in travel fires for every exit pad after dwell + facing', () => {
+  it('E travels for every exit pad; walking never auto-travels', () => {
     vi.useFakeTimers();
     const s = new GameSession(7);
     s.startNew();
@@ -53,7 +53,6 @@ describe('v1.16.0 title / dialogue / pads', () => {
     }
     for (const exit of districtExits()) {
       s.travelTo(exit.districtId);
-      // Clear latch + expire cooldown, then step onto the pad from one tile away.
       const clearX = exit.x > 20 ? exit.x - 10 : exit.x + 10;
       s.player.setPosition(clearX, exit.y);
       s.move(0, 1);
@@ -64,14 +63,14 @@ describe('v1.16.0 title / dialogue / pads', () => {
       const before = s.player.getStats().districtId;
       expect(before).toBe(exit.districtId);
       const dx = exit.x > approachX ? 1 : -1;
-      // First step arms dwell — still in the same district.
       expect(s.move(dx, 0), exit.id).toBe(true);
-      expect(s.player.getStats().districtId, `${exit.id}-armed`).toBe(exit.districtId);
+      expect(s.player.getStats().districtId, `${exit.id}-walk`).toBe(exit.districtId);
       vi.advanceTimersByTime(EXIT_DWELL_MS + 20);
-      // Stay on the pad; next move finishes the armed dwell without stepping off.
       s.player.setPosition(exit.x, exit.y);
       s.player.setFacing(dx, 0);
-      s.move(dx, 0);
+      s.move(0, 0);
+      expect(s.player.getStats().districtId, `${exit.id}-dwell`).toBe(exit.districtId);
+      expect(s.interact(), exit.id).toBe(true);
       expect(s.player.getStats().districtId, exit.id).toBe(exit.toDistrict);
     }
     vi.useRealTimers();

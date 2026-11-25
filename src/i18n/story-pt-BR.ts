@@ -65,13 +65,13 @@ export const storyPtBR: Record<string, string> = {
   'story.avenida-drone.3.text':
     'De qualquer forma — o Mensageiro espera quando os cones apagarem.',
   'story.avenida-drone.title': 'Cones de drone na avenida',
-  'story.avenida-influencer.0.speaker': 'Influencer Odds',
+  'story.avenida-influencer.0.speaker': 'Influenciador Odds',
   'story.avenida-influencer.0.text':
     'Ao vivo da Avenida Odds! A Casa me paga por view. Chama o engajamento fake — leitura afiada, não sorte.',
   'story.avenida-influencer.1.speaker': 'Rita Odds',
   'story.avenida-influencer.1.text':
     'Seu número estoura de um dia pro outro — like comprado. Pixo de verdade não pula assim, e isso não é publi da Casa.',
-  'story.avenida-influencer.2.speaker': 'Influencer Odds',
+  'story.avenida-influencer.2.speaker': 'Influenciador Odds',
   'story.avenida-influencer.2.text':
     'Leitura bonita. Prova no painel antes do próximo filtro.',
   'story.avenida-influencer.title': 'Duelo com o influenciador',
@@ -378,10 +378,9 @@ export const storyPtBR: Record<string, string> = {
   'story.prova-luna.title': 'Pendrive no freela',
   'story.seu-ze-banca.0.speaker': 'Seu Zé',
   'story.seu-ze-banca.0.text':
-    'Tudo licenciado agora, minha filha. Quer o chip da Luna? Acerta a bola sem marca do sorteio.',
+    'Tudo licenciado agora, minha filha. Quer o chip da Luna? Limpa o portão da moto na laje primeiro.',
   'story.seu-ze-banca.1.speaker': 'Rita Odds',
-  'story.seu-ze-banca.1.text':
-    'Fechado. Vamos ver se esse sorteio compra o chip da Luna.',
+  'story.seu-ze-banca.1.text': 'Fechado. Eu pego a faixa — paga e me aponta pra Feira.',
   'story.seu-ze-banca.2.speaker': 'Seu Zé',
   'story.seu-ze-banca.2.text': 'Pode crer. Ganha primeiro — rota vem depois.',
   'story.seu-ze-banca.title': 'Banca do Seu Zé',
@@ -391,7 +390,7 @@ export const storyPtBR: Record<string, string> = {
   'story.side-avenida-neon.1.speaker': 'Rita Odds',
   'story.side-avenida-neon.1.text': 'Luz de rua nunca precisou de patrocínio. Roda.',
   'story.side-avenida-neon.title': 'Odd de foto no neon',
-  'story.side-feira-ice.0.speaker': 'Kiko',
+  'story.side-feira-ice.0.speaker': 'Kiko Calçadão',
   'story.side-feira-ice.0.text':
     'Carrinho de gelo atrasou e o óleo do pastel tá quente. Aposta se o gelo chega antes da fritadeira morrer.',
   'story.side-feira-ice.1.speaker': 'Rita Odds',

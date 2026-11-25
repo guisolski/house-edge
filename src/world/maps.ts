@@ -604,6 +604,14 @@ function sealAvenidaLane(tiles: TileKind[], w: number, h: number): void {
   rect({ tiles, w, x0: 1, y0: h - 2, x1: w - 2, y1: h - 2, kind: 'blocked' });
   rect({ tiles, w, x0: 12, y0: 9, x1: 34, y1: 10, kind: 'blocked' });
   rect({ tiles, w, x0: 12, y0: 13, x1: 34, y1: 14, kind: 'blocked' });
+  // Playtest #29: side escapes between sealed columns (12/20/28/34 stay blocked).
+  for (const x of [14, 16, 18, 22, 24, 26, 30, 32]) {
+    set(tiles, w, x, 10, 'asphalt');
+    set(tiles, w, x, 13, 'asphalt');
+  }
+  // Wide west + east plazas stay fully open (no shoulder walls).
+  rect({ tiles, w, x0: 1, y0: 9, x1: 11, y1: 14, kind: 'asphalt' });
+  rect({ tiles, w, x0: 35, y0: 9, x1: w - 2, y1: 14, kind: 'asphalt' });
 }
 
 function placeAvenidaTowers(

@@ -8,6 +8,12 @@ export const skillPtBR = {
   'skill._fallback.option.2': 'Opção C',
   'skill.agua-gelada.prompt': 'Pega o gelo na hora — para no frio.',
   'skill.antena-sinal.prompt': 'Emenda o jack pirata — repete a sequência de bips.',
+  'skill.antena-sinal.title': 'Jack do sinal pirata',
+  'skill.antena-sinal.blurb': 'Repete a sequência de bips no jack da Antena.',
+  'skill.fio-corrida.title': 'Perseguição no fio da laje',
+  'skill.fio-corrida.blurb': 'Copia o caminho de ladrilhos do Fio antes dele sumir.',
+  'skill.corrida-moto.title': 'Portão da moto na laje',
+  'skill.corrida-moto.blurb': 'Racha do Seu Zé — limpa o portão, não o fio do Fio.',
   'skill.audiencia-publica.clue':
     'Doutor Margin cruza papel da comunidade, não release de imprensa nem ameaça vazia.',
   'skill.audiencia-publica.option.0': 'RP da corp',
@@ -30,7 +36,7 @@ export const skillPtBR = {
     'Quebra os pinos da gaiola do servidor antes da varredura.',
   'skill.avenida-stealth.prompt':
     'Passa pelas câmeras do lobby — repete os pontos cegos.',
-  'skill.corrida-moto.prompt': 'Liga a faixa da moto — limpa a sequência do portão.',
+  'skill.corrida-moto.prompt': 'Arranca na faixa da moto — limpa a sequência do portão.',
   'skill.courier-tip.prompt': 'Segue o entregador — repete 4 becos.',
   'skill.dancer-tip.prompt': 'Pega o sinal da dançarina.',
   'skill.duelo-casa.blurb': 'Confronto em fases — agulha, leitura e hack.',
@@ -44,13 +50,13 @@ export const skillPtBR = {
   'skill.duelo-casa.phase.2.prompt': 'Fase 3 — quebra o feed da torre.',
   'skill.duelo-casa.title': 'Duelo vs Augusto Casa',
   'skill.feira-garrafa.clue':
-    'O Catador rolhou antes da Casa repintar a prateleira — confia no carimbo do beco, não no brilho de boutique.',
+    'O Catador guardou uma rolha antes da prateleira virar boutique — a carga honesta ainda cheira a chuva, não perfume.',
   'skill.feira-garrafa.option.0': 'Vidro verde',
   'skill.feira-garrafa.option.1': 'Incolor corp',
   'skill.feira-garrafa.option.2': 'Rosa neon',
   'skill.feira-garrafa.prompt': 'Qual garrafa ainda tem prova de rua?',
   'skill.feira-lockbox.clue':
-    'Arranhão da esquerda para na metade da placa do ombro (não flush, não no topo). O miolo é o único que beija a borda do riser. O da direita desce macio — trata como afundado. Adesivo vermelho no dois é isca.',
+    'O Maquinista deixa graxa no poste em que confia e poeira no assento que ignora. Adesivo gritante é sempre isca — sente qual pino resiste como madeira molhada.',
   'skill.feira-lockbox.prompt': 'Abre o cofre da Casa debaixo do palco do forró.',
   'skill.feira-radio.prompt': 'Sintoniza o dial pirata — repete 3 cliques.',
   'skill.feira-tipster.clue':
@@ -69,7 +75,7 @@ export const skillPtBR = {
   'skill.influencer-duelo.option.2': 'Drop patrocinado corp',
   'skill.influencer-duelo.prompt': 'Expõe o engajamento falso.',
   'skill.laje-lottery.clue':
-    'O Seu Zé só tinta o que o saco da comunidade ainda reivindica — ignora o que saiu da torre.',
+    'A Luna confia na bola que ainda cheira a chuva de laje, não no verniz da torre nem no lacquer VIP.',
   'skill.laje-lottery.option.0': 'Vermelho corp 7',
   'skill.laje-lottery.option.1': 'Giz do morro 3',
   'skill.laje-lottery.option.2': 'VIP dourado 0',
@@ -84,14 +90,14 @@ export const skillPtBR = {
   'skill.pastel-surpresa.prompt': 'Qual caixa de pastel tá armada?',
   'skill.pixo-challenge.prompt': 'Pixa no ritmo.',
   'skill.prova-vazamento.clue':
-    'A Luna quer a conta quieta que câmera nenhuma filmou — clip de vaidade e barulho de máquina são cortina.',
+    'A Luna quer papel que câmera nenhuma enquadrou — reel de vaidade e barulho de máquina são cortina.',
   'skill.prova-vazamento.option.0': 'Clip da influencer',
   'skill.prova-vazamento.option.1': 'Pane do caixa',
   'skill.prova-vazamento.option.2': 'Livro do salão',
   'skill.prova-vazamento.prompt': 'Qual vazamento derruba a casa primeiro?',
   'skill.samba-odds.prompt': 'Acerta o downbeat do samba.',
   'skill.side-morro-copper.clue':
-    'O Catador pesa no pulso — óxido e umidade puxam pra baixo; o spare honesto flutua.',
+    'O Catador confia no saco que não arrasta o pulso — crosta de óxido e fio úmido puxam mais do que parece.',
   'skill.side-morro-copper.option.0': 'Ferrugem pesada',
   'skill.side-morro-copper.option.1': 'Brilho leve',
   'skill.side-morro-copper.option.2': 'Bobina molhada',

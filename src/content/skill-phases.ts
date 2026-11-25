@@ -24,7 +24,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Which draw ball is unmarked?',
     target: 1,
     options: ['Corp red 7', 'Hill chalk 3', 'Gold VIP 0'],
-    clue: 'Seu Zé only inks what the community sack still claims — ignore anything that shipped from the tower.',
+    // Answer is Hill chalk 3 — never name chalk/hill/unmarked/community sack.
+    clue: 'Luna trusts the ball that still smells like rooftop rain, not tower polish or VIP lacquer.',
   },
   'fio-corrida': {
     kind: 'chase',
@@ -38,7 +39,7 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
   },
   'corrida-moto': {
     kind: 'chase',
-    prompt: 'Wire the moto lane — clear the gate sequence.',
+    prompt: 'Dash the moto lane — clear the gate sequence.',
     target: 0,
     steps: 4,
     sequence: ['→', '→', '↓', '→'],
@@ -58,8 +59,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Which bottle still has street proof?',
     target: 0,
     options: ['Green glass', 'Corp clear', 'Neon pink'],
-    // Answer Green glass — street stamp without naming green/glass/bottle.
-    clue: 'Catador corked his pick before Casa repainted the market shelf — trust the alley stamp, not the boutique gloss.',
+    // Answer Green glass — never name green/glass/corp/pink/alley stamp.
+    clue: 'Catador kept one cork before the shelf got a boutique makeover — the honest haul still smells like rain, not perfume.',
   },
   'samba-odds': {
     kind: 'timing',
@@ -97,7 +98,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Which leak drops the house first?',
     target: 2,
     options: ['Influencer clip', 'ATM glitch', 'Pit ledger'],
-    clue: 'Luna wants the quiet arithmetic cameras never filmed — vanity clips and machine noise are smokescreens.',
+    // Answer Pit ledger — never say pit/ledger/arithmetic/kill shot.
+    clue: 'Luna wants paper the cameras never framed — vanity reels and machine noise are smokescreens.',
   },
   'twist-vazamento': {
     kind: 'hack',
@@ -221,7 +223,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Weigh the spare copper — which bag is light?',
     target: 1,
     options: ['Heavy rust', 'Light bright', 'Wet coil'],
-    clue: 'Catador weighs by feel — oxide and moisture drag the wrist down; the honest spare floats.',
+    // Answer Light bright — never say light/bright/heavy/wet/floats.
+    clue: 'Catador trusts the sack that does not drag his wrist — oxide crust and damp wire both pull harder than they look.',
   },
   'courier-tip': {
     kind: 'chase',
@@ -250,10 +253,10 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     hiddenPin: 1,
     timerMs: 28_000,
     pickDurability: 3,
+    // Avoid naming pin heights / riser / sunk — stage-hand vibe only.
     clue:
-      'Left scratch stops halfway up the shoulder plate (not flush, not topped). ' +
-      'The middle tumbler is the only one that kisses the stage riser’s top edge. ' +
-      'Right seat drops all the way soft — treat it as sunk. Red sticker on two is a decoy.',
+      'Maquinista leaves grease on the post he trusts and dust on the seat he ignores. ' +
+      'A loud sticker is always a decoy — feel which tumbler resists like wet wood.',
   },
   'avenida-server': {
     kind: 'lockpick',

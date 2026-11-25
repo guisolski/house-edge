@@ -105,7 +105,7 @@ describe('session v1.5 recovery and upgrades', () => {
     expect(session.brokeHintText()).toBeNull();
   });
 
-  it('auto-travels when stepping onto exit; guards empty bet paths', () => {
+  it('E on exit pad travels; walking on pad does not; guards empty bet paths', () => {
     vi.useFakeTimers();
     const session = new GameSession(8);
     session.startNew();
@@ -119,6 +119,9 @@ describe('session v1.5 recovery and upgrades', () => {
     session.player.setPosition(38, 22);
     session.player.setFacing(1, 0);
     expect(session.move(1, 0)).toBe(true);
+    expect(session.player.getStats().districtId).toBe('morro-neon');
+    expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
+    expect(session.interact()).toBe(true);
     expect(session.player.getStats().districtId).toBe('feira-central');
     expect(session.player.getFacing().dx).toBe(1);
     expect(session.offerBet('no-such-bet')).toBe(false);

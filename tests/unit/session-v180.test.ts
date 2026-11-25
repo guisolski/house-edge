@@ -85,7 +85,7 @@ describe('v1.18.0 pad arrival off-pad + leave/re-enter', () => {
     vi.useRealTimers();
   });
 
-  it('pad re-arms only after clear + cooldown + re-enter step', () => {
+  it('pad re-arms only after clear + cooldown; E travels (no walk-in)', () => {
     vi.useFakeTimers();
     const s = new GameSession(9);
     s.startNew();
@@ -108,14 +108,17 @@ describe('v1.18.0 pad arrival off-pad + leave/re-enter', () => {
         EXIT_CLEAR_RANGE,
       ),
     ).toBe(true);
-    // Re-enter pad: first step arms dwell, second after dwell travels.
+    // Playtest #29: standing / walking on the pad never auto-travels.
     s.player.setPosition(pad.x + 1, pad.y);
     expect(s.move(-1, 0)).toBe(true);
     expect(s.player.getStats().districtId).toBe('avenida-odds');
     vi.advanceTimersByTime(EXIT_DWELL_MS + 20);
     s.player.setPosition(pad.x, pad.y);
     s.player.setFacing(-1, 0);
-    expect(s.move(-1, 0)).toBe(true);
+    s.move(0, 0);
+    expect(s.player.getStats().districtId).toBe('avenida-odds');
+    expect(s.nearbyExit()?.id).toBe(pad.id);
+    expect(s.interact()).toBe(true);
     expect(s.player.getStats().districtId).toBe('feira-central');
     vi.useRealTimers();
   });

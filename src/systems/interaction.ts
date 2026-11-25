@@ -81,9 +81,10 @@ const NPCS: readonly WorldNpc[] = [
     id: 'antena-tech',
     name: englishNpcName('antena-tech'),
     districtId: 'morro-neon',
-    // West ridge — well clear of spawn/Nair interact bubble (12–14,16).
-    x: 5,
-    y: 10,
+    // Open terrace with 4-way escape — clear of Nair + RAMP sign.
+    x: 11,
+    y: 9,
+    wanderRadius: 0,
     beatId: 'morro-antena',
     extraBeatIds: ['side-morro-tank'],
     jobBetId: 'antena-sinal',
@@ -103,8 +104,10 @@ const NPCS: readonly WorldNpc[] = [
     id: 'fio-ladrao',
     name: englishNpcName('fio-ladrao'),
     districtId: 'morro-neon',
-    x: 18,
-    y: 10,
+    // North terrace with 4-way escape — clear of Luna plaza bubble.
+    x: 16,
+    y: 9,
+    wanderRadius: 0,
     beatId: 'morro-fios',
     extraBeatIds: ['morro-return-fio'],
     jobBetId: 'fio-corrida',
@@ -114,11 +117,12 @@ const NPCS: readonly WorldNpc[] = [
     id: 'seu-ze',
     name: englishNpcName('seu-ze'),
     districtId: 'morro-neon',
-    // Lower plaza — clear of Fair pad (38,22) by > INTERACT_RANGE.
-    x: 28,
-    y: 21,
+    // Lower plaza asphalt cross — clear of Fair pad (38,22).
+    x: 27,
+    y: 23,
+    wanderRadius: 0,
     beatId: 'seu-ze-banca',
-    jobBetId: 'laje-lottery',
+    jobBetId: 'corrida-moto',
     color: '#ffdf00',
   },
   {
@@ -149,9 +153,10 @@ const NPCS: readonly WorldNpc[] = [
     id: 'catador-feira',
     name: englishNpcName('catador-feira'),
     districtId: 'feira-central',
-    // South aisle — clear of Bia (18,10) and Barraca Tia.
+    // South aisle — clear of Dancer Sol + Bia interact bubbles.
     x: 26,
     y: 16,
+    wanderRadius: 0,
     beatId: 'feira-catador',
     jobBetId: 'feira-garrafa',
     safeJobId: 'safe-feira-central',
@@ -173,9 +178,10 @@ const NPCS: readonly WorldNpc[] = [
     id: 'dancer-feira',
     name: englishNpcName('dancer-feira'),
     districtId: 'feira-central',
-    // Mid aisle — clear of DJ interact bubble.
-    x: 26,
-    y: 14,
+    // North of catador aisle — outside Catador interact bubble (playtest #29).
+    x: 22,
+    y: 12,
+    wanderRadius: 0,
     beatId: 'feira-dancer',
     color: '#ff9f1c',
     bodyVariant: 1,
@@ -265,9 +271,10 @@ const NPCS: readonly WorldNpc[] = [
     id: 'capita',
     name: englishNpcName('capita'),
     districtId: 'avenida-odds',
-    // South shoulder — leaves the west Fair asphalt (y11–12) clear.
-    x: 5,
-    y: 14,
+    // West plaza mid-lane — 4-way escape, clear of Fair pad (2,12).
+    x: 6,
+    y: 11,
+    wanderRadius: 0,
     beatId: 'avenida-checkpoint',
     jobBetId: 'pixo-challenge',
     color: '#b8ff2b',
@@ -277,9 +284,10 @@ const NPCS: readonly WorldNpc[] = [
     id: 'courier-odds',
     name: englishNpcName('courier-odds'),
     districtId: 'avenida-odds',
-    // South of west approach — never inside the drone lane or Fair pad bubble.
+    // West plaza — clear of Fair pad + Capita / Neon Snap.
     x: 8,
-    y: 14,
+    y: 10,
+    wanderRadius: 0,
     beatId: 'avenida-courier',
     color: '#c9b037',
     bodyVariant: 0,
@@ -343,9 +351,10 @@ const NPCS: readonly WorldNpc[] = [
     id: 'cage-runner',
     name: englishNpcName('cage-runner'),
     districtId: 'avenida-odds',
-    // South-east of Fair approach — no Vespera overlap on the west lane.
-    x: 10,
-    y: 14,
+    // South of west plaza — spaced from Capita / Neon Snap (playtest #29).
+    x: 9,
+    y: 13,
+    wanderRadius: 0,
     beatId: 'avenida-server',
     jobBetId: 'avenida-server',
     color: '#7bc96f',
@@ -355,7 +364,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'neon-snap',
     name: englishNpcName('neon-snap'),
     districtId: 'avenida-odds',
-    // Corridor mouth — clear of Fair pad (2,12); starts the run, never in cones.
+    // West of sealed lane (x<12) — 4-way asphalt, outside drone cones.
     x: 11,
     y: 12,
     wanderRadius: 0,
@@ -426,9 +435,10 @@ const NPCS: readonly WorldNpc[] = [
     id: 'ceo',
     name: englishNpcName('ceo'),
     districtId: 'torre-casa',
-    // Keep clear of the VIP elevator (20,9) so E on the pad uses the car.
+    // VIP salon with 4-way escape — clear of elevator pad (20,9).
     x: 32,
-    y: 15,
+    y: 14,
+    wanderRadius: 0,
     beatId: 'torre-final',
     color: '#ff3b5c',
     bodyVariant: 0,

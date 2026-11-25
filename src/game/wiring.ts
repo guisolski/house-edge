@@ -187,14 +187,31 @@ function handleTitleAction(
 }
 
 function handleEscModal(session: GameSession, hud: HudHandles): boolean {
-  if (session.ui.is('bet') || session.ui.is('skill')) {
-    session.cancelBet();
+  // Playtest #29: Esc must fully close any panel and release WASD.
+  if (
+    session.ui.is('bet') ||
+    session.ui.is('skill') ||
+    session.ui.is('dialogue') ||
+    session.ui.is('travel') ||
+    session.ui.is('jobs') ||
+    session.ui.is('upgrades')
+  ) {
+    if (session.ui.is('bet') || session.ui.is('skill')) {
+      session.cancelBet();
+    } else if (session.ui.is('dialogue')) {
+      session.closeModal();
+    } else {
+      session.releaseModalToPlay();
+    }
+    // Blur focused Cancel/Sair so keys reach the canvas ActionState path.
+    const ae = document.activeElement;
+    if (ae instanceof HTMLElement) ae.blur();
+    const canvas = document.querySelector(
+      'canvas.world-canvas, canvas.engine-canvas',
+    ) as HTMLCanvasElement | null;
+    canvas?.focus({ preventScroll: true });
     hud.syncScreen();
-    return true;
-  }
-  if (session.ui.is('dialogue')) {
-    session.closeModal();
-    hud.syncScreen();
+    hud.showHud();
     return true;
   }
   return false;
@@ -239,7 +256,10 @@ function handleAction(session: GameSession, hud: HudHandles, action: string): vo
   if (session.isSequenceSkillActive()) {
     if (action === 'menu') {
       session.cancelBet();
+      const ae = document.activeElement;
+      if (ae instanceof HTMLElement) ae.blur();
       hud.syncScreen();
+      hud.showHud();
     }
     return;
   }

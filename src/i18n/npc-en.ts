@@ -6,7 +6,7 @@ export const npcEn = {
   'npc.fio-ladrao.name': 'Fio Ladrão',
   'npc.seu-ze.name': 'Seu Zé',
   'npc.catador-morro.name': 'Catador do Morro',
-  'npc.kiko.name': 'Kiko',
+  'npc.kiko.name': 'Kiko Calçadão',
   'npc.catador-feira.name': 'Catador da Feira',
   'npc.bia.name': 'Bia Forró',
   'npc.dancer-feira.name': 'Dancer Sol',

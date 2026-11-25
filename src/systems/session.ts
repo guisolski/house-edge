@@ -21,7 +21,6 @@ import {
   tickNpcWander,
   EXIT_CLEAR_RANGE,
   EXIT_COOLDOWN_MS,
-  EXIT_DWELL_MS,
   EXIT_STAND_RANGE,
   INTERACT_RANGE,
   arrivalSpawnFromPad,
@@ -112,8 +111,6 @@ export class GameSession {
   /** Reciprocal pad id that bounced us here — only this pad is gated. */
   private arrivalExitId: string | null = null;
   /** Pad id currently underfoot for dwell timing. */
-  private exitDwellId: string | null = null;
-  private exitDwellSince = 0;
   /** After travel, block all walk-in exits until Run is released once. */
   private awaitRunRelease = false;
   private runHeld = false;
@@ -308,11 +305,7 @@ export class GameSession {
     if (this.stealthProgress && !this.stealthProgress.done) {
       return this.moveStealth(dx, dy);
     }
-    // Finish an armed dwell before stepping off the pad.
-    if (!this.vipFloor) {
-      const ready = this.armedWalkInExit();
-      if (ready) return this.travelTo(ready.toDistrict);
-    }
+    // Playtest #29: exits are prompt + E only — never auto-travel on dwell/walk-in.
     const s = this.player.getStats();
     const map = this.getMap();
     const dest = slideStep(map, s.x, s.y, dx, dy);
@@ -324,8 +317,6 @@ export class GameSession {
       this.player.setFacing(dx, dy);
     }
     this.refreshExitLatch();
-    // Arm / refresh dwell after the step (playtest #26).
-    if (!this.vipFloor) this.armedWalkInExit();
     return Boolean(dest);
   }
 
@@ -458,7 +449,7 @@ export class GameSession {
     const pool = this.floorNpcs();
     const available = new Set(this.story.availableBeats(s.districtId).map((b) => b.id));
     const objectiveNpc = this.objectiveNpcInRange(pool);
-    // Playtest #23: objective wins whenever it is in interact range.
+    // Playtest #23/#29: objective wins whenever it is in interact range.
     if (objectiveNpc) return objectiveNpc;
     return nearestNpc({
       npcs: pool,
@@ -471,16 +462,34 @@ export class GameSession {
     });
   }
 
-  /** Objective target NPC if standing inside INTERACT_RANGE (name or marker coords). */
+  /** Objective target NPC if standing inside INTERACT_RANGE (name, id, or marker). */
   objectiveNpcInRange(pool = this.floorNpcs()): WorldNpc | null {
     const s = this.player.getStats();
     const obj = this.objective();
     if (obj.districtId !== s.districtId) return null;
     const inRange = (n: WorldNpc): boolean =>
       n.districtId === s.districtId && Math.hypot(n.x - s.x, n.y - s.y) <= INTERACT_RANGE;
+    // Match by English name, localized display name, or beat ownership.
     if (obj.targetName) {
-      const byName = pool.find((n) => n.name === obj.targetName && inRange(n));
+      const byName = pool.find(
+        (n) =>
+          inRange(n) &&
+          (n.name === obj.targetName || localizedNpcName(n) === obj.targetName),
+      );
       if (byName) return byName;
+    }
+    const next = nextBeat({
+      beats: STORY_BEATS,
+      completed: this.story.getCompleted(),
+      flags: (f) => this.story.getFlag(f),
+      districtId: s.districtId,
+      npcs: pool,
+      exits: this.exits,
+      unlocked: (id) => this.world.isUnlocked(id as DistrictId),
+    });
+    if (next) {
+      const byBeat = pool.find((n) => inRange(n) && npcStoryBeatIds(n).includes(next.id));
+      if (byBeat) return byBeat;
     }
     if (obj.targetX != null && obj.targetY != null) {
       const byPos = pool.find(
@@ -521,43 +530,9 @@ export class GameSession {
       y: s.y,
       range: EXIT_STAND_RANGE,
     });
-    if (!exit) {
-      this.exitDwellId = null;
-      this.exitDwellSince = 0;
-      return null;
-    }
+    if (!exit) return null;
     if (this.arrivalPadBlocked(exit)) return null;
     return this.world.isUnlocked(exit.toDistrict) ? exit : null;
-  }
-
-  /**
-   * Walk-in only after standing on the pad briefly while facing it —
-   * brushing the edge no longer teleports (playtest #26).
-   */
-  private armedWalkInExit(): DistrictExit | null {
-    const exit = this.nearbyExit();
-    if (!exit) return null;
-    const s = this.player.getStats();
-    const face = this.player.getFacing();
-    const toX = exit.x - s.x;
-    const toY = exit.y - s.y;
-    const len = Math.hypot(toX, toY) || 1;
-    const facing = (face.dx * toX + face.dy * toY) / len;
-    // Must be on the pad (≤1.6) or facing into it from the rim.
-    const onPad = Math.hypot(toX, toY) <= 1.6;
-    if (!onPad && facing < 0.35) {
-      this.exitDwellId = null;
-      this.exitDwellSince = 0;
-      return null;
-    }
-    const now = Date.now();
-    if (this.exitDwellId !== exit.id) {
-      this.exitDwellId = exit.id;
-      this.exitDwellSince = now;
-      return null;
-    }
-    if (now - this.exitDwellSince < EXIT_DWELL_MS) return null;
-    return exit;
   }
 
   /** Locked exit underfoot / adjacent — for toast + prompt feedback. */
@@ -862,10 +837,11 @@ export class GameSession {
               n: String(this.skillProgress.pickLeft),
             })
           : '';
+      const missHint = this.missHintForBet(this.pendingBetId!);
       const detail =
         phase?.kind === 'timing' && this.skillProgress.misses >= 2
-          ? t('ui.toast.missedPhaseZoneWide')
-          : `${t('ui.toast.missedPhaseRetry')}${pickLeft}`;
+          ? tf('ui.toast.missedPhaseZoneWide', { hint: missHint })
+          : `${tf('ui.toast.missedPhaseRetry', { hint: missHint })}${pickLeft}`;
       this.bus.emit('ui:toast', {
         message: tf('ui.toast.missedPhase', {
           phase: String(this.skillProgress.phaseIndex + 1),
@@ -990,6 +966,13 @@ export class GameSession {
     this.bus.emit('audio:play-sfx', { id: won ? 'win' : 'ui' });
   }
 
+  /** Per-NPC / per-bet miss line — never the generic “try again” alone. */
+  private missHintForBet(betId: string): string {
+    const key = `ui.toast.missHint.${betId}`;
+    const v = t(key);
+    return v !== key ? v : t('ui.toast.missHint.default');
+  }
+
   /** Guaranteed credits — cooldown + daily cap so it can't be farmed forever. */
   doSafeJob(jobId: string): boolean {
     const job = getJob(jobId);
@@ -1081,8 +1064,25 @@ export class GameSession {
     this.pendingBetAfterDialogue = null;
     this.skillProgress = null;
     this.stealthProgress = null;
-    this.ui.go('play');
-    this.armInteractLock();
+    // Force play even if a prior transition edge was odd — Esc must free WASD.
+    this.ui.backToPlay();
+    this.armInteractLock(this.interactKeyDown);
+  }
+
+  /**
+   * Esc / cancel: fully dismiss any modal and restore play input
+   * (playtest #29 — Neon Snap optional panel left input captured).
+   */
+  releaseModalToPlay(): void {
+    this.pendingBetId = null;
+    this.pendingStake = 0;
+    this.pendingBetAfterDialogue = null;
+    this.pendingStoryBeat = null;
+    this.skillProgress = null;
+    this.stealthProgress = null;
+    this.lastDialogue = [];
+    this.ui.backToPlay();
+    this.armInteractLock(this.interactKeyDown);
   }
 
   /** Apply a dialogue choice flag mid-beat. Choices are stripped so they don't loop. */
@@ -1223,8 +1223,18 @@ export class GameSession {
     // (Escape/click close must not eat the next KeyE — playtest #28 Luna).
     const held = this.interactKeyDown;
     if (this.ui.is('dialogue')) {
+      // Offer-bet dialogs: Esc = Walk away / Sair — never leave a ghost modal.
+      if (this.pendingBetAfterDialogue) {
+        this.declineStoryBet();
+        this.armInteractLock(held);
+        return;
+      }
       this.advanceDialogue();
       this.armInteractLock(held);
+      return;
+    }
+    if (this.ui.is('bet') || this.ui.is('skill')) {
+      this.cancelBet();
       return;
     }
     this.ui.backToPlay();
