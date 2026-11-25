@@ -25,16 +25,19 @@ Unit tests alone are never enough.
 6. Capture screenshots of each step into `artifacts/playtest/`.
 7. Assert browser console has **zero** errors and **zero** 404s.
 8. Compare screenshots to art direction in `docs/art-and-lighting.md`.
-9. Write `artifacts/playtest/REPORT.md` (pass/fail per step + gaps).
-10. Run `make playtest` (automated) and `make e2e` (includes golden path).
-11. Only then run quality gates and push.
+9. Write `artifacts/playtest/REPORT.md` (pass/fail per step + gaps), then run
+   `npm run format:playtest-report` so Prettier never fails CI on the report.
+10. Run `make playtest` (automated; also formats `REPORT.md`) and `make e2e`.
+11. Run `make check` (lint + typecheck). **Do not push until it passes.**
 
 ## Commands
 
 ```bash
 make dev
-make playtest          # Playwright playthrough + screenshots + console check
+make playtest          # Playwright playthrough + screenshots + format REPORT.md
 make e2e               # includes golden-path story completion
+make check             # lint + typecheck — required before every push
+npm run format:playtest-report   # prettier --write artifacts/playtest/REPORT.md
 ```
 
 ## Performance (mandatory)

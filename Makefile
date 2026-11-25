@@ -1,4 +1,4 @@
-.PHONY: install dev test e2e playtest mutation lint build docker deploy preview typecheck ci clean
+.PHONY: install dev test e2e playtest mutation lint check build docker deploy preview typecheck ci clean
 
 BASE_PATH ?= /
 PORT ?= 43123
@@ -19,12 +19,17 @@ e2e:
 playtest:
 	mkdir -p artifacts/playtest
 	npx playwright test e2e/playtest.spec.ts e2e/perf-throttle.spec.ts e2e/story-complete.spec.ts e2e/story-walk.spec.ts --project=desktop-chromium
+	npm run format:playtest-report
 
 mutation:
 	npm run mutation
 
 lint:
 	npm run lint
+
+# Required before every push (also enforced by simple-git-hooks pre-push → lint).
+check:
+	npm run check
 
 typecheck:
 	npm run typecheck
