@@ -4,7 +4,9 @@ Independent follow-up after v1.16.0 (e30474b / user measured ~17 min walk; art 6
 
 ## Verdict: PASS
 
-`make check` + full e2e (38/38) green locally. Coverage branches **91%+**. Push both remotes; CI + Pages expected green on tip.
+`make check` + full e2e (38/38) green locally. Coverage branches **91%+**.
+
+CI (`5df85f7`): GitHub **quality** / **build** / **deploy (Pages)** all success.
 
 ## Bugs fixed
 
