@@ -6,6 +6,8 @@ Independent playtest #21 of v1.18.1 (art 8, fun 6, ~23 min, FPS 56–60 with one
 
 `make check` (lint + typecheck + **npm test**) + e2e **46/46** green. Coverage branches **90%+**. Neon Snap south Shift-run hits physical wall (e2e + screenshot).
 
+CI (`5aadd31`): GitHub **quality** / **build** / **deploy (Pages)** all success.
+
 ## Bugs fixed
 
 | #   | Issue                                               | Result                                                               |
