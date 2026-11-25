@@ -15,7 +15,11 @@ import {
   startSkill,
 } from '../../src/systems/minigame';
 import { BETS } from '../../src/content/bets';
-import { districtExits, EXIT_COOLDOWN_MS } from '../../src/systems/interaction';
+import {
+  districtExits,
+  EXIT_COOLDOWN_MS,
+  EXIT_DWELL_MS,
+} from '../../src/systems/interaction';
 
 describe('v1.16.0 title / dialogue / pads', () => {
   it('package version is semver 1.x', () => {
@@ -40,7 +44,7 @@ describe('v1.16.0 title / dialogue / pads', () => {
     expect(vis.some((l) => /Saúde|credits roll/i.test(l.text))).toBe(false);
   });
 
-  it('walk-in travel fires for every exit pad within stand range', () => {
+  it('walk-in travel fires for every exit pad after dwell + facing', () => {
     vi.useFakeTimers();
     const s = new GameSession(7);
     s.startNew();
@@ -59,8 +63,15 @@ describe('v1.16.0 title / dialogue / pads', () => {
       s.player.setPosition(approachX, exit.y);
       const before = s.player.getStats().districtId;
       expect(before).toBe(exit.districtId);
-      const ok = s.move(exit.x > approachX ? 1 : -1, 0);
-      expect(ok, exit.id).toBe(true);
+      const dx = exit.x > approachX ? 1 : -1;
+      // First step arms dwell — still in the same district.
+      expect(s.move(dx, 0), exit.id).toBe(true);
+      expect(s.player.getStats().districtId, `${exit.id}-armed`).toBe(exit.districtId);
+      vi.advanceTimersByTime(EXIT_DWELL_MS + 20);
+      // Stay on the pad; next move finishes the armed dwell without stepping off.
+      s.player.setPosition(exit.x, exit.y);
+      s.player.setFacing(dx, 0);
+      s.move(dx, 0);
       expect(s.player.getStats().districtId, exit.id).toBe(exit.toDistrict);
     }
     vi.useRealTimers();

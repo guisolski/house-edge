@@ -72,7 +72,13 @@ test.describe('District exits', () => {
         const approachX = exit.x > 2 ? exit.x - 1 : exit.x + 1;
         he.session.player.setPosition(approachX, exit.y);
         const before = he.session.player.getStats().districtId;
-        const stepped = he.session.move(exit.x > approachX ? 1 : -1, 0);
+        const dx = exit.x > approachX ? 1 : -1;
+        // Playtest #26: first step arms dwell; wait then finish on the pad.
+        he.session.move(dx, 0);
+        await sleep(250);
+        he.session.player.setPosition(exit.x, exit.y);
+        he.session.player.setFacing(dx, 0);
+        const stepped = he.session.move(dx, 0);
         const after = he.session.player.getStats();
         he.session.travelTo(exit.districtId);
         he.session.player.setPosition(clearX, exit.y);

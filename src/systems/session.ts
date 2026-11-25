@@ -21,6 +21,7 @@ import {
   tickNpcWander,
   EXIT_CLEAR_RANGE,
   EXIT_COOLDOWN_MS,
+  EXIT_DWELL_MS,
   EXIT_STAND_RANGE,
   INTERACT_RANGE,
   arrivalSpawnFromPad,
@@ -105,6 +106,9 @@ export class GameSession {
   private exitCleared = false;
   /** Reciprocal pad id that bounced us here — only this pad is gated. */
   private arrivalExitId: string | null = null;
+  /** Pad id currently underfoot for dwell timing. */
+  private exitDwellId: string | null = null;
+  private exitDwellSince = 0;
   /** After travel, block all walk-in exits until Run is released once. */
   private awaitRunRelease = false;
   private runHeld = false;
@@ -259,20 +263,25 @@ export class GameSession {
     if (this.stealthProgress && !this.stealthProgress.done) {
       return this.moveStealth(dx, dy);
     }
+    // Finish an armed dwell before stepping off the pad.
+    if (!this.vipFloor) {
+      const ready = this.armedWalkInExit();
+      if (ready) return this.travelTo(ready.toDistrict);
+    }
     const s = this.player.getStats();
     const map = this.getMap();
     const dest = slideStep(map, s.x, s.y, dx, dy);
-    if (!dest) return false;
-    this.player.setFacing(dest.x - s.x || dx, dest.y - s.y || dy);
-    // NPCs are non-blocking — walk-through keeps interaction from trapping the player.
-    this.player.setPosition(dest.x, dest.y);
-    this.refreshExitLatch();
-    // All pads: walk-in within stand range (latch prevents bounce-back).
-    if (!this.vipFloor) {
-      const exit = this.nearbyExit();
-      if (exit) return this.travelTo(exit.toDistrict);
+    if (dest) {
+      this.player.setFacing(dest.x - s.x || dx, dest.y - s.y || dy);
+      // NPCs are non-blocking — walk-through keeps interaction from trapping the player.
+      this.player.setPosition(dest.x, dest.y);
+    } else if (dx !== 0 || dy !== 0) {
+      this.player.setFacing(dx, dy);
     }
-    return true;
+    this.refreshExitLatch();
+    // Arm / refresh dwell after the step (playtest #26).
+    if (!this.vipFloor) this.armedWalkInExit();
+    return Boolean(dest);
   }
 
   private moveStealth(dx: number, dy: number): boolean {
@@ -467,9 +476,43 @@ export class GameSession {
       y: s.y,
       range: EXIT_STAND_RANGE,
     });
-    if (!exit) return null;
+    if (!exit) {
+      this.exitDwellId = null;
+      this.exitDwellSince = 0;
+      return null;
+    }
     if (this.arrivalPadBlocked(exit)) return null;
     return this.world.isUnlocked(exit.toDistrict) ? exit : null;
+  }
+
+  /**
+   * Walk-in only after standing on the pad briefly while facing it —
+   * brushing the edge no longer teleports (playtest #26).
+   */
+  private armedWalkInExit(): DistrictExit | null {
+    const exit = this.nearbyExit();
+    if (!exit) return null;
+    const s = this.player.getStats();
+    const face = this.player.getFacing();
+    const toX = exit.x - s.x;
+    const toY = exit.y - s.y;
+    const len = Math.hypot(toX, toY) || 1;
+    const facing = (face.dx * toX + face.dy * toY) / len;
+    // Must be on the pad (≤0.85) or facing into it from the rim.
+    const onPad = Math.hypot(toX, toY) <= 0.85;
+    if (!onPad && facing < 0.35) {
+      this.exitDwellId = null;
+      this.exitDwellSince = 0;
+      return null;
+    }
+    const now = Date.now();
+    if (this.exitDwellId !== exit.id) {
+      this.exitDwellId = exit.id;
+      this.exitDwellSince = now;
+      return null;
+    }
+    if (now - this.exitDwellSince < EXIT_DWELL_MS) return null;
+    return exit;
   }
 
   /** Locked exit underfoot / adjacent — for toast + prompt feedback. */
@@ -591,23 +634,24 @@ export class GameSession {
   }
 
   /**
-   * Input-layer gate after Close: ignore Interact held from before close (need
-   * key-up). Fresh presses are allowed once ~150ms have passed.
+   * Input-layer gate after Close: ignore Interact while the arm is live.
+   * A key-up during the arm clears needsRelease only after the arm expires
+   * (so 4× Enter @80ms cannot rematch, but mouse-Close still frees E after 500ms).
    */
   allowInteractInput(): boolean {
     const now = Date.now();
-    if (this.interactReleasePending && now >= this.interactLockUntil) {
+    if (now < this.interactLockUntil) return false;
+    if (this.interactReleasePending) {
       this.interactNeedsRelease = false;
       this.interactReleasePending = false;
     }
     if (this.interactNeedsRelease) return false;
-    if (now < this.interactLockUntil) return false;
     return true;
   }
 
   /**
    * Modal confirm gate: when a dialog/skill opens with Interact held, ignore
-   * confirm until key-up. Fresh presses after ~150ms are allowed.
+   * confirm until key-up. Fresh presses after the arm window are allowed.
    */
   allowModalConfirm(): boolean {
     if (this.modalConfirmNeedsRelease) return false;
@@ -617,7 +661,8 @@ export class GameSession {
 
   /** Call when dialogue/skill/bet opens. `interactHeld` = Interact down at open. */
   noteModalOpened(interactHeld: boolean): void {
-    this.modalConfirmArmUntil = Date.now() + 150;
+    // Playtest #26: 250ms so Enter×3 right after E cannot select a choice.
+    this.modalConfirmArmUntil = Date.now() + 250;
     this.modalConfirmNeedsRelease = interactHeld;
   }
 
@@ -817,6 +862,7 @@ export class GameSession {
       (won ? this.upgrades.fameBonus() : 0);
     this.player.addReputation(rep);
     const phase = this.skillProgress?.cleared ?? 0;
+    const storyBeat = this.pendingStoryBeat;
     this.bus.emit('skill:resolved', { betId, won, phase });
     this.bus.emit('fx:flash', { kind: won ? 'win' : 'lose' });
     this.bus.emit('fx:credits', { delta });
@@ -828,7 +874,7 @@ export class GameSession {
       stake: won ? stake : 0,
     });
     if (!this.ui.is('ending') && !this.elevating) {
-      this.toastSkill(won, payout);
+      this.toastSkill(won, payout, storyBeat);
       this.ui.go('play');
       this.armInteractLock();
     }
@@ -846,11 +892,13 @@ export class GameSession {
     if (need > 0) this.player.addCredits(need);
   }
 
-  private toastSkill(won: boolean, payout: number): void {
+  private toastSkill(won: boolean, payout: number, storyBeat: string | null): void {
+    const missHint =
+      storyBeat === 'boteco-nair'
+        ? 'Missed the pour — talk to Nair again to retry. Objective stays put.'
+        : 'Miss — story beat still open. Talk again to retry. No stake taken.';
     this.bus.emit('ui:toast', {
-      message: won
-        ? `Cleared — ${payout} credits.`
-        : 'Encounter closed — story beat still open. No stake taken.',
+      message: won ? `Cleared — ${payout} credits.` : missHint,
       kind: won ? 'success' : 'info',
     });
     this.bus.emit('audio:play-sfx', { id: won ? 'win' : 'ui' });
@@ -1091,11 +1139,12 @@ export class GameSession {
   }
 
   /**
-   * After Close: 400ms rematch arm + require key release (4× Enter @80ms stays safe).
+   * After Close: 500ms rematch arm + require a fresh key-up after the arm
+   * (4× Enter @80ms stays safe; release during the arm does not clear the gate).
    * Modal-open dropped Enter is handled separately via noteModalOpened / allowModalConfirm.
    */
   private armInteractLock(interactHeld = true): void {
-    this.interactLockUntil = Date.now() + 400;
+    this.interactLockUntil = Date.now() + 500;
     this.interactNeedsRelease = interactHeld;
     this.interactReleasePending = false;
   }
@@ -1103,6 +1152,8 @@ export class GameSession {
   /** Call on Interact key-up so a held Enter can't chain rematch dialogs. */
   noteInteractRelease(): void {
     this.modalConfirmNeedsRelease = false;
+    // Key-up during the time lock only counts once the arm expires —
+    // still require a *post-arm* release so Enter spam @80ms can't rematch.
     if (Date.now() < this.interactLockUntil) {
       this.interactReleasePending = true;
       return;

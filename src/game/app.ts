@@ -11,6 +11,7 @@ import { loadFromStorage } from '../systems/save';
 import { InputModeTracker } from '../systems/input-mode';
 import { hydrateLocaleFromStorage } from '../i18n';
 import { createTutorialState } from '../systems/tutorial';
+import { countNpcLabels } from '../systems/label-policy';
 import { wireSessionEvents } from './wiring';
 import type { HudHandles } from '../ui/hud';
 import type { FpsSample } from '../rendering/fps';
@@ -137,6 +138,8 @@ function exposeHarness(
       session.resetTutorialForDemo(createTutorialState());
       hud.showTutorial(true);
     },
+    /** Playtest #26: visible NPC nameplate counts in the current district. */
+    countNpcLabels: () => countNpcLabels(session),
   };
 }
 

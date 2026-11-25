@@ -3,6 +3,7 @@ import { GameSession } from '../../src/systems/session';
 import {
   EXIT_CLEAR_RANGE,
   EXIT_COOLDOWN_MS,
+  EXIT_DWELL_MS,
   EXIT_STAND_RANGE,
   arrivalSpawnFromPad,
   districtExits,
@@ -107,8 +108,13 @@ describe('v1.18.0 pad arrival off-pad + leave/re-enter', () => {
         EXIT_CLEAR_RANGE,
       ),
     ).toBe(true);
-    // Re-enter pad with an explicit step → travel back.
+    // Re-enter pad: first step arms dwell, second after dwell travels.
     s.player.setPosition(pad.x + 1, pad.y);
+    expect(s.move(-1, 0)).toBe(true);
+    expect(s.player.getStats().districtId).toBe('avenida-odds');
+    vi.advanceTimersByTime(EXIT_DWELL_MS + 20);
+    s.player.setPosition(pad.x, pad.y);
+    s.player.setFacing(-1, 0);
     expect(s.move(-1, 0)).toBe(true);
     expect(s.player.getStats().districtId).toBe('feira-central');
     vi.useRealTimers();

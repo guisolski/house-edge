@@ -65,15 +65,15 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     kind: 'timing',
     prompt: 'Hit the samba downbeat.',
     target: 0.38,
-    window: 0.12,
-    needleSpeed: 0.95,
+    window: 0.14,
+    needleSpeed: 0.82,
   },
   'forro-crowd': {
     kind: 'timing',
     prompt: 'Step on the forró accent.',
     target: 0.68,
-    window: 0.11,
-    needleSpeed: 1.0,
+    window: 0.13,
+    needleSpeed: 0.88,
   },
   'feira-radio': {
     kind: 'hack',
@@ -233,10 +233,11 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
   },
   'dancer-tip': {
     kind: 'timing',
+    // Playtest #26: was ~7 tries — ease toward mid-game, leave boss hardest.
     prompt: 'Catch the dancer’s cue.',
-    target: 0.28,
-    window: 0.13,
-    needleSpeed: 1.05,
+    target: 0.42,
+    window: 0.16,
+    needleSpeed: 0.78,
   },
   'feira-lockbox': {
     kind: 'lockpick',

@@ -159,7 +159,7 @@ export const storyPtBR: Record<string, string> = {
     'Que país. Me dá a odd da água gelada — eu cronometro o gelo.',
   'story.boteco-nair.2.speaker': 'Dona Nair',
   'story.boteco-nair.2.text':
-    'De qualquer jeito, a odd do gelo é a porta. Aceite a aposta quando estiver pronta — aí o Catador pesa o cobre antes da Antena Tech falar.',
+    'De qualquer jeito, a odd do gelo é a porta. Ganhe o gelo e o Catador pesa o cobre — erre e tenta de novo comigo. Nada avança até o gelo cair.',
   'story.boteco-nair.3.speaker': 'Dona Nair',
   'story.boteco-nair.3.text':
     'A Luna tá fuçando na antena LED. Papo de sinal pirata. Bebe devagar. A Casa cobra os cubos de gelo agora.',

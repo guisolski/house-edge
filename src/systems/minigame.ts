@@ -495,11 +495,11 @@ function duelSkill(betId: string): SkillDef {
     phases: [
       {
         kind: 'timing',
-        // Late-game: tight zone, fast needle — widen only after 2+ misses.
+        // Playtest #26: boss is the hardest needle — tighter than Dancer Sol.
         prompt: 'Phase 1 — stop the house needle.',
         target: 0.5,
-        window: 0.07,
-        needleSpeed: 1.35,
+        window: 0.055,
+        needleSpeed: 1.55,
       },
       {
         kind: 'choice',

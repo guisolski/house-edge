@@ -50,13 +50,15 @@ describe('session v1.5 recovery and upgrades', () => {
     const session = new GameSession(5);
     session.startNew();
     session.world.unlock('feira-central');
-    // Generous doorway margin (~2.6); far plaza tile does not count.
+    // Playtest #26: tight stand range (~1.15) — rim tiles no longer auto-arm.
     session.player.setPosition(28, 16);
     expect(session.nearbyExit()).toBeNull();
     session.player.setPosition(38, 22);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
-    session.player.setPosition(36, 22);
+    session.player.setPosition(37, 22);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
+    session.player.setPosition(36, 22);
+    expect(session.nearbyExit()).toBeNull();
     session.player.setPosition(38, 18);
     expect(session.nearbyExit()).toBeNull();
 
@@ -111,6 +113,11 @@ describe('session v1.5 recovery and upgrades', () => {
     session.player.setFacing(0, 0);
     expect(session.player.getFacing().dx).toBe(1);
     session.player.setPosition(37, 22);
+    expect(session.move(1, 0)).toBe(true);
+    expect(session.player.getStats().districtId).toBe('morro-neon');
+    vi.advanceTimersByTime(250);
+    session.player.setPosition(38, 22);
+    session.player.setFacing(1, 0);
     expect(session.move(1, 0)).toBe(true);
     expect(session.player.getStats().districtId).toBe('feira-central');
     expect(session.player.getFacing().dx).toBe(1);

@@ -328,7 +328,7 @@ describe('objectives', () => {
       unlocked: () => false,
     });
     expect(obj.text).toContain('Dona Nair');
-    expect(obj.targetX).toBe(14);
+    expect(obj.targetX).toBe(13);
     const travel = currentObjective({
       beats: STORY_BEATS,
       completed: [
@@ -526,9 +526,10 @@ describe('session deep paths', () => {
     session.cancelBet();
     expect(session.ui.is('play')).toBe(true);
     session.story.completeBeat('boteco-nair');
-    session.player.setPosition(14, 16);
+    session.player.setPosition(13, 16);
     session.noteInteractRelease();
-    vi.advanceTimersByTime(450);
+    vi.advanceTimersByTime(550);
+    session.noteInteractRelease();
     expect(session.interact()).toBe(true);
     vi.useRealTimers();
   });

@@ -33,8 +33,15 @@ export function createCamera(): Camera {
  * Biases the focus so the player sits below the HUD inset.
  * Never scrolls past the map — letterbox when the map is smaller than the view.
  */
+function softFollow(cam: Camera, next: Camera): Camera {
+  // Soft follow — kills ~1-tile snaps when the north clamp engages (VIP salon).
+  const snap = Math.hypot(next.x - cam.x, next.y - cam.y);
+  if (snap < 1) return next;
+  const t = snap > 80 ? 1 : 0.28;
+  return { x: cam.x + (next.x - cam.x) * t, y: cam.y + (next.y - cam.y) * t };
+}
+
 export function followPlayer(args: FollowArgs): Camera {
-  void args.cam;
   const top = args.topInsetPx ?? HUD_TOP_INSET_PX;
   const bottom = args.bottomInsetPx ?? HUD_BOTTOM_INSET_PX;
   const worldW = args.mapW * args.tilePx;
@@ -44,14 +51,12 @@ export function followPlayer(args: FollowArgs): Camera {
   // Prefer the player in the middle of the *usable* band under the HUD.
   const usableH = Math.max(args.tilePx, args.viewH - top - bottom);
   const preferredScreenY = top + usableH * 0.45;
-  const targetX = focusX - args.viewW / 2;
-  const targetY = focusY - preferredScreenY;
   const maxX = Math.max(0, worldW - args.viewW);
   const maxY = Math.max(0, worldH - args.viewH);
-  return {
-    x: clamp(targetX, 0, maxX),
-    y: clamp(targetY, 0, maxY),
-  };
+  return softFollow(args.cam, {
+    x: clamp(focusX - args.viewW / 2, 0, maxX),
+    y: clamp(focusY - preferredScreenY, 0, maxY),
+  });
 }
 
 export type ViewportPadArgs = Pick<

@@ -158,7 +158,7 @@ export const storyEn: Record<string, string> = {
     'What a country. Hit me with the ice-water odd — I’ll time the pour myself.',
   'story.boteco-nair.2.speaker': 'Dona Nair',
   'story.boteco-nair.2.text':
-    'Either way, the ice odd is the door. Take the bet when you’re ready — then Catador weighs copper before Antena Tech talks.',
+    'Either way, the ice odd is the door. Win the pour and Catador weighs copper — miss and you retry with me. Nothing advances until the ice lands.',
   'story.boteco-nair.3.speaker': 'Dona Nair',
   'story.boteco-nair.3.text':
     'Luna’s been sniffing around the LED antenna. Pirate signal nonsense. Drink slow. Casa bills the ice cubes now.',

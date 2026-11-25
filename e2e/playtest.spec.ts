@@ -78,6 +78,8 @@ test.describe('Playtest golden path', () => {
       }),
     ).toHaveCount(2);
     await page.screenshot({ path: path.join(ART, '03-dialogue.png') });
+    // Playtest #26: choice arm ≥250ms before click accepts.
+    await page.waitForTimeout(300);
     await page.getByRole('button', { name: /Loud — then Take the bet/ }).click();
     await expect(
       page.getByRole('button', { name: 'Take the bet', exact: true }),

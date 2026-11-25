@@ -67,8 +67,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'dona-nair',
     name: 'Dona Nair',
     districtId: 'morro-neon',
-    // Forward plaza — clear of BOTECO NAIR sign (8,11) and tenement footprints.
-    x: 14,
+    // Spawn plaza asphalt — same band as Rita spawn (12,16), easy first talk.
+    x: 13,
     y: 16,
     wanderRadius: 0,
     beatId: 'boteco-nair',
@@ -250,9 +250,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'mole-contact',
     name: 'Mole Contact',
     districtId: 'avenida-odds',
-    // West plaza — outside Neon Snap lane (x12–34 y11–12).
+    // North shoulder of west plaza — clear of Fair pad (2,12) lane.
     x: 9,
-    y: 12,
+    y: 10,
     wanderRadius: 0,
     beatId: 'avenida-twist',
     extraBeatIds: ['avenida-betrayal'],
@@ -264,8 +264,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'capita',
     name: 'Captain Vespera',
     districtId: 'avenida-odds',
-    x: 6,
-    y: 11,
+    // South shoulder — leaves the west Fair asphalt (y11–12) clear.
+    x: 5,
+    y: 14,
     beatId: 'avenida-checkpoint',
     jobBetId: 'pixo-challenge',
     color: '#b8ff2b',
@@ -275,9 +276,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'courier-odds',
     name: 'Casa Courier',
     districtId: 'avenida-odds',
-    // West approach — never inside the drone lane.
-    x: 7,
-    y: 12,
+    // South of west approach — never inside the drone lane or Fair pad bubble.
+    x: 8,
+    y: 14,
     beatId: 'avenida-courier',
     color: '#c9b037',
     bodyVariant: 0,
@@ -341,8 +342,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'cage-runner',
     name: 'Cage Runner',
     districtId: 'avenida-odds',
-    x: 8,
-    y: 11,
+    // South-east of Fair approach — no Vespera overlap on the west lane.
+    x: 10,
+    y: 14,
     beatId: 'avenida-server',
     jobBetId: 'avenida-server',
     color: '#7bc96f',
@@ -352,7 +354,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'neon-snap',
     name: 'Neon Snap',
     districtId: 'avenida-odds',
-    // West gate of the corridor — starts the run, never stands in cones.
+    // Corridor mouth — clear of Fair pad (2,12); starts the run, never in cones.
     x: 11,
     y: 12,
     wanderRadius: 0,
@@ -557,14 +559,16 @@ function pickNearest(
   return best;
 }
 
-/** Doorway trigger radius — walk-in fires inside this. */
-export const EXIT_STAND_RANGE = 2.2;
+/** Doorway trigger radius — must walk onto the pad (not brush past). */
+export const EXIT_STAND_RANGE = 1.15;
 /** Hysteresis: latch clears only after leaving this larger radius (stops bounce-back). */
-export const EXIT_CLEAR_RANGE = 4.2;
+export const EXIT_CLEAR_RANGE = 3.2;
 /** Tiles inward from the reciprocal pad on arrival (must exceed CLEAR). */
 export const EXIT_ARRIVAL_OFFSET = 7;
 /** Cooldown after travel before any pad can re-arm (≥1.5s run toward pad). */
 export const EXIT_COOLDOWN_MS = 1600;
+/** Dwell on the pad before walk-in fires (playtest #26 accidental triggers). */
+export const EXIT_DWELL_MS = 220;
 
 /** Inward facing + spawn offset so arrival is never standing on the pad. */
 export function arrivalSpawnFromPad(pad: {

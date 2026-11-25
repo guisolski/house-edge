@@ -576,19 +576,18 @@ function buildFeira(): MapDef {
 }
 
 function fillAvenidaApproachProps(props: MapDef['props']): void {
+  // Keep west Fair lane (x1–6, y11–12) prop-light so the exit stays walkable.
   for (const [x, y] of [
-    [3, 11],
-    [6, 12],
+    [8, 10],
     [40, 11],
     [37, 12],
   ] as const) {
     props.push({ x, y, kind: 'plant' });
   }
-  props.push({ x: 4, y: 12, kind: 'puddle' }, { x: 39, y: 11, kind: 'puddle' });
-  props.push({ x: 5, y: 11, kind: 'trash' }, { x: 41, y: 12, kind: 'trash' });
+  props.push({ x: 39, y: 11, kind: 'puddle' });
+  props.push({ x: 8, y: 11, kind: 'trash' }, { x: 41, y: 12, kind: 'trash' });
   props.push({ x: 3, y: 10, kind: 'orelhao' }, { x: 42, y: 10, kind: 'graffiti' });
-  props.push({ x: 7, y: 12, kind: 'awning' }, { x: 38, y: 12, kind: 'awning' });
-  props.push({ x: 9, y: 12, kind: 'vendor' });
+  props.push({ x: 38, y: 12, kind: 'awning' });
 }
 
 function sealAvenidaLane(tiles: TileKind[], w: number, h: number): void {

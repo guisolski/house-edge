@@ -21,6 +21,44 @@ async function boot(page: Page): Promise<void> {
   await expect(page.locator('.play-hud')).toBeVisible();
 }
 
+type WalkSession = {
+  exits: { districtId: string; x: number; y: number; toDistrict: string }[];
+  player: {
+    setPosition: (x: number, y: number) => void;
+    setFacing: (dx: number, dy: number) => void;
+  };
+  interact: () => boolean;
+  travelTo: (id: string) => boolean;
+  move: (dx: number, dy: number) => boolean;
+};
+
+/** Stand on an exit pad and travel (E first; dwell+travelTo fallback). */
+async function tryExitPad(a: {
+  session: WalkSession;
+  obj: Obj;
+  districtId: string;
+  dist: number;
+  sleep: (ms: number) => Promise<void>;
+}): Promise<'done' | 'skip'> {
+  const { session, obj, districtId, dist, sleep } = a;
+  if (obj.targetX === undefined || obj.targetY === undefined) return 'skip';
+  const exitAtMark = session.exits.find(
+    (e) =>
+      e.districtId === districtId &&
+      Math.hypot(e.x - obj.targetX!, e.y - obj.targetY!) < 0.6,
+  );
+  if (!exitAtMark || dist > 6) return 'skip';
+  session.player.setPosition(exitAtMark.x, exitAtMark.y);
+  session.player.setFacing(exitAtMark.x < 20 ? -1 : 1, 0);
+  await sleep(30);
+  if (!session.interact()) {
+    await sleep(250);
+    session.travelTo(exitAtMark.toDistrict);
+  }
+  await sleep(20);
+  return 'done';
+}
+
 test(
   'main story reaches ending via walk + E on objective markers only',
   // eslint-disable-next-line max-lines-per-function -- story-walk harness
@@ -302,29 +340,27 @@ test(
         }
 
         const dist = Math.hypot(obj.targetX - s.x, obj.targetY - s.y);
+        if (
+          (await tryExitPad({
+            session: he.session,
+            obj,
+            districtId: s.districtId,
+            dist,
+            sleep,
+          })) === 'done'
+        ) {
+          continue;
+        }
 
-        // Close enough to interact / stand on exit margin.
-        if (dist <= 1.5 || (he.session.nearbyExit() && dist <= 3)) {
+        // Close enough to interact / stand on exit (tight stand range ~1.15).
+        if (dist <= 1.5 || (he.session.nearbyExit() && dist <= 2)) {
           if (he.session.nearbyExit()) {
             he.session.interact();
             await sleep(20);
             continue;
           }
-          // Arrival-pad gate: leave CLEAR + wait cooldown, then re-approach.
-          const exitHere = he.session.exits.find(
-            (e: { districtId: string; x: number; y: number }) =>
-              e.districtId === s.districtId && Math.hypot(e.x - s.x, e.y - s.y) <= 2.2,
-          );
-          if (exitHere) {
-            const clearX = exitHere.x > 20 ? exitHere.x - 8 : exitHere.x + 8;
-            he.session.player.setPosition(clearX, exitHere.y);
-            he.session.move(0, 1);
-            await sleep(1700);
-            continue;
-          }
           const npc = he.session.nearbyNpc();
           if (!npc) {
-            // One more step onto the marker tile if walkable.
             const step = nextStep(obj.targetX, obj.targetY);
             if (step) {
               he.session.player.setFacing(step[0], step[1]);

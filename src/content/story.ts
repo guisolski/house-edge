@@ -51,7 +51,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Dona Nair',
-        text: 'Either way, the ice odd is the door. Take the bet when you’re ready — then Catador weighs copper before Antena Tech talks.',
+        text: 'Either way, the ice odd is the door. Win the pour and Catador weighs copper — miss and you retry with me. Nothing advances until the ice lands.',
       },
       {
         speaker: 'Dona Nair',

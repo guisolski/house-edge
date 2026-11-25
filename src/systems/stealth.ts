@@ -64,9 +64,9 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
   start: { x: 12, y: 12 },
   checkpoint: { x: 12, y: 11 },
   goal: { x: 34, y: 12 },
-  goalRadius: 1.2,
+  goalRadius: 1.1,
   targetMs: 90_000,
-  coverRadius: 0.75,
+  coverRadius: 0.6,
   cover: [
     { x: 15, y: 12 },
     { x: 20, y: 11 },
@@ -75,40 +75,40 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
   ],
   drones: [
     {
-      // West gate — starts north so the mid-lane opens first.
+      // West gate — modestly harder than v1.21 (playtest #26: ~15s first clear).
       id: 'drone-a',
       path: [
         { x: 17, y: 8 },
         { x: 17, y: 16 },
         { x: 17, y: 8 },
       ],
-      speed: 0.88,
-      halfAngle: Math.PI / 7,
-      range: 2.9,
+      speed: 0.98,
+      halfAngle: Math.PI / 6.2,
+      range: 3.1,
     },
     {
-      // Mid — opposite phase (starts south) so gaps alternate with A.
+      // Mid — opposite phase; slightly faster so gaps stay tight.
       id: 'drone-b',
       path: [
         { x: 23, y: 16 },
         { x: 23, y: 8 },
         { x: 23, y: 16 },
       ],
-      speed: 0.88,
-      halfAngle: Math.PI / 7,
-      range: 2.9,
+      speed: 1.0,
+      halfAngle: Math.PI / 6.2,
+      range: 3.1,
     },
     {
-      // East gate — slightly slower / narrower.
+      // East gate — no free sprint at the finish.
       id: 'drone-c',
       path: [
         { x: 29, y: 8 },
         { x: 29, y: 16 },
         { x: 29, y: 8 },
       ],
-      speed: 0.8,
-      halfAngle: Math.PI / 7.5,
-      range: 2.7,
+      speed: 0.94,
+      halfAngle: Math.PI / 6.8,
+      range: 2.95,
     },
   ],
 };

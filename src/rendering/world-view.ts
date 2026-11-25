@@ -206,7 +206,14 @@ type ViewState = {
   lastSample: FpsSample;
   resizeW: number;
   resizeH: number;
-  marker: { x: number; y: number; districtId: string; name: string } | null;
+  marker: {
+    x: number;
+    y: number;
+    districtId: string;
+    name: string;
+    arrowOnly: boolean;
+    npcOwns: boolean;
+  } | null;
   markerFrame: number;
 };
 
@@ -339,24 +346,30 @@ type TagRow = {
   force: boolean;
 };
 
-/** Collect objective + nearest tags (elevator only in pad range). */
+/** Collect objective + nearest tags. Elevators stay neon-only (no canvas nameplate). */
 function collectTagRows(state: ViewState): TagRow[] {
   const me = state.session.player.getStats();
   const obj = state.session.objective();
   const objNpc = state.session.objectiveNpcInRange();
   const near: TagRow[] = [];
+  const seen = new Set<string>();
   for (const npc of state.session.floorNpcs()) {
     if (npc.districtId !== me.districtId || !npc.name) continue;
+    // Neon already names the car — never draw a second Elevator tag.
+    if (npc.id.startsWith('elevator')) continue;
+    // One nameplate per display name on this floor (Luna / VIP Host / Nair).
+    if (seen.has(npc.name)) continue;
     const d = Math.hypot(npc.x - me.x, npc.y - me.y);
     const isObj =
       Boolean(objNpc && npc.id === objNpc.id) ||
       (obj.targetName != null && npc.name === obj.targetName);
-    if (npc.id.startsWith('elevator')) {
-      if (d <= 1.6) near.push({ npc, d, force: true });
-      continue;
+    if (isObj) {
+      seen.add(npc.name);
+      near.push({ npc, d, force: true });
+    } else if (d <= 1.5) {
+      seen.add(npc.name);
+      near.push({ npc, d, force: false });
     }
-    if (isObj) near.push({ npc, d, force: true });
-    else if (d <= 1.5) near.push({ npc, d, force: false });
   }
   near.sort((a, b) => Number(b.force) - Number(a.force) || a.d - b.d);
   return near.filter((r, i) => r.force || i < 3).slice(0, 3);
@@ -1284,14 +1297,16 @@ function refreshMarkerCache(state: ViewState, frame: number): void {
   const me = state.session.player.getStats();
   if (obj.districtId === me.districtId) {
     const dist = Math.hypot(obj.targetX - me.x, obj.targetY - me.y);
-    // Same-room NPC / short hop: pin arrow on the fixed target (no path wander).
-    // Fixes Casa foyer pointing at the elevator pad while Guard is adjacent.
+    // Same-room NPC / tower / short hop: pin arrow on the fixed target (no path wander).
     if (dist <= 10 || me.districtId === 'torre-casa') {
       state.marker = {
         x: obj.targetX,
         y: obj.targetY,
         districtId: obj.districtId ?? '',
-        name: obj.targetName ?? '',
+        // Name stays on the sprite nameplate — never float a second copy mid-path.
+        name: '',
+        arrowOnly: true,
+        npcOwns: Boolean(obj.targetName),
       };
       return;
     }
@@ -1302,11 +1317,15 @@ function refreshMarkerCache(state: ViewState, frame: number): void {
       { x: obj.targetX, y: obj.targetY },
       5,
     );
+    const atTarget = Math.hypot(wp.x - obj.targetX, wp.y - obj.targetY) < 0.6;
     state.marker = {
       x: wp.x,
       y: wp.y,
       districtId: obj.districtId ?? '',
-      name: obj.targetName ?? '',
+      // Path hops are arrow-only so "Mole Contact" never floats mid-asphalt.
+      name: atTarget ? (obj.targetName ?? '') : '',
+      arrowOnly: !atTarget,
+      npcOwns: atTarget && Boolean(obj.targetName),
     };
     return;
   }
@@ -1315,6 +1334,8 @@ function refreshMarkerCache(state: ViewState, frame: number): void {
     y: obj.targetY,
     districtId: obj.districtId ?? '',
     name: obj.targetName ?? '',
+    arrowOnly: /Fair|Avenue|Tower|Morro Neon|Elevator/i.test(obj.targetName ?? ''),
+    npcOwns: false,
   };
 }
 
@@ -1342,6 +1363,8 @@ function drawMarker(
     viewH: ctx.canvas.height,
     distTiles: Math.round(Math.hypot(m.x - me.x, m.y - me.y)),
     signs: map.signs,
+    npcNameplateOwns: m.npcOwns,
+    arrowOnly: m.arrowOnly,
   });
 }
 
@@ -1351,7 +1374,7 @@ function drawSideMarkers(
   camX: number,
   camY: number,
 ): void {
-  // Dim dots for side quests; VIP elevator gets a readable exit arrow.
+  // Dim dots for side quests; VIP elevator gets an arrow pinned to the car (no text).
   const markers = state.session.sideMarkers();
   const obj = state.marker;
   for (const m of markers) {
@@ -1360,7 +1383,6 @@ function drawSideMarkers(
     const py = m.y * TILE_PX - 6 - camY;
     if (m.label.startsWith('Elevator')) {
       paintBigArrow(ctx, px, py - 12, '#c8d0d8');
-      paintMarkerLabel(ctx, px, py - 40, m.label, ctx.canvas.width);
       continue;
     }
     ctx.fillStyle = '#2bfff244';
@@ -1382,9 +1404,27 @@ type ObjectiveMark = {
   viewH: number;
   distTiles: number;
   signs: readonly { x: number; y: number }[];
+  /** True when a sprite nameplate already owns this entity's name. */
+  npcNameplateOwns: boolean;
+  /** Path hop / pad — arrow only, never a floating name. */
+  arrowOnly: boolean;
 };
 
-/** Large bouncing yellow arrow + name; edge pointer when off-screen. */
+/**
+ * Playtest #26: never print a second nameplate on the quest arrow.
+ * NPC names live only on sprite-attached tags; pads/waypoints stay arrow-only.
+ */
+function objectiveArrowLabel(m: ObjectiveMark & { onScreen: boolean }): string | null {
+  if (!m.label || m.arrowOnly) return null;
+  if (/Fair|Avenue|Tower|Morro Neon|Elevator/i.test(m.label)) return null;
+  // Sprite nameplate owns the name — arrow is pointer-only.
+  if (m.npcNameplateOwns) return null;
+  // Off-screen edge pointer may keep a destination hint for non-NPC targets.
+  if (!m.onScreen) return `${m.label} · ${m.distTiles}m`;
+  return null;
+}
+
+/** Large bouncing yellow arrow; name only when no sprite nameplate owns it. */
 function paintObjectiveMarker(m: ObjectiveMark): void {
   const bob = Math.sin(m.frame / 8) * 6;
   const avoid = labelOffsetForSigns({
@@ -1397,22 +1437,16 @@ function paintObjectiveMarker(m: ObjectiveMark): void {
   const margin = 28;
   const onScreen =
     rawX >= margin && rawX <= m.viewW - margin && rawY >= 120 && rawY <= m.viewH - margin;
-  // Pad / travel markers: arrow only — EXIT neon already names the destination.
-  const padLabel = avoid.hideLabel || /Fair|Avenue|Tower|Morro Neon/i.test(m.label);
+  const label = objectiveArrowLabel({ ...m, onScreen });
   if (onScreen) {
     paintBigArrow(m.ctx, rawX, rawY, Palette.brasilYellow);
-    if (m.label && !padLabel) {
-      paintMarkerLabel(m.ctx, rawX, rawY - 22, m.label, m.viewW);
-    }
+    if (label) paintMarkerLabel(m.ctx, rawX, rawY - 22, label, m.viewW);
     return;
   }
   const px = clamp(rawX, margin, m.viewW - margin);
   const py = clamp(rawY, 120, m.viewH - margin);
   paintBigArrow(m.ctx, px, py, Palette.brasilYellow);
-  if (padLabel) return;
-  // Prefer full destination name; layoutMarkerLabel shortens only if it cannot fit.
-  const label = m.label ? `${m.label} · ${m.distTiles}m` : `${m.distTiles}m`;
-  paintMarkerLabel(m.ctx, px, py - 22, label, m.viewW);
+  if (label) paintMarkerLabel(m.ctx, px, py - 22, label, m.viewW);
 }
 
 function paintBigArrow(
