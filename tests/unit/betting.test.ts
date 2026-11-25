@@ -8,6 +8,7 @@ import {
   formatWinChance,
   impliedWinChance,
   payoutForWin,
+  pityWinChance,
   resolveBet,
 } from '../../src/systems/betting';
 import { createRng } from '../../src/core/rng';
@@ -17,6 +18,18 @@ describe('betting', () => {
   it('computes implied chance with house edge', () => {
     const chance = impliedWinChance({ numerator: 1, denominator: 1 }, 0.1);
     expect(chance).toBeCloseTo(0.45, 5);
+  });
+
+  it('first story bet agua-gelada is onboarding-friendly (~70%+)', () => {
+    const bet = getBet('agua-gelada')!;
+    const chance = impliedWinChance(bet.odds, bet.houseEdge);
+    expect(chance).toBeGreaterThanOrEqual(0.7);
+    expect(chance).toBeCloseTo(0.72, 2);
+    // Pity soft-cap must not pull a friendly base down below itself.
+    expect(pityWinChance(bet.odds, bet.houseEdge, 0, { storyGate: true })).toBeCloseTo(
+      0.72,
+      2,
+    );
   });
 
   it('pays stake plus fractional odds', () => {

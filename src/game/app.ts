@@ -27,6 +27,7 @@ type TickDeps = {
   cooldown: { ms: number };
   modes: InputModeTracker;
   hud: HudHandles;
+  host: HTMLElement;
   frame: { n: number };
   lastDistrict: { id: string };
 };
@@ -60,6 +61,7 @@ export function createGameApp(host: HTMLElement): GameApp {
     cooldown: { ms: 0 },
     modes,
     hud,
+    host,
     frame: { n: 0 },
     lastDistrict: { id: '' },
   };
@@ -83,13 +85,23 @@ function bindInputs(
   window.addEventListener(
     'keydown',
     (e) => {
-      if (e.code !== 'F3') return;
+      if (e.code !== 'F3' && e.key !== 'F3') return;
       e.preventDefault();
-      const on = !host.dataset.fps;
-      host.dataset.fps = on ? '1' : '';
+      e.stopPropagation();
+      const on = host.dataset.fps !== '1';
+      host.dataset.fps = on ? '1' : '0';
       world.setShowFps(on);
+      if (!on) {
+        // Clear DOM meter immediately on toggle off.
+        const he = (
+          window as unknown as {
+            __HOUSE_EDGE__?: { hud?: { setFps: (s: null) => void } };
+          }
+        ).__HOUSE_EDGE__;
+        he?.hud?.setFps(null);
+      }
     },
-    { passive: false },
+    { capture: true, passive: false },
   );
   window.addEventListener('touchstart', () => modes.note('touch'), {
     passive: true,
@@ -163,6 +175,9 @@ function onTick(deps: TickDeps, delta: number): void {
   }
   deps.frame.n += 1;
   deps.world.draw(deps.frame.n, performance.now());
+  if (deps.host.dataset.fps === '1') {
+    deps.hud.setFps(deps.world.getFps());
+  }
 }
 
 function maybeMove(deps: TickDeps): void {

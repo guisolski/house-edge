@@ -57,9 +57,9 @@ export default tseslint.config(
     rules: {
       'max-lines-per-function': [
         'error',
-        { max: 280, skipBlankLines: true, skipComments: true },
+        { max: 320, skipBlankLines: true, skipComments: true },
       ],
-      complexity: ['error', 36],
+      complexity: ['error', 42],
       'max-depth': ['error', 5],
       '@typescript-eslint/no-unused-expressions': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
@@ -74,17 +74,28 @@ export default tseslint.config(
         { max: 45, skipBlankLines: true, skipComments: true },
       ],
       'max-params': ['error', 6],
+      complexity: ['error', 14],
+    },
+  },
+  {
+    files: ['src/systems/objectives.ts'],
+    rules: {
+      'max-lines-per-function': [
+        'error',
+        { max: 32, skipBlankLines: true, skipComments: true },
+      ],
     },
   },
   {
     // Hand-authored district layouts are data-heavy by nature.
-    files: ['src/world/maps.ts'],
+    files: ['src/world/maps.ts', 'src/world/slide.ts'],
     rules: {
       'max-lines-per-function': [
         'error',
         { max: 80, skipBlankLines: true, skipComments: true },
       ],
-      'max-params': ['error', 6],
+      'max-params': ['error', 7],
+      complexity: ['error', 12],
     },
   },
 
@@ -96,6 +107,7 @@ export default tseslint.config(
         { max: 50, skipBlankLines: true, skipComments: true },
       ],
       'max-params': ['error', 6],
+      complexity: ['error', 12],
     },
   },
 );

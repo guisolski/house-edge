@@ -163,7 +163,7 @@ type ViewState = {
   lastSample: FpsSample;
   resizeW: number;
   resizeH: number;
-  marker: { x: number; y: number; districtId: string } | null;
+  marker: { x: number; y: number; districtId: string; name: string } | null;
   markerFrame: number;
 };
 
@@ -273,7 +273,7 @@ function paintPlayHud(
   // Signs hide under modals so dialogue doesn't cover CASA SUPREMA / EXIT text.
   drawLiveSigns(ctx, state, map, camX, camY);
   drawMarker(ctx, state, camX, camY, frame);
-  drawSideMarkers(ctx, state, camX, camY, frame);
+  drawSideMarkers(ctx, state, camX, camY);
 }
 
 function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCamera> {
@@ -293,6 +293,8 @@ function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCa
     viewW: canvas.width,
     viewH: canvas.height,
     tilePx: TILE_PX,
+    topInsetPx: 110,
+    bottomInsetPx: 28,
   });
   const pad = viewportPadding({
     mapW: map.width,
@@ -318,7 +320,9 @@ function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCa
     frame,
   });
   paintPlayHud(ctx, state, map, viewCamX, viewCamY, frame);
-  if (showFps) drawFpsOverlay(ctx, sample);
+  // FPS meter is a DOM overlay (see hud) — canvas draw was covered by .hud.
+  void showFps;
+  void sample;
   return cam;
 }
 
@@ -927,6 +931,22 @@ function drawRain(ctx: CanvasRenderingContext2D, frame: number): void {
   }
 }
 
+function refreshMarkerCache(state: ViewState, frame: number): void {
+  if (state.markerFrame >= 0 && frame - state.markerFrame < 8) return;
+  state.markerFrame = frame;
+  const obj = state.session.objective();
+  if (obj.targetX === undefined || obj.targetY === undefined) {
+    state.marker = null;
+    return;
+  }
+  state.marker = {
+    x: obj.targetX,
+    y: obj.targetY,
+    districtId: obj.districtId ?? '',
+    name: obj.targetName ?? '',
+  };
+}
+
 function drawMarker(
   ctx: CanvasRenderingContext2D,
   state: ViewState,
@@ -934,31 +954,21 @@ function drawMarker(
   camY: number,
   frame: number,
 ): void {
-  // Refresh objective marker at most every 8 frames (not every paint).
-  if (state.markerFrame < 0 || frame - state.markerFrame >= 8) {
-    state.markerFrame = frame;
-    const obj = state.session.objective();
-    if (obj.targetX === undefined || obj.targetY === undefined) {
-      state.marker = null;
-    } else {
-      state.marker = {
-        x: obj.targetX,
-        y: obj.targetY,
-        districtId: obj.districtId ?? '',
-      };
-    }
-  }
+  refreshMarkerCache(state, frame);
   const m = state.marker;
-  if (!m) return;
-  if (m.districtId !== state.session.player.getStats().districtId) return;
-  paintArrowMarker({
+  const me = state.session.player.getStats();
+  if (!m || m.districtId !== me.districtId) return;
+  paintObjectiveMarker({
     ctx,
     tx: m.x,
     ty: m.y,
     camX,
     camY,
     frame,
-    color: Palette.brasilYellow,
+    label: m.name,
+    viewW: ctx.canvas.width,
+    viewH: ctx.canvas.height,
+    distTiles: Math.round(Math.hypot(m.x - me.x, m.y - me.y)),
   });
 }
 
@@ -967,54 +977,95 @@ function drawSideMarkers(
   state: ViewState,
   camX: number,
   camY: number,
-  frame: number,
 ): void {
+  // Dim dots only — never compete with the main yellow objective arrow.
   const markers = state.session.sideMarkers();
+  const obj = state.marker;
   for (const m of markers) {
-    paintArrowMarker({
-      ctx,
-      tx: m.x,
-      ty: m.y,
-      camX,
-      camY,
-      frame: frame + 4,
-      color: Palette.neonCyan,
-    });
+    if (obj && m.x === obj.x && m.y === obj.y) continue;
+    const px = m.x * TILE_PX + 16 - camX;
+    const py = m.y * TILE_PX - 6 - camY;
+    ctx.fillStyle = '#2bfff244';
+    ctx.beginPath();
+    ctx.arc(px, py, 3, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
-type ArrowMark = {
+type ObjectiveMark = {
   ctx: CanvasRenderingContext2D;
   tx: number;
   ty: number;
   camX: number;
   camY: number;
   frame: number;
-  color: string;
+  label: string;
+  viewW: number;
+  viewH: number;
+  distTiles: number;
 };
 
-function paintArrowMarker(m: ArrowMark): void {
-  const bob = Math.sin(m.frame / 10) * 4;
-  const px = m.tx * TILE_PX + 16 - m.camX;
-  const py = m.ty * TILE_PX - 14 + bob - m.camY;
-  m.ctx.fillStyle = m.color;
-  m.ctx.beginPath();
-  m.ctx.moveTo(px, py);
-  m.ctx.lineTo(px - 8, py - 14);
-  m.ctx.lineTo(px + 8, py - 14);
-  m.ctx.fill();
+/** Large bouncing yellow arrow + name; edge pointer when off-screen. */
+function paintObjectiveMarker(m: ObjectiveMark): void {
+  const bob = Math.sin(m.frame / 8) * 6;
+  const rawX = m.tx * TILE_PX + 16 - m.camX;
+  const rawY = m.ty * TILE_PX - 18 + bob - m.camY;
+  const margin = 28;
+  const onScreen =
+    rawX >= margin && rawX <= m.viewW - margin && rawY >= 120 && rawY <= m.viewH - margin;
+  if (onScreen) {
+    paintBigArrow(m.ctx, rawX, rawY, Palette.brasilYellow);
+    if (m.label) paintMarkerLabel(m.ctx, rawX, rawY - 22, m.label);
+    return;
+  }
+  const px = clamp(rawX, margin, m.viewW - margin);
+  const py = clamp(rawY, 120, m.viewH - margin);
+  paintBigArrow(m.ctx, px, py, Palette.brasilYellow);
+  const label = m.label ? `${m.label} · ${m.distTiles}m` : `${m.distTiles}m`;
+  paintMarkerLabel(m.ctx, px, py - 22, label);
 }
 
-function drawFpsOverlay(ctx: CanvasRenderingContext2D, sample: FpsSample): void {
-  // Bottom-left so the play HUD does not cover the meter.
-  const y = ctx.canvas.height - 52;
-  ctx.fillStyle = '#000000aa';
-  ctx.fillRect(8, y, 150, 44);
-  ctx.fillStyle = sample.avgFps >= 50 ? '#b8ff2b' : '#ff3b5c';
-  ctx.font = '12px monospace';
-  ctx.textAlign = 'left';
-  ctx.fillText(`FPS ${sample.fps} (avg ${sample.avgFps.toFixed(0)})`, 14, y + 18);
-  ctx.fillText(`${sample.frameMs.toFixed(1)} ms`, 14, y + 34);
+function paintBigArrow(
+  ctx: CanvasRenderingContext2D,
+  px: number,
+  py: number,
+  color: string,
+): void {
+  ctx.fillStyle = '#00000099';
+  ctx.beginPath();
+  ctx.moveTo(px, py + 4);
+  ctx.lineTo(px - 22, py - 34);
+  ctx.lineTo(px + 22, py - 34);
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(px, py);
+  ctx.lineTo(px - 18, py - 30);
+  ctx.lineTo(px + 18, py - 30);
+  ctx.fill();
+  // Stem so it reads as a big quest marker, not a tiny chevron.
+  ctx.fillRect(px - 4, py - 48, 8, 16);
+}
+
+function paintMarkerLabel(
+  ctx: CanvasRenderingContext2D,
+  px: number,
+  py: number,
+  text: string,
+): void {
+  ctx.font = 'bold 14px monospace';
+  ctx.textAlign = 'center';
+  const w = Math.min(200, ctx.measureText(text).width + 14);
+  ctx.fillStyle = '#000000dd';
+  ctx.fillRect(px - w / 2, py - 14, w, 20);
+  ctx.strokeStyle = Palette.brasilYellow;
+  ctx.strokeRect(px - w / 2, py - 14, w, 20);
+  ctx.fillStyle = Palette.brasilYellow;
+  ctx.fillText(text, px, py);
+}
+
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.min(hi, Math.max(lo, v));
 }
 
 function fitCanvas(canvas: HTMLCanvasElement, state: ViewState): void {

@@ -46,23 +46,9 @@ function wireLifecycle(
 function wirePlayer(session: GameSession, hud: HudHandles): void {
   session.bus.on('player:credits-changed', () => hud.updateStats());
   session.bus.on('player:reputation-changed', () => hud.updateStats());
-  // PERF: throttle proximity prompt DOM writes, with a trailing flush so the
-  // final tile (stop next to an NPC) still refreshes the prompt.
-  let promptAt = 0;
-  let promptTimer: ReturnType<typeof setTimeout> | null = null;
+  // Always refresh on move — a throttled trailing write left stale E prompts.
   session.bus.on('player:moved', () => {
-    const now = performance.now();
-    if (now - promptAt >= 80) {
-      promptAt = now;
-      hud.updatePrompt();
-      return;
-    }
-    if (promptTimer !== null) return;
-    promptTimer = setTimeout(() => {
-      promptTimer = null;
-      promptAt = performance.now();
-      hud.updatePrompt();
-    }, 80);
+    hud.updatePrompt();
   });
   session.bus.on('district:entered', () => {
     hud.updateStats();
@@ -142,10 +128,18 @@ function onBet(session: GameSession, hud: HudHandles): void {
 }
 
 function onMenu(session: GameSession, hud: HudHandles): void {
+  // Esc toggles: submenu → main menu → play.
   if (session.ui.is('menu')) {
     session.closeModal();
     hud.showMenu(false);
+    hud.updatePrompt();
     return;
+  }
+  if (session.ui.is('travel') || session.ui.is('jobs') || session.ui.is('upgrades')) {
+    if (session.returnToMenu()) {
+      hud.showMenu(true);
+      return;
+    }
   }
   if (session.ui.is('play') && session.openMenu()) {
     hud.showMenu(true);

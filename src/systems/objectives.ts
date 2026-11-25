@@ -5,7 +5,12 @@ import type { WorldNpc, DistrictExit } from './interaction';
 /** GD-1: always show the next concrete objective with a world marker. */
 
 export type Objective = {
+  /** Primary HUD line — concrete target + district. */
   text: string;
+  /** Flavour / beat title on a secondary line. */
+  detail?: string;
+  /** Name drawn on the world marker (NPC / exit / object). */
+  targetName?: string;
   targetX?: number;
   targetY?: number;
   districtId?: string;
@@ -38,14 +43,17 @@ function freeRoamObjective(ctx: ObjectiveCtx): Objective {
   const epi = ctx.npcs.find((n) => n.extraBeatIds?.includes('epilogue-laje'));
   if (epi && epi.districtId === ctx.districtId) {
     return {
-      text: `Free roam — or talk to ${epi.name} for the laje epilogue.`,
+      text: `Talk to ${epi.name} (${districtName(ctx.districtId)})`,
+      detail: 'Optional laje epilogue — or keep grinding.',
+      targetName: epi.name,
       targetX: epi.x,
       targetY: epi.y,
       districtId: ctx.districtId,
     };
   }
   return {
-    text: 'Free roam — grind side jobs, explore, or revisit the hill for the epilogue.',
+    text: 'Free roam — grind side jobs or explore',
+    detail: 'Epilogue waits on the hill with Dona Nair.',
   };
 }
 
@@ -117,34 +125,46 @@ export function firstHopExit(ctx: ObjectiveCtx, dest: string): DistrictExit | un
 function travelObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
   const place = districtName(next.districtId);
   const npc = beatNpc(ctx, next);
-  const who = npc ? ` — talk to ${npc.name}` : '';
   const hop = firstHopExit(ctx, next.districtId);
   if (hop) {
     const hopPlace = districtName(hop.toDistrict);
-    const text =
-      hop.toDistrict === next.districtId
-        ? `Go to ${place}${who} (${next.title})`
-        : `Walk to ${hopPlace} exit → then ${place}${who}`;
-    return { text, targetX: hop.x, targetY: hop.y, districtId: ctx.districtId };
+    const direct = hop.toDistrict === next.districtId;
+    const who = npc?.name ?? place;
+    return {
+      text: direct
+        ? `Go to ${place} — talk to ${who}`
+        : `Exit → ${hopPlace}, then ${place}`,
+      detail: next.title,
+      targetName: hopPlace,
+      targetX: hop.x,
+      targetY: hop.y,
+      districtId: ctx.districtId,
+    };
   }
   if (ctx.unlocked(next.districtId)) {
-    return { text: `Travel menu → ${place}${who}`, districtId: next.districtId };
+    return {
+      text: `Travel menu → ${place}`,
+      detail: npc ? `Talk to ${npc.name} · ${next.title}` : next.title,
+      districtId: next.districtId,
+    };
   }
-  return { text: `Unlock path to ${place} — finish the current bet.` };
+  return { text: `Unlock path to ${place}`, detail: 'Finish the current bet.' };
 }
 
 function npcObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
   const npc = beatNpc(ctx, next);
   if (npc) {
     const verb = npc.id === 'elevator' ? 'Use' : 'Talk to';
+    const place = districtName(ctx.districtId);
     return {
-      text: `${verb} ${npc.name}: ${next.title}`,
+      text: `${verb} ${npc.name} (${place})`,
+      detail: next.title,
+      targetName: npc.name,
       targetX: npc.x,
       targetY: npc.y,
       districtId: ctx.districtId,
     };
   }
-  // Softlock guard — should never ship; e2e + unit tests assert every beat is tagged.
   return {
     text: `${next.title} — missing target (bug)`,
     districtId: ctx.districtId,
@@ -158,7 +178,7 @@ function sideBeatReady(ctx: ObjectiveCtx, beat: StoryBeat): boolean {
   return beat.requiredFlags.every((f) => ctx.flags(f));
 }
 
-/** Available optional side quests in the current district (for world markers). */
+/** Optional side quests — dim dots only (never compete with the main marker). */
 export function sideQuestMarkers(
   ctx: ObjectiveCtx,
 ): { x: number; y: number; label: string }[] {

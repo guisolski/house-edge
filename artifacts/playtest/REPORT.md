@@ -1,55 +1,56 @@
-# Playtest REPORT — House Edge v1.12.1
+# Playtest REPORT — House Edge v1.12.2
 
-Independent follow-up after v1.12.0 softlock: Casa Suprema objective “Elevator odds — look around…” with no interactable after Pit Dealer.
+Fresh-player Morro follow-up after v1.12.1: lost at step 3 (Luna / cyan arrows), camera north clip, F3 dead, ramp wedge, Esc, stale E, fake climb, harsh first bet.
 
 ## Verdict
 
-**PASS** for ship gates. Softlock fixed; walk+E e2e plays New Game → ending via objective markers only; exits use full names + doorway margin; freeroam HUD verified. Desktop 4× throttle FPS still ≥50.
+**PASS** for ship gates. Large yellow objective marker + name on the current target only; HUD `Talk to Name (District)` + flavour detail; north HUD clamp; F3 DOM FPS; wall-slide; Esc toggles menu; stale E cleared; antena reworded; first bet ~72% (pity no longer caps friendly bases down). Desktop e2e 15/15.
 
-## Fixes vs playtest findings
+## Fixes vs findings
 
-| #   | Issue                                        | Result                                                                                         |
-| --- | -------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| 1   | Elevator softlock (“look around”, no target) | Visible elevator booth NPC + `ELEVATOR` sign + marker; objective `Use Elevator: Elevator odds` |
-| 2   | Objectives without concrete targets          | Unit test: every non-intro beat tagged to NPC/object; missing target → bug string              |
-| 3   | No e2e for marker-driven progression         | `e2e/story-walk.spec.ts` New Game→ending walk+E only; fails if marker has no interactable      |
-| 4   | Tiny exit hotspots (Morro↔Fair, Fair→Odds)   | Plus-shaped exit pads + `EXIT_STAND_RANGE` 2.6; `E — Travel to <full name>`; walk-on on tiles  |
-| 5   | Abbreviated exit signs (`ODDS AVE`)          | Full names: Central Fair, Odds Avenue, Morro Neon, Casa Tower                                  |
-| 6   | Arrival bounce (spawn on Odds exit pad)      | Avenida/Casa spawns cleared of pads; walk-on travel only on `exit` tiles                       |
-| 7   | Post-ending freeroam HUD                     | Verified: `Free roam — grind side jobs…` after continue exploring                              |
+| #   | Issue                                  | Result                                                            |
+| --- | -------------------------------------- | ----------------------------------------------------------------- |
+| 1   | Cyan arrows on many NPCs; Luna unclear | Big yellow arrow + name on objective only; side quests = dim dots |
+| 2   | “Pixo alley” read as a place           | Primary: `Talk to Luna Pixel (Morro Neon)`; detail: `Pixo alley`  |
+| 3   | North ridge player under HUD           | Camera HUD inset + min walkable Y                                 |
+| 4   | F3 FPS missing                         | DOM `.fps-meter`; e2e toggle                                      |
+| 5   | Ramp corner wedge                      | `slideStep` wall-slide / corner-slip                              |
+| 6   | Esc doesn’t close menu                 | Esc toggles menu → play; submenus return to menu                  |
+| 7   | Stale `E (Antena Tech)`                | Prompt refreshes on every `player:moved`                          |
+| 8   | “Climb the LED antenna” with no climb  | Reworded to **Jack the LED antenna**                              |
+| 9   | First bet lost 3× / ~46–62%            | `agua-gelada` ~72%; pity never pulls base below itself            |
 
-## Browser playtest (computer-use)
+## Browser playtest (computer-use, fresh player)
 
-| Check                        | Result                                                                  |
-| ---------------------------- | ----------------------------------------------------------------------- |
-| Elevator marker + sprite + E | **PASS** — booth at (24,10); prompt `E — Use (Elevator)`; bet resolves  |
-| No “look around” softlock    | **PASS**                                                                |
-| Freeroam HUD after ending    | **PASS** — Free roam objective on play HUD                              |
-| Fair east full name + Travel | **PASS** — `> Odds Avenue`; `E — Travel to Odds Avenue` within ~2 tiles |
-| Console errors               | **None**                                                                |
-| FPS overlay (Tower)          | ~59–61                                                                  |
+| Check                        | Result                                 |
+| ---------------------------- | -------------------------------------- |
+| Unique yellow marker + label | **PASS** (enlarged after first pass)   |
+| HUD name (district) + detail | **PASS**                               |
+| F3 FPS toggle                | **PASS**                               |
+| First bet ~72%               | **PASS** (`Win chance 72% · Odds 1:3`) |
+| North ridge below HUD        | **PASS**                               |
+| Esc closes menu              | **PASS**                               |
+| Stale E clears               | **PASS** (~200 ms)                     |
+| Console errors               | **None**                               |
 
-Artifacts: `pt-01-new-game.png`, `pt-02-elevator-marker.png`, `pt-02b-elevator-dialogue.png`, `pt-03-freeroam-hud.png`, `pt-04b-fair-exit-travel-prompt.png`, `pt-critical-checks.webm`.
+Artifacts: `v122-*.png`, `v122-morro-ux.webm` under `/opt/cursor/artifacts/` (copied into `artifacts/playtest/` when present).
 
 ## Timed scripted run
 
-| Run                                      | Result                                              |
-| ---------------------------------------- | --------------------------------------------------- |
-| `e2e/story-walk.spec.ts` (walk+E only)   | **PASS** (~4.3s harness / 5.4s wall; marker-driven) |
-| `e2e/story-complete.spec.ts` (debug API) | **PASS**                                            |
-| Desktop 4× throttle avg FPS              | **≥50** (budget)                                    |
-
-Harness time is not human pace; the walk+E test exercises every main-story marker without travel menu / `runStoryBeat` jumps.
+| Run                                    | Result           |
+| -------------------------------------- | ---------------- |
+| `e2e/story-walk.spec.ts` (walk+E only) | **PASS** (~3.4s) |
+| `e2e/fps-overlay.spec.ts`              | **PASS**         |
+| Desktop Chromium e2e                   | **15/15**        |
+| 4× throttle FPS                        | **≥50**          |
 
 ## Automated
 
-- `npm test` — pass (coverage gates)
-- `npm run lint` / `typecheck` — pass
-- `npx playwright test --project=desktop-chromium` — 14/14 pass (incl. story-walk + exits)
+- `npm test` — pass (coverage ≥90% branches)
+- `npm run lint` / `typecheck` / `make check` — pass
 
 ## Gaps (honest)
 
-- From south of the elevator, Augusto can win the E prompt until you enter elevator range (~3.5 tiles) — follow the marker north.
-- Freeroam HUD text can overlap the CASA SUPREMA world sign in Tower (sign draws over HUD line).
-- Exit Travel prompt yields to nearby NPC prompts beyond ~2 tiles; doorway pad + E on the pad remain reliable.
-- NPC art remains blocky procedural silhouettes.
+- Objective arrow is large but still procedural (not a sprite sheet).
+- North ridge can draw the player over building windows (y-sort / footprint).
+- Hint line can be hard to read over bright neon signs.

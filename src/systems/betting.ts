@@ -10,7 +10,8 @@ export function impliedWinChance(odds: Odds, houseEdge: number): number {
 
 /**
  * Pity applies only to story-gate bets (not grind).
- * +8% per consecutive loss, max 2 stacks → +16%, hard cap 62%.
+ * +8% per consecutive loss, max 2 stacks → +16%, soft ceiling 62%.
+ * Never pull an already-friendly base (e.g. onboarding ~72%) down below itself.
  */
 export function pityWinChance(
   odds: Odds,
@@ -21,7 +22,8 @@ export function pityWinChance(
   const base = impliedWinChance(odds, houseEdge) + (opts.luckBonus ?? 0);
   if (!opts.storyGate) return clamp01(base);
   const stacks = Math.min(2, Math.max(0, consecutiveLosses));
-  return Math.min(0.62, base + stacks * 0.08);
+  const withPity = base + stacks * 0.08;
+  return clamp01(Math.max(base, Math.min(0.62, withPity)));
 }
 
 export function payoutForWin(stake: number, odds: Odds): number {

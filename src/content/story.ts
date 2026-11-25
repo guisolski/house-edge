@@ -37,7 +37,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Dona Nair',
-        text: 'Luna’s been sniffing around the LED antenna. Pirate signal nonsense. Ask the tech on the hill first.',
+        text: 'Luna’s been sniffing around the LED antenna. Pirate signal nonsense. Find Antena Tech on the mid terrace — they already climbed it.',
       },
       {
         speaker: 'Dona Nair',
@@ -47,7 +47,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
   },
   {
     id: 'morro-antena',
-    title: 'Climb the LED antenna',
+    title: 'Jack the LED antenna',
     districtId: 'morro-neon',
     requiredFlags: ['falou_nair'],
     setsFlags: ['antena_ok'],
@@ -55,19 +55,19 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     dialogue: [
       {
         speaker: 'Antena Tech',
-        text: 'Casa chopped the hill’s Wi‑Fi and sold it back drip by drip. I can jack a pirate feed off the LED tower — if you bet the climb.',
+        text: 'Casa chopped the hill’s Wi‑Fi and sold it back drip by drip. I already climbed the LED tower — you bet the pirate jack from down here.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'Up the rust ladder, past the neon cross. Let’s see if this hill still hears the street.',
+        text: 'So I fund the splice, you hold the cable. Fair. Let’s hear if this hill still talks.',
       },
       {
         speaker: 'Antena Tech',
-        text: 'Signal’s clean, you hear Luna on the beco. If you wipe out, I catch the antenna — not you.',
+        text: 'Signal’s clean, you catch Luna on the beco. Wipe the bet and I kill the feed — not you.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'Pirate feed tastes like static and hope. I’m taking both down the stairs.',
+        text: 'Pirate feed tastes like static and hope. Jack it.',
       },
     ],
   },

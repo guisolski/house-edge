@@ -15,6 +15,7 @@ import {
 } from './panels';
 import { bakeSprite } from '../rendering/bake';
 import { makeEndingScene } from '../rendering/pixel-gen';
+import type { FpsSample } from '../rendering/fps';
 
 export type HudHandles = {
   root: HTMLElement;
@@ -31,6 +32,7 @@ export type HudHandles = {
   showEnding: (text: string) => void;
   setInputMode: (mode: InputMode) => void;
   updatePrompt: () => void;
+  setFps: (sample: FpsSample | null) => void;
   syncScreen: () => void;
   gamepadNav: (dir: 'up' | 'down' | 'confirm' | 'back') => void;
 };
@@ -50,6 +52,8 @@ type Parts = {
   prompt: HTMLElement;
   hints: HTMLElement;
   objective: HTMLElement;
+  objectiveDetail: HTMLElement;
+  fps: HTMLElement;
   stats: HTMLElement;
 };
 
@@ -79,12 +83,16 @@ function emptyParts(): Parts {
     prompt: el('div', 'interact-prompt'),
     hints: el('div', 'input-hints', UI.hintKeyboard),
     objective: el('div', 'objective', ''),
+    objectiveDetail: el('div', 'objective-detail', ''),
+    fps: el('div', 'fps-meter', ''),
     stats: el('div', 'stats', ''),
   };
 }
 
 function wireDom(session: GameSession, p: Parts, h: HudHandles): void {
-  p.play.append(p.stats, p.objective, p.hints);
+  p.play.append(p.stats, p.objective, p.objectiveDetail, p.hints);
+  setVisible(p.fps, false);
+  p.root.appendChild(p.fps);
   fillTitle(p.title, session);
   fillMenu(p.menu, session, h);
   appendAll(p);
@@ -140,6 +148,7 @@ function baseShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudHa
     showToast: (message, kind) => paintToast(p.toast, message, kind),
     setInputMode: (mode) => applyMode(p, mode),
     updatePrompt: () => paintPrompt(p.prompt, session),
+    setFps: (sample) => paintFps(p.fps, sample),
     syncScreen: () => syncFromUi(h, p, session),
     gamepadNav: (dir) => navModal(h, p, session, dir),
   };
@@ -370,7 +379,21 @@ function refresh(p: Parts, session: GameSession): void {
   const s = session.player.getStats();
   const district = session.world.get(s.districtId)?.name ?? s.districtId;
   p.stats.textContent = `${district} · ${UI.credits} ${s.credits} · ${UI.reputation} ${s.reputation}`;
-  p.objective.textContent = `▸ ${session.objective().text}`;
+  const obj = session.objective();
+  p.objective.textContent = `▸ ${obj.text}`;
+  p.objectiveDetail.textContent = obj.detail ?? '';
+  setVisible(p.objectiveDetail, Boolean(obj.detail));
+}
+
+function paintFps(node: HTMLElement, sample: FpsSample | null): void {
+  if (!sample) {
+    setVisible(node, false);
+    return;
+  }
+  const ok = sample.avgFps >= 50;
+  node.className = ok ? 'fps-meter fps-ok' : 'fps-meter fps-bad';
+  node.textContent = `FPS ${sample.fps} (avg ${sample.avgFps.toFixed(0)}) · ${sample.frameMs.toFixed(1)} ms`;
+  setVisible(node, true);
 }
 
 function paintPrompt(prompt: HTMLElement, session: GameSession): void {

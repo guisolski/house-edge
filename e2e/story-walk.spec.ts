@@ -8,6 +8,8 @@ import { test, expect, type Page } from '@playwright/test';
 
 type Obj = {
   text: string;
+  detail?: string;
+  targetName?: string;
   targetX?: number;
   targetY?: number;
   districtId?: string;
@@ -45,6 +47,14 @@ test('main story reaches ending via walk + E on objective markers only', async (
               x: number;
               y: number;
             } | null;
+            npcs: {
+              id: string;
+              name: string;
+              x: number;
+              y: number;
+              districtId: string;
+            }[];
+            sideMarkers: () => { x: number; y: number; label: string }[];
             getMap: () => { width: number; height: number; tiles: string[] };
             ui: { is: (s: string) => boolean };
             player: {
@@ -163,6 +173,37 @@ test('main story reaches ending via walk + E on objective markers only', async (
       }
     };
 
+    /** Unique yellow target in-district (or exit hop) so edge pointer / on-screen arrow can aim. */
+    const uniqueMarkerFail = (
+      session: typeof he.session,
+      obj: Obj,
+      districtId: string,
+    ): string | null => {
+      if (obj.districtId && obj.districtId !== districtId) {
+        return `marker not on-screen-or-pointed-to (district ${obj.districtId} vs ${districtId}): ${obj.text}`;
+      }
+      const hits = session.npcs.filter(
+        (n) =>
+          n.districtId === districtId &&
+          n.x === obj.targetX &&
+          n.y === obj.targetY &&
+          n.name === obj.targetName,
+      );
+      if (hits.length > 1) {
+        return `objective target not unique (${hits.length} NPCs named ${obj.targetName}): ${obj.text}`;
+      }
+      const compete = session
+        .sideMarkers()
+        .filter(
+          (m) =>
+            (m.x !== obj.targetX || m.y !== obj.targetY) && m.label === obj.targetName,
+        );
+      if (compete.length > 0) {
+        return `side markers compete with objective name ${obj.targetName}: ${obj.text}`;
+      }
+      return null;
+    };
+
     while (steps < MAX) {
       steps += 1;
       if (he.session.ui.is('ending')) {
@@ -218,7 +259,24 @@ test('main story reaches ending via walk + E on objective markers only', async (
         break;
       }
 
+      // Objective target must be uniquely marked (not competing with side cyan arrows).
+      if (!obj.targetName) {
+        failures.push(`objective missing targetName: ${obj.text}`);
+        break;
+      }
+      if (obj.detail === undefined && !obj.text.startsWith('Broke')) {
+        // Flavour titles live on the secondary line for story/travel objectives.
+        failures.push(`objective missing detail line: ${obj.text}`);
+        break;
+      }
+
       const s = he.session.player.getStats();
+      const markFail = uniqueMarkerFail(he.session, obj, s.districtId);
+      if (markFail) {
+        failures.push(markFail);
+        break;
+      }
+
       const dist = Math.hypot(obj.targetX - s.x, obj.targetY - s.y);
 
       // Close enough to interact / stand on exit margin.

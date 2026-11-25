@@ -19,21 +19,23 @@ export const BETS: readonly BetDefinition[] = [
     id: 'agua-gelada',
     kind: 'purchase',
     title: 'Ice-cold water at the boteco',
-    description: 'Even drinking water is a wager. Casa Suprema taxed the filter.',
+    description:
+      'Onboarding pour — short odds so a fresh Rita usually wins her first glass (~72%).',
     stake: 8,
     stakeMin: 4,
     stakeMax: 30,
-    odds: { numerator: 1, denominator: 1 },
-    houseEdge: 0.08,
+    // 1:3 → fair 75%; light edge → ~72% so the first story bet onboards kindly.
+    odds: { numerator: 1, denominator: 3 },
+    houseEdge: 0.04,
     reputationDeltaWin: 1,
     reputationDeltaLose: 0,
   }),
   bet({
     id: 'antena-sinal',
     kind: 'story',
-    title: 'Pirate signal climb',
+    title: 'Pirate signal jack',
     description:
-      'Scale the LED antenna and hold the jack long enough to catch Luna’s beco feed.',
+      'Bet the pirate jack Antena Tech spliced on the LED tower — catch Luna’s beco feed.',
     stake: 14,
     stakeMin: 8,
     stakeMax: 40,

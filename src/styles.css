@@ -280,6 +280,35 @@ canvas.excalibur-game {
   font-weight: 600;
 }
 
+.objective-detail {
+  flex: 1 1 100%;
+  color: #c8c0d8;
+  font-size: 0.85rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.fps-meter {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 14;
+  padding: 0.35rem 0.55rem;
+  background: #000000cc;
+  border: 1px solid #2bfff266;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+.fps-meter.fps-ok {
+  color: #b8ff2b;
+}
+
+.fps-meter.fps-bad {
+  color: #ff3b5c;
+}
+
 .input-hints {
   font-size: 0.85rem;
   opacity: 0.9;

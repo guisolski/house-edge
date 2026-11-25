@@ -509,7 +509,9 @@ describe('session deep paths', () => {
   it('blocks move into walls and mute volume', () => {
     const session = new GameSession(12);
     session.startNew();
-    expect(session.move(0, -20)).toBe(false);
+    // HUD north clamp — cannot walk into the top inset / sealed row.
+    session.player.setPosition(8, 3);
+    expect(session.move(0, -1)).toBe(false);
     session.setMasterVolume(2);
     expect(session.getAudio().masterVolume).toBe(1);
     session.setMasterVolume(-1);

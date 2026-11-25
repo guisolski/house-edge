@@ -22,7 +22,8 @@ import {
   type DistrictExit,
   type WorldNpc,
 } from './interaction';
-import { buildDistrictMap, isWalkable, tileAt, type MapDef } from '../world/maps';
+import { buildDistrictMap, tileAt, type MapDef } from '../world/maps';
+import { slideStep } from '../world/slide';
 import { currentObjective, sideQuestMarkers, type Objective } from './objectives';
 
 const SAFE_JOB_COOLDOWN_MS = 10_000;
@@ -97,14 +98,13 @@ export class GameSession {
     if (!this.ui.is('play')) return false;
     const s = this.player.getStats();
     const map = this.getMap();
-    const nx = Math.max(0, Math.min(map.width - 1, s.x + dx));
-    const ny = Math.max(0, Math.min(map.height - 1, s.y + dy));
-    if (!isWalkable(map, nx, ny)) return false;
-    this.player.setFacing(dx, dy);
+    const dest = slideStep(map, s.x, s.y, dx, dy);
+    if (!dest) return false;
+    this.player.setFacing(dest.x - s.x || dx, dest.y - s.y || dy);
     // NPCs are non-blocking — walk-through keeps interaction from trapping the player.
-    this.player.setPosition(nx, ny);
+    this.player.setPosition(dest.x, dest.y);
     // Walk-on travel only on exit tiles (plus-pad). Stand margin still shows E — Travel.
-    if (tileAt(map, nx, ny) === 'exit') {
+    if (tileAt(map, dest.x, dest.y) === 'exit') {
       const exit = this.nearbyExit();
       if (exit) return this.travelTo(exit.toDistrict);
     }
@@ -424,6 +424,8 @@ export class GameSession {
       const same = giver?.districtId === s.districtId;
       return {
         text: broke,
+        detail: 'Safe odd jobs refill credits without a house edge.',
+        targetName: giver?.name,
         targetX: same ? giver!.x : undefined,
         targetY: same ? giver!.y : undefined,
         districtId: giver?.districtId ?? s.districtId,

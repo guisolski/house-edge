@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.2] — 2026-11-25
+
+### Fixed
+
+- Objective marker is a large bouncing yellow arrow + name on the current target only; side quests are dim dots; off-screen targets get an edge pointer with distance.
+- Objective HUD: `Talk to Name (District)` with flavour title on a secondary line.
+- Camera/player north clamp keeps the sprite below the HTML HUD (Morro ridge clip regression).
+- F3 FPS is a DOM overlay (was covered by `.hud`); e2e asserts toggle.
+- Wall-slide on blocked tiles so ramp corners don’t wedge on single-axis keys.
+- Esc closes the pause menu (and returns from Travel/Jobs/Upgrades); E prompt clears immediately on move.
+- Antena beat reworded to “Jack the LED antenna” (no fake climb).
+- First story bet (`agua-gelada`) ~72% win chance for onboarding.
+
 ## [1.12.1] — 2026-11-25
 
 ### Fixed
