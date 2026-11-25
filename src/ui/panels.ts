@@ -206,14 +206,8 @@ function paintLockpickSkill(
     labels.push(btn);
     row.appendChild(btn);
   });
-  body.append(
-    el(
-      'p',
-      'skill-clue',
-      phase.clue ? `Clue: ${phase.clue}` : 'Set every tumbler, then Submit.',
-    ),
-    row,
-  );
+  // Clue already painted by paintSkill — only append the pin row here.
+  body.appendChild(row);
   refresh();
   actions.appendChild(
     button('Submit lock', () => {

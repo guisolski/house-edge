@@ -412,6 +412,8 @@ function only(p: Parts, which: string): void {
     clearNode(node);
   }
   setVisible(map[which]!, true);
+  // World E-prompt lives outside play HUD — hide it whenever a modal owns the screen.
+  if (which !== 'play') setVisible(p.prompt, false);
   blurIfHidden();
 }
 
