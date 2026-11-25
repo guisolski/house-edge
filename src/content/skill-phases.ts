@@ -24,7 +24,7 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Which draw ball is unmarked?',
     target: 1,
     options: ['Corp red 7', 'Hill chalk 3', 'Gold VIP 0'],
-    clue: 'Seu Zé only marks what the favela still owns — stamped balls stay corp property.',
+    clue: 'Seu Zé only inks what the community sack still claims — ignore anything that shipped from the tower.',
   },
   'fio-corrida': {
     kind: 'chase',
@@ -51,7 +51,7 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 2,
     options: ['Left steam', 'Middle quiet', 'Right buzz'],
     // Answer is Right buzz — clue via vibration/oil, no "buzz"/"right" synonym dump.
-    clue: 'Kiko leans toward the fryer that rattles the handle — the still crates are dummies.',
+    clue: 'Kiko checks the tray that trembles his wrist — the quiet stacks are decoys for tourists.',
   },
   'feira-garrafa': {
     kind: 'choice',
@@ -59,7 +59,7 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 0,
     options: ['Green glass', 'Corp clear', 'Neon pink'],
     // Answer Green glass — street stamp without naming green/glass/bottle.
-    clue: 'Catador keeps only what the street corked before Casa blanked the clear and pink stock.',
+    clue: 'Catador corked his pick before Casa repainted the market shelf — trust the alley stamp, not the boutique gloss.',
   },
   'samba-odds': {
     kind: 'timing',
@@ -219,7 +219,7 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Weigh the spare copper — which bag is light?',
     target: 1,
     options: ['Heavy rust', 'Light bright', 'Wet coil'],
-    clue: 'Catador nods at what doesn’t tip the scale — rust and wet both lie heavy.',
+    clue: 'Catador weighs by feel — oxide and moisture drag the wrist down; the honest spare floats.',
   },
   'courier-tip': {
     kind: 'chase',

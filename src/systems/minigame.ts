@@ -1,6 +1,7 @@
 /** Skill encounters that replace pure RNG for story gates. */
 
 import { SKILL_PHASE_TABLE } from '../content/skill-phases';
+import { t } from '../i18n';
 
 export type SkillKind =
   | 'timing'
@@ -428,28 +429,10 @@ export function lockpickClueIsDecoy(phase: SkillPhase): boolean {
 }
 
 function skillBlurb(kind: SkillKind): string {
-  switch (kind) {
-    case 'timing':
-      return 'Stop the needle in the green zone.';
-    case 'choice':
-      return 'Read the odds — pick the honest line.';
-    case 'puzzle':
-      return 'Find the rigged machine before Casa does.';
-    case 'chase':
-      return 'Reproduce the path before the mark slips away.';
-    case 'hack':
-      return 'Match the terminal sequence.';
-    case 'lockpick':
-      return 'Set tumblers under a timer — pick can snap.';
-    case 'evade':
-      return 'Slip past drone sight cones on Odds Avenue.';
-    case 'negotiate':
-      return 'Pick an offer before the timer — consequences stick.';
-    case 'duel':
-      return 'Multi-phase showdown — timing, read, and hack.';
-    default:
-      return 'Skill check.';
-  }
+  const key = `ui.skillBlurb.${kind}` as const;
+  const hit = t(key);
+  if (hit !== key) return hit;
+  return t('ui.skillBlurb.default');
 }
 
 function arrows(n: number, seed: SeqKey[]): SeqKey[] {
@@ -490,7 +473,7 @@ function duelSkill(betId: string): SkillDef {
   void betId;
   return {
     kind: 'duel',
-    title: 'Duel vs Augusto Casa',
+    title: t('skill.duelo-casa.title'),
     blurb: skillBlurb('duel'),
     phases: [
       {

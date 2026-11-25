@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 export type UpgradeId = 'sorte' | 'bolso' | 'fama' | 'filtro-agua';
 
 export type UpgradeDef = {
@@ -38,6 +40,14 @@ export const UPGRADES: readonly UpgradeDef[] = [
     maxLevel: 1,
   },
 ];
+
+export function upgradeName(id: UpgradeId): string {
+  return t(`upgrade.${id}.name`);
+}
+
+export function upgradeDescription(id: UpgradeId): string {
+  return t(`upgrade.${id}.description`);
+}
 
 export class UpgradeSystem {
   private levels = new Map<UpgradeId, number>();

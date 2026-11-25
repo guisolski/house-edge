@@ -310,7 +310,7 @@ export class GameSession {
       const cp = this.stealthProgress.checkpoint;
       this.player.setPosition(cp.x, cp.y);
       this.bus.emit('ui:toast', {
-        message: 'Spotted — back to checkpoint. No credit loss.',
+        message: t('ui.toast.spotted'),
         kind: 'danger',
       });
       this.bus.emit('fx:flash', { kind: 'lose' });
@@ -569,9 +569,7 @@ export class GameSession {
     if (!this.ui.go('play')) return false;
     this.bus.emit('game:started', { newGame: false });
     this.bus.emit('ui:toast', {
-      message: afterCredits
-        ? 'Credits rolled — free roam. Side hustles stay open on every district.'
-        : 'Free roam — grind side jobs or explore. Epilogue waits on the hill with Nair.',
+      message: afterCredits ? t('ui.toast.continueCredits') : t('ui.toast.continueFree'),
       kind: 'info',
     });
     return true;
@@ -625,12 +623,12 @@ export class GameSession {
     if (!this.isBroke()) return null;
     const giver = this.nearestSafeJobNpc();
     if (!giver) {
-      return 'Broke — open Esc → Side Jobs for safe pay.';
+      return t('ui.broke.escJobs');
     }
     const same = giver.districtId === this.player.getStats().districtId;
     return same
-      ? `Broke — talk to ${giver.name} for safe odd jobs (marker).`
-      : `Broke — find ${giver.name} (${giver.districtId}) for safe odd jobs.`;
+      ? tf('ui.broke.talkSame', { name: giver.name })
+      : tf('ui.broke.talkOther', { name: giver.name, district: giver.districtId });
   }
 
   /**
@@ -692,13 +690,13 @@ export class GameSession {
     if (kind === 'travel' && exit) return this.travelTo(exit.toDistrict);
     if (kind === 'locked') {
       this.bus.emit('ui:toast', {
-        message: 'Path locked — finish the current bet first.',
+        message: t('ui.toast.pathLocked'),
         kind: 'info',
       });
       return false;
     }
     if (kind === 'npc' && npc) return this.interactNpc(npc);
-    this.bus.emit('ui:toast', { message: 'Nobody in range.', kind: 'info' });
+    this.bus.emit('ui:toast', { message: t('ui.toast.nobodyInRange'), kind: 'info' });
     return false;
   }
 
@@ -708,7 +706,7 @@ export class GameSession {
     // Neon Snap: once cleared, never restart stealth / rematch the story bet.
     if (betId === 'avenida-drone' && this.story.getFlag('drone_ok')) {
       this.bus.emit('ui:toast', {
-        message: 'Neon Snap: Already got your shot — cones stay lit without you.',
+        message: t('ui.toast.neonSnapDone'),
         kind: 'info',
       });
       return false;
@@ -719,7 +717,7 @@ export class GameSession {
     const stake = defaultStake(bet, credits);
     if (!canAfford(credits, stake)) {
       this.bus.emit('ui:toast', {
-        message: this.brokeHintText() ?? 'Not enough credits — find an odd-job NPC.',
+        message: this.brokeHintText() ?? t('ui.toast.notEnoughCredits'),
         kind: 'danger',
       });
       return false;
@@ -729,7 +727,7 @@ export class GameSession {
     if (betId === 'duelo-casa' && this.story.getFlag('neg_hush')) {
       this.pendingStake = Math.max(bet.stakeMin ?? 1, Math.floor(stake * 0.8));
       this.bus.emit('ui:toast', {
-        message: 'Hush chip softens the rail (−20% stake).',
+        message: t('ui.toast.hushChip'),
         kind: 'success',
       });
     } else {
@@ -744,8 +742,7 @@ export class GameSession {
       this.bus.emit('skill:started', { betId, kind: 'evade' });
       this.bus.emit('audio:play-sfx', { id: 'bet' });
       this.bus.emit('ui:toast', {
-        message:
-          'Neon Snap — slip past the drones. Spotted = checkpoint, no credit loss.',
+        message: t('ui.toast.neonSnapStart'),
         kind: 'info',
       });
       return this.ui.go('play');
@@ -784,16 +781,21 @@ export class GameSession {
       // Retry current phase only — no stake drain, optional timing assist.
       this.skillProgress = assistAfterMiss(next);
       const phase = this.skillProgress.def.phases[this.skillProgress.phaseIndex];
-      const left =
+      const pickLeft =
         phase?.kind === 'lockpick' && this.skillProgress.pickLeft !== undefined
-          ? ` Pick left: ${this.skillProgress.pickLeft}.`
+          ? tf('ui.toast.missedPhasePickLeft', {
+              n: String(this.skillProgress.pickLeft),
+            })
           : '';
-      const widened =
+      const detail =
         phase?.kind === 'timing' && this.skillProgress.misses >= 2
-          ? ' Zone widened / needle slowed — try this phase again.'
-          : ` Retry this phase.${left}`;
+          ? t('ui.toast.missedPhaseZoneWide')
+          : `${t('ui.toast.missedPhaseRetry')}${pickLeft}`;
       this.bus.emit('ui:toast', {
-        message: `Missed phase ${this.skillProgress.phaseIndex + 1}.${widened}`,
+        message: tf('ui.toast.missedPhase', {
+          phase: String(this.skillProgress.phaseIndex + 1),
+          detail,
+        }),
         kind: 'info',
       });
       this.bus.emit('audio:play-sfx', { id: 'lose' });
@@ -894,11 +896,9 @@ export class GameSession {
 
   private toastSkill(won: boolean, payout: number, storyBeat: string | null): void {
     const missHint =
-      storyBeat === 'boteco-nair'
-        ? 'Missed the pour — talk to Nair again to retry. Objective stays put.'
-        : 'Miss — story beat still open. Talk again to retry. No stake taken.';
+      storyBeat === 'boteco-nair' ? t('ui.toast.missedPour') : t('ui.toast.missedStory');
     this.bus.emit('ui:toast', {
-      message: won ? `Cleared — ${payout} credits.` : missHint,
+      message: won ? tf('ui.toast.cleared', { payout: String(payout) }) : missHint,
       kind: won ? 'success' : 'info',
     });
     this.bus.emit('audio:play-sfx', { id: won ? 'win' : 'ui' });
@@ -910,7 +910,7 @@ export class GameSession {
     if (!job?.flatPay) return false;
     if (this.safeJobUses >= SAFE_JOB_CAP) {
       this.bus.emit('ui:toast', {
-        message: 'Odd jobs are tapped out — try a real bet or story beat.',
+        message: t('ui.toast.oddJobsCap'),
         kind: 'info',
       });
       return false;
@@ -918,7 +918,7 @@ export class GameSession {
     const now = Date.now();
     if (now - this.lastSafeJobMs < SAFE_JOB_COOLDOWN_MS) {
       this.bus.emit('ui:toast', {
-        message: 'Catch your breath — odd jobs need a short cooldown.',
+        message: t('ui.toast.oddJobsCooldown'),
         kind: 'info',
       });
       return false;
@@ -928,7 +928,11 @@ export class GameSession {
     this.safeJobUses += 1;
     this.lastSafeJobMs = now;
     this.bus.emit('ui:toast', {
-      message: `Earned ${pay} credits (safe odd jobs · ${this.safeJobUses}/${SAFE_JOB_CAP}).`,
+      message: tf('ui.toast.oddJobsEarned', {
+        pay: String(pay),
+        uses: String(this.safeJobUses),
+        cap: String(SAFE_JOB_CAP),
+      }),
       kind: 'success',
     });
     this.ui.go('play');
@@ -943,7 +947,7 @@ export class GameSession {
     const cost = this.upgrades.buy(id, this.player.getStats().credits);
     if (cost === null) {
       this.bus.emit('ui:toast', {
-        message: 'Cannot buy that upgrade.',
+        message: t('ui.toast.upgradeCannot'),
         kind: 'danger',
       });
       return false;
@@ -951,7 +955,7 @@ export class GameSession {
     this.player.addCredits(-cost);
     this.persist();
     this.bus.emit('ui:toast', {
-      message: `Bought upgrade (${cost} credits).`,
+      message: tf('ui.toast.upgradeBought', { cost: String(cost) }),
       kind: 'success',
     });
     return true;
@@ -1290,7 +1294,7 @@ export class GameSession {
     const finish = (): void => {
       this.ui.go('play');
       this.bus.emit('ui:toast', {
-        message: 'Elevator returns to the pit foyer.',
+        message: t('ui.toast.elevatorFoyer'),
         kind: 'info',
       });
       this.bus.emit('district:entered', { districtId: 'torre-casa' });
@@ -1394,9 +1398,11 @@ export class GameSession {
     // Soft pity is capped at 2 stacks (+16%) — never claim climbing past 100%.
     const stacks = Math.min(2, Math.max(0, priorLosses + 1));
     const pity =
-      !won && stacks > 0 ? ` Soft pity +${stacks * 8}% (max +16%) on the next roll.` : '';
+      !won && stacks > 0 ? tf('ui.toast.lostBetPity', { pct: String(stacks * 8) }) : '';
     this.bus.emit('ui:toast', {
-      message: won ? `Won ${payout} credits!` : `The house took this one.${pity}`,
+      message: won
+        ? tf('ui.toast.wonBet', { payout: String(payout) })
+        : tf('ui.toast.lostBet', { pity }),
       kind: won ? 'success' : 'danger',
     });
     this.bus.emit('audio:play-sfx', { id: won ? 'win' : 'lose' });

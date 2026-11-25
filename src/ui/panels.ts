@@ -1,5 +1,7 @@
 import { el, clearNode } from './dom';
 import { UI } from './strings';
+import { t, tf } from '../i18n';
+import { localizePhase, localizeSkillDef } from '../i18n/localize-phase';
 import type { GameSession } from '../systems/session';
 import type { DialogueLine } from '../core/types';
 import { listJobs } from '../systems/grind';
@@ -10,7 +12,7 @@ import {
   isSoftStakeBet,
 } from '../systems/betting';
 import { DISTRICTS } from '../content/districts';
-import { UPGRADES } from '../systems/upgrade';
+import { UPGRADES, upgradeDescription, upgradeName } from '../systems/upgrade';
 import {
   encodePins,
   LOCK_PIN_LEVELS,
@@ -144,6 +146,17 @@ function lockpickControlHint(panel: HTMLElement): string {
   return UI.lockpickHintKeyboard;
 }
 
+function appendPickDurability(
+  body: HTMLElement,
+  pickLeft: number,
+  panel: HTMLElement,
+): void {
+  const pickKey =
+    pickLeft === 1 ? 'ui.skill.pickDurabilityOne' : 'ui.skill.pickDurabilityMany';
+  body.appendChild(el('p', 'skill-seq', tf(pickKey, { n: String(pickLeft) })));
+  body.appendChild(el('p', 'skill-seq lockpick-hint', lockpickControlHint(panel)));
+}
+
 export function paintSkill(
   panel: HTMLElement,
   session: GameSession,
@@ -153,41 +166,45 @@ export function paintSkill(
   const progress = session.getSkillProgress();
   const bet = session.getPendingBet();
   if (!progress || !bet) return;
-  const phase = progress.def.phases[progress.phaseIndex];
+  const localizedDef = localizeSkillDef(bet.id, progress.def);
+  const multi = progress.def.phases.length > 1;
+  const phase = localizePhase(
+    bet.id,
+    progress.def.phases[progress.phaseIndex]!,
+    progress.phaseIndex,
+    multi,
+  );
   const body = el('div', 'panel-body skill-body');
   const streak = session.getSkillStreak();
   const sideHustle = bet.id === 'agua-gelada' && session.story.getFlag('free_roam');
   body.append(
-    el('h2', '', sideHustle ? 'Side hustle: ice pour' : progress.def.title),
+    el('h2', '', sideHustle ? t('ui.sideHustle.title') : localizedDef.title),
+    el('p', 'bet-desc', sideHustle ? t('ui.sideHustle.descSkill') : localizedDef.blurb),
     el(
       'p',
-      'bet-desc',
-      sideHustle
-        ? 'Repeatable post-credits grind — stop the needle on cold.'
-        : progress.def.blurb,
+      'stake-line',
+      tf('ui.stakeAtRisk', { stake: String(session.getPendingStake()) }),
     ),
-    el('p', 'stake-line', `Stake at risk: ${session.getPendingStake()} credits`),
     el(
       'p',
       'skill-phase',
-      `Phase ${progress.phaseIndex + 1}/${progress.def.phases.length}: ${phase?.prompt ?? ''}`,
+      tf('ui.skill.phase', {
+        current: String(progress.phaseIndex + 1),
+        total: String(progress.def.phases.length),
+        prompt: phase?.prompt ?? '',
+      }),
     ),
   );
   if (streak > 0) {
-    body.appendChild(el('p', 'skill-streak', `Combo ×${streak} — bonus on next win`));
+    body.appendChild(
+      el('p', 'skill-streak', tf('ui.skill.combo', { streak: String(streak) })),
+    );
   }
   if (phase?.clue) {
-    body.appendChild(el('p', 'skill-clue', `Clue: ${phase.clue}`));
+    body.appendChild(el('p', 'skill-clue', tf('ui.skill.clue', { clue: phase.clue })));
   }
   if (phase?.kind === 'lockpick' && progress.pickLeft !== undefined) {
-    body.appendChild(
-      el(
-        'p',
-        'skill-seq',
-        `Pick durability: ${progress.pickLeft} snap${progress.pickLeft === 1 ? '' : 's'} left`,
-      ),
-    );
-    body.appendChild(el('p', 'skill-seq lockpick-hint', lockpickControlHint(panel)));
+    appendPickDurability(body, progress.pickLeft, panel);
   }
   const actions = el('div', 'panel-actions skill-actions');
   if (phase) paintPhaseControls(body, actions, session, after, phase, progress.pickLeft);
@@ -219,7 +236,10 @@ function paintPhaseControls(
     return;
   }
   if (phase.kind === 'choice' || phase.kind === 'puzzle' || phase.kind === 'negotiate') {
-    paintChoiceSkill(actions, phase.options ?? ['A', 'B', 'C'], session, after, phase);
+    const opts =
+      phase.options ??
+      ([0, 1, 2].map((i) => t(`skill._fallback.option.${i}`)) as string[]);
+    paintChoiceSkill(actions, opts, session, after, phase);
     return;
   }
   paintSequenceSkill(body, actions, session, after);
@@ -245,20 +265,23 @@ function paintTimingSkill(
     el(
       'p',
       'skill-seq',
-      `Green zone ${Math.round(zone.lo * 100)}–${Math.round(zone.hi * 100)}% · stop on the needle`,
+      tf('ui.skill.greenZone', {
+        lo: String(Math.round(zone.lo * 100)),
+        hi: String(Math.round(zone.hi * 100)),
+      }),
     ),
   );
   const misses = session.getSkillProgress()?.misses ?? 0;
   if (misses > 0) {
     body.appendChild(el('p', 'skill-clue skill-miss-hint', UI.needleMissHint));
   }
-  let t = 0;
+  let needlePos = 0;
   let settled = false;
   const speed = phase.needleSpeed ?? 0.8;
   const step = Math.max(0.015, 0.028 * speed);
   const tick = window.setInterval(() => {
-    t = (t + step) % 1;
-    needle.style.left = `${t * 100}%`;
+    needlePos = (needlePos + step) % 1;
+    needle.style.left = `${needlePos * 100}%`;
   }, 32);
   meter.dataset.needleTick = String(tick);
   const stopAt = (pos: number): void => {
@@ -276,7 +299,7 @@ function paintTimingSkill(
       const v = parseFloat(raw) / 100;
       if (Number.isFinite(v)) return v;
     }
-    return t;
+    return needlePos;
   };
   const onKey = (e: KeyboardEvent): void => {
     if (e.repeat) return;
@@ -288,7 +311,7 @@ function paintTimingSkill(
     stopAt(sampleNeedle());
   };
   window.addEventListener('keydown', onKey, true);
-  const stopBtn = button('Stop!', () => stopAt(sampleNeedle()));
+  const stopBtn = button(t('ui.skill.stop'), () => stopAt(sampleNeedle()));
   stopBtn.classList.add('btn-needle-stop');
   actions.appendChild(stopBtn);
 }
@@ -312,13 +335,19 @@ function paintChoiceSkill(
   });
   const ms = phase?.timerMs;
   if (ms && ms > 0) {
-    const timer = el('p', 'skill-seq', `Offer expires in ${Math.ceil(ms / 1000)}s`);
+    const timer = el(
+      'p',
+      'skill-seq',
+      tf('ui.skill.offerExpires', { s: String(Math.ceil(ms / 1000)) }),
+    );
     actions.prepend(timer);
     const started = Date.now();
     const tick = window.setInterval(() => {
       const left = Math.max(0, ms - (Date.now() - started));
       timer.textContent =
-        left > 0 ? `Offer expires in ${Math.ceil(left / 1000)}s` : 'Offer expired';
+        left > 0
+          ? tf('ui.skill.offerExpires', { s: String(Math.ceil(left / 1000)) })
+          : t('ui.skill.offerExpired');
       if (left <= 0) {
         window.clearInterval(tick);
         // Wrong answer on timeout — miss, then UI refreshes via after.
@@ -340,11 +369,11 @@ type LockpickState = {
 function refreshLockpick(state: LockpickState): void {
   state.labels.forEach((btn, i) => {
     if (state.hidden === i && !state.revealed.has(i)) {
-      btn.textContent = `Pin ${i + 1}: ???`;
+      btn.textContent = tf('ui.skill.pinHidden', { n: String(i + 1) });
       return;
     }
     const h = state.heights[i] ?? 0;
-    btn.textContent = `Pin ${i + 1}: ${'▮'.repeat(h + 1)}${'▯'.repeat(LOCK_PIN_LEVELS - 1 - h)}`;
+    btn.textContent = `${tf('ui.skill.pinBtn', { n: String(i + 1) })}: ${'▮'.repeat(h + 1)}${'▯'.repeat(LOCK_PIN_LEVELS - 1 - h)}`;
   });
 }
 
@@ -363,7 +392,9 @@ function bindLockpickTimer(
   const tick = window.setInterval(() => {
     const left = Math.max(0, ms - (Date.now() - started));
     timerEl.textContent =
-      left > 0 ? `Timer ${Math.ceil(left / 1000)}s` : 'Timer expired — pick snaps';
+      left > 0
+        ? tf('ui.skill.timer', { s: String(Math.ceil(left / 1000)) })
+        : t('ui.skill.timerExpiredPick');
     if (left > 0) return;
     window.clearInterval(tick);
     state.expired = true;
@@ -411,7 +442,7 @@ function paintLockpickSkill(
   };
   body.ownerDocument?.addEventListener('keydown', onTab, true);
   target.forEach((_, i) => {
-    const btn = button(`Pin ${i + 1}`, () => {
+    const btn = button(tf('ui.skill.pinBtn', { n: String(i + 1) }), () => {
       if (state.expired || state.settled) return;
       if (state.hidden === i) state.revealed.add(i);
       state.heights[i] = ((state.heights[i] ?? 0) + 1) % LOCK_PIN_LEVELS;
@@ -439,7 +470,7 @@ function paintLockpickSkill(
   void pickLeft;
   bindLockpickTimer(body, phase, target, state, { cleanup, session, after });
   refreshLockpick(state);
-  actions.appendChild(button('Submit lock', submit));
+  actions.appendChild(button(t('ui.skill.submitLock'), submit));
 }
 
 function bindSequenceTimer(
@@ -456,7 +487,9 @@ function bindSequenceTimer(
   const tick = window.setInterval(() => {
     const left = Math.max(0, timerMs - (Date.now() - started));
     timerEl.textContent =
-      left > 0 ? `Timer ${Math.ceil(left / 1000)}s` : 'Time’s up — sequence failed';
+      left > 0
+        ? tf('ui.skill.timer', { s: String(Math.ceil(left / 1000)) })
+        : t('ui.skill.timerExpiredSeq');
     if (left > 0 || settled.v) return;
     window.clearInterval(tick);
     settled.v = true;
@@ -483,10 +516,15 @@ function paintSequenceSkill(
   const status = el(
     'p',
     'skill-seq',
-    `Match ${progress.seqIndex + 1} / ${seq.length} — next key…` +
-      (missCap ? ` · ${missCap} misses fail` : ''),
+    tf('ui.skill.matchNext', {
+      current: String(progress.seqIndex + 1),
+      total: String(seq.length),
+    }) + (missCap ? tf('ui.skill.missesFail', { n: String(missCap) }) : ''),
   );
-  body.append(el('p', 'skill-pattern', `Sequence: ${seq.join('  ')}`), status);
+  body.append(
+    el('p', 'skill-pattern', tf('ui.skill.sequenceLabel', { seq: seq.join('  ') })),
+    status,
+  );
   const settled = { v: false };
   if (phase.timerMs && phase.timerMs > 0) {
     bindSequenceTimer(body, session, seq, phase.timerMs, settled, after);
@@ -502,8 +540,17 @@ function paintSequenceSkill(
       after();
       return;
     }
-    const left = missCap ? ` · misses ${next.misses}/${missCap}` : '';
-    status.textContent = `Match ${next.seqIndex + 1} / ${seq.length} — next key…${left}`;
+    const left = missCap
+      ? tf('ui.skill.missesProgress', {
+          current: String(next.misses),
+          max: String(missCap),
+        })
+      : '';
+    status.textContent =
+      tf('ui.skill.matchNext', {
+        current: String(next.seqIndex + 1),
+        total: String(seq.length),
+      }) + left;
   });
   const onKey = (keyIndex: number): void => buffer.push(keyIndex);
   const pad = el('div', 'skill-seq-pad');
@@ -511,7 +558,7 @@ function paintSequenceSkill(
     pad.appendChild(button(key, () => onKey(SEQ_KEYS.indexOf(key))));
   }
   actions.appendChild(pad);
-  actions.appendChild(el('p', 'skill-seq', 'Esc cancels · arrows are sequence only'));
+  actions.appendChild(el('p', 'skill-seq', t('ui.skill.escSeqHint')));
   panelKeyHook(actions, (ev) => {
     if (ev.repeat) return;
     const sym = SEQ_KEY_CODES[ev.code];
@@ -598,30 +645,31 @@ function appendBetDetails(
   const losses = session.getBetLosses(bet.id);
   const story = isSoftStakeBet(bet);
   const pityStacks = story ? Math.min(2, losses) : 0;
-  const pity = pityStacks > 0 ? ` · pity +${pityStacks * 8}%` : '';
   const writeStake = (): void => {
-    stakeLine.textContent = `Stake: ${session.getPendingStake()} credits`;
+    stakeLine.textContent = tf('ui.stakeLine', {
+      stake: String(session.getPendingStake()),
+    });
   };
   writeStake();
   const sideHustle = bet.id === 'agua-gelada' && session.story.getFlag('free_roam');
+  const pityPct = pityStacks > 0 ? pityStacks * 8 : 0;
+  const pityStr = pityPct > 0 ? tf('ui.bet.pity', { pct: String(pityPct) }) : '';
   panel.append(
-    el('h2', '', sideHustle ? 'Side hustle: ice pour' : bet.title),
-    el(
-      'p',
-      'bet-desc',
-      sideHustle
-        ? 'Repeatable post-credits grind at Nair’s boteco — stop the needle on cold.'
-        : bet.description,
-    ),
+    el('h2', '', sideHustle ? t('ui.sideHustle.title') : bet.title),
+    el('p', 'bet-desc', sideHustle ? t('ui.sideHustle.descBet') : bet.description),
     stakeLine,
     el(
       'p',
       '',
-      `Win chance ${formatWinChance(bet.odds, bet.houseEdge, losses, story)} · Odds ${formatOdds(bet.odds)}${pity}`,
+      tf('ui.bet.winChance', {
+        chance: formatWinChance(bet.odds, bet.houseEdge, losses, story),
+        odds: formatOdds(bet.odds),
+        pity: pityStr,
+      }),
     ),
     el('p', 'bet-flavor', applyHouseFlavor(bet.houseEdge)),
     stakeControls(session, writeStake),
-    el('div', 'bet-roll', 'Ready to roll'),
+    el('div', 'bet-roll', t('ui.bet.readyToRoll')),
   );
 }
 
@@ -663,9 +711,9 @@ function stakeControls(session: GameSession, writeStake: () => void): HTMLElemen
 
 function animateRoll(panel: HTMLElement, done: () => void): void {
   const roll = panel.querySelector('.bet-roll');
-  if (roll) roll.textContent = '⚀ ⚁ ⚂ …';
+  if (roll) roll.textContent = t('ui.bet.rollAnim');
   window.setTimeout(() => {
-    if (roll) roll.textContent = 'Resolving…';
+    if (roll) roll.textContent = t('ui.bet.resolving');
     window.setTimeout(done, 160);
   }, 220);
 }
@@ -695,7 +743,7 @@ function travelBtn(
   after: () => void,
 ): HTMLButtonElement {
   const unlocked = session.world.isUnlocked(id);
-  const btn = button(unlocked ? name : `${name} (locked)`, () => {
+  const btn = button(unlocked ? name : `${name}${t('ui.travel.lockedSuffix')}`, () => {
     if (unlocked) {
       session.travelTo(id);
       after();
@@ -712,7 +760,7 @@ export function paintJobs(
 ): void {
   clearNode(panel);
   panel.appendChild(el('h2', '', UI.grind));
-  panel.appendChild(el('p', 'hint', '[SAFE] = flat pay · [BET] = opens a wager panel'));
+  panel.appendChild(el('p', 'hint', t('ui.jobs.hint')));
   const s = session.player.getStats();
   const jobs = listJobs(s.districtId, s.reputation);
   if (!jobs.length) panel.appendChild(el('p', '', UI.noJobs));
@@ -748,14 +796,15 @@ export function paintUpgrades(
     const level = session.upgrades.getLevel(def.id);
     const cost = session.upgrades.nextCost(def.id);
     const maxed = level >= def.maxLevel;
+    const name = upgradeName(def.id);
     const label = maxed
-      ? `${def.name} · Lv ${level} (max)`
-      : `${def.name} · Lv ${level} → ${cost}cr`;
+      ? tf('ui.upgrade.maxed', { name, level: String(level) })
+      : tf('ui.upgrade.row', { name, level: String(level), cost: String(cost) });
     const btn = button(label, () => {
       if (session.buyUpgrade(def.id)) paintUpgrades(panel, session, after);
     });
     btn.disabled = maxed || !session.upgrades.canBuy(def.id, credits);
-    panel.append(btn, el('p', 'hint', def.description));
+    panel.append(btn, el('p', 'hint', upgradeDescription(def.id)));
   }
   panel.appendChild(
     button(UI.close, () => {

@@ -238,7 +238,7 @@ function onBet(session: GameSession, hud: HudHandles): void {
     return;
   }
   session.bus.emit('ui:toast', {
-    message: 'No bet in range — walk up to an NPC.',
+    message: t('ui.toast.noBetInRange'),
     kind: 'info',
   });
 }

@@ -660,7 +660,7 @@ function promptLabel(
       session.world.get(exit.toDistrict)?.name ?? exit.label.replace(/^Exit → /, '');
     return `E — Travel to ${dest}`;
   }
-  if (kind === 'locked') return 'E — Path locked';
+  if (kind === 'locked') return t('ui.promptPathLocked');
   if (npc) return `${promptVerb(npc)}${npc.name ? ` (${npc.name})` : ''}`;
   return null;
 }
