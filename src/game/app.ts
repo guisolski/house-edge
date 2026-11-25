@@ -168,6 +168,9 @@ function onTick(deps: TickDeps, delta: number): void {
   pollPads(deps);
   deps.cooldown.ms = Math.max(0, deps.cooldown.ms - delta);
   maybeMove(deps);
+  if (deps.session.isStealthActive()) {
+    deps.session.tickStealthFrame(delta / 1000);
+  }
   const id = deps.session.player.getStats().districtId;
   const vip = deps.session.isVipFloor() ? 'vip' : 'foyer';
   const mapKey = `${id}:${vip}`;

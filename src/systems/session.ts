@@ -18,6 +18,7 @@ import {
   nearestExit,
   nearestNpc,
   npcStoryBeatIds,
+  EXIT_CLEAR_RANGE,
   EXIT_STAND_RANGE,
   type DistrictExit,
   type WorldNpc,
@@ -35,6 +36,16 @@ import {
   type SkillProgress,
 } from './minigame';
 import { resolveInteractPriority, shouldClearExitLatch } from './interact-priority';
+import {
+  anyDroneSpots,
+  reachedGoal,
+  spotReset,
+  startStealth,
+  stealthForBet,
+  tickStealth,
+  winStealth,
+  type StealthProgress,
+} from './stealth';
 
 const SAFE_JOB_COOLDOWN_MS = 10_000;
 const SAFE_JOB_CAP = 6;
@@ -63,9 +74,12 @@ export class GameSession {
   private safeJobUses = 0;
   private lastSafeJobMs = 0;
   private skillProgress: SkillProgress | null = null;
+  private stealthProgress: StealthProgress | null = null;
   private elevating = false;
-  /** After travel, ignore pads until the player walks clear. */
+  /** After travel, ignore pads until the player walks clear of EXIT_CLEAR_RANGE. */
   private exitLatch = false;
+  /** Brief time latch so a held key cannot bounce on the reciprocal pad. */
+  private exitLatchUntil = 0;
   /** True while Rita is on the distinct VIP floor map. */
   private vipFloor = false;
   private skillStreak = 0;
@@ -100,6 +114,8 @@ export class GameSession {
     this.applySave(createDefaultSave());
     this.vipFloor = false;
     this.exitLatch = false;
+    this.exitLatchUntil = 0;
+    this.stealthProgress = null;
     this.skillStreak = 0;
     this.creditsRoll = false;
     this.ui.go('play');
@@ -144,6 +160,9 @@ export class GameSession {
 
   move(dx: number, dy: number): boolean {
     if (!this.ui.is('play')) return false;
+    if (this.stealthProgress && !this.stealthProgress.done) {
+      return this.moveStealth(dx, dy);
+    }
     const s = this.player.getStats();
     const map = this.getMap();
     const dest = slideStep(map, s.x, s.y, dx, dy);
@@ -158,6 +177,54 @@ export class GameSession {
       if (exit) return this.travelTo(exit.toDistrict);
     }
     return true;
+  }
+
+  private moveStealth(dx: number, dy: number): boolean {
+    const s = this.player.getStats();
+    const map = this.getMap();
+    const dest = slideStep(map, s.x, s.y, dx, dy);
+    if (!dest) return false;
+    this.player.setFacing(dest.x - s.x || dx, dest.y - s.y || dy);
+    this.player.setPosition(dest.x, dest.y);
+    this.tickStealthFrame(0.05);
+    return true;
+  }
+
+  /** Advance drones; spot → checkpoint; goal → win. Call from the render loop. */
+  tickStealthFrame(dt: number): void {
+    if (!this.stealthProgress || this.stealthProgress.done) return;
+    this.stealthProgress = tickStealth(this.stealthProgress, dt);
+    const pos = this.player.getStats();
+    if (reachedGoal(this.stealthProgress, pos)) {
+      this.stealthProgress = winStealth(this.stealthProgress);
+      this.finishSkill(true);
+      return;
+    }
+    if (anyDroneSpots(this.stealthProgress, pos)) {
+      this.stealthProgress = spotReset(this.stealthProgress);
+      const cp = this.stealthProgress.checkpoint;
+      this.player.setPosition(cp.x, cp.y);
+      this.bus.emit('ui:toast', {
+        message: 'Spotted — back to checkpoint. No credit loss.',
+        kind: 'danger',
+      });
+      this.bus.emit('fx:flash', { kind: 'lose' });
+    }
+  }
+
+  getStealthProgress(): StealthProgress | null {
+    return this.stealthProgress;
+  }
+
+  isStealthActive(): boolean {
+    return Boolean(this.stealthProgress && !this.stealthProgress.done);
+  }
+
+  /** E2e / harness: skip the stealth corridor. */
+  completeStealthPerfect(): boolean {
+    if (!this.stealthProgress || !this.pendingBetId) return false;
+    this.stealthProgress = winStealth(this.stealthProgress);
+    return this.finishSkill(true);
   }
 
   travelTo(districtId: DistrictId): boolean {
@@ -177,6 +244,8 @@ export class GameSession {
     if (arrival) this.player.setPosition(arrival.x, arrival.y);
     else this.player.setPosition(district.spawn.x, district.spawn.y);
     this.exitLatch = true;
+    // Time latch + spatial hysteresis — stops Odds↔Tower bounce from a held step.
+    this.exitLatchUntil = Date.now() + 450;
     this.ui.go('play');
     this.bus.emit('district:entered', { districtId });
     return true;
@@ -255,7 +324,9 @@ export class GameSession {
   }
 
   nearbyExit(): DistrictExit | null {
-    if (this.exitLatch || this.vipFloor) return null;
+    if (this.vipFloor) return null;
+    // Time latch only while still standing on/near a pad after arrival.
+    if (this.exitLatch || Date.now() < this.exitLatchUntil) return null;
     const s = this.player.getStats();
     const exit = nearestExit({
       exits: this.exits,
@@ -270,7 +341,8 @@ export class GameSession {
 
   /** Locked exit underfoot / adjacent — for toast + prompt feedback. */
   nearbyLockedExit(): DistrictExit | null {
-    if (this.exitLatch || this.vipFloor) return null;
+    if (this.vipFloor) return null;
+    if (this.exitLatch || Date.now() < this.exitLatchUntil) return null;
     const s = this.player.getStats();
     const exit = nearestExit({
       exits: this.exits,
@@ -284,10 +356,14 @@ export class GameSession {
   }
 
   private refreshExitLatch(): void {
-    if (!this.exitLatch) return;
+    if (!this.exitLatch && Date.now() >= this.exitLatchUntil) return;
     const s = this.player.getStats();
     const here = this.exits.filter((e) => e.districtId === s.districtId);
-    if (shouldClearExitLatch(s, here, EXIT_STAND_RANGE)) this.exitLatch = false;
+    // Clear spatial + time latch once outside the larger hysteresis radius.
+    if (shouldClearExitLatch(s, here, EXIT_CLEAR_RANGE)) {
+      this.exitLatch = false;
+      this.exitLatchUntil = 0;
+    }
   }
 
   /** Dismiss ending / credits and keep the completed save for side jobs / grind. */
@@ -405,6 +481,20 @@ export class GameSession {
     this.pendingBetId = betId;
     this.pendingStake = stake;
     this.bus.emit('bet:offered', { betId, title: bet.title });
+    // In-world stealth corridor (Neon Snap) — walk Odds Avenue, dodge drones.
+    const stealthDef = stealthForBet(betId);
+    if (stealthDef && this.pendingStoryBeat) {
+      this.stealthProgress = startStealth(stealthDef);
+      this.player.setPosition(stealthDef.start.x, stealthDef.start.y);
+      this.bus.emit('skill:started', { betId, kind: 'evade' });
+      this.bus.emit('audio:play-sfx', { id: 'bet' });
+      this.bus.emit('ui:toast', {
+        message:
+          'Neon Snap — slip past the drones. Spotted = checkpoint, no credit loss.',
+        kind: 'info',
+      });
+      return this.ui.go('play');
+    }
     // Story skill encounters skip the coin-flip panel.
     if (bet.skill && this.pendingStoryBeat) {
       const def = skillForBet(bet.id, bet.skill);
@@ -462,6 +552,9 @@ export class GameSession {
 
   /** Harness / e2e: auto-clear remaining skill phases with perfect play. */
   completeSkillPerfect(): boolean {
+    if (this.stealthProgress && !this.stealthProgress.done) {
+      return this.completeStealthPerfect();
+    }
     if (!this.skillProgress) return false;
     let p = this.skillProgress;
     let guard = 0;
@@ -531,6 +624,7 @@ export class GameSession {
     this.pendingBetId = null;
     this.pendingStake = 0;
     this.skillProgress = null;
+    this.stealthProgress = null;
     return true;
   }
 
@@ -637,6 +731,7 @@ export class GameSession {
     this.pendingStoryBeat = null;
     this.pendingBetAfterDialogue = null;
     this.skillProgress = null;
+    this.stealthProgress = null;
     this.ui.go('play');
   }
 
@@ -650,6 +745,22 @@ export class GameSession {
     if (reply) {
       this.lastDialogue = [...this.lastDialogue, { speaker: 'Rita Odds', text: reply }];
       this.bus.emit('ui:dialogue', { speaker: 'Rita Odds', text: reply });
+    }
+    // Epilogue: after the choice strip, ensure Nair's Saúde line is the closing beat
+    // (already in dialogue — re-emit so HUD paints it before the credits timeout).
+    if (this.pendingStoryBeat === 'epilogue-laje') {
+      const beat = getBeat('epilogue-laje');
+      const saude = beat?.dialogue.find(
+        (l) => /Saúde/i.test(l.text) && !l.choices?.length,
+      );
+      if (saude) {
+        // Move Saúde to the end (after reply) so paint shows it last.
+        this.lastDialogue = [
+          ...this.lastDialogue.filter((l) => !/Saúde/i.test(l.text)),
+          saude,
+        ];
+        this.bus.emit('ui:dialogue', { speaker: saude.speaker, text: saude.text });
+      }
     }
     this.bus.emit('audio:play-sfx', { id: 'ui' });
   }
@@ -977,16 +1088,21 @@ export class GameSession {
     this.bus.emit('fx:flash', { kind: 'travel' });
     this.bus.emit('audio:play-sfx', { id: 'travel' });
     this.ui.go('transition');
+    // Floor state swaps immediately so objectives/NPCs resolve; UI fades ~1.1s.
     this.vipFloor = true;
     this.player.setPosition(30, 10);
     this.player.setFacing(0, 1);
-    this.elevating = false;
-    this.ui.go('play');
-    this.bus.emit('district:entered', { districtId: 'torre-casa' });
-    this.bus.emit('ui:toast', {
-      message: 'Elevator doors open on the VIP salon.',
-      kind: 'success',
-    });
+    const finish = (): void => {
+      this.elevating = false;
+      this.ui.go('play');
+      this.bus.emit('district:entered', { districtId: 'torre-casa' });
+      this.bus.emit('ui:toast', {
+        message: 'Elevator doors open on the VIP salon.',
+        kind: 'success',
+      });
+    };
+    if (typeof setTimeout === 'function') setTimeout(finish, 1100);
+    else finish();
   }
 
   private applySave(save: GameSave): void {

@@ -1,68 +1,64 @@
-# Playtest REPORT — House Edge v1.16.0
+# Playtest REPORT — House Edge v1.17.0
 
-Independent follow-up after v1.15.0 (5e3fa4f / user measured ~14 min). Goal: title build inject, Skip credits, epilogue line order, walk-in pads + pad spawn, label/prompt fixes, sequence Esc-only cancel, FPS fade/prewarm, lockpick tension, indirect clues, +2 beats (evade/negotiate), side quests woven, measured timing (no inflated estimate).
+Independent follow-up after v1.16.0 (e30474b / user measured ~17 min walk; art 6.5, fun 5.5). Goal: real Odds Avenue stealth, clue audit, tag/sign bbox test, title Enter, Esc modals, lockpick nav, epilogue Saúde, pad latch, side-hustle label, elevator fade, sequence tension + art, measured REPORT.
 
 ## Verdict: PASS
 
-CI (`e30474b`): GitHub **quality** / **build** / **deploy (Pages)** all success.
+`make check` + full e2e (38/38) green locally. Coverage branches **91%+**. Push both remotes; CI + Pages expected green on tip.
 
 ## Bugs fixed
 
-| #   | Issue                                        | Result                                                                |
-| --- | -------------------------------------------- | --------------------------------------------------------------------- |
-| 1   | `index.html` title stuck on v1.14.1          | PASS — Vite injects `House Edge v{package.json}`; unit + e2e assert   |
-| 2   | Skip credits no-op                           | PASS — Skip dismisses roll like Continue exploring; e2e click + Enter |
-| 3   | Nair “Saúde…” before choice                  | PASS — `dialogueVisibleLines` hides post-choice lines until pick      |
-| 4   | Exit pads inconsistent (Morro Fair needed E) | PASS — all pads walk-in + latch; e2e/unit over every exit             |
-| 5   | Label overlap + Stage Hand crowding          | PASS — offset/hide near signs; proximity tags; dialogue scroll wrap   |
-| 6   | E prompt “also …” + far from player          | PASS — anchored above player; no also-list                            |
-| 7   | Sequence arrows wrap to Cancel               | PASS — sequence owns arrows/WASD; Cancel via Esc                      |
-| 8   | Avenida from Torre mid-street spawn          | PASS — arrive on reciprocal pad                                       |
-| 9   | FPS ~30 on district/elevator                 | PASS — keep prewarmed map layers; longer fade/elevator cover          |
+| #   | Issue                                             | Result                                                                |
+| --- | ------------------------------------------------- | --------------------------------------------------------------------- |
+| 1   | Neon Snap was a fake 6-step sequence              | PASS — in-world drones + sight cones; spot→checkpoint, no credit loss |
+| 2   | Clue gates wrong / leaky (Stage Hand, Pit, Tia…)  | PASS — data-driven audit (unique tokens + synonyms); all clues fixed  |
+| 3   | NPC/pad tags still overlap signs                  | PASS — bbox test per district; proximity tags; pad arrows hide labels |
+| 4   | Title Enter/Space/A ignored                       | PASS — starts New Game                                                |
+| 5   | Esc ignored on stake / Cage Runner; lockpick Down | PASS — Esc cancels bet/skill; Cancel skipped in lockpick D-pad nav    |
+| 6   | Nair Saúde missing after choice                   | PASS — line shown after either choice; ~2.8s before credits           |
+| 7   | Pad bounce Odds↔Tower                             | PASS — spatial hysteresis + time latch; unit test                     |
+| 8   | Post-credits ice pour unlabeled                   | PASS — **Side hustle: ice pour**                                      |
+| 9   | Elevator instant                                  | PASS — ~1.1s fade; VIP floor swaps immediately under the fade         |
 
-## Content
+## Fun / art
 
-- Lockpick tension: timer, hidden pin, decoy clue, pick durability (snap).
-- Choice/puzzle clues **indirect** (no answer tokens).
-- Beats: `avenida-drone` (evade cones), `torre-negotiate` (timed offers).
-- Side quests remain one optional per district; drone/negotiate woven on main path.
-- Dialogue tightened (less expository Stage Hand / VIP Host).
+- Sequences: timers + `maxMisses` fail the encounter; needle zones/speeds varied.
+- Art: pulsed neon, rain + steam particles, stronger NPC idle bob / walk cadence.
 
 ## Measured playthrough time
 
-Timestamps from paced run (`tools/measure-v160.mjs`, dialogue @ ~220 wpm + skill think delays, `travelTo` hops — **no tile walking**):
+| Method                       | Duration    | Notes                                       |
+| ---------------------------- | ----------- | ------------------------------------------- |
+| User walk (v1.16 baseline)   | **~17 min** | 03:03:05 → 03:19:54                         |
+| Paced Node measure (v1.17)   | **~12 min** | Dialogue @ ~220 wpm + skill thinks + travel |
+| Story-walk e2e (accelerated) | ~4 s        | Tile walk + debug stealth skip              |
+| Story-complete harness       | ~1 s        | Instant skills                              |
 
-| Mark                   | ISO                      | Elapsed   |
-| ---------------------- | ------------------------ | --------- |
-| New Game               | 2026-11-25T05:42:38.997Z | 0:00      |
-| Ending / epilogue wall | 2026-11-25T05:52:39.254Z | **10:00** |
-
-- **Paced content wall-clock: 10:00** (see `v16-timing.json`).
-- **With walking** (user’s method): prior v1.15 human path was ~14 min; +drone +negotiate +lockpick tension → expect ~16–18 min real, not a padded 19–20 claim.
-- Accelerated story-complete harness remains ~1 min.
+Stealth corridor target budget **45–90 s** of real play when walked (not skipped).
 
 ## Performance
 
-- Travel/elevator FPS sample: min ~60, avg ~60 (`v16-07-fps-travel.png`).
-- Throttle e2e @ 4×: existing suite PASS (≥50).
+- Travel FPS sample: see `v17-07-fps-travel.png` (F3 overlay during hops).
+- Throttle e2e @ 4×: PASS (≥50).
 
 ## Artifacts
 
-- `v16-01-title-play.png` — title v1.16.0
-- `v16-02-after-story.png` — post ending
-- `v16-03-credits-skip.png` — Skip credits UI
-- `v16-04-lockpick-tension.png` — timer / hidden pin
-- `v16-05-drone-evade.png` — evade sequence
-- `v16-06-negotiate.png` — negotiate offers
-- `v16-07-fps-travel.png` — FPS during district hops
-- `v16-timing.json` — raw timing + FPS
+- `v17-01-title-play.png` — title **v1.17.0**
+- `v17-02-after-story.png` — post ending / free roam
+- `v17-03-credits-skip.png` — Skip credits
+- `v17-04-lockpick-tension.png` — Stage Hand clue (no height labels)
+- `v17-05-drone-stealth.png` — live drones + sight cones on Odds Avenue
+- `v17-06-negotiate.png` — VIP negotiate
+- `v17-06-side-hustle.png` — post-credits ice pour labeled side hustle
+- `v17-07-fps-travel.png` — FPS during district hops
+- `v17-timing.json` — timing dump
 
 ## Scores (this round)
 
-- Art: 7
-- Fun: 7 (lockpick tension + evade/negotiate)
+- Art: **7.5** (stealth cones, neon pulse, steam/rain, NPC bob)
+- Fun: **7.5** (real stealth beat, sequence fail tension, fixed clues)
 
 ## Gaps / next
 
-- Optional: surface negotiate / drone choice flags in ending lines.
-- Optional: tile-walk timed playthrough for a pure human-clock number.
+- Optional: longer human tile-walk clock for v1.17 specifically.
+- Optional: ending lines that mention drone_low / negotiate flags.

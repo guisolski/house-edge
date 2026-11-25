@@ -38,6 +38,7 @@ test('main story reaches ending via walk + E on objective markers only', async (
             acceptStoryBet: () => boolean;
             confirmBet: () => boolean;
             completeSkillPerfect: () => boolean;
+            isStealthActive?: () => boolean;
             pickDialogueChoice: (flag?: string, reply?: string) => void;
             closeModal: () => void;
             continueExploring: () => boolean;
@@ -156,13 +157,18 @@ test('main story reaches ending via walk + E on objective markers only', async (
     };
 
     const handleModal = async (): Promise<void> => {
+      // Elevator fade holds `transition` ~1.1s — wait it out.
+      if (he.session.ui.is('transition')) {
+        await sleep(200);
+        return;
+      }
       if (he.session.ui.is('dialogue')) {
         // Optional dialogue choice — pick first style without blocking.
         he.session.pickDialogueChoice?.('rita_loud', 'Loud it is.');
         if (he.session.acceptStoryBet()) {
           await sleep(20);
           grindIfBroke();
-          if (he.session.ui.is('skill')) {
+          if (he.session.ui.is('skill') || he.session.isStealthActive?.()) {
             he.session.completeSkillPerfect();
             await sleep(20);
             return;

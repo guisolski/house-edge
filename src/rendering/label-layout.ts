@@ -17,16 +17,70 @@ export function labelOffsetForSigns(opts: {
   signs: readonly { x: number; y: number }[];
   nearTiles?: number;
 }): { dy: number; hideLabel: boolean } {
-  const near = opts.nearTiles ?? 2.4;
+  const near = opts.nearTiles ?? 3.2;
   let closest = Infinity;
   for (const s of opts.signs) {
     const d = Math.hypot(s.x - opts.tileX, s.y - opts.tileY);
     if (d < closest) closest = d;
   }
   if (closest > near) return { dy: 0, hideLabel: false };
-  // Exit-pad markers often sit on "> CENTRAL FAIR" — hide the name tag.
-  if (closest < 1.35) return { dy: -48, hideLabel: true };
-  return { dy: -40, hideLabel: false };
+  // Near neon / EXIT signs — hide the floating name (signs win).
+  if (closest < 2.6) return { dy: -56, hideLabel: true };
+  return { dy: -48, hideLabel: false };
+}
+
+/** Axis-aligned box in screen/canvas space. */
+export type ScreenBox = { left: number; top: number; width: number; height: number };
+
+export function boxesIntersect(a: ScreenBox, b: ScreenBox): boolean {
+  return !(
+    a.left + a.width <= b.left ||
+    b.left + b.width <= a.left ||
+    a.top + a.height <= b.top ||
+    b.top + b.height <= a.top
+  );
+}
+
+/**
+ * Estimate a floating name-tag box above a tile (matches paintMarkerLabel layout).
+ */
+export function estimateTagBox(opts: {
+  tileX: number;
+  tileY: number;
+  text: string;
+  camX?: number;
+  camY?: number;
+  tilePx?: number;
+  dy?: number;
+}): ScreenBox {
+  const tilePx = opts.tilePx ?? 32;
+  const camX = opts.camX ?? 0;
+  const camY = opts.camY ?? 0;
+  const dy = opts.dy ?? 0;
+  const width = Math.min(220, Math.max(40, opts.text.length * 7 + 14));
+  const height = 18;
+  const cx = opts.tileX * tilePx + 16 - camX;
+  const top = opts.tileY * tilePx - 28 - camY + dy - height;
+  return { left: cx - width / 2, top, width, height };
+}
+
+/** Approximate neon sign screen box (baked sign ~ label width). */
+export function estimateSignBox(opts: {
+  tileX: number;
+  tileY: number;
+  label: string;
+  camX?: number;
+  camY?: number;
+  tilePx?: number;
+}): ScreenBox {
+  const tilePx = opts.tilePx ?? 32;
+  const camX = opts.camX ?? 0;
+  const camY = opts.camY ?? 0;
+  const width = Math.max(48, opts.label.length * 8 + 16);
+  const height = 22;
+  const left = opts.tileX * tilePx - camX;
+  const top = opts.tileY * tilePx - 8 - camY;
+  return { left, top, width, height };
 }
 
 /**

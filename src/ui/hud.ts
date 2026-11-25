@@ -194,13 +194,13 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
         onChoice: (setsFlag, reply) => {
           session.pickDialogueChoice(setsFlag, reply);
           h.showDialogue(session.getDialogue());
-          // Epilogue: show closing line briefly, then credits without another Close.
+          // Epilogue: show Nair's Saúde closing line, then credits without another Close.
           if (session.getPendingStoryBeat() === 'epilogue-laje') {
             window.setTimeout(() => {
               if (session.getPendingStoryBeat() !== 'epilogue-laje') return;
               session.closeModal();
               h.syncScreen();
-            }, 900);
+            }, 2800);
           }
         },
         onClose: () => {

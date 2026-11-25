@@ -43,10 +43,12 @@ export type SkillPhase = {
   pins?: number[];
   /** Pin index hidden until first toggle (tension). */
   hiddenPin?: number;
-  /** Lockpick / negotiate countdown in ms. */
+  /** Lockpick / negotiate / sequence countdown in ms. */
   timerMs?: number;
   /** Wrong submits before the pick snaps (lockpick). */
   pickDurability?: number;
+  /** Sequence: wrong taps before the encounter fails (tension). */
+  maxMisses?: number;
 };
 
 /** Encode pin heights as a single base-3 integer for skill attempts. */
@@ -219,7 +221,14 @@ function attemptSequence(
 ): SkillProgress {
   const seq = phaseSequence(phase);
   const expected = SEQ_KEYS.indexOf(seq[progress.seqIndex]!);
-  if (Math.round(value) !== expected) return phaseMiss(progress);
+  if (Math.round(value) !== expected) {
+    const missed = phaseMiss(progress);
+    const cap = phase.maxMisses;
+    if (cap !== undefined && missed.misses >= cap) {
+      return { ...missed, done: true, won: false };
+    }
+    return missed;
+  }
   const nextSeq = progress.seqIndex + 1;
   if (nextSeq < seq.length) {
     return { ...progress, seqIndex: nextSeq, justMissed: false };
@@ -317,9 +326,23 @@ export function allTimingPhases(): { betId: string; phase: SkillPhase }[] {
   return out;
 }
 
+/** Near-synonyms that must not appear when the answer uses the paired word. */
+const CLUE_SYNONYMS: Record<string, string[]> = {
+  hum: ['hum', 'humming', 'buzz', 'buzzing', 'drone'],
+  buzz: ['buzz', 'buzzing', 'hum', 'humming'],
+  dog: ['dog', 'dogged', 'ear', 'eared', 'dogear', 'dog-eared'],
+  eared: ['ear', 'eared', 'dog', 'dogear'],
+  green: ['green', 'verde'],
+  glass: ['glass'],
+  mole: ['mole', 'rat', 'informant'],
+  light: ['light', 'lite', 'feather'],
+  quiet: ['quiet', 'silent', 'still'],
+  steam: ['steam', 'steamy'],
+};
+
 /**
  * Choice/puzzle clues must be deducible but must NOT name the answer directly
- * (no answer tokens ≥3 letters appear in the clue).
+ * (unique answer tokens ≥3 letters, plus near-synonyms, must not appear in the clue).
  */
 export function choiceClueIndirect(phase: SkillPhase): boolean {
   if (phase.kind !== 'choice' && phase.kind !== 'puzzle' && phase.kind !== 'negotiate') {
@@ -329,13 +352,45 @@ export function choiceClueIndirect(phase: SkillPhase): boolean {
   const answer = opts[phase.target];
   if (!answer || !phase.clue || phase.clue.length < 16) return false;
   const stop = new Set(['the', 'and', 'for', 'you', 'with', 'from', 'that', 'this']);
-  const tokens = answer
-    .toLowerCase()
-    .split(/[^a-z0-9]+/)
-    .filter((t) => t.length >= 3 && !stop.has(t));
-  if (!tokens.length) return phase.clue.length >= 16;
+  const tokenize = (s: string): string[] =>
+    s
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((t) => t.length >= 3 && !stop.has(t));
+  const answerTokens = tokenize(answer);
+  // Tokens shared by every option (e.g. "crate") are not answer-identifying.
+  const shared = new Set(
+    answerTokens.filter((t) =>
+      opts.every((o, i) => i === phase.target || tokenize(o).includes(t)),
+    ),
+  );
+  const unique = answerTokens.filter((t) => !shared.has(t));
+  if (!unique.length && !answerTokens.length) return phase.clue.length >= 16;
   const clue = phase.clue.toLowerCase();
-  return tokens.every((t) => !new RegExp(`\\b${t}\\b`, 'i').test(clue));
+  const banned = new Set<string>();
+  for (const t of unique.length ? unique : answerTokens) {
+    banned.add(t);
+    for (const syn of CLUE_SYNONYMS[t] ?? []) banned.add(syn);
+  }
+  return [...banned].every(
+    (t) => !new RegExp(`\\b${t.replace(/-/g, '[-]?')}\\b`, 'i').test(clue),
+  );
+}
+
+/**
+ * Lockpick clue must hint tumblers via reasoning without listing height labels
+ * in order or naming the encoded digit run.
+ */
+export function lockpickClueDeducible(phase: SkillPhase): boolean {
+  if (phase.kind !== 'lockpick') return true;
+  if (!phase.clue || phase.clue.length < 24) return false;
+  if (!lockpickClueIsDecoy(phase)) return false;
+  const clue = phase.clue.toLowerCase();
+  const hooks =
+    clue.match(
+      /\b(left|right|outer|center|middle|shoulder|riser|seat|soft|pair|third|sticker|grease|oil|stage|worn|cage)\b/g,
+    ) ?? [];
+  return hooks.length >= 3;
 }
 
 /** @deprecated Prefer choiceClueIndirect — kept as alias for older imports. */
@@ -377,7 +432,7 @@ function skillBlurb(kind: SkillKind): string {
     case 'lockpick':
       return 'Set tumblers under a timer — pick can snap.';
     case 'evade':
-      return 'Slip the drone sight cones — match the blind path.';
+      return 'Slip past drone sight cones on Odds Avenue.';
     case 'negotiate':
       return 'Pick an offer before the timer — consequences stick.';
     case 'duel':

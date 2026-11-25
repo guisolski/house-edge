@@ -16,6 +16,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 0,
     steps: 3,
     sequence: ['R', 'G', 'B'],
+    timerMs: 14_000,
+    maxMisses: 2,
   },
   'laje-lottery': {
     kind: 'choice',
@@ -30,6 +32,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 0,
     steps: 4,
     sequence: ['↑', '→', '↑', '←'],
+    timerMs: 16_000,
+    maxMisses: 2,
   },
   'corrida-moto': {
     kind: 'chase',
@@ -37,34 +41,38 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 0,
     steps: 4,
     sequence: ['→', '→', '↓', '→'],
+    timerMs: 15_000,
+    maxMisses: 2,
   },
   'pastel-surpresa': {
     kind: 'puzzle',
     prompt: 'Which pastel crate is wired?',
     target: 2,
     options: ['Left steam', 'Middle quiet', 'Right buzz'],
-    clue: 'Kiko taps the crate that sings under the oil — the silent ones are decoys.',
+    // Answer is Right buzz — clue via vibration/oil, no "buzz"/"right" synonym dump.
+    clue: 'Kiko leans toward the fryer that rattles the handle — the still crates are dummies.',
   },
   'feira-garrafa': {
     kind: 'choice',
     prompt: 'Which bottle still has street proof?',
     target: 0,
     options: ['Green glass', 'Corp clear', 'Neon pink'],
-    clue: 'Catador keeps only what the street stamped before Casa blanked the rest.',
+    // Answer Green glass — street stamp without naming green/glass/bottle.
+    clue: 'Catador keeps only what the street corked before Casa blanked the clear and pink stock.',
   },
   'samba-odds': {
     kind: 'timing',
     prompt: 'Hit the samba downbeat.',
-    target: 0.48,
-    window: 0.14,
-    needleSpeed: 0.85,
+    target: 0.38,
+    window: 0.12,
+    needleSpeed: 0.95,
   },
   'forro-crowd': {
     kind: 'timing',
     prompt: 'Step on the forró accent.',
-    target: 0.62,
-    window: 0.14,
-    needleSpeed: 0.9,
+    target: 0.68,
+    window: 0.11,
+    needleSpeed: 1.0,
   },
   'feira-radio': {
     kind: 'hack',
@@ -72,13 +80,16 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 0,
     steps: 3,
     sequence: ['←', '→', '↑'],
+    timerMs: 12_000,
+    maxMisses: 2,
   },
   'feira-tipster': {
     kind: 'puzzle',
     prompt: 'Which mango crate hums?',
     target: 1,
     options: ['Sun crate', 'Hum crate', 'Empty crate'],
-    clue: 'Barraca Tia says the one that sings is neither sun-baked nor hollow.',
+    // Answer Hum crate — never say "hum"; point at vibration/song vs sun/hollow.
+    clue: 'Barraca Tia says the one that sings under the lid is neither sun-baked nor hollow.',
   },
   'prova-vazamento': {
     kind: 'choice',
@@ -93,13 +104,15 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 0,
     steps: 3,
     sequence: ['B', 'Y', 'R'],
+    timerMs: 12_000,
+    maxMisses: 2,
   },
   'pixo-challenge': {
     kind: 'timing',
     prompt: 'Spray on the beat.',
-    target: 0.5,
-    window: 0.15,
-    needleSpeed: 0.8,
+    target: 0.42,
+    window: 0.13,
+    needleSpeed: 0.88,
   },
   'influencer-duelo': {
     kind: 'choice',
@@ -114,6 +127,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 0,
     steps: 4,
     sequence: ['↑', '↓', '←', '→'],
+    timerMs: 16_000,
+    maxMisses: 2,
   },
   'avenida-stealth': {
     kind: 'chase',
@@ -121,7 +136,10 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 0,
     steps: 5,
     sequence: ['←', '↑', '→', '↑', '→'],
+    timerMs: 18_000,
+    maxMisses: 2,
   },
+  // Fallback only — live Neon Snap uses in-world stealth, not this sequence.
   'avenida-drone': {
     kind: 'evade',
     prompt: 'Evade the militia drone cones — slip the blind path.',
@@ -129,6 +147,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     steps: 6,
     sequence: ['↑', '←', '↑', '→', '↓', '→'],
     clue: 'Cones sweep the asphalt center — hug the glass shadow, then cut when the light blinks.',
+    timerMs: 20_000,
+    maxMisses: 2,
   },
   'audiencia-publica': {
     kind: 'choice',
@@ -140,9 +160,9 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
   'morro-return-nair': {
     kind: 'timing',
     prompt: 'Toast with the hill — stop on warm.',
-    target: 0.5,
-    window: 0.16,
-    needleSpeed: 0.7,
+    target: 0.58,
+    window: 0.14,
+    needleSpeed: 0.72,
   },
   'morro-return-fio': {
     kind: 'hack',
@@ -150,6 +170,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 0,
     steps: 3,
     sequence: ['G', 'B', 'G'],
+    timerMs: 12_000,
+    maxMisses: 2,
   },
   'torre-foyer': {
     kind: 'choice',
@@ -163,7 +185,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Spot the real deck.',
     target: 0,
     options: ['Dog-eared', 'Gold foil', 'Shrink-wrap'],
-    clue: 'Pit Dealer’s thumb worries the worn edge; shine and plastic are show props.',
+    // Answer Dog-eared — never say dog/ear; worn edge / thumb only.
+    clue: 'Pit Dealer’s thumb worries the worn corner; shine and plastic are show props.',
   },
   'torre-elevator': {
     kind: 'timing',
@@ -175,9 +198,9 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
   'torre-vip': {
     kind: 'timing',
     prompt: 'Skim the rake on the sweep.',
-    target: 0.45,
-    window: 0.11,
-    needleSpeed: 1.05,
+    target: 0.72,
+    window: 0.1,
+    needleSpeed: 1.12,
   },
   'torre-negotiate': {
     kind: 'negotiate',
@@ -200,23 +223,26 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 0,
     steps: 4,
     sequence: ['→', '↓', '→', '↑'],
+    timerMs: 14_000,
+    maxMisses: 2,
   },
   'dancer-tip': {
     kind: 'timing',
     prompt: 'Catch the dancer’s cue.',
-    target: 0.58,
-    window: 0.15,
-    needleSpeed: 0.95,
+    target: 0.28,
+    window: 0.13,
+    needleSpeed: 1.05,
   },
   'feira-lockbox': {
     kind: 'lockpick',
     prompt: 'Pick the Casa lockbox under the forró stage.',
     target: 0,
+    // Pins: mid / raised / sunk — clue via shoulder + stage + soft seat, not height words.
     pins: [1, 2, 0],
     hiddenPin: 1,
     timerMs: 28_000,
     pickDurability: 3,
-    clue: 'Scratched plate favors the left shoulder — the red sticker is a lie. Middle pin stays shy.',
+    clue: 'Scratched plate favors the left shoulder — the red sticker is a lie. Center tumbler rides the stage riser; the right seat sinks soft.',
   },
   'avenida-server': {
     kind: 'lockpick',

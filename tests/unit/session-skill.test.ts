@@ -88,6 +88,7 @@ describe('session skill encounters', () => {
   });
 
   it('elevator ride relocates to VIP floor after skill win', () => {
+    vi.useFakeTimers();
     const session = new GameSession(11);
     session.startNew();
     for (const id of [
@@ -152,12 +153,17 @@ describe('session skill encounters', () => {
     session.runStoryBeat('torre-elevator');
     expect(session.acceptStoryBet()).toBe(true);
     expect(session.completeSkillPerfect()).toBe(true);
-    const s = session.player.getStats();
+    // Floor swaps immediately; UI stays on transition until the fade ends.
     expect(session.isVipFloor()).toBe(true);
+    expect(session.ui.is('transition')).toBe(true);
+    vi.advanceTimersByTime(1200);
+    const s = session.player.getStats();
+    expect(session.ui.is('play')).toBe(true);
     expect(s.x).toBe(30);
     expect(s.y).toBe(10);
     expect(session.getMap().signs.some((g) => g.label.includes('VIP SALON'))).toBe(true);
     expect(session.story.getCompleted()).toContain('torre-elevator');
+    vi.useRealTimers();
   });
 
   it('exit latch blocks chain-travel until player walks clear of pads', () => {

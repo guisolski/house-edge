@@ -18,11 +18,11 @@ import { BETS } from '../../src/content/bets';
 import { districtExits } from '../../src/systems/interaction';
 
 describe('v1.16.0 title / dialogue / pads', () => {
-  it('package version is 1.16.x', () => {
+  it('package version is semver 1.x', () => {
     const pkg = JSON.parse(readFileSync(path.resolve('package.json'), 'utf8')) as {
       version: string;
     };
-    expect(pkg.version).toMatch(/^1\.16\./);
+    expect(pkg.version).toMatch(/^1\.\d+\.\d+/);
   });
 
   it('hides epilogue closing line until after the choice', () => {
@@ -256,7 +256,8 @@ describe('v1.16.0 label offset near signs', () => {
       tileY: 10,
       signs: [{ x: 11, y: 11 }],
     });
-    expect(soft.hideLabel).toBe(false);
+    // Within 2.6 tiles of a sign — hide to avoid neon overlap.
+    expect(soft.hideLabel).toBe(true);
     expect(soft.dy).toBeLessThan(0);
   });
 });

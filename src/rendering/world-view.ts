@@ -284,13 +284,14 @@ function paintPlayHud(
 ): void {
   if (!state.session.ui.is('play')) return;
   // Signs hide under modals so dialogue doesn't cover CASA SUPREMA / EXIT text.
-  drawLiveSigns(ctx, state, map, camX, camY);
+  drawLiveSigns(ctx, state, map, camX, camY, frame);
+  drawStealthDrones(ctx, state, camX, camY);
   drawNearbyNpcNames(ctx, state, map, camX, camY);
   drawMarker(ctx, state, camX, camY, frame);
   drawSideMarkers(ctx, state, camX, camY);
 }
 
-/** Name tags only within ~2.2 tiles; offset/hide when they would cover a sign. */
+/** Name tags only within ~1.8 tiles; offset/hide when they would cover a sign. */
 function drawNearbyNpcNames(
   ctx: CanvasRenderingContext2D,
   state: ViewState,
@@ -303,7 +304,7 @@ function drawNearbyNpcNames(
   for (const npc of state.session.floorNpcs()) {
     if (npc.districtId !== me.districtId) continue;
     const d = Math.hypot(npc.x - me.x, npc.y - me.y);
-    if (d > 2.2) continue;
+    if (d > 1.8) continue;
     // Objective marker already labels the quest target.
     if (objName && npc.name === objName) continue;
     const avoid = labelOffsetForSigns({
@@ -316,6 +317,52 @@ function drawNearbyNpcNames(
     const py = npc.y * TILE_PX - 28 - camY + avoid.dy;
     paintMarkerLabel(ctx, px, py, npc.name, ctx.canvas.width);
   }
+}
+
+/** Patrolling drones + sight cones during Neon Snap stealth. */
+function drawStealthDrones(
+  ctx: CanvasRenderingContext2D,
+  state: ViewState,
+  camX: number,
+  camY: number,
+): void {
+  const stealth = state.session.getStealthProgress();
+  if (!stealth || stealth.done) return;
+  for (const d of stealth.drones) {
+    const cx = d.x * TILE_PX + 16 - camX;
+    const cy = d.y * TILE_PX + 16 - camY;
+    // Sight cone (filled wedge).
+    ctx.fillStyle = '#ff3b5c33';
+    ctx.strokeStyle = '#ff3b5caa';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    const steps = 10;
+    for (let i = 0; i <= steps; i += 1) {
+      const a = d.facing - d.halfAngle + (2 * d.halfAngle * i) / steps;
+      ctx.lineTo(
+        cx + Math.cos(a) * d.range * TILE_PX,
+        cy + Math.sin(a) * d.range * TILE_PX,
+      );
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Drone body.
+    ctx.fillStyle = Palette.neonCyan;
+    ctx.fillRect(cx - 6, cy - 6, 12, 12);
+    ctx.fillStyle = '#ff2bd6';
+    ctx.fillRect(cx - 3, cy - 3, 6, 6);
+  }
+  // Goal beacon.
+  const g = stealth.def.goal;
+  const gx = g.x * TILE_PX + 16 - camX;
+  const gy = g.y * TILE_PX + 16 - camY;
+  ctx.strokeStyle = Palette.brasilYellow;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(gx, gy, 14, 0, Math.PI * 2);
+  ctx.stroke();
 }
 
 function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCamera> {
@@ -388,6 +435,7 @@ function paintPlayOverlays(o: {
     drawFewLights(o.ctx, o.state, o.px, o.py, o.camX, o.camY);
   }
   if ((o.frame & 3) === 0) drawRain(o.ctx, o.frame);
+  if ((o.frame & 3) === 0) drawSteam(o.ctx, o.state, o.camX, o.camY, o.frame);
 }
 
 function mapCacheKey(session: GameSession, map: MapDef): string {
@@ -580,10 +628,12 @@ function drawLiveSigns(
   map: MapDef,
   camX: number,
   camY: number,
+  frame = 0,
 ): void {
   const maxX = map.width * TILE_PX;
   const viewW = state.canvas.width;
   const pad = 8;
+  const pulse = 0.85 + 0.15 * Math.sin(frame / 14);
   for (const s of map.signs) {
     const img = signImage(state.baked, s.label, s.color);
     let sx = s.x * TILE_PX;
@@ -594,7 +644,9 @@ function drawLiveSigns(
     if (screenX + img.width > viewW - pad)
       screenX = Math.max(pad, viewW - pad - img.width);
     if (screenX < pad) screenX = pad;
+    ctx.globalAlpha = pulse;
     blitImage(ctx, img, screenX, s.y * TILE_PX - 8 - camY);
+    ctx.globalAlpha = 1;
   }
 }
 
@@ -768,8 +820,9 @@ function drawSortedActors(
 ): void {
   const { session, baked } = state;
   const stats = session.player.getStats();
-  const anim = Math.floor(frame / 10) % 2;
-  const bob = Math.sin(frame / 12) * 1.5;
+  // 4-phase walk/idle: even frames = plant, odd = stride (baked as 0/1).
+  const anim = Math.floor(frame / 8) % 2;
+  const bob = Math.sin(frame / 10) * 2;
   const view = { ctx, camX, camY, bob, vw: ctx.canvas.width, vh: ctx.canvas.height };
   const items: SortBlit[] = [];
   pushNpcSorts(items, session, baked, stats.districtId, anim, view);
@@ -1010,6 +1063,40 @@ function drawRain(ctx: CanvasRenderingContext2D, frame: number): void {
   }
 }
 
+/** Feira / avenida steam wisps from stalls and vents. */
+function drawSteam(
+  ctx: CanvasRenderingContext2D,
+  state: ViewState,
+  camX: number,
+  camY: number,
+  frame: number,
+): void {
+  const id = state.session.player.getStats().districtId;
+  if (id !== 'feira-central' && id !== 'avenida-odds') return;
+  ctx.fillStyle = '#c8d0d844';
+  const anchors =
+    id === 'feira-central'
+      ? [
+          { x: 18, y: 14 },
+          { x: 26, y: 12 },
+          { x: 12, y: 16 },
+        ]
+      : [
+          { x: 20, y: 13 },
+          { x: 14, y: 11 },
+          { x: 30, y: 14 },
+        ];
+  for (let i = 0; i < anchors.length; i += 1) {
+    const a = anchors[i]!;
+    const bob = Math.sin(frame / 18 + i) * 6;
+    const sx = a.x * TILE_PX + 8 - camX;
+    const sy = a.y * TILE_PX - 10 - camY + bob;
+    ctx.beginPath();
+    ctx.ellipse(sx, sy, 6 + (i % 2), 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 function refreshMarkerCache(state: ViewState, frame: number): void {
   if (state.markerFrame >= 0 && frame - state.markerFrame < 8) return;
   state.markerFrame = frame;
@@ -1100,9 +1187,11 @@ function paintObjectiveMarker(m: ObjectiveMark): void {
   const margin = 28;
   const onScreen =
     rawX >= margin && rawX <= m.viewW - margin && rawY >= 120 && rawY <= m.viewH - margin;
+  // Pad / travel markers: arrow only — EXIT neon already names the destination.
+  const padLabel = avoid.hideLabel || /Fair|Avenue|Tower|Morro Neon/i.test(m.label);
   if (onScreen) {
     paintBigArrow(m.ctx, rawX, rawY, Palette.brasilYellow);
-    if (m.label && !avoid.hideLabel) {
+    if (m.label && !padLabel) {
       paintMarkerLabel(m.ctx, rawX, rawY - 22, m.label, m.viewW);
     }
     return;
@@ -1110,7 +1199,7 @@ function paintObjectiveMarker(m: ObjectiveMark): void {
   const px = clamp(rawX, margin, m.viewW - margin);
   const py = clamp(rawY, 120, m.viewH - margin);
   paintBigArrow(m.ctx, px, py, Palette.brasilYellow);
-  if (avoid.hideLabel) return;
+  if (padLabel) return;
   // Prefer full destination name; layoutMarkerLabel shortens only if it cannot fit.
   const label = m.label ? `${m.label} · ${m.distTiles}m` : `${m.distTiles}m`;
   paintMarkerLabel(m.ctx, px, py - 22, label, m.viewW);

@@ -91,9 +91,16 @@ export function paintSkill(
   const phase = progress.def.phases[progress.phaseIndex];
   const body = el('div', 'panel-body skill-body');
   const streak = session.getSkillStreak();
+  const sideHustle = bet.id === 'agua-gelada' && session.story.getFlag('free_roam');
   body.append(
-    el('h2', '', progress.def.title),
-    el('p', 'bet-desc', progress.def.blurb),
+    el('h2', '', sideHustle ? 'Side hustle: ice pour' : progress.def.title),
+    el(
+      'p',
+      'bet-desc',
+      sideHustle
+        ? 'Repeatable post-credits grind — stop the needle on cold.'
+        : progress.def.blurb,
+    ),
     el('p', 'stake-line', `Stake at risk: ${session.getPendingStake()} credits`),
     el(
       'p',
@@ -118,12 +125,13 @@ export function paintSkill(
   }
   const actions = el('div', 'panel-actions skill-actions');
   if (phase) paintPhaseControls(body, actions, session, after, phase, progress.pickLeft);
-  actions.appendChild(
-    button(UI.cancel, () => {
-      session.cancelBet();
-      after();
-    }),
-  );
+  const cancel = button(UI.cancel, () => {
+    session.cancelBet();
+    after();
+  });
+  // Lockpick: Down cycles pins/Submit only — Esc cancels (skip Cancel in D-pad nav).
+  if (phase?.kind === 'lockpick') cancel.dataset.skipNav = '1';
+  actions.appendChild(cancel);
   panel.append(body, actions);
   focusFirst(panel);
 }
@@ -300,6 +308,33 @@ function paintLockpickSkill(
   );
 }
 
+function bindSequenceTimer(
+  body: HTMLElement,
+  session: GameSession,
+  seq: SeqKey[],
+  timerMs: number,
+  settled: { v: boolean },
+  after: () => void,
+): void {
+  const timerEl = el('p', 'skill-seq', '');
+  body.appendChild(timerEl);
+  const started = Date.now();
+  const tick = window.setInterval(() => {
+    const left = Math.max(0, timerMs - (Date.now() - started));
+    timerEl.textContent =
+      left > 0 ? `Timer ${Math.ceil(left / 1000)}s` : 'Time’s up — sequence failed';
+    if (left > 0 || settled.v) return;
+    window.clearInterval(tick);
+    settled.v = true;
+    let p = session.getSkillProgress();
+    while (p && !p.done) {
+      session.submitSkill((SEQ_KEYS.indexOf(seq[0]!) + 1) % SEQ_KEYS.length);
+      p = session.getSkillProgress();
+    }
+    after();
+  }, 200);
+}
+
 function paintSequenceSkill(
   body: HTMLElement,
   actions: HTMLElement,
@@ -310,47 +345,37 @@ function paintSequenceSkill(
   const phase = progress?.def.phases[progress.phaseIndex];
   if (!progress || !phase) return;
   const seq = phaseSequence(phase);
-  const evade = phase.kind === 'evade';
-  const pattern = el(
-    'p',
-    'skill-pattern',
-    evade ? `Blind path: ${seq.join('  ')}` : `Sequence: ${seq.join('  ')}`,
-  );
+  const missCap = phase.maxMisses;
   const status = el(
     'p',
     'skill-seq',
-    evade
-      ? `Cone ${progress.seqIndex + 1} / ${seq.length} — slip next…`
-      : `Match ${progress.seqIndex + 1} / ${seq.length} — next key…`,
+    `Match ${progress.seqIndex + 1} / ${seq.length} — next key…` +
+      (missCap ? ` · ${missCap} misses fail` : ''),
   );
-  body.append(pattern, status);
-  const pad = el('div', 'skill-seq-pad');
+  body.append(el('p', 'skill-pattern', `Sequence: ${seq.join('  ')}`), status);
+  const settled = { v: false };
+  if (phase.timerMs && phase.timerMs > 0) {
+    bindSequenceTimer(body, session, seq, phase.timerMs, settled, after);
+  }
   const used = [...new Set(seq)] as SeqKey[];
   const onKey = (keyIndex: number): void => {
+    if (settled.v) return;
     const beforePhase = session.getSkillProgress()?.phaseIndex;
     session.submitSkill(keyIndex);
     const next = session.getSkillProgress();
-    if (!next || next.done) {
+    if (!next || next.done || next.phaseIndex !== beforePhase) {
+      settled.v = true;
       after();
       return;
     }
-    // Still mid-sequence — refresh status without clearing pad.
-    if (next.phaseIndex === beforePhase) {
-      status.textContent = `Match ${next.seqIndex + 1} / ${seq.length} — next key…`;
-      return;
-    }
-    after();
+    const left = missCap ? ` · misses ${next.misses}/${missCap}` : '';
+    status.textContent = `Match ${next.seqIndex + 1} / ${seq.length} — next key…${left}`;
   };
+  const pad = el('div', 'skill-seq-pad');
   for (const key of used) {
-    const idx = SEQ_KEYS.indexOf(key);
-    pad.appendChild(
-      button(key, () => {
-        onKey(idx);
-      }),
-    );
+    pad.appendChild(button(key, () => onKey(SEQ_KEYS.indexOf(key))));
   }
   actions.appendChild(pad);
-  // Hint: Esc cancels (wired in handleAction); arrows never cycle Cancel.
   actions.appendChild(el('p', 'skill-seq', 'Esc cancels · arrows are sequence only'));
   panelKeyHook(actions, (ev) => {
     const sym = SEQ_KEY_CODES[ev.code];
@@ -415,9 +440,16 @@ function appendBetDetails(
     stakeLine.textContent = `Stake: ${session.getPendingStake()} credits`;
   };
   writeStake();
+  const sideHustle = bet.id === 'agua-gelada' && session.story.getFlag('free_roam');
   panel.append(
-    el('h2', '', bet.title),
-    el('p', 'bet-desc', bet.description),
+    el('h2', '', sideHustle ? 'Side hustle: ice pour' : bet.title),
+    el(
+      'p',
+      'bet-desc',
+      sideHustle
+        ? 'Repeatable post-credits grind at Nair’s boteco — stop the needle on cold.'
+        : bet.description,
+    ),
     stakeLine,
     el(
       'p',

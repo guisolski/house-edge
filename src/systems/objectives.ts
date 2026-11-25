@@ -72,7 +72,7 @@ function districtName(id: string): string {
   return DISTRICTS.find((d) => d.id === id)?.name ?? id;
 }
 
-/** Short marker labels so edge pointers stay readable. */
+/** Short marker labels so edge pointers stay readable (arrow-only when near EXIT signs). */
 function districtShortName(id: string): string {
   if (id === 'torre-casa') return 'Casa Tower';
   if (id === 'feira-central') return 'Central Fair';
@@ -145,6 +145,7 @@ function travelObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
         ? `Go to ${place} — talk to ${who}`
         : `Exit → ${hopPlace}, then ${place}`,
       detail: next.title,
+      // Name kept for walk e2e uniqueness; paint hides it when near EXIT neon.
       targetName: hopShort,
       targetX: hop.x,
       targetY: hop.y,

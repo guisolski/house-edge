@@ -27,6 +27,6 @@ export function activateFocused(panel: HTMLElement): void {
 
 function enabledButtons(panel: HTMLElement): HTMLButtonElement[] {
   return [...panel.querySelectorAll('button')].filter(
-    (b) => !b.disabled,
+    (b) => !b.disabled && b.dataset.skipNav !== '1',
   ) as HTMLButtonElement[];
 }

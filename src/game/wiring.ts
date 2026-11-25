@@ -67,10 +67,20 @@ function wireUi(session: GameSession, hud: HudHandles, audio: AudioEngine): void
     hud.showDialogue(session.getDialogue());
   });
   session.bus.on('bet:offered', () => {
+    if (session.isStealthActive()) {
+      hud.showHud();
+      return;
+    }
     if (session.ui.is('skill')) hud.showSkill();
     else hud.showBet();
   });
-  session.bus.on('skill:started', () => hud.showSkill());
+  session.bus.on('skill:started', () => {
+    if (session.isStealthActive()) {
+      hud.showHud();
+      return;
+    }
+    hud.showSkill();
+  });
   session.bus.on('bet:resolved', () => {
     hud.updateStats();
     // Ending beats already switched UI — don't clobber the ending panel.
@@ -101,8 +111,52 @@ function wireModes(
   modes.onChange(apply);
 }
 
+function handleTitleAction(
+  session: GameSession,
+  hud: HudHandles,
+  action: string,
+): boolean {
+  if (!session.ui.is('title')) return false;
+  if (action === 'interact' || action === 'bet') {
+    session.startNew();
+    hud.syncScreen();
+  }
+  return true;
+}
+
+function handleEscModal(session: GameSession, hud: HudHandles): boolean {
+  if (session.ui.is('bet') || session.ui.is('skill')) {
+    session.cancelBet();
+    hud.syncScreen();
+    return true;
+  }
+  if (session.ui.is('dialogue')) {
+    session.closeModal();
+    hud.syncScreen();
+    return true;
+  }
+  return false;
+}
+
+function handleModalNav(session: GameSession, hud: HudHandles, action: string): boolean {
+  if (session.ui.is('play') || session.ui.is('title')) return false;
+  if (action === 'up' || action === 'left') {
+    hud.gamepadNav('up');
+    return true;
+  }
+  if (action === 'down' || action === 'right') {
+    hud.gamepadNav('down');
+    return true;
+  }
+  if (action === 'interact') {
+    hud.gamepadNav('confirm');
+    return true;
+  }
+  return false;
+}
+
 function handleAction(session: GameSession, hud: HudHandles, action: string): void {
-  // Sequence skill owns arrows/WASD/A — Cancel only via Esc (menu).
+  if (handleTitleAction(session, hud, action)) return;
   if (session.isSequenceSkillActive()) {
     if (action === 'menu') {
       session.cancelBet();
@@ -110,21 +164,8 @@ function handleAction(session: GameSession, hud: HudHandles, action: string): vo
     }
     return;
   }
-  // Modal navigation: arrows/WASD cycle focus; E/Space/Enter activates.
-  if (!session.ui.is('play') && !session.ui.is('title')) {
-    if (action === 'up' || action === 'left') {
-      hud.gamepadNav('up');
-      return;
-    }
-    if (action === 'down' || action === 'right') {
-      hud.gamepadNav('down');
-      return;
-    }
-    if (action === 'interact') {
-      hud.gamepadNav('confirm');
-      return;
-    }
-  }
+  if (action === 'menu' && handleEscModal(session, hud)) return;
+  if (handleModalNav(session, hud, action)) return;
   if (action === 'interact') onInteract(session, hud);
   if (action === 'bet') onBet(session, hud);
   if (action === 'menu') onMenu(session, hud);

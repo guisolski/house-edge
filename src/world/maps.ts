@@ -533,8 +533,9 @@ function buildAvenida(): MapDef {
     tiles,
     buildings,
     signs: [
-      { x: 16, y: 8, label: 'ODDS 24h', color: '#ff2bd6' },
-      { x: 28, y: 8, label: 'CASA SUPREMA', color: '#ff2bd6' },
+      // High on glass towers — clear of boulevard NPC tags.
+      { x: 16, y: 5, label: 'ODDS 24h', color: '#ff2bd6' },
+      { x: 28, y: 5, label: 'CASA SUPREMA', color: '#ff2bd6' },
       { x: 5, y: 10, label: '> Central Fair', color: '#2bfff2' },
       // Keep within ~3 tiles of exit pad (40,12) so doorway + label read as one hotspot.
       { x: 38, y: 11, label: '> Casa Tower', color: '#2bfff2' },

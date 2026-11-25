@@ -214,8 +214,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'mole-contact',
     name: 'Mole Contact',
     districtId: 'avenida-odds',
-    x: 18,
-    y: 10,
+    // South plaza — clear of ODDS 24h neon (16,6).
+    x: 14,
+    y: 16,
     beatId: 'avenida-twist',
     extraBeatIds: ['avenida-betrayal'],
     jobBetId: 'twist-vazamento',
@@ -270,8 +271,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'stealth-cam',
     name: 'Lobby Cam Tech',
     districtId: 'avenida-odds',
-    x: 28,
-    y: 10,
+    // South of CASA SUPREMA neon (28,6).
+    x: 34,
+    y: 16,
     beatId: 'avenida-stealth',
     color: '#6ec8e8',
     bodyVariant: 1,
@@ -280,8 +282,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'margin',
     name: 'Dr. Margin',
     districtId: 'avenida-odds',
-    x: 26,
-    y: 9,
+    x: 22,
+    y: 16,
     beatId: 'lobby-margin',
     color: '#4a6cff',
     bodyVariant: 0,
@@ -510,8 +512,10 @@ function pickNearest(
   return best;
 }
 
-/** Doorway + sign margin — whole exit approach triggers Travel / walk-in. */
-export const EXIT_STAND_RANGE = 2.6;
+/** Doorway trigger radius — walk-in fires inside this. */
+export const EXIT_STAND_RANGE = 2.2;
+/** Hysteresis: latch clears only after leaving this larger radius (stops bounce-back). */
+export const EXIT_CLEAR_RANGE = 3.8;
 
 export type NearestExitQuery = {
   exits: readonly DistrictExit[];

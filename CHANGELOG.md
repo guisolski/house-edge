@@ -5,6 +5,35 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.0] — 2026-11-25
+
+### Added
+
+- **Real Neon Snap stealth** on Odds Avenue — patrolling drones with visible sight cones; spotted → checkpoint reset (no credit loss); e2e/debug skip via `completeStealthPerfect`.
+- Sequence tension: time limits + `maxMisses` fail the encounter (chase/hack).
+- Varied timing needle zones/speeds across story gates.
+- Ambient steam particles (Feira / Odds) + pulsed neon signs; stronger NPC idle bob.
+- Pad latch hysteresis (`EXIT_CLEAR_RANGE` > stand range) + short time latch.
+- Elevator ride fade (~1.1s) before VIP floor swap.
+- Automated per-district NPC-tag vs sign bounding-box non-intersection test.
+- Clue audit: unique answer tokens + near-synonym ban; lockpick clues must be deducible.
+
+### Fixed
+
+- Stage Hand lockpick clue matches mid / raised / sunk without height labels.
+- Pit Dealer / Barraca Tia / Kiko / Catador clues no longer leak answer labels or synonyms.
+- NPC/pad tags no longer overlap ODDS 24h, CASA SUPREMA, or EXIT destination signs; tags proximity-only (~1.8 tiles); travel pads are arrow-only.
+- Title: Enter / Space / gamepad A starts New Game.
+- Esc closes stake + skill modals (Cage Runner lockpick included).
+- Lockpick: Down no longer jumps to Cancel (`data-skip-nav`).
+- Nair epilogue **Saúde** shows after either choice before credits (~2.8s).
+- Post-credits ice pour labeled **Side hustle: ice pour**.
+
+### Tests
+
+- Unit: cone detection, stealth progress, clue synonym audit, label bbox overlap, latch hysteresis, epilogue both choices, sequence fail.
+- E2e: story-complete / story-walk skip in-world stealth via `completeSkillPerfect`.
+
 ## [1.16.0] — 2026-11-25
 
 ### Added

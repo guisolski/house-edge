@@ -20,7 +20,7 @@ export const BETS: readonly BetDefinition[] = [
     kind: 'purchase',
     title: 'Ice-cold water at the boteco',
     description:
-      'Onboarding timing pour — stop the needle on cold. Wide green zone; stake still costs on a miss.',
+      'Onboarding timing pour — stop the needle on cold. After the credits this rematch is a side hustle (repeatable grind).',
     stake: 8,
     stakeMin: 4,
     stakeMax: 30,

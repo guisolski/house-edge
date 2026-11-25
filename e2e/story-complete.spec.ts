@@ -104,6 +104,7 @@ test('full story reaches ending with safe-job recovery', async ({ page }) => {
               acceptStoryBet: () => boolean;
               confirmBet: () => boolean;
               completeSkillPerfect: () => boolean;
+              isStealthActive?: () => boolean;
               doSafeJob: (id: string) => boolean;
               travelTo: (id: string) => boolean;
               closeModal: () => void;
@@ -154,7 +155,7 @@ test('full story reaches ending with safe-job recovery', async ({ page }) => {
             if (he.session.story.getCompleted().includes(id)) break;
             continue;
           }
-          if (he.session.ui.is('skill')) {
+          if (he.session.ui.is('skill') || he.session.isStealthActive?.()) {
             he.session.completeSkillPerfect();
             skills += 1;
           } else {
