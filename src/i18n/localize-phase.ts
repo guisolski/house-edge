@@ -30,7 +30,9 @@ export function localizeSkillDef(betId: string, def: SkillDef): SkillDef {
   const multi = def.phases.length > 1;
   const titleKey = `skill.${betId}.title`;
   const blurbKey = `skill.${betId}.blurb`;
-  const title = lookup(titleKey, def.title);
+  // Single-phase skills use prompt as title in EN — prefer localized prompt.
+  const promptFallback = multi ? def.title : lookup(`skill.${betId}.prompt`, def.title);
+  const title = lookup(titleKey, promptFallback);
   const blurb = lookup(blurbKey, def.blurb);
   return {
     ...def,
