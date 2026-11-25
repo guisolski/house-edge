@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.22.6] — 2026-11-25
+
+### Fixed
+
+- **Choice mash (P0)**: no default focus on option 1 — arrow onto a choice first; Enter/NumpadEnter via `event.key`; Close/Skip/Stop bind the same confirm keys.
+- **Anfitrião (P0)**: wrong dialogue offers fail the beat; hush chip only seals; negotiate skill stays target-only.
+- **Augusto P3 (P0)**: sequence pad uses fixed RGBY+arrows order (not the answer order after flash).
+- **Tags / exits / Esc / pt-BR (P1)**: nearest-only tags with overlap reject; larger exit stand range; Esc dismisses wipe-save confirm; viraliza / miss-zone / clue giveaway copy.
+
+### Tests
+
+- `session-v1226`, `enter-confirm-surfaces`, `tag-overlap` e2e.
+
 ## [1.22.5] — 2026-11-25
 
 ### Fixed

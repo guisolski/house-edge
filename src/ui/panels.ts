@@ -15,11 +15,13 @@ import {
 } from '../systems/betting';
 import { DISTRICTS } from '../content/districts';
 import { UPGRADES, upgradeDescription, upgradeName } from '../systems/upgrade';
+import { isConfirmKey } from '../input/keyboard';
 import {
   encodePins,
   LOCK_PIN_LEVELS,
   phasePins,
   phaseSequence,
+  sequencePadKeys,
   SEQ_KEYS,
   timingZone,
   type SeqKey,
@@ -49,7 +51,7 @@ type DialogueOpts = {
   onClose: () => void;
   offerBet?: boolean;
   onAcceptBet?: () => void;
-  onChoice?: (setsFlag?: string, reply?: string) => void;
+  onChoice?: (setsFlag?: string, reply?: string, fails?: boolean) => void;
   choiceArmAt?: number;
   /** Playtest #31: also require key-up + modal arm (held Enter must not auto-pick). */
   allowChoice?: () => boolean;
@@ -69,14 +71,14 @@ function choiceKeyReady(opts: DialogueOpts): boolean {
 
 /**
  * Swallow native Enter/Space activation; invoke `onKey` when ready.
- * Do NOT stopPropagation — the window ActionState handler must still see
- * the key so blocked confirms can bumpModalConfirmArm (playtest #31).
+ * Uses event.key so NumpadEnter counts (playtest #32).
+ * Do NOT stopPropagation — window ActionState must still bump the arm.
  */
 function bindEnterGate(btn: HTMLButtonElement, onKey: () => void): void {
   btn.addEventListener(
     'keydown',
     (e) => {
-      if (e.key !== 'Enter' && e.key !== ' ' && e.code !== 'Space') return;
+      if (!isConfirmKey(e)) return;
       e.preventDefault();
       if (e.repeat) return;
       onKey();
@@ -93,11 +95,11 @@ function appendChoiceButtons(
   for (const c of choices) {
     const pickMouse = (): void => {
       if (!choiceArmReady(opts)) return;
-      opts.onChoice?.(c.setsFlag, c.reply);
+      opts.onChoice?.(c.setsFlag, c.reply, c.fails);
     };
     const pickKey = (): void => {
       if (!choiceKeyReady(opts)) return;
-      opts.onChoice?.(c.setsFlag, c.reply);
+      opts.onChoice?.(c.setsFlag, c.reply, c.fails);
     };
     const btn = button(c.label, () => {
       /* pointerup / key handlers */
@@ -149,11 +151,13 @@ function fillDialogueActions(
     return;
   }
   const holdUntil = opts.holdCloseUntil ?? 0;
-  const close = button(UI.close, () => {
+  const doClose = (): void => {
     if (Date.now() < holdUntil) return;
     opts.onClose();
-  });
+  };
+  const close = button(UI.close, doClose);
   if (opts.closingLine) close.classList.add('btn-closing-continue');
+  bindEnterGate(close, doClose);
   if (Date.now() < holdUntil) {
     close.disabled = true;
     window.setTimeout(
@@ -192,7 +196,13 @@ export function paintDialogue(
   fillDialogueActions(actions, pendingChoices, opts);
   panel.append(body, actions);
   const primary = panel.querySelector('.btn-take-bet') as HTMLElement | null;
-  if (primary) primary.focus();
+  if (pendingChoices?.length) {
+    // Playtest #32: no default focus on option 1 — mash Enter does nothing
+    // until the player arrows onto a choice.
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  } else if (primary) primary.focus();
   else focusFirst(panel);
   requestAnimationFrame(() => {
     body.scrollTop = body.scrollHeight;
@@ -277,9 +287,27 @@ export function paintSkill(
   if (phase?.kind === 'lockpick') cancel.dataset.skipNav = '1';
   actions.appendChild(cancel);
   panel.append(body, actions);
-  // Sequence skills: focus Cancel only — arrows drive the pad, not first option.
-  if (session.isSequenceSkillActive()) cancel.focus();
-  else focusFirst(panel);
+  focusSkillPanel(panel, session, phase, cancel);
+}
+
+/** Sequence → Cancel; choiceish → no default focus; else first control. */
+function focusSkillPanel(
+  panel: HTMLElement,
+  session: GameSession,
+  phase: SkillPhase | undefined,
+  cancel: HTMLButtonElement,
+): void {
+  if (session.isSequenceSkillActive()) {
+    cancel.focus();
+    return;
+  }
+  const choiceish =
+    phase?.kind === 'choice' || phase?.kind === 'puzzle' || phase?.kind === 'negotiate';
+  if (choiceish) {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    return;
+  }
+  focusFirst(panel);
 }
 
 function paintPhaseControls(
@@ -368,8 +396,7 @@ function paintTimingSkill(
   };
   const onKey = (e: KeyboardEvent): void => {
     if (e.repeat) return;
-    if (!(e.key === 'Enter' || e.code === 'Enter' || e.key === ' ' || e.code === 'Space'))
-      return;
+    if (!isConfirmKey(e) && e.code !== 'KeyE') return;
     e.preventDefault();
     e.stopPropagation();
     stopAt(sampleNeedle());
@@ -377,6 +404,7 @@ function paintTimingSkill(
   window.addEventListener('keydown', onKey, true);
   const stopBtn = button(t('ui.skill.stop'), () => stopAt(sampleNeedle()));
   stopBtn.classList.add('btn-needle-stop');
+  bindEnterGate(stopBtn, () => stopAt(sampleNeedle()));
   actions.appendChild(stopBtn);
 }
 
@@ -398,11 +426,13 @@ function paintChoiceSkill(
   };
   options.forEach((label, i) => {
     const btn = button(label, () => settle(i));
+    btn.classList.add('skill-choice');
+    bindEnterGate(btn, () => settle(i));
     btn.addEventListener(
       'keydown',
       (e) => {
         if (Date.now() >= armUntil) return;
-        if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+        if (isConfirmKey(e)) {
           e.preventDefault();
           e.stopPropagation();
         }
@@ -411,6 +441,10 @@ function paintChoiceSkill(
     );
     actions.appendChild(btn);
   });
+  // Playtest #32: no default focus — arrow onto an offer before Enter.
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
+  }
   const ms = phase?.timerMs;
   if (ms && ms > 0) {
     const timer = el(
@@ -738,13 +772,6 @@ function paintSequenceSkill(
     ev.stopPropagation();
     onKey(SEQ_KEYS.indexOf(sym));
   });
-}
-
-/** Arrow chase pads always show ↑→↓← so “match 4” never shows only 3 buttons. */
-function sequencePadKeys(seq: SeqKey[]): SeqKey[] {
-  const arrows: SeqKey[] = ['↑', '→', '↓', '←'];
-  if (seq.every((k) => arrows.includes(k))) return arrows;
-  return [...new Set(seq)] as SeqKey[];
 }
 
 /**

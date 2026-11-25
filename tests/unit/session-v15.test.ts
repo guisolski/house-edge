@@ -50,14 +50,14 @@ describe('session v1.5 recovery and upgrades', () => {
     const session = new GameSession(5);
     session.startNew();
     session.world.unlock('feira-central');
-    // Playtest #26: tight stand range (~1.15) — rim tiles no longer auto-arm.
+    // Playtest #32: stand range ~2.35 — far tiles stay quiet; near pad arms Entrar.
     session.player.setPosition(28, 16);
     expect(session.nearbyExit()).toBeNull();
     session.player.setPosition(38, 22);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
     session.player.setPosition(37, 22);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
-    session.player.setPosition(36, 22);
+    session.player.setPosition(35, 22);
     expect(session.nearbyExit()).toBeNull();
     session.player.setPosition(38, 18);
     expect(session.nearbyExit()).toBeNull();

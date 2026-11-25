@@ -27,11 +27,14 @@ test('dialogue choices: keyboard selects option 2', async ({ page }) => {
   await expect(panel).toBeVisible();
   const choices = panel.locator('button.dialogue-choice');
   await expect(choices).toHaveCount(2);
-  await expect(choices.nth(0)).toBeFocused();
+  // Playtest #32: no default focus — mash Enter must not pick option 1.
+  await expect(choices.nth(0)).not.toBeFocused();
 
   // Playtest #28/#31: choice arm ≥400ms + post-arm key-up if mashed.
   await page.waitForTimeout(500);
-  // Arrow / S moves highlight to option 2; Enter activates it.
+  // Arrow onto option 1, then option 2; Enter activates it.
+  await page.keyboard.press('ArrowDown');
+  await expect(choices.nth(0)).toBeFocused();
   await page.keyboard.press('ArrowDown');
   await expect(choices.nth(1)).toBeFocused();
   await page.waitForTimeout(50);

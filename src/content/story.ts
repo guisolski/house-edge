@@ -702,7 +702,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Mole Contact',
-        text: 'Call it. Skill read: who sold the hill’s bytes? Clue’s in the burner ping. Your choice after still matters at Margin’s table.',
+        text: 'Call it. Skill read: who sold the hill’s bytes? Clue’s in who still picks up for Casa without leaving a name. Your choice after still matters at Margin’s table.',
         choices: [
           {
             label: 'Keep Luna close',
@@ -939,13 +939,15 @@ export const STORY_BEATS: readonly StoryBeat[] = [
           },
           {
             label: 'Demand the pit mirror',
-            setsFlag: 'neg_mirror',
-            reply: 'Pit mirror. If Augusto bluffs, the books still scream.',
+            // Playtest #32: only the hush chip seals — mirror/smile fail the offer.
+            fails: true,
+            reply: 'Host hardens. Mirror talk belongs in the books, not this handshake.',
           },
           {
             label: 'Walk out smiling',
-            setsFlag: 'neg_smile',
-            reply: 'Smile for the cams. No paper. Pure nerve.',
+            fails: true,
+            reply:
+              'Cameras eat the smile. No chip. No deal. Try again when you’re quiet.',
           },
         ],
       },

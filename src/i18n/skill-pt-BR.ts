@@ -15,16 +15,16 @@ export const skillPtBR = {
   'skill.corrida-moto.title': 'Portão da moto na laje',
   'skill.corrida-moto.blurb': 'Racha do Seu Zé — limpa o portão, não o fio do Fio.',
   'skill.audiencia-publica.clue':
-    'Margin não compra discurso de kit de imprensa. Quer a página que alguém já arriscou carimbar — não ameaça que não cobra.',
+    'Margin não compra discurso de kit de imprensa. Quer prova que já custou a alguém — tinta de quem arriscou a pele, não ameaça que não cobra.',
   'skill.audiencia-publica.option.0': 'Assessoria da corp',
-  'skill.audiencia-publica.option.1': 'Caderno carimbado',
+  'skill.audiencia-publica.option.1': 'Caderno do morro',
   'skill.audiencia-publica.option.2': 'Ameaça vazia',
   'skill.audiencia-publica.prompt': 'Qual depoimento prende?',
   'skill.avenida-atm.prompt': 'Bug no arredondamento do caixa — repete 4 dígitos.',
   'skill.avenida-betrayal.clue':
-    'A Luna ainda luta em aberto. O Margin discute no papel. Quem vendeu os bytes ainda atende quando a Casa liga num descartável.',
+    'A Luna luta em aberto. O Margin discute no papel. Quem vendeu os bytes atende um toque que nunca deixa nome.',
   'skill.avenida-betrayal.option.0': 'Culpar a Luna',
-  'skill.avenida-betrayal.option.1': 'Culpar quem atende o burner',
+  'skill.avenida-betrayal.option.1': 'Culpar a linha sem nome',
   'skill.avenida-betrayal.option.2': 'Culpar o Margin',
   'skill.avenida-betrayal.prompt': 'Quem vendeu os bytes do morro?',
   'skill.avenida-drone.clue':

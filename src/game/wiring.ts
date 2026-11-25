@@ -193,6 +193,15 @@ function handleTitleAction(
 }
 
 function handleEscModal(session: GameSession, hud: HudHandles): boolean {
+  // Playtest #32: Esc on "wipe save?" acts as Voltar.
+  if (session.ui.is('ending')) {
+    const ending = document.querySelector('.ending-panel') as HTMLElement | null;
+    if (ending?.dataset.endingConfirm === '1') {
+      hud.showEnding(UI.wonEnding);
+      return true;
+    }
+    return false;
+  }
   // Playtest #29: Esc must fully close any panel and release WASD.
   if (
     session.ui.is('bet') ||

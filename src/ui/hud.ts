@@ -21,6 +21,7 @@ import { resolveInteractPriority } from '../systems/interact-priority';
 import { getLocale, setLocale, t, tf, type LocaleCode } from '../i18n';
 import { localizedNpcName } from '../i18n/localize-npc';
 import { localizeDistrictName } from '../i18n/localize-district';
+import { isConfirmKey } from '../input/keyboard';
 import {
   tutorialCopyKey,
   tutorialStepCount,
@@ -240,8 +241,14 @@ function showDialoguePanel(
       session.acceptStoryBet();
       h.syncScreen();
     },
-    onChoice: (setsFlag, reply) => {
-      session.pickDialogueChoice(setsFlag, reply);
+    onChoice: (setsFlag, reply, fails) => {
+      session.pickDialogueChoice(setsFlag, reply, fails);
+      if (fails || session.ui.is('play')) {
+        focusCanvasAfterClose();
+        h.syncScreen();
+        h.showHud();
+        return;
+      }
       h.showDialogue(session.getDialogue());
     },
     onClose: () => {
@@ -372,16 +379,29 @@ function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
     h.syncScreen();
     h.showHud();
   };
-  // Playtest #31: credits need a deliberate Skip after arm — rapid Enter must not skip.
+  // Playtest #31/#32: Skip armed ~900ms; Enter + NumpadEnter both work (event.key).
   const skipArmUntil = Date.now() + 900;
-  const skipBtn = button(UI.skipCredits, () => {
-    if (Date.now() < skipArmUntil) return;
+  let skipReady = false;
+  const doSkip = (): void => {
+    if (Date.now() < skipArmUntil || !skipReady) return;
     roll.classList.add('credits-skipped');
     leaveCredits();
-  });
+  };
+  const skipBtn = button(UI.skipCredits, doSkip);
+  skipBtn.addEventListener(
+    'keydown',
+    (e) => {
+      if (!isConfirmKey(e)) return;
+      e.preventDefault();
+      if (e.repeat) return;
+      doSkip();
+    },
+    true,
+  );
   skipBtn.disabled = true;
   window.setTimeout(
     () => {
+      skipReady = true;
       skipBtn.disabled = false;
       skipBtn.focus();
     },
@@ -419,6 +439,7 @@ function paintEnding(
     el('p', '', text === UI.wonEnding ? UI.endingBlurb : text),
   );
   if (confirming) {
+    p.ending.dataset.endingConfirm = '1';
     p.ending.append(
       el('p', 'ending-confirm', UI.playAgainConfirm),
       button(UI.playAgainYes, () => {
@@ -428,6 +449,7 @@ function paintEnding(
       button(UI.playAgainNo, () => paintEnding(p, session, h, text, false)),
     );
   } else {
+    delete p.ending.dataset.endingConfirm;
     const actions = el('div', 'panel-actions ending-actions');
     actions.append(
       button(UI.continueExploring, () => {

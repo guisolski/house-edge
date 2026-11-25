@@ -193,7 +193,8 @@ export const uiPtBR = {
     'Neon Snap — passa pelos drones. Flagrado = checkpoint, sem perder crédito.',
   'ui.toast.missedPhase': 'Errou a fase {phase}.{detail}',
   'ui.toast.missedPhasePickLeft': ' Gazua restante: {n}.',
-  'ui.toast.missedPhaseZoneWide': ' Zona alargou / agulha desacelerou — {hint}',
+  'ui.toast.missedPhaseZoneWide':
+    ' Agora ficou mais fácil: zona maior, agulha mais lenta. — {hint}',
   'ui.toast.missedPhaseRetry': ' {hint}',
   'ui.toast.missHint.default': 'Tenta essa fase de novo.',
   'ui.toast.missHint.agua-gelada': 'Nair: o gelo escorre — espera o frio de verdade.',

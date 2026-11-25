@@ -23,7 +23,7 @@ export const storyEn: Record<string, string> = {
     'I cut soft allies. Only cold ledger walks into that hearing.',
   'story.avenida-betrayal.2.speaker': 'Mole Contact',
   'story.avenida-betrayal.2.text':
-    'Call it. Skill read: who sold the hill’s bytes? Clue’s in the burner ping. Your choice after still matters at Margin’s table.',
+    'Call it. Skill read: who sold the hill’s bytes? Clue’s in who still picks up for Casa without leaving a name. Your choice after still matters at Margin’s table.',
   'story.avenida-betrayal.3.speaker': 'Mole Contact',
   'story.avenida-betrayal.3.text':
     'Either way, Margin’s coffee is next. Win the testimony — the tower unlocks.',
@@ -467,15 +467,16 @@ export const storyEn: Record<string, string> = {
     'Hush chip in the pocket. Quiet doors. Thin leverage.',
   'story.torre-negotiate.2.choice.1.label': 'Demand the pit mirror',
   'story.torre-negotiate.2.choice.1.reply':
-    'Pit mirror. If Augusto bluffs, the books still scream.',
+    'Host hardens. Mirror talk belongs in the books, not this handshake.',
   'story.torre-negotiate.2.choice.2.label': 'Walk out smiling',
-  'story.torre-negotiate.2.choice.2.reply': 'Smile for the cams. No paper. Pure nerve.',
+  'story.torre-negotiate.2.choice.2.reply':
+    'Cameras eat the smile. No chip. No deal. Try again when you’re quiet.',
   'story.torre-negotiate.2.speaker': 'VIP Host',
   'story.torre-negotiate.2.text':
     'Three offers. One sticks. Augusto hears whatever you leave on the table.',
   'story.torre-negotiate.3.speaker': 'VIP Host',
   'story.torre-negotiate.3.text':
-    'Deal’s sealed. Gold rail to Augusto — don’t blink first.',
+    'Deal’s sealed. Clear path to Augusto — hold his eye, don’t blink first.',
   'story.torre-negotiate.title': 'Negotiate the VIP exit',
   'story.torre-pit.0.speaker': 'Pit Dealer',
   'story.torre-pit.0.text':

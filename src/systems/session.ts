@@ -1140,12 +1140,19 @@ export class GameSession {
     this.armInteractLock(this.interactKeyDown);
   }
 
-  /** Apply a dialogue choice flag mid-beat. Choices are stripped so they don't loop. */
-  pickDialogueChoice(setsFlag?: string, reply?: string): void {
+  /**
+   * Apply a dialogue choice flag mid-beat. Choices are stripped so they don't loop.
+   * `fails` (playtest #32): wrong Anfitrião offer — toast + abandon the beat.
+   */
+  pickDialogueChoice(setsFlag?: string, reply?: string, fails?: boolean): void {
     // Drop choice buttons from the transcript — pick once, then Continue / Take bet.
     this.lastDialogue = this.lastDialogue.map((line) =>
       line.choices ? { speaker: line.speaker, text: line.text } : line,
     );
+    if (fails) {
+      this.failDialogueOffer(reply);
+      return;
+    }
     if (setsFlag) this.story.setFlag(setsFlag, true);
     // Epilogue: skip the reply transcript — show ONLY Saúde as its own panel.
     // lastDialogue is already locale-localized from runStoryBeat.
@@ -1165,6 +1172,19 @@ export class GameSession {
       this.bus.emit('ui:dialogue', { speaker: 'Rita Odds', text: reply });
     }
     this.bus.emit('audio:play-sfx', { id: 'ui' });
+  }
+
+  /** Wrong dialogue offer — soft fail, beat stays retryable. */
+  private failDialogueOffer(reply?: string): void {
+    const hint = reply?.trim() || t('ui.toast.missedStory');
+    this.pendingBetAfterDialogue = null;
+    this.pendingStoryBeat = null;
+    this.lastDialogue = [];
+    this.ui.backToPlay();
+    this.armInteractLock(this.interactKeyDown, 400);
+    this.bus.emit('ui:toast', { message: hint, kind: 'danger' });
+    this.bus.emit('audio:play-sfx', { id: 'lose' });
+    this.bus.emit('fx:flash', { kind: 'lose' });
   }
 
   /** True when the open dialogue still has unresolved choice buttons. */

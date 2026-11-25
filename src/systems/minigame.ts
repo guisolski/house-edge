@@ -290,6 +290,22 @@ export function phaseSequence(phase: SkillPhase): SeqKey[] {
   return Array.from({ length: n }, (_, i) => pool[i % pool.length]!);
 }
 
+/**
+ * Pad chip order is fixed/neutral — never the flash sequence order
+ * (playtest #32: Augusto P3 showed R↑B↓ chips in answer order).
+ */
+export function sequencePadKeys(seq: SeqKey[]): SeqKey[] {
+  const arrows: SeqKey[] = ['↑', '→', '↓', '←'];
+  const colors: SeqKey[] = ['R', 'G', 'B', 'Y'];
+  if (seq.every((k) => arrows.includes(k))) return arrows;
+  const needColors = seq.some((k) => colors.includes(k));
+  const needArrows = seq.some((k) => arrows.includes(k));
+  const pad: SeqKey[] = [];
+  if (needColors) pad.push(...colors);
+  if (needArrows) pad.push(...arrows);
+  return pad.length > 0 ? pad : arrows;
+}
+
 export function judgePhase(phase: SkillPhase, value: number): boolean {
   if (phase.kind === 'timing') {
     return judgeTimingStop(value, timingZone(phase));

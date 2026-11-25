@@ -77,6 +77,8 @@ export type DialogueChoice = {
   setsFlag?: string;
   /** Reply line spoken after the choice. */
   reply?: string;
+  /** Wrong pick — fail the pending story beat (playtest #32 Anfitrião). */
+  fails?: boolean;
 };
 
 export type DialogueLine = {

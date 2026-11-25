@@ -10,16 +10,16 @@ export const skillEn = {
   'skill.agua-gelada.prompt': 'Catch the ice pour — stop on cold.',
   'skill.antena-sinal.prompt': 'Splice the pirate jack — match the beep sequence.',
   'skill.audiencia-publica.clue':
-    'Margin never buys a speech that smells like a press kit. He wants the page someone already risked a stamp for — not a threat you can’t cash.',
+    'Margin never buys a speech that smells like a press kit. He wants proof that already cost someone — ink from a hill that risked skin, not a threat you can’t cash.',
   'skill.audiencia-publica.option.0': 'Corp PR',
-  'skill.audiencia-publica.option.1': 'Hill ledger',
+  'skill.audiencia-publica.option.1': 'Hill notebook',
   'skill.audiencia-publica.option.2': 'Empty threat',
   'skill.audiencia-publica.prompt': 'Which testimony sticks?',
   'skill.avenida-atm.prompt': 'Glitch the ATM rounding — match 4 digits.',
   'skill.avenida-betrayal.clue':
-    'Luna still fights in the open. Margin argues on paper. Whoever sold the bytes still picks up when Casa rings a disposable line.',
+    'Luna fights in the open. Margin argues on paper. Whoever sold the bytes picks up a call that never leaves a name.',
   'skill.avenida-betrayal.option.0': 'Blame Luna',
-  'skill.avenida-betrayal.option.1': 'Blame the burner pickup',
+  'skill.avenida-betrayal.option.1': 'Blame the nameless line',
   'skill.avenida-betrayal.option.2': 'Blame Margin',
   'skill.avenida-betrayal.prompt': 'Who sold the hill’s bytes?',
   'skill.avenida-drone.clue':

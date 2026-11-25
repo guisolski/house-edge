@@ -23,7 +23,7 @@ export const storyPtBR: Record<string, string> = {
     'Corto aliado mole. Só o livro-caixa frio entra naquela audiência.',
   'story.avenida-betrayal.2.speaker': 'Contato Vira-Casaca',
   'story.avenida-betrayal.2.text':
-    'Decide. Quem vendeu os bytes do morro? A pista tá no ping do burner. Sua escolha depois ainda pesa na mesa do Margin.',
+    'Decide. Quem vendeu os bytes do morro? A pista tá em quem ainda atende a Casa sem deixar nome. Sua escolha depois ainda pesa na mesa do Margin.',
   'story.avenida-betrayal.3.speaker': 'Contato Vira-Casaca',
   'story.avenida-betrayal.3.text':
     'De qualquer jeito, o café do Margin vem depois. Ganha o depoimento — a torre abre.',
@@ -303,7 +303,7 @@ export const storyPtBR: Record<string, string> = {
     'O povo vai ver a vantagem da casa comendo escola, hospital e água. E a cicatriz de dedo-duro nos nossos próprios bytes.',
   'story.lobby-margin.2.speaker': 'Dr. Margin',
   'story.lobby-margin.2.text':
-    'A audiência decide tudo. Coloca as fichas — ganha, e o escândalo vira viralizar na cidade.',
+    'A audiência decide tudo. Coloca as fichas — ganha, e o escândalo viraliza na cidade.',
   'story.lobby-margin.3.speaker': 'Rita Odds',
   'story.lobby-margin.3.text':
     'Então eu recompro o microfone com escândalo. Vamos abrir os livros.',
@@ -467,16 +467,16 @@ export const storyPtBR: Record<string, string> = {
     'Ficha do silêncio no bolso. Porta quieta. Pressão na medida.',
   'story.torre-negotiate.2.choice.1.label': 'Exigir o espelho do salão',
   'story.torre-negotiate.2.choice.1.reply':
-    'Espelho do salão. Se o Augusto blefar, os livros ainda gritam.',
+    'O Anfitrião endurece. Espelho é pra livro, não pra esse aperto de mão.',
   'story.torre-negotiate.2.choice.2.label': 'Sair sorrindo',
   'story.torre-negotiate.2.choice.2.reply':
-    'Sorriso pras câmeras. Sem papel. Puro nervo.',
+    'Câmera come o sorriso. Sem ficha. Sem acordo. Volta quando ficar quieto.',
   'story.torre-negotiate.2.speaker': 'Anfitrião VIP',
   'story.torre-negotiate.2.text':
     'Três ofertas. Uma fica. O Augusto ouve o que você deixa na mesa.',
   'story.torre-negotiate.3.speaker': 'Anfitrião VIP',
   'story.torre-negotiate.3.text':
-    'Acordo selado. Trilho de ouro pro Augusto — não pisque primeiro.',
+    'Acordo selado. Corredor livre até o Augusto — segura o olhar, sem piscar primeiro.',
   'story.torre-negotiate.title': 'Negociar a saída VIP',
   'story.torre-pit.0.speaker': 'Dealer do Salão',
   'story.torre-pit.0.text':

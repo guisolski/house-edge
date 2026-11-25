@@ -277,8 +277,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     kind: 'choice',
     prompt: 'Who sold the hill’s bytes?',
     target: 1,
-    options: ['Blame Luna', 'Blame the burner pickup', 'Blame Margin'],
-    // Playtest #31: no “contact/mole/informante” token — motive via dialogue vibe.
-    clue: 'Luna still fights in the open. Margin argues on paper. Whoever sold the bytes still picks up when Casa rings a disposable line.',
+    options: ['Blame Luna', 'Blame the nameless line', 'Blame Margin'],
+    // Playtest #32: no burner/contact/Casa/quiet giveaway.
+    clue: 'Luna fights in the open. Margin argues on paper. Whoever sold the bytes picks up a call that never leaves a name.',
   },
 };

@@ -12,6 +12,8 @@ const KEY_MAP: Record<string, ActionName> = {
   KeyE: Actions.Interact,
   Space: Actions.Interact,
   Enter: Actions.Interact,
+  // Playtest #32: laptop Enter and numpad Enter both confirm.
+  NumpadEnter: Actions.Interact,
   KeyF: Actions.Bet,
   Escape: Actions.Menu,
   Backspace: Actions.Menu,
@@ -19,6 +21,18 @@ const KEY_MAP: Record<string, ActionName> = {
   ShiftLeft: Actions.Run,
   ShiftRight: Actions.Run,
 };
+
+/** Normalize so callers can treat main + numpad Enter the same. */
+export function normalizeKeyCode(e: KeyboardEvent): string {
+  if (e.key === 'Enter' || e.code === 'NumpadEnter') return 'Enter';
+  if (e.key === ' ' || e.code === 'Space') return 'Space';
+  return e.code;
+}
+
+/** True for confirm keys — use event.key so NumpadEnter counts (playtest #32). */
+export function isConfirmKey(e: KeyboardEvent): boolean {
+  return e.key === 'Enter' || e.key === ' ' || e.code === 'Space';
+}
 
 export function applyKey(
   state: ActionState,
@@ -54,9 +68,10 @@ function makeHandler(
   return (e: KeyboardEvent): void => {
     // Ignore OS key-repeat — held Enter/E must not spam interact/confirm.
     if (pressed && e.repeat) return;
-    const action = applyKey(state, e.code, pressed);
+    const code = normalizeKeyCode(e);
+    const action = applyKey(state, code, pressed);
     if (!action) return;
     if (pressed) e.preventDefault();
-    onAction(action, pressed, e.code);
+    onAction(action, pressed, code);
   };
 }

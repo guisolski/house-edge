@@ -114,8 +114,8 @@ describe('v1.22.5 minigame fairness', () => {
   it('choice clues do not echo option tokens', () => {
     setLocale('pt-BR');
     const checks: [string, RegExp][] = [
-      ['avenida-betrayal', /culpar o contato/i],
-      ['audiencia-publica', /livro do morro/i],
+      ['avenida-betrayal', /burner|culpar o contato/i],
+      ['audiencia-publica', /carimb|livro do morro/i],
       ['torre-foyer', /vazamento do escândalo/i],
       ['torre-pit', /orelha de cachorro/i],
     ];

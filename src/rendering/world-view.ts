@@ -376,8 +376,10 @@ function collectTagRows(state: ViewState): TagRow[] {
     }
   }
   near.sort((a, b) => Number(b.force) - Number(a.force) || a.d - b.d);
-  // Objective always; at most one other nearest tag fully shown.
-  return near.filter((r, i) => r.force || i < 2).slice(0, 2);
+  // Playtest #32: objective + only the single nearest other (no stacked groups).
+  const forced = near.filter((r) => r.force);
+  const other = near.find((r) => !r.force);
+  return other ? [...forced.slice(0, 1), other] : forced.slice(0, 1);
 }
 
 /**
@@ -434,9 +436,16 @@ function paintOneNpcTag(o: {
       py = o.row.npc.y * TILE_PX - tagLift - o.camY + avoid.dy + o.bob + stack;
     }
   }
-  if (!o.row.force && o.placed.some((p) => Math.hypot(px - p.x, py - p.y) < 28)) return;
+  // Hard reject any remaining overlap after stack lifts.
+  if (o.placed.some((p) => Math.hypot(px - p.x, py - p.y) < 36)) {
+    if (!o.row.force) return;
+    py -= 44;
+  }
   o.placed.push({ x: px, y: py });
+  // Non-nearest (shouldn't draw often): keep force tags opaque.
+  if (!o.row.force && o.i > 0) o.ctx.globalAlpha = 0.55;
   paintMarkerLabel(o.ctx, px, py, tagName, o.ctx.canvas.width);
+  o.ctx.globalAlpha = 1;
 }
 
 /** Steady translucent sight cone — always drawn (brightness may pulse). */

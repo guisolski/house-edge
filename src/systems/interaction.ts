@@ -568,7 +568,8 @@ function pickNearest(
  * Doorway trigger radius — covers the painted plus-shaped exit pad
  * (center ± cardinals), not just the exact arrow tile.
  */
-export const EXIT_STAND_RANGE = 1.85;
+/** Playtest #32: slightly larger so Avenida→Torre Entrar is not a pixel hunt. */
+export const EXIT_STAND_RANGE = 2.35;
 /** Hysteresis: latch clears only after leaving this larger radius (stops bounce-back). */
 export const EXIT_CLEAR_RANGE = 3.2;
 /** Tiles inward from the reciprocal pad on arrival (must exceed CLEAR). */
