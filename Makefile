@@ -27,7 +27,8 @@ mutation:
 lint:
 	npm run lint
 
-# Required before every push (also enforced by simple-git-hooks pre-push → lint).
+# Required before every push: lint + typecheck + npm test (CI quality unit step).
+# simple-git-hooks pre-push also runs lint.
 check:
 	npm run check
 

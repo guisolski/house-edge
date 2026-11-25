@@ -1,10 +1,10 @@
-# Playtest REPORT — House Edge v1.19.0
+# Playtest REPORT — House Edge v1.19.1
 
-Independent playtest #21 of v1.18.1 (art 8, fun 6, ~23 min, FPS 56–60 with one Odds dip to 30). P0 VIP softlock already fixed. Ship **v1.19.0**: Neon Snap solid walls, path-aware arrows, pad placement, lockpick keyboard submit, lockbox clue, epilogue holds, free-roam → Nair, negotiate hush, E-prompt, needle hint, Odds FPS.
+Independent playtest #21 of v1.18.1 (art 8, fun 6, ~23 min, FPS 56–60 with one Odds dip to 30). P0 VIP softlock already fixed. Ship **v1.19.0** then **v1.19.1** (ATM clear of torre pad; `make check` includes `npm test`).
 
 ## Verdict: PASS
 
-`npm run check` + unit **213/213** + e2e **46/46** green. Coverage branches **90%+**. Neon Snap south Shift-run hits physical wall (e2e + screenshot).
+`make check` (lint + typecheck + **npm test**) + e2e **46/46** green. Coverage branches **90%+**. Neon Snap south Shift-run hits physical wall (e2e + screenshot).
 
 ## Bugs fixed
 

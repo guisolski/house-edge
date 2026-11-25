@@ -28,7 +28,7 @@ Unit tests alone are never enough.
 9. Write `artifacts/playtest/REPORT.md` (pass/fail per step + gaps), then run
    `npm run format:playtest-report` so Prettier never fails CI on the report.
 10. Run `make playtest` (automated; also formats `REPORT.md`) and `make e2e`.
-11. Run `make check` (lint + typecheck). **Do not push until it passes.**
+11. Run `make check` (lint + typecheck + `npm test`). **Do not push until it passes.**
 
 ## Commands
 
@@ -36,7 +36,7 @@ Unit tests alone are never enough.
 make dev
 make playtest          # Playwright playthrough + screenshots + format REPORT.md
 make e2e               # includes golden-path story completion
-make check             # lint + typecheck — required before every push
+make check             # lint + typecheck + unit tests — required before every push
 npm run format:playtest-report   # prettier --write artifacts/playtest/REPORT.md
 ```
 

@@ -263,9 +263,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'atm-hacker',
     name: 'ATM Hacker',
     districtId: 'avenida-odds',
-    // Asphalt corridor — south wall y15–19 is solid Neon Snap barricade.
-    x: 40,
-    y: 11,
+    // North asphalt lane — clear of torre pad (43,12) by > INTERACT_RANGE.
+    x: 38,
+    y: 9,
     beatId: 'avenida-atm',
     jobBetId: 'avenida-atm',
     color: '#ff3b5c',

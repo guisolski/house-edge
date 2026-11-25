@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { districtExits, districtNpcs } from '../../src/systems/interaction';
+import {
+  districtExits,
+  districtNpcs,
+  INTERACT_RANGE,
+} from '../../src/systems/interaction';
 import { AVENIDA_DRONE_STEALTH, droneFreePathExists } from '../../src/systems/stealth';
 import { buildDistrictMap, isWalkable } from '../../src/world/maps';
 import { slideStep } from '../../src/world/slide';
@@ -127,5 +131,12 @@ describe('v1.19.0 lockpick / negotiate / lockbox clue', () => {
     const msg = districtNpcs().find((n) => n.id === 'mensageiro-avenida')!;
     expect(pad.x).toBeLessThanOrEqual(3);
     expect(Math.hypot(pad.x - msg.x, pad.y - msg.y)).toBeGreaterThan(8);
+  });
+
+  it('ATM Hacker stays clear of avenida-to-torre interact radius', () => {
+    const pad = districtExits().find((e) => e.id === 'avenida-to-torre')!;
+    const atm = districtNpcs().find((n) => n.id === 'atm-hacker')!;
+    expect(isWalkable(buildDistrictMap('avenida-odds'), atm.x, atm.y)).toBe(true);
+    expect(Math.hypot(pad.x - atm.x, pad.y - atm.y)).toBeGreaterThan(INTERACT_RANGE);
   });
 });

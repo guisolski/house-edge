@@ -14,9 +14,10 @@ Follow these rules for every change.
 - Event-driven design: systems talk through the typed `EventBus`.
 - Keep functions short (≤ ~20 lines) and low complexity — ESLint enforces this.
 - Linters/formatters must pass: ESLint, Prettier, markdownlint.
-- **`make check` must pass before every push** (`lint` + `typecheck`). A
-  `simple-git-hooks` pre-push hook runs `npm run lint`; do not bypass it
-  (`--no-verify`) unless recovering from a broken hook install.
+- **`make check` must pass before every push** (`lint` + `typecheck` +
+  `npm test` — same unit command CI runs). A `simple-git-hooks` pre-push
+  hook runs `npm run lint`; do not bypass it (`--no-verify`) unless
+  recovering from a broken hook install.
 - After writing `artifacts/playtest/REPORT.md`, run
   `npm run format:playtest-report` (also runs at the end of `make playtest`).
 
@@ -58,7 +59,7 @@ make e2e
 make playtest
 make mutation
 make lint
-make check          # lint + typecheck — required before every push
+make check          # lint + typecheck + unit tests — required before every push
 make build BASE_PATH=/house-edge/
 make deploy
 ```
