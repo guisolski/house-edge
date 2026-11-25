@@ -100,6 +100,38 @@ canvas.excalibur-game {
   border-radius: 4px;
 }
 
+.credits-roll {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 40vh;
+  overflow: auto;
+  animation: credits-rise 12s linear 1;
+}
+
+.credits-roll .credits-line {
+  margin: 0;
+  color: var(--cyan);
+  font-size: 0.95rem;
+}
+
+.credits-roll .credits-thanks {
+  margin-top: 0.75rem;
+  color: var(--yellow, #ffdf00);
+  font-weight: 600;
+}
+
+@keyframes credits-rise {
+  from {
+    transform: translateY(28%);
+    opacity: 0.35;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 .panel-body {
   display: flex;
   flex-direction: column;

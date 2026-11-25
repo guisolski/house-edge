@@ -1,45 +1,40 @@
-# Playtest REPORT — House Edge v1.14.0
+# Playtest REPORT — House Edge v1.14.1
 
-Independent follow-up after v1.13.0 (631d11b). Goal: real Simon sequences, clue-backed choice gates, exit latch + label correctness, VIP floor, Casa FPS prewarm, prompt priority, ~20 min story.
+Independent follow-up after v1.14.0 (056a753). Goal: P0 needle/duel judge fix, phase-only retries, no credit lockout, skill pity clarity, real epilogue + credits, art variants.
 
 ## Verdict
 
-**PASS** for ship gates. Simon sequences visible + fail on mistakes; every choice/puzzle gate has a clue naming the answer (unit-tested); exit pads latch + label==destination; distinct VIP salon; FPS prewarm. Coverage branches **≥90%**. Story-walk e2e + 4× FPS ≥50.
-
-## Measured story time
-
-| Method                                                    | Result         |
-| --------------------------------------------------------- | -------------- |
-| Content + Simon/clue pacing (skills take longer than RNG) | **~19–21 min** |
-| Scripted walk+E with perfect skills                       | ~4–5 min       |
-| Prior v1.13.0 human playtest                              | ~17 min        |
-
-Target ~20 min via longer skill interactions + epilogue scene — not backtracking.
+**PASS** for ship gates. Drawn green zone == judged zone (deterministic); Stop captures needle at input; phase miss retries current phase only with no stake drain; story skills top up credits so the path cannot softlock; epilogue is a short scene with NPC callbacks + choice + credits roll. Coverage branches **≥90%**. Story-walk e2e + duel-in-zone e2e + 4× FPS ≥50.
 
 ## Fixes vs ask
 
-| #   | Ask                                           | Result                                                       |
-| --- | --------------------------------------------- | ------------------------------------------------------------ |
-| 1   | Tap-sequence shows actual Simon pattern       | Sequence UI + keys; wrong tap fails; KB/touch/gamepad        |
-| 2   | Choice gates need readable clues              | `clue` on every choice/puzzle; unit test covers answers      |
-| 3   | Edge-pointer labels clipped                   | `layoutMarkerLabel` measures + clamps; unit test             |
-| 4   | E priority + clear stale prompt               | objective > travel > npc > none; unit tests                  |
-| 5   | No chain-travel; pad label == dest            | exit latch + clear spawns; exit-labels unit + e2e exits      |
-| 6   | Distinct VIP floor                            | `buildTorreVip()` salon map after elevator                   |
-| 7   | Casa FPS dip after transition                 | Prewarm all districts + VIP + NPC sprites on load            |
-| 8   | Optional side bets clearly optional           | `[SIDE HUSTLE · RNG]` labels on Side Jobs                    |
-| 9   | Fun: needle difficulty, streak, dialogue, epi | needleSpeed/window; combo bonus; unique lines; Nair epilogue |
-| 10  | Story ~20 min                                 | Longer skills + dialogue + epilogue                          |
+| #   | Ask                                             | Result                                                                                               |
+| --- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 1   | P0 needle/duel zone inverted                    | `timingZone` draws + `judgeTimingStop` judges the same lo/hi; Stop uses `needle.style.left` at click |
+| 1b  | Unit tests every needle gate + duel e2e in-zone | `allTimingPhases` edges/centre; `e2e/duel-needle.spec.ts` Stop in zone                               |
+| 1c  | Audit other needle gates                        | Same path for agua, samba, forró, pixo, return, elevator, VIP, dancer, duel                          |
+| 2   | Duel fail too punishing                         | Phase miss → retry same phase; stake only on full win; `ensureStoryCredits`                          |
+| 2b  | Never credit-lock story                         | Unit: 0 credits still accepts + clears story skill                                                   |
+| 3   | Retry odds +N% past 100%                        | Removed on skills; miss widens/slows zone with toast; RNG pity capped +16%                           |
+| 4   | Epilogue only a toast                           | Multi-NPC callbacks + final choice → credits roll panel                                              |
+| 5   | NPC/building art repetitive                     | Body variants 0–5 (cap, afro, sash…); more favela/avenida facades                                    |
 
 ## Automated
 
 - `make check` — pass
 - `npm test` — branches ≥90%
-- full Playwright e2e — pass (story-walk, exits, golden path, 4× FPS)
-- Version assertions read `package.json` / semver regex (never hardcoded)
+- full Playwright e2e — pass (story-walk, duel-needle, exits, golden path, 4× FPS)
+- Version from `package.json` / semver (never hardcoded in e2e asserts)
+
+## Screenshots
+
+- `14-duel-needle-in-zone.png` — duel phase 1 with needle parked in the drawn green zone before Stop
+- `15-morro-variants-v141.png` — Morro world with NPC/building variants
+- `16-epilogue-credits-v141.png` — epilogue credits roll after Nair’s laje scene
+- Prior v1.14.0 set retained under `artifacts/playtest/` for regression compare
 
 ## Gaps (honest)
 
-- Simon shows the full sequence (not memorize-then-hide) for clarity on touch.
-- Combo bonus is a small credit top-up, not a separate meter UI.
-- VIP return is via the upstairs Elevator interact (not a second exit pad).
+- Credits roll is a short animated panel, not a full cinematic cutscene.
+- RNG side hustles still use soft pity; only skill gates dropped the misleading +N% climb.
+- Next: v1.15.0 content pass (per ask).

@@ -42,17 +42,34 @@ describe('session skill encounters', () => {
     expect(session.story.getCompleted()).toContain('boteco-nair');
   });
 
-  it('failed skill attempt costs stake and leaves beat retryable', () => {
+  it('missed skill phase retries in-place with no stake loss', () => {
     const session = new GameSession(7);
     session.startNew();
     session.runStoryBeat('boteco-nair');
     const before = session.player.getStats().credits;
     expect(session.acceptStoryBet()).toBe(true);
-    // Miss the timing window hard.
     expect(session.submitSkill(0)).toBe(true);
-    expect(session.player.getStats().credits).toBeLessThan(before);
+    // Still in the skill UI; credits untouched; beat incomplete.
+    expect(session.ui.is('skill')).toBe(true);
+    expect(session.player.getStats().credits).toBe(before);
+    expect(session.getSkillProgress()?.misses).toBeGreaterThan(0);
     expect(session.story.getCompleted().includes('boteco-nair')).toBe(false);
-    expect(session.ui.is('play')).toBe(true);
+    // Assist widened the zone — centre still wins.
+    expect(session.completeSkillPerfect()).toBe(true);
+  });
+
+  it('never credit-locks the player out of a story skill', () => {
+    const session = new GameSession(9);
+    session.startNew();
+    session.player.addCredits(-session.player.getStats().credits);
+    expect(session.player.getStats().credits).toBe(0);
+    session.runStoryBeat('boteco-nair');
+    expect(session.acceptStoryBet()).toBe(true);
+    // Miss repeatedly — still no drain, still in skill.
+    for (let i = 0; i < 5; i += 1) session.submitSkill(0);
+    expect(session.ui.is('skill')).toBe(true);
+    expect(session.completeSkillPerfect()).toBe(true);
+    expect(session.story.getCompleted()).toContain('boteco-nair');
   });
 
   it('prioritizes objective NPC over exit for E', () => {

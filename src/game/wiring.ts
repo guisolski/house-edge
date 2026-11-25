@@ -38,6 +38,11 @@ function wireLifecycle(
     hud.showToast('', 'info');
     hud.showEnding(UI.wonEnding);
   });
+  session.bus.on('story:credits', () => {
+    if (!session.ui.is('ending')) session.ui.go('ending');
+    hud.showToast('', 'info');
+    hud.showCreditsRoll();
+  });
   session.bus.on('input:action', (p) => {
     if (p.pressed) handleAction(session, hud, p.action);
   });

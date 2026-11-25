@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.1] — 2026-11-25
+
+### Fixed
+
+- P0: timing/duel needle — drawn green zone matches judge; Stop captures needle at input (no frame delay); deterministic, no hidden RNG in skill gates.
+- Skill phase miss retries the **current phase only** (duel no longer restarts); stake charged only on full win; story credits topped up so players cannot be credit-locked.
+- Removed misleading “Retry odds +N%” on skill gates; misses widen/slow the timing zone with a clear toast. RNG soft pity toast capped at +16%.
+- Epilogue is a short scene (NPC callbacks + final choice) ending in a credits roll.
+- More NPC silhouette variants (0–5 palette/accessories) and building facade variety (free/CC0 procedural).
+
+### Tests
+
+- Unit: every timing gate edges/centre pass, outside fail; phase-miss retry; credit-lockout guard.
+- E2e: duel Stop inside the drawn zone advances phase 1.
+
 ## [1.14.0] — 2026-11-25
 
 ### Added

@@ -20,6 +20,16 @@ describe('pixel-gen', () => {
     expect(makeNpcSprite('#fff').height).toBe(54);
     expect(makeNpcSprite('#fff', 0, 'seu-ze').height).toBe(58);
     expect(makeNpcSprite('#c8d0d8', 0, 'elevator').height).toBe(54);
+    // Palette-swap / accessory variants stay distinct silhouettes.
+    for (const v of [0, 1, 2, 3, 4, 5] as const) {
+      expect(makeNpcSprite('#a0c0ff', 0, undefined, v).pixels.length).toBeGreaterThan(
+        100,
+      );
+    }
+    expect(makeBuilding(2, 'morro').height).not.toBe(makeBuilding(3, 'morro').height);
+    expect(makeBuilding(0, 'avenida').pixels).not.toEqual(
+      makeBuilding(1, 'avenida').pixels,
+    );
     expect(makeAsphalt().pixels.length).toBe(256);
     expect(makePlaza().pixels.length).toBe(256);
     expect(makeStairs().pixels.length).toBe(256);

@@ -44,9 +44,31 @@ export type SkillProgress = {
   cleared: number;
   /** Correct sequence taps within the current chase/hack phase. */
   seqIndex: number;
+  /** Phase misses in this encounter (retry same phase; never ends the duel). */
+  misses: number;
+  /** True when the latest attempt missed the current phase. */
+  justMissed: boolean;
   done: boolean;
   won: boolean;
 };
+
+/** Inclusive green-zone bounds matching the drawn meter (target ± window). */
+export type TimingZone = { lo: number; hi: number; target: number; half: number };
+
+export function timingZone(phase: SkillPhase): TimingZone {
+  const half = phase.window ?? 0.12;
+  const target = phase.target;
+  return {
+    target,
+    half,
+    lo: Math.max(0, target - half),
+    hi: Math.min(1, target + half),
+  };
+}
+
+export function judgeTimingStop(pos: number, zone: TimingZone): boolean {
+  return pos >= zone.lo && pos <= zone.hi;
+}
 
 /** Build a skill encounter definition for a bet id / kind. */
 export function skillForBet(betId: string, kind: SkillKind | undefined): SkillDef | null {
@@ -62,23 +84,60 @@ export function skillForBet(betId: string, kind: SkillKind | undefined): SkillDe
 }
 
 export function startSkill(def: SkillDef): SkillProgress {
-  return { def, phaseIndex: 0, cleared: 0, seqIndex: 0, done: false, won: false };
+  return {
+    def,
+    phaseIndex: 0,
+    cleared: 0,
+    seqIndex: 0,
+    misses: 0,
+    justMissed: false,
+    done: false,
+    won: false,
+  };
 }
 
-/** Apply one player attempt; advances phases (and Simon steps) until win/lose. */
+/** Apply one player attempt; phase misses retry the same phase (no full reset). */
 export function attemptSkill(
   progress: SkillProgress,
   attempt: SkillAttempt,
 ): SkillProgress {
   if (progress.done) return progress;
   const phase = progress.def.phases[progress.phaseIndex];
-  if (!phase) return { ...progress, done: true, won: false };
+  if (!phase) return { ...progress, done: true, won: false, justMissed: false };
   if (phase.kind === 'chase' || phase.kind === 'hack') {
     return attemptSequence(progress, phase, attempt.value);
   }
   const ok = judgePhase(phase, attempt.value);
-  if (!ok) return { ...progress, done: true, won: false, seqIndex: 0 };
+  if (!ok) return phaseMiss(progress);
   return advancePhase(progress);
+}
+
+function phaseMiss(progress: SkillProgress): SkillProgress {
+  return {
+    ...progress,
+    seqIndex: 0,
+    misses: progress.misses + 1,
+    justMissed: true,
+    done: false,
+    won: false,
+  };
+}
+
+/** After a miss, widen/slow the current timing phase so retries stay fair. */
+export function assistAfterMiss(progress: SkillProgress): SkillProgress {
+  const phases = progress.def.phases.map((p, i) => {
+    if (i !== progress.phaseIndex || p.kind !== 'timing') return p;
+    return {
+      ...p,
+      window: Math.min(0.3, (p.window ?? 0.12) + 0.04),
+      needleSpeed: Math.max(0.4, (p.needleSpeed ?? 0.8) * 0.82),
+    };
+  });
+  return {
+    ...progress,
+    justMissed: false,
+    def: { ...progress.def, phases },
+  };
 }
 
 function attemptSequence(
@@ -88,14 +147,12 @@ function attemptSequence(
 ): SkillProgress {
   const seq = phaseSequence(phase);
   const expected = SEQ_KEYS.indexOf(seq[progress.seqIndex]!);
-  if (Math.round(value) !== expected) {
-    return { ...progress, done: true, won: false, seqIndex: 0 };
-  }
+  if (Math.round(value) !== expected) return phaseMiss(progress);
   const nextSeq = progress.seqIndex + 1;
   if (nextSeq < seq.length) {
-    return { ...progress, seqIndex: nextSeq };
+    return { ...progress, seqIndex: nextSeq, justMissed: false };
   }
-  return advancePhase({ ...progress, seqIndex: 0 });
+  return advancePhase({ ...progress, seqIndex: 0, justMissed: false });
 }
 
 function advancePhase(progress: SkillProgress): SkillProgress {
@@ -107,6 +164,7 @@ function advancePhase(progress: SkillProgress): SkillProgress {
       phaseIndex: next,
       cleared,
       seqIndex: 0,
+      justMissed: false,
       done: true,
       won: true,
     };
@@ -116,6 +174,7 @@ function advancePhase(progress: SkillProgress): SkillProgress {
     phaseIndex: next,
     cleared,
     seqIndex: 0,
+    justMissed: false,
     done: false,
     won: false,
   };
@@ -142,8 +201,7 @@ export function phaseSequence(phase: SkillPhase): SeqKey[] {
 
 export function judgePhase(phase: SkillPhase, value: number): boolean {
   if (phase.kind === 'timing') {
-    const half = phase.window ?? 0.12;
-    return Math.abs(value - phase.target) <= half;
+    return judgeTimingStop(value, timingZone(phase));
   }
   if (phase.kind === 'chase' || phase.kind === 'hack') {
     // Full-sequence match is handled in attemptSkill; this is for single-shot tests.
@@ -151,6 +209,31 @@ export function judgePhase(phase: SkillPhase, value: number): boolean {
     return Math.round(value) === SEQ_KEYS.indexOf(seq[0]!);
   }
   return Math.round(value) === phase.target;
+}
+
+/** All story timing gates (incl. duel phases) for audit/tests. */
+export function allTimingPhases(): { betId: string; phase: SkillPhase }[] {
+  const ids = [
+    'agua-gelada',
+    'samba-odds',
+    'forro-crowd',
+    'pixo-challenge',
+    'morro-return-nair',
+    'torre-elevator',
+    'torre-vip',
+    'dancer-tip',
+    'duelo-casa',
+  ];
+  const out: { betId: string; phase: SkillPhase }[] = [];
+  for (const id of ids) {
+    const kind = id === 'duelo-casa' ? 'duel' : 'timing';
+    const def = skillForBet(id, kind as SkillKind);
+    if (!def) continue;
+    for (const phase of def.phases) {
+      if (phase.kind === 'timing') out.push({ betId: id, phase });
+    }
+  }
+  return out;
 }
 
 /** Every choice/puzzle phase must expose a clue that names the correct option. */

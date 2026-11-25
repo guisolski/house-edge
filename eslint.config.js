@@ -113,8 +113,10 @@ export default tseslint.config(
     files: [
       'tests/unit/coverage-boost.test.ts',
       'tests/unit/session-skill.test.ts',
+      'tests/unit/session-v141.test.ts',
       'tests/unit/minigame.test.ts',
       'tests/unit/session-v15.test.ts',
+      'e2e/duel-needle.spec.ts',
     ],
     rules: {
       'max-lines-per-function': [

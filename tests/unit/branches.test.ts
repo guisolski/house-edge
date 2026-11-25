@@ -134,14 +134,14 @@ describe('session branches', () => {
     clearStorage(mem);
   });
 
-  it('opens dialogue then backs out when bet cannot be afforded', () => {
+  it('tops up story skill stakes when broke so the beat stays reachable', () => {
     const session = new GameSession(5);
     session.startNew();
     session.player.addCredits(-session.player.getStats().credits);
     expect(session.runStoryBeat('boteco-nair')).toBe(true);
-    expect(session.acceptStoryBet()).toBe(false);
-    expect(session.getPendingBet()).toBeNull();
-    expect(session.ui.is('play')).toBe(true);
+    expect(session.acceptStoryBet()).toBe(true);
+    expect(session.ui.is('skill')).toBe(true);
+    expect(session.player.getStats().credits).toBeGreaterThan(0);
     expect(session.runStoryBeat('missing')).toBe(false);
   });
 

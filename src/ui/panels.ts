@@ -11,7 +11,13 @@ import {
 } from '../systems/betting';
 import { DISTRICTS } from '../content/districts';
 import { UPGRADES } from '../systems/upgrade';
-import { phaseSequence, SEQ_KEYS, type SeqKey } from '../systems/minigame';
+import {
+  phaseSequence,
+  SEQ_KEYS,
+  timingZone,
+  type SeqKey,
+  type SkillPhase,
+} from '../systems/minigame';
 
 export function button(label: string, onClick: () => void): HTMLButtonElement {
   const btn = el('button', 'btn', label);
@@ -92,14 +98,7 @@ export function paintSkill(
   }
   const actions = el('div', 'panel-actions skill-actions');
   if (phase?.kind === 'timing') {
-    paintTimingSkill(
-      body,
-      actions,
-      session,
-      after,
-      phase.window ?? 0.12,
-      phase.needleSpeed,
-    );
+    paintTimingSkill(body, actions, session, after, phase);
   } else if (phase?.kind === 'choice' || phase?.kind === 'puzzle') {
     paintChoiceSkill(actions, phase.options ?? ['A', 'B', 'C'], session, after);
   } else if (phase) {
@@ -120,27 +119,40 @@ function paintTimingSkill(
   actions: HTMLElement,
   session: GameSession,
   after: () => void,
-  windowHalf: number,
-  needleSpeed = 0.8,
+  phase: SkillPhase,
 ): void {
   const meter = el('div', 'skill-meter');
   const needle = el('div', 'skill-needle');
-  const zone = el('div', 'skill-zone');
-  const center = 0.5;
-  zone.style.left = `${Math.max(0, (center - windowHalf) * 100)}%`;
-  zone.style.width = `${windowHalf * 2 * 100}%`;
-  meter.append(zone, needle);
+  const zoneEl = el('div', 'skill-zone');
+  // Drawn zone MUST match judgeTimingStop(timingZone(phase)).
+  const zone = timingZone(phase);
+  zoneEl.style.left = `${zone.lo * 100}%`;
+  zoneEl.style.width = `${(zone.hi - zone.lo) * 100}%`;
+  meter.append(zoneEl, needle);
   body.appendChild(meter);
+  body.appendChild(
+    el(
+      'p',
+      'skill-seq',
+      `Green zone ${Math.round(zone.lo * 100)}–${Math.round(zone.hi * 100)}% · stop on the needle`,
+    ),
+  );
   let t = 0;
-  const step = Math.max(0.02, 0.028 * needleSpeed);
+  const speed = phase.needleSpeed ?? 0.8;
+  const step = Math.max(0.015, 0.028 * speed);
   const tick = window.setInterval(() => {
     t = (t + step) % 1;
     needle.style.left = `${t * 100}%`;
   }, 32);
+  // Harness / e2e can freeze the needle before Stop without a frame race.
+  meter.dataset.needleTick = String(tick);
   actions.appendChild(
     button('Stop!', () => {
       window.clearInterval(tick);
-      session.submitSkill(t);
+      // Capture the needle position at input time (no extra animation frame).
+      const raw = needle.style.left;
+      const pos = raw.endsWith('%') ? parseFloat(raw) / 100 : t;
+      session.submitSkill(Number.isFinite(pos) ? pos : t);
       after();
     }),
   );

@@ -26,6 +26,7 @@ import { buildDistrictMap, buildTorreVip, tileAt, type MapDef } from '../world/m
 import { slideStep } from '../world/slide';
 import { currentObjective, sideQuestMarkers, type Objective } from './objectives';
 import {
+  assistAfterMiss,
   attemptSkill,
   perfectAttempt,
   skillForBet,
@@ -68,6 +69,8 @@ export class GameSession {
   private vipFloor = false;
   private skillStreak = 0;
   private vipMap: MapDef = buildTorreVip();
+  /** Ending panel shows the credits roll after the laje epilogue. */
+  private creditsRoll = false;
 
   constructor(seed = 42, bus = new EventBus()) {
     this.bus = bus;
@@ -84,6 +87,10 @@ export class GameSession {
     return this.vipFloor;
   }
 
+  showingCreditsRoll(): boolean {
+    return this.creditsRoll;
+  }
+
   getSkillStreak(): number {
     return this.skillStreak;
   }
@@ -93,6 +100,7 @@ export class GameSession {
     this.vipFloor = false;
     this.exitLatch = false;
     this.skillStreak = 0;
+    this.creditsRoll = false;
     this.ui.go('play');
     this.story.completeBeat('intro-laje');
     this.bus.emit('game:started', { newGame: true });
@@ -250,16 +258,19 @@ export class GameSession {
     if (shouldClearExitLatch(s, here, EXIT_STAND_RANGE)) this.exitLatch = false;
   }
 
-  /** Dismiss ending and keep the completed save for side jobs / grind. */
+  /** Dismiss ending / credits and keep the completed save for side jobs / grind. */
   continueExploring(): boolean {
     if (!this.ui.is('ending')) return false;
-    // Epilogue is optional free-roam flavour — mark it available without blocking HUD.
+    const afterCredits = this.creditsRoll;
+    this.creditsRoll = false;
     this.story.setFlag('free_roam', true);
     this.persist();
     if (!this.ui.go('play')) return false;
     this.bus.emit('game:started', { newGame: false });
     this.bus.emit('ui:toast', {
-      message: 'Free roam — grind side jobs or explore. Epilogue waits on the hill.',
+      message: afterCredits
+        ? 'Credits rolled — free roam. Side hustles stay open on every district.'
+        : 'Free roam — grind side jobs or explore. Epilogue waits on the hill with Nair.',
       kind: 'info',
     });
     return true;
@@ -345,6 +356,8 @@ export class GameSession {
   offerBet(betId: string): boolean {
     const bet = getBet(betId);
     if (!bet) return false;
+    // Story skills: top up before afford check so a broke player is never locked out.
+    if (this.pendingStoryBeat && bet.skill) this.ensureStoryCredits(bet.stake);
     const credits = this.player.getStats().credits;
     const stake = defaultStake(bet, credits);
     if (!canAfford(credits, stake)) {
@@ -377,10 +390,27 @@ export class GameSession {
   /** Player attempt on the current skill phase. */
   submitSkill(value: number): boolean {
     if (!this.skillProgress || !this.pendingBetId) return false;
+    const beforeMisses = this.skillProgress.misses;
     const next = attemptSkill(this.skillProgress, {
       phaseIndex: this.skillProgress.phaseIndex,
       value,
     });
+    if (next.justMissed || next.misses > beforeMisses) {
+      // Retry current phase only — no stake drain, optional timing assist.
+      this.skillProgress = assistAfterMiss(next);
+      const phase = this.skillProgress.def.phases[this.skillProgress.phaseIndex];
+      const widened =
+        phase?.kind === 'timing'
+          ? ' Zone widened / needle slowed — try this phase again.'
+          : ' Retry this phase.';
+      this.bus.emit('ui:toast', {
+        message: `Missed phase ${this.skillProgress.phaseIndex + 1}.${widened}`,
+        kind: 'info',
+      });
+      this.bus.emit('audio:play-sfx', { id: 'lose' });
+      this.bus.emit('fx:flash', { kind: 'lose' });
+      return true;
+    }
     this.skillProgress = next;
     if (!next.done) {
       this.bus.emit('audio:play-sfx', { id: 'interact' });
@@ -393,33 +423,51 @@ export class GameSession {
   completeSkillPerfect(): boolean {
     if (!this.skillProgress) return false;
     let p = this.skillProgress;
-    while (!p.done) p = attemptSkill(p, perfectAttempt(p));
+    let guard = 0;
+    while (!p.done && guard < 64) {
+      guard += 1;
+      const before = p.misses;
+      p = attemptSkill(p, perfectAttempt(p));
+      if (p.justMissed || p.misses > before) {
+        // Perfect attempts should never miss — bail if they do.
+        break;
+      }
+    }
     this.skillProgress = p;
-    return this.finishSkill(p.won);
+    if (!p.done || !p.won) return false;
+    return this.finishSkill(true);
   }
 
+  /**
+   * Story skills never charge stake on a miss. Stake is only settled on a
+   * full encounter win so the player cannot be credit-locked out of the story.
+   */
   private finishSkill(won: boolean): boolean {
     const betId = this.pendingBetId;
     if (!betId) return false;
     const bet = getBet(betId);
     if (!bet) return false;
+    this.ensureStoryCredits(bet.stake);
     const stake = clampStake(
       bet,
       this.pendingStake || bet.stake,
       this.player.getStats().credits,
     );
-    this.player.addCredits(-stake);
-    let payout = won ? payoutForWin(stake, bet.odds) : 0;
+    let payout = 0;
+    let delta = 0;
     if (won) {
+      this.player.addCredits(-stake);
+      payout = payoutForWin(stake, bet.odds);
       this.skillStreak += 1;
       if (this.skillStreak >= 2) {
-        const bonus = Math.min(40, 5 * this.skillStreak);
-        payout += bonus;
+        payout += Math.min(40, 5 * this.skillStreak);
       }
+      this.player.addCredits(payout);
+      delta = payout - stake;
     } else {
+      // Story-critical: no stake loss on incomplete fail paths (cancel / abandon).
       this.skillStreak = 0;
     }
-    this.player.addCredits(payout);
     const rep =
       (won ? bet.reputationDeltaWin : bet.reputationDeltaLose) +
       (won ? this.upgrades.fameBonus() : 0);
@@ -427,17 +475,39 @@ export class GameSession {
     const phase = this.skillProgress?.cleared ?? 0;
     this.bus.emit('skill:resolved', { betId, won, phase });
     this.bus.emit('fx:flash', { kind: won ? 'win' : 'lose' });
-    this.bus.emit('fx:credits', { delta: won ? payout - stake : -stake });
+    this.bus.emit('fx:credits', { delta });
     this.afterBetResolved(bet, won);
-    this.bus.emit('bet:resolved', { betId: bet.id, won, payout, stake });
+    this.bus.emit('bet:resolved', {
+      betId: bet.id,
+      won,
+      payout: won ? payout : 0,
+      stake: won ? stake : 0,
+    });
     if (!this.ui.is('ending') && !this.elevating) {
-      this.toastBet(won, payout, this.lossesByBet.get(bet.id) ?? 0);
+      this.toastSkill(won, payout);
       this.ui.go('play');
     }
     this.pendingBetId = null;
     this.pendingStake = 0;
     this.skillProgress = null;
     return true;
+  }
+
+  /** Top up credits so a story skill stake is always payable. */
+  ensureStoryCredits(minStake: number): void {
+    if (!this.pendingStoryBeat) return;
+    const need = Math.max(0, minStake - this.player.getStats().credits);
+    if (need > 0) this.player.addCredits(need);
+  }
+
+  private toastSkill(won: boolean, payout: number): void {
+    this.bus.emit('ui:toast', {
+      message: won
+        ? `Cleared — ${payout} credits.`
+        : 'Encounter closed — story beat still open. No stake taken.',
+      kind: won ? 'success' : 'info',
+    });
+    this.bus.emit('audio:play-sfx', { id: won ? 'win' : 'ui' });
   }
 
   /** Guaranteed credits — cooldown + daily cap so it can't be farmed forever. */
@@ -814,10 +884,10 @@ export class GameSession {
   }
 
   private toastBet(won: boolean, payout: number, priorLosses: number): void {
+    // Soft pity is capped at 2 stacks (+16%) — never claim climbing past 100%.
+    const stacks = Math.min(2, Math.max(0, priorLosses + 1));
     const pity =
-      !won && priorLosses + 1 > 0
-        ? ` Retry odds improve (+${(priorLosses + 1) * 10}%).`
-        : '';
+      !won && stacks > 0 ? ` Soft pity +${stacks * 8}% (max +16%) on the next roll.` : '';
     this.bus.emit('ui:toast', {
       message: won ? `Won ${payout} credits!` : `The house took this one.${pity}`,
       kind: won ? 'success' : 'danger',
@@ -830,6 +900,11 @@ export class GameSession {
     if (done?.unlocksDistrict) this.world.unlock(done.unlocksDistrict);
     if (beatId === 'torre-elevator') this.runElevatorRide();
     if (done?.isEnding) this.ui.go('ending');
+    if (beatId === 'epilogue-laje') {
+      this.creditsRoll = true;
+      this.ui.go('ending');
+      this.bus.emit('story:credits', {});
+    }
     this.persist();
   }
 

@@ -776,7 +776,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Augusto Casa',
-        text: 'Skill won’t save you from the house. High stakes. No appeals. Fail a phase and the stake is mine.',
+        text: 'Skill won’t save you from the house. Three phases. Miss one and you retry it — the stake waits for a full clear.',
       },
       {
         speaker: 'Rita Odds',
@@ -797,20 +797,40 @@ export const STORY_BEATS: readonly StoryBeat[] = [
         text: 'Rita. Sit. The ice is honest tonight — no odd attached. You walked the hill, the fair, the avenue, and you made Augusto sweat.',
       },
       {
+        speaker: 'Capitã',
+        text: '(radio crackle) Hill’s clear. Antenna still sings your pirate hymn. Don’t forget who kept the splice warm.',
+      },
+      {
+        speaker: 'Fio',
+        text: 'And who ran the lajes when the cams blinked. Your chase steps still echo on my tiles.',
+      },
+      {
+        speaker: 'Luna',
+        text: 'Pendrive’s archived. Pit ledger’s public. Casa can rebuild — we’ll have the receipts.',
+      },
+      {
         speaker: 'Rita Odds',
         text: 'He called it skill. I called it the city. The ledger still has names, but they’re ours now.',
       },
       {
         speaker: 'Dona Nair',
-        text: 'Good. Keep the pirate feed warm. When Casa rebuilds, the laje remembers who paid first.',
-      },
-      {
-        speaker: 'Rita Odds',
-        text: 'Then toast with me — not for luck. For the sequence we matched with our eyes open.',
+        text: 'One last call from the boteco — how do you leave the table?',
+        choices: [
+          {
+            label: 'Keep the pirate feed warm',
+            setsFlag: 'epi_feed',
+            reply: 'Feed stays warm. When Casa rebuilds, the hill hears first.',
+          },
+          {
+            label: 'Rest the odds — free roam',
+            setsFlag: 'epi_rest',
+            reply: 'Odds can rest. Side hustles stay optional. Neon can wait.',
+          },
+        ],
       },
       {
         speaker: 'Dona Nair',
-        text: 'Saúde. Side hustles stay optional. The story’s yours to rest on. Come back when the neon asks again.',
+        text: 'Saúde. The credits roll for everyone who bet with you — then the city is yours again.',
       },
     ],
   },

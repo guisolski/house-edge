@@ -33,7 +33,8 @@ export function makePlayerSprite(frame = 0): PixelGrid {
   return g;
 }
 
-type BodyVariant = 0 | 1 | 2 | 3;
+/** Silhouette / accessory / palette-swap lanes (0–5). */
+export type BodyVariant = 0 | 1 | 2 | 3 | 4 | 5;
 
 function paintNamedHead(
   g: PixelGrid,
@@ -88,6 +89,21 @@ function paintVariantHead(
     fillRect(g, { x: 8, y: headY + 1 + y0, w: 16, h: 3 }, '#1a1028');
     return;
   }
+  if (variant === 4) {
+    // Cap + visor.
+    fillRect(g, { x: 10, y: headY + y0, w: 12, h: 10 }, accent);
+    fillRect(g, { x: 8, y: headY + y0, w: 16, h: 3 }, '#1a3040');
+    fillRect(g, { x: 9, y: headY + 3 + y0, w: 14, h: 2 }, Palette.neonCyan);
+    return;
+  }
+  if (variant === 5) {
+    // Afro / high hair + earrings.
+    fillRect(g, { x: 8, y: headY + y0, w: 16, h: 6 }, '#1a1018');
+    fillRect(g, { x: 10, y: headY + 4 + y0, w: 12, h: 8 }, accent);
+    fillRect(g, { x: 8, y: headY + 8 + y0, w: 2, h: 3 }, Palette.gold);
+    fillRect(g, { x: 22, y: headY + 8 + y0, w: 2, h: 3 }, Palette.gold);
+    return;
+  }
   fillRect(g, { x: 10, y: headY + y0, w: 12, h: 10 }, accent);
 }
 
@@ -109,6 +125,8 @@ function npcCoat(npcId: string | undefined, variant: BodyVariant): string {
   if (variant === 1) return '#2a2438';
   if (variant === 2) return '#1a2830';
   if (variant === 3) return '#302018';
+  if (variant === 4) return '#182838';
+  if (variant === 5) return '#382028';
   return Palette.concrete;
 }
 
@@ -159,6 +177,20 @@ function paintNpcBody(p: BodyPaint): void {
   if (p.variant === 3) {
     fillRect(p.g, { x: bx, y: p.layout.bodyY + p.y0, w: bw, h: 2 }, '#4a3020');
   }
+  if (p.variant === 4) {
+    fillRect(
+      p.g,
+      { x: bx + 2, y: p.layout.bodyY + 6 + p.y0, w: bw - 4, h: 3 },
+      Palette.neonCyan,
+    );
+  }
+  if (p.variant === 5) {
+    fillRect(
+      p.g,
+      { x: bx + 1, y: p.layout.bodyY + 10 + p.y0, w: bw - 2, h: 2 },
+      Palette.neonMagenta,
+    );
+  }
   fillRect(p.g, { x: 3, y: p.layout.bodyY + 1 + p.y0 + p.bob, w: 5, h: 10 }, coat);
   fillRect(p.g, { x: 24, y: p.layout.bodyY + 1 + p.y0 + (1 - p.bob), w: 5, h: 10 }, coat);
   fillRect(p.g, { x: 10 + p.bob, y: p.layout.legY + p.y0, w: 5, h: 16 }, Palette.asphalt);
@@ -170,12 +202,22 @@ function paintNpcBody(p: BodyPaint): void {
       Palette.neonMagenta,
     );
   }
-  // Accessories: hat / bag / scarf so NPCs read as distinct silhouettes.
+  // Accessories: hat / bag / scarf / sash so NPCs read as distinct silhouettes.
   if (p.variant === 1) {
     fillRect(p.g, { x: 10, y: p.layout.headY - 1 + p.y0, w: 12, h: 3 }, '#2a1810');
   }
   if (p.variant === 2) {
     fillRect(p.g, { x: 22, y: p.layout.bodyY + 6 + p.y0, w: 6, h: 8 }, '#3a2818');
+  }
+  if (p.variant === 4) {
+    fillRect(p.g, { x: 6, y: p.layout.bodyY + 4 + p.y0, w: 4, h: 10 }, '#0a1820');
+  }
+  if (p.variant === 5) {
+    fillRect(
+      p.g,
+      { x: 9, y: p.layout.bodyY - 2 + p.y0, w: 14, h: 3 },
+      Palette.brasilYellow,
+    );
   }
   if (p.npcId === 'ceo') {
     fillRect(p.g, { x: 11, y: p.layout.headY + p.y0, w: 10, h: 2 }, Palette.gold);
@@ -603,13 +645,31 @@ function paintFavelaWindows(
 function paintFavelaRoofProps(g: PixelGrid, style: number, w: number, h: number): void {
   fillRect(g, { x: 16, y: h - 22, w: 12, h: 18 }, '#100818');
   fillRect(g, { x: 24, y: h - 14, w: 2, h: 2 }, Palette.gold);
-  if (style % 2 === 0) {
+  const facade = style % 4;
+  if (facade === 0) {
     fillRect(g, { x: 10, y: 2, w: 12, h: 8 }, '#4a6070');
     fillRect(g, { x: 11, y: 3, w: 10, h: 2 }, '#7ab');
     return;
   }
-  fillRect(g, { x: w - 20, y: 4, w: 10, h: 6 }, '#3a4858');
-  fillRect(g, { x: w - 18, y: 1, w: 2, h: 8 }, '#889');
+  if (facade === 1) {
+    fillRect(g, { x: w - 20, y: 4, w: 10, h: 6 }, '#3a4858');
+    fillRect(g, { x: w - 18, y: 1, w: 2, h: 8 }, '#889');
+    return;
+  }
+  if (facade === 2) {
+    // Satellite dish + laundry line.
+    fillRect(g, { x: 6, y: 4, w: 10, h: 10 }, '#5a6878');
+    fillRect(g, { x: 8, y: 6, w: 6, h: 6 }, '#a0c0d0');
+    fillRect(g, { x: 18, y: 8, w: w - 28, h: 1 }, '#d0d0e0');
+    fillRect(g, { x: 22, y: 6, w: 3, h: 5 }, Palette.neonMagenta);
+    fillRect(g, { x: 28, y: 6, w: 3, h: 5 }, Palette.brasilYellow);
+    return;
+  }
+  // Painted mural strip + chimney.
+  fillRect(g, { x: 8, y: h - 40, w: w - 24, h: 4 }, Palette.neonCyan);
+  fillRect(g, { x: 8, y: h - 36, w: w - 24, h: 3 }, Palette.neonMagenta);
+  fillRect(g, { x: w - 14, y: 2, w: 6, h: 14 }, '#2a2030');
+  fillRect(g, { x: w - 13, y: 1, w: 4, h: 2 }, '#101018');
 }
 
 function stall(style: number): PixelGrid {
@@ -680,22 +740,25 @@ function glassTower(style: number): PixelGrid {
   const w = style % 2 ? 56 : 48;
   const h = style % 3 === 0 ? 96 : 80;
   const g = empty(w, h, 'transparent');
+  const facade = [Palette.concrete, '#1a2838', '#281828', '#182828'][style % 4]!;
+  const crown = [
+    Palette.neonCyan,
+    Palette.neonMagenta,
+    Palette.gold,
+    Palette.brasilYellow,
+  ][style % 4]!;
   fillRect(g, { x: 14, y: 16, w: w - 20, h: h - 20 }, Palette.shadow);
-  fillRect(g, { x: 6, y: 12, w: w - 20, h: h - 16 }, Palette.concrete);
+  fillRect(g, { x: 6, y: 12, w: w - 20, h: h - 16 }, facade);
   fillRect(g, { x: w - 14, y: 14, w: 8, h: h - 18 }, '#00000066');
-  fillRect(
-    g,
-    { x: 4, y: 4, w: w - 16, h: 10 },
-    style % 2 ? Palette.neonCyan : Palette.neonMagenta,
-  );
-  fillRect(
-    g,
-    { x: w - 14, y: 6, w: 10, h: 8 },
-    style % 2 ? Palette.neonCyan : Palette.neonMagenta,
-  );
+  fillRect(g, { x: 4, y: 4, w: w - 16, h: 10 }, crown);
+  fillRect(g, { x: w - 14, y: 6, w: 10, h: 8 }, crown);
+  const pane = style % 4 === 2 ? '#a04070' : style % 4 === 3 ? '#40a070' : '#3a80a0';
   for (let y = 16; y < h - 20; y += 7) {
-    fillRect(g, { x: 10, y, w: w - 28, h: 4 }, '#3a80a0');
+    fillRect(g, { x: 10, y, w: w - 28, h: 4 }, pane);
     fillRect(g, { x: 10, y: y + 3, w: w - 28, h: 1 }, '#1a3040');
+  }
+  if (style % 4 === 1) {
+    fillRect(g, { x: 8, y: 20, w: 3, h: h - 36 }, Palette.neonCyan);
   }
   fillRect(g, { x: Math.floor(w / 2) - 6, y: h - 22, w: 12, h: 16 }, '#08060e');
   return g;

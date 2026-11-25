@@ -12,8 +12,8 @@ export type WorldNpc = {
   jobBetId?: string;
   safeJobId?: string;
   color: string;
-  /** Body / hair / outfit silhouette variant (0–3). */
-  bodyVariant?: 0 | 1 | 2 | 3;
+  /** Body / hair / outfit silhouette variant (0–5). */
+  bodyVariant?: 0 | 1 | 2 | 3 | 4 | 5;
   /** Casa tower floor — VIP map only shows vip NPCs. */
   floor?: 'foyer' | 'vip';
 };
@@ -506,10 +506,10 @@ export function nearestExit(q: NearestExitQuery): DistrictExit | null {
   return best;
 }
 
-export function npcBodyVariant(id: string): 0 | 1 | 2 | 3 {
+export function npcBodyVariant(id: string): 0 | 1 | 2 | 3 | 4 | 5 {
   let h = 0;
   for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return (h % 4) as 0 | 1 | 2 | 3;
+  return (h % 6) as 0 | 1 | 2 | 3 | 4 | 5;
 }
 
 export function inRange(a: {

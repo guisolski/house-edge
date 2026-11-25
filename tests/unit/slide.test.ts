@@ -45,4 +45,14 @@ describe('slideStep', () => {
   it('returns null when every slip is blocked', () => {
     expect(slideStep(toy, 1, minY, -1, 0)).toBeNull();
   });
+
+  it('skips out-of-bounds slip cells on west/north edges', () => {
+    const edge = toySlideMap();
+    // Block west target so slips try (nx, y±1) which may be OOB / blocked.
+    edge.tiles[5 * edge.width + 0] = 'blocked';
+    expect(slideStep(edge, 1, 5, -1, 0)).toBeNull();
+    // Vertical axis slip near left edge.
+    edge.tiles[6 * edge.width + 1] = 'blocked';
+    expect(slideStep(edge, 1, 5, 0, 1)?.x).toBeDefined();
+  });
 });

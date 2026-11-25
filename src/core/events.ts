@@ -23,6 +23,7 @@ export type GameEvents = {
   'story:beat-started': { beatId: string };
   'story:beat-completed': { beatId: string };
   'story:ended': { endingId: string };
+  'story:credits': Record<string, never>;
   'district:entered': { districtId: string };
   'district:unlocked': { districtId: string };
   'npc:interacted': { npcId: string };

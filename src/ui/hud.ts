@@ -33,6 +33,7 @@ export type HudHandles = {
   showJobs: () => void;
   showUpgrades: () => void;
   showEnding: (text: string) => void;
+  showCreditsRoll: () => void;
   setInputMode: (mode: InputMode) => void;
   updatePrompt: () => void;
   setFps: (sample: FpsSample | null) => void;
@@ -227,6 +228,7 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
       focusFirst(p.upgrades);
     },
     showEnding: (text) => showEnding(p, session, h, text),
+    showCreditsRoll: () => showCreditsRoll(p, session, h),
   };
 }
 
@@ -259,7 +261,51 @@ function endingArt(): HTMLCanvasElement {
 
 function showEnding(p: Parts, session: GameSession, h: HudHandles, text: string): void {
   only(p, 'ending');
+  if (session.showingCreditsRoll()) {
+    paintCreditsRoll(p, session, h);
+    return;
+  }
   paintEnding(p, session, h, text, false);
+}
+
+function showCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
+  only(p, 'ending');
+  paintCreditsRoll(p, session, h);
+}
+
+function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
+  clearNode(p.ending);
+  const art = el('canvas', 'ending-art') as HTMLCanvasElement;
+  const src = endingArt();
+  art.width = src.width;
+  art.height = src.height;
+  art.getContext('2d')?.drawImage(src, 0, 0);
+  const roll = el('div', 'credits-roll');
+  roll.append(
+    el('h2', '', UI.creditsTitle),
+    el('p', 'credits-line', 'Rita Odds — timed every needle'),
+    el('p', 'credits-line', 'Dona Nair — honest ice, open laje'),
+    el('p', 'credits-line', 'Capitã & Fio — antenna + chase tiles'),
+    el('p', 'credits-line', 'Luna — pit ledger on the feed'),
+    el('p', 'credits-line', 'Augusto Casa — the house that fell'),
+    el('p', 'credits-line', 'Morro · Feira · Avenida · Torre'),
+    el('p', 'credits-thanks', UI.creditsThanks),
+  );
+  p.ending.append(art, roll);
+  const actions = el('div', 'panel-actions ending-actions');
+  actions.append(
+    button(UI.continueExploring, () => {
+      blurActive();
+      session.continueExploring();
+      h.syncScreen();
+    }),
+    button(UI.playAgain, () => {
+      blurActive();
+      queueMicrotask(() => session.startNew());
+    }),
+  );
+  p.ending.append(actions);
+  focusFirst(p.ending);
 }
 
 function paintEnding(
