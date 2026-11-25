@@ -51,7 +51,7 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 2,
     options: ['Left steam', 'Middle quiet', 'Right buzz'],
     // Answer is Right buzz — clue via vibration/oil, no "buzz"/"right" synonym dump.
-    clue: 'Kiko checks the tray that trembles his wrist — the quiet stacks are decoys for tourists.',
+    clue: 'Kiko trusts the tray that oils his fingertips — quiet middle stacks and left steam are tourist bait.',
   },
   'feira-garrafa': {
     kind: 'choice',
@@ -90,14 +90,14 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 1,
     options: ['Sun crate', 'Hum crate', 'Empty crate'],
     // Answer Hum crate — never say hum; buzzes vs hot/hollow lids.
-    clue: 'Barraca Tia taps lids — one buzzes in the palm; the hot lid and the hollow one stay quiet.',
+    clue: 'Barraca Tia rests a palm on each lid — only the wired one answers with a shiver; sun-baked and hollow stay mute.',
   },
   'prova-vazamento': {
     kind: 'choice',
     prompt: 'Which leak drops the house first?',
     target: 2,
     options: ['Influencer clip', 'ATM glitch', 'Pit ledger'],
-    clue: 'Luna marks the quiet paper trail — vanity clips and machine noise are smokescreens.',
+    clue: 'Luna wants the quiet arithmetic cameras never filmed — vanity clips and machine noise are smokescreens.',
   },
   'twist-vazamento': {
     kind: 'hack',
@@ -138,8 +138,9 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 0,
     steps: 5,
     sequence: ['←', '↑', '→', '↑', '→'],
-    timerMs: 20_000,
-    maxMisses: 3,
+    // Playtest #28: 250ms taps were dropping — longer timer + one extra miss.
+    timerMs: 28_000,
+    maxMisses: 4,
   },
   // Fallback only — live Neon Snap uses in-world stealth, not this sequence.
   'avenida-drone': {
@@ -180,7 +181,7 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Bluff the badge reader.',
     target: 2,
     options: ['Tourist pass', 'Staff QR', 'Scandal leak'],
-    clue: 'Foyer Guard ignores plastic badges — he only blinks when the city’s dirty secret walks in.',
+    clue: 'Foyer Guard waves plastic past — he only flinches when yesterday’s hill gossip already hit every screen.',
   },
   'torre-pit': {
     kind: 'puzzle',
@@ -188,7 +189,7 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 0,
     options: ['Dog-eared', 'Gold foil', 'Shrink-wrap'],
     // Answer Dog-eared — never say dog/ear; handled pack vs foil/plastic.
-    clue: 'The dealer’s hands linger on the pack that looks handled; foil and factory plastic are decoys.',
+    clue: 'Trust the soft corner the dealer keeps closest to his cuff; shiny foil and sealed plastic are tourist bait.',
   },
   'torre-elevator': {
     kind: 'timing',
@@ -212,7 +213,7 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 0,
     options: ['Take the hush chip', 'Demand the pit mirror', 'Walk out smiling'],
     // Any exit wins — avoid naming hush/chip/take (answer tokens).
-    clue: 'Any sealed exit works — quiet buyout, table glass, or a clean walk. Just decide before the smile freezes.',
+    clue: 'Name any door before the smile freezes — the house stamps every exit you pick the same way.',
     timerMs: 12_000,
   },
   'side-morro-copper': {

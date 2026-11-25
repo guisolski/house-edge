@@ -5,9 +5,12 @@ import { readFileSync } from 'node:fs';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const base = process.env.BASE_PATH ?? '/';
-const pkg = JSON.parse(readFileSync(path.join(rootDir, 'package.json'), 'utf8')) as {
-  version: string;
-};
+function readPkgVersion(): string {
+  const pkg = JSON.parse(readFileSync(path.join(rootDir, 'package.json'), 'utf8')) as {
+    version: string;
+  };
+  return pkg.version;
+}
 
 export default defineConfig({
   base,
@@ -37,7 +40,7 @@ export default defineConfig({
       transformIndexHtml(html) {
         return html.replace(
           /<title>[^<]*<\/title>/,
-          `<title>House Edge v${pkg.version}</title>`,
+          `<title>House Edge v${readPkgVersion()}</title>`,
         );
       },
     },

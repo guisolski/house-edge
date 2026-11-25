@@ -328,8 +328,8 @@ function paintChoiceSkill(
   phase?: SkillPhase,
 ): void {
   let settled = false;
-  // Arm 280ms so leftover Enter from Take bet / dialogue can't pick option 0.
-  const armUntil = Date.now() + 280;
+  // Arm 450ms so leftover Enter from Take bet / dialogue can't pick option 0.
+  const armUntil = Date.now() + 450;
   const settle = (i: number): void => {
     if (settled || Date.now() < armUntil) return;
     settled = true;

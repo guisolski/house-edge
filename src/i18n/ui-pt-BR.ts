@@ -238,7 +238,7 @@ export const uiPtBR = {
   'ui.credits.line.1': 'Dona Nair — gelo honesto, laje aberta',
   'ui.credits.line.2': 'Capitã & Fio — antena + perseguição nas lajes',
   'ui.credits.line.3': 'Luna — livro do salão na transmissão',
-  'ui.credits.line.4': 'Contato Vira-Casaca — o plot twist que cortou',
+  'ui.credits.line.4': 'Contato Vira-Casaca — o reviravolta que cortou',
   'ui.credits.line.5': 'Turma do cofre — palco da Feira + gaiola',
   'ui.credits.line.6': 'Augusto Casa — a casa que caiu',
   'ui.credits.line.7': 'Morro · Feira · Avenida · Torre',

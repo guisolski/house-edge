@@ -2,13 +2,13 @@
 export const storyPtBR: Record<string, string> = {
   'story.avenida-atm.0.speaker': 'Hacker do Caixa',
   'story.avenida-atm.0.text':
-    'Uplink da gaiola tá no ar. Os multibancos da Casa arredondam pro centavo e guardam a sobra. Dispara o glitch antes do bloqueio.',
+    'Enlace da gaiola tá no ar. Os multibancos da Casa arredondam pro centavo e guardam a sobra. Dispara o travada antes do bloqueio.',
   'story.avenida-atm.1.speaker': 'Rita Odds',
-  'story.avenida-atm.1.text': 'Cada moeda lascada compra tempo. Roda o exploit.',
+  'story.avenida-atm.1.text': 'Cada moeda lascada compra tempo. Roda o brecha.',
   'story.avenida-atm.2.speaker': 'Hacker do Caixa',
   'story.avenida-atm.2.text':
-    'A máquina fica ao sul da faixa de vidro — longe do café do Margin. Não mistura meu glitch com o ouvido dele.',
-  'story.avenida-atm.title': 'Caçada ao glitch do ATM',
+    'A máquina fica ao sul da faixa de vidro — longe do café do Margin. Não mistura meu travada com o ouvido dele.',
+  'story.avenida-atm.title': 'Caçada ao travada do ATM',
   'story.avenida-betrayal.0.speaker': 'Contato Vira-Casaca',
   'story.avenida-betrayal.0.text':
     'Para. O "vazamento" nunca foi só da Luna — vendi um pedaço de volta pra Casa numa saída limpa. Os bytes do morro têm cicatriz de dedo-duro.',
@@ -49,7 +49,7 @@ export const storyPtBR: Record<string, string> = {
   'story.avenida-courier.title': 'Sombra do correio',
   'story.avenida-drone.0.speaker': 'Neon Snap',
   'story.avenida-drone.0.text':
-    'O feed do influenciador fritou o espaço aéreo. Drone da milícia pinta cone no asfalto.',
+    'A transmissão do influenciador fritou o espaço aéreo. Drone da milícia pinta cone no asfalto.',
   'story.avenida-drone.1.speaker': 'Rita Odds',
   'story.avenida-drone.1.text': 'Não ando na luz. Me mostra o caminho cego.',
   'story.avenida-drone.2.choice.0.label': 'Rastejar baixo — zero foto',
@@ -65,13 +65,13 @@ export const storyPtBR: Record<string, string> = {
   'story.avenida-drone.3.text':
     'De qualquer forma — o Mensageiro espera quando os cones apagarem.',
   'story.avenida-drone.title': 'Cones de drone na avenida',
-  'story.avenida-influencer.0.speaker': 'Odds Influencer',
+  'story.avenida-influencer.0.speaker': 'Influencer Odds',
   'story.avenida-influencer.0.text':
-    'Ao vivo da Avenida Odds! A Casa me paga por view. Chama o engajamento fake — leitura de skill, não sorte.',
+    'Ao vivo da Avenida Odds! A Casa me paga por view. Chama o engajamento fake — leitura afiada, não sorte.',
   'story.avenida-influencer.1.speaker': 'Rita Odds',
   'story.avenida-influencer.1.text':
     'Seu número estoura de um dia pro outro — like comprado. Pixo de verdade não pula assim, e isso não é publi da Casa.',
-  'story.avenida-influencer.2.speaker': 'Odds Influencer',
+  'story.avenida-influencer.2.speaker': 'Influencer Odds',
   'story.avenida-influencer.2.text':
     'Leitura bonita. Prova no painel antes do próximo filtro.',
   'story.avenida-influencer.title': 'Duelo com o influenciador',
@@ -91,13 +91,13 @@ export const storyPtBR: Record<string, string> = {
     'As vans da milícia sumiram. Tem gaiola de servidor da Casa fora da faixa de vidro — quatro pinos, um minuto de silêncio.',
   'story.avenida-server.1.speaker': 'Rita Odds',
   'story.avenida-server.1.text':
-    'Infiltração, não cara ou coroa. Se eu abrir, o glitch do ATM ganha uplink limpo.',
-  'story.avenida-server.2.choice.0.label': 'Puxar os espelhos do pit',
+    'Infiltração, não cara ou coroa. Se eu abrir, o travada do ATM ganha enlace limpo.',
+  'story.avenida-server.2.choice.0.label': 'Puxar os espelhos do salão',
   'story.avenida-server.2.choice.0.reply':
-    'Espelho o pit. As mesas privadas de rake do Augusto vêm comigo.',
-  'story.avenida-server.2.choice.1.label': 'Plantar beacon do morto',
+    'Espelho o salão. As mesas privadas com comissão do Augusto vêm comigo.',
+  'story.avenida-server.2.choice.1.label': 'Plantar sinal falso do morto',
   'story.avenida-server.2.choice.1.reply':
-    'Beacon plantado. Se a audiência travar, o feed ainda grita.',
+    'Sinal plantado. Se a audiência travar, a transmissão ainda grita.',
   'story.avenida-server.2.speaker': 'Corredor da Gaiola',
   'story.avenida-server.2.text':
     'A pista tá gravada embaixo do trinco. Ajusta cada pino, manda uma vez. Erra e vira a aposta — mesma gaiola, mesmos pinos.',
@@ -107,7 +107,7 @@ export const storyPtBR: Record<string, string> = {
   'story.avenida-server.title': 'Infiltração na gaiola de servidor',
   'story.avenida-stealth.0.speaker': 'Tech das Câmeras',
   'story.avenida-stealth.0.text':
-    'O glitch do ATM acordou as câmeras do lobby. Desliza pelas rotas antes da audiência do Margin — cinco passos quietos.',
+    'O travada do ATM acordou as câmeras do lobby. Desliza pelas rotas antes da audiência do Margin — cinco passos quietos.',
   'story.avenida-stealth.1.speaker': 'Rita Odds',
   'story.avenida-stealth.1.text': 'Perseguição furtiva. Sem dado. Me guia.',
   'story.avenida-stealth.2.speaker': 'Tech das Câmeras',
@@ -128,7 +128,7 @@ export const storyPtBR: Record<string, string> = {
     'Se for isca, eu ainda ando na avenida. Verdade ou armadilha — preciso de olho no checkpoint da Capitã.',
   'story.avenida-twist.4.speaker': 'Contato Vira-Casaca',
   'story.avenida-twist.4.text':
-    'Decide o que quiser, mas não conta pro influenciador. O brilho dele tá no payroll da Casa.',
+    'Decide o que quiser, mas não conta pro influenciador. O brilho dele tá no folha da Casa.',
   'story.avenida-twist.title': 'Vazamento ou armadilha?',
   'story.bia-set.0.speaker': 'Bia Forró',
   'story.bia-set.0.text':
@@ -143,7 +143,7 @@ export const storyPtBR: Record<string, string> = {
   'story.bia-set.1.text': 'Agulha no downbeat. Hoje o salão é nosso.',
   'story.bia-set.2.speaker': 'Bia Forró',
   'story.bia-set.2.text':
-    'Depois do set, pega o sinal da Dancer Sol — depois o DJ. Ele lê a galera melhor que sensor da Casa.',
+    'Depois do set, pega o sinal da Dançarina Sol — depois o DJ. Ele lê a galera melhor que sensor da Casa.',
   'story.bia-set.title': 'Set synth-forró pirata',
   'story.boteco-nair.0.speaker': 'Dona Nair',
   'story.boteco-nair.0.text':
@@ -159,7 +159,7 @@ export const storyPtBR: Record<string, string> = {
     'Que país. Me dá a odd da água gelada — eu cronometro o gelo.',
   'story.boteco-nair.2.speaker': 'Dona Nair',
   'story.boteco-nair.2.text':
-    'De qualquer jeito, a odd do gelo é a porta. Ganha o gelo e o Catador pesa o cobre — erra e tenta de novo comigo. Nada anda até o gelo cair.',
+    'De qualquer jeito, a odd do gelo é a porta. Ganha o gelo e o Catador pesa o cobre — erra e volta pro balcão gelar a mão. Nada anda até o gelo cair.',
   'story.boteco-nair.3.speaker': 'Dona Nair',
   'story.boteco-nair.3.text':
     'A Luna tá fuçando na antena LED. Papo de sinal pirata. Bebe devagar. A Casa cobra cubo de gelo agora.',
@@ -169,20 +169,20 @@ export const storyPtBR: Record<string, string> = {
     'Rita. Senta. O gelo tá honesto hoje — sem odd em cima. Você andou o morro, a feira, a avenida, e fez o Augusto suar.',
   'story.epilogue-laje.1.speaker': 'Capitã',
   'story.epilogue-laje.1.text':
-    '(estática no rádio) Morro limpo. A antena ainda canta seu hino pirata. Não esquece quem manteve o splice quente.',
+    '(estática no rádio) Morro limpo. A antena ainda canta seu hino pirata. Não esquece quem manteve o fio quente.',
   'story.epilogue-laje.2.speaker': 'Fio',
   'story.epilogue-laje.2.text':
     'E quem correu as lajes quando as câmeras piscaram. Seus passos de perseguição ainda ecoam no meu piso.',
   'story.epilogue-laje.3.speaker': 'Luna',
   'story.epilogue-laje.3.text':
-    'Pendrive arquivado. Livro do pit público. A Casa pode reconstruir — a gente fica com os recibos.',
+    'Pendrive arquivado. Livro do salão público. A Casa pode reconstruir — a gente fica com os recibos.',
   'story.epilogue-laje.4.speaker': 'Rita Odds',
   'story.epilogue-laje.4.text':
-    'Ele chamou de skill. Eu chamei de cidade. O livro ainda tem nome, mas agora é nosso.',
+    'Ele chamou de técnica. Eu chamei de cidade. O livro ainda tem nome, mas agora é nosso.',
   'story.epilogue-laje.5.choice.0.label': 'Manter o sinal pirata no ar',
   'story.epilogue-laje.5.choice.0.reply':
     'Sinal no ar. Quando a Casa reconstruir, o morro ouve primeiro.',
-  'story.epilogue-laje.5.choice.1.label': 'Deixar as odds descansar — free roam',
+  'story.epilogue-laje.5.choice.1.label': 'Deixar as odds descansar — circular à vontade',
   'story.epilogue-laje.5.choice.1.reply':
     'Odds podem descansar. Bico fica opcional. Neon pode esperar.',
   'story.epilogue-laje.5.speaker': 'Dona Nair',
@@ -221,7 +221,7 @@ export const storyPtBR: Record<string, string> = {
   'story.feira-dancer.1.text': 'Timing, não sorte. Me mostra a janela.',
   'story.feira-dancer.2.speaker': 'Dançarina Sol',
   'story.feira-dancer.2.text':
-    'Zona verde no meio do giro. Erra e vira a aposta — tenta de novo. Depois vai no DJ.',
+    'Zona verde no meio do giro. Erra e vira a aposta — gira outra vez no mesmo passo. Depois vai no DJ.',
   'story.feira-dancer.title': 'Sinal da dançarina',
   'story.feira-forro.0.speaker': 'DJ Forró',
   'story.feira-forro.0.text':
@@ -231,7 +231,7 @@ export const storyPtBR: Record<string, string> = {
     'Se o calçadão mexer, a milícia fica nervosa. Aposto em suor e sax.',
   'story.feira-forro.2.speaker': 'DJ Forró',
   'story.feira-forro.2.text':
-    'No pico da festa, a Luna passa o pendrive. Perde a batida e a gente tenta de novo.',
+    'No pico da festa, a Luna passa o pendrive. Perde a batida e a gente marca o compasso de novo.',
   'story.feira-forro.title': 'Onda no calçadão',
   'story.feira-kiko.0.speaker': 'Kiko Calçadão',
   'story.feira-kiko.0.text':
@@ -273,7 +273,7 @@ export const storyPtBR: Record<string, string> = {
     'Se o filtro disparar, a milícia ouve estática em vez da entrega da Luna. Tô dentro.',
   'story.feira-radio.2.speaker': 'Pirateiro de Rádio',
   'story.feira-radio.2.text':
-    'Ganha e o calçadão fica alto por dez minutos quietos. Perde e a gente sua nas vans farejadoras.',
+    'Ganha e o calçadão fica alto por dez minutos quietos. Perde e a gente sua nas viaturas farejando o dial.',
   'story.feira-radio.3.speaker': 'Rita Odds',
   'story.feira-radio.3.text': 'Dez minutos dá. Roda.',
   'story.feira-radio.title': 'Odd do rádio pirata',
@@ -297,13 +297,13 @@ export const storyPtBR: Record<string, string> = {
   'story.intro-laje.title': 'Acordar na laje',
   'story.lobby-margin.0.speaker': 'Dr. Margin',
   'story.lobby-margin.0.text':
-    'Regulamento é só mais uma mesa. Quer audiência pública? Escolhe o depoimento que gruda — leitura de skill.',
+    'Regulamento é só mais uma mesa. Quer audiência pública? Escolhe o depoimento que gruda — leitura afiada.',
   'story.lobby-margin.1.speaker': 'Rita Odds',
   'story.lobby-margin.1.text':
-    'O povo vai ver a house edge comendo escola, hospital e água. E a cicatriz de dedo-duro nos nossos próprios bytes.',
+    'O povo vai ver a vantagem da casa comendo escola, hospital e água. E a cicatriz de dedo-duro nos nossos próprios bytes.',
   'story.lobby-margin.2.speaker': 'Dr. Margin',
   'story.lobby-margin.2.text':
-    'A audiência decide tudo. Coloca as fichas — ganha, e o escândalo vira trend na cidade.',
+    'A audiência decide tudo. Coloca as fichas — ganha, e o escândalo vira viralizar na cidade.',
   'story.lobby-margin.3.speaker': 'Rita Odds',
   'story.lobby-margin.3.text':
     'Então eu recompro o microfone com escândalo. Vamos abrir os livros.',
@@ -316,7 +316,7 @@ export const storyPtBR: Record<string, string> = {
     'Lotaria de rua morreu quando a corp tomou conta. Agora até a laje joga pelo regulamento da Casa.',
   'story.luna-beco.2.speaker': 'Luna Pixel',
   'story.luna-beco.2.text':
-    'A banca do Seu Zé fica a leste da escada. Não deixa o Fio pegar o cobre no meio da troca — fio é com ele.',
+    'A banca do Seu Zé fica depois da escada. Cobre com o Catador — Fio é outro lance, não mistura.',
   'story.luna-beco.title': 'Beco do pixo',
   'story.morro-antena.0.speaker': 'Antena Tech',
   'story.morro-antena.0.text':
@@ -326,7 +326,7 @@ export const storyPtBR: Record<string, string> = {
     'Então eu financio a emenda, você segura o cabo. Justo. Vamos ver se esse morro ainda fala.',
   'story.morro-antena.2.speaker': 'Antena Tech',
   'story.morro-antena.2.text':
-    'Sinal limpo, você acha a Luna no beco. Erra a sequência e eu corto o feed — não você.',
+    'Sinal limpo, você acha a Luna no beco. Erra a sequência e eu corto a transmissão — não você.',
   'story.morro-antena.3.speaker': 'Rita Odds',
   'story.morro-antena.3.text':
     'Sinal pirata tem gosto de estática com esperança. Desvia.',
@@ -349,7 +349,7 @@ export const storyPtBR: Record<string, string> = {
     'Linha privada é menos gente sabendo. Mais seguro — ou mais solitário.',
   'story.morro-return-fio.2.speaker': 'Fio Ladrão',
   'story.morro-return-fio.2.text':
-    'Aposta no splice. Ganha e sobe sozinha. O caminho da Nair é o barulhento se quiser companhia.',
+    'Aposta no emenda. Ganha e sobe sozinha. O caminho da Nair é o barulhento se quiser companhia.',
   'story.morro-return-fio.3.speaker': 'Rita Odds',
   'story.morro-return-fio.3.text':
     'Companhia ou silêncio — eu mesmo caminho no asfalto. Aposta.',
@@ -378,10 +378,10 @@ export const storyPtBR: Record<string, string> = {
   'story.prova-luna.title': 'Pendrive no freela',
   'story.seu-ze-banca.0.speaker': 'Seu Zé',
   'story.seu-ze-banca.0.text':
-    'Tudo licenciado agora, minha filha. Quer o chip da Luna? Ganha a corrida de moto no telhado.',
+    'Tudo licenciado agora, minha filha. Quer o chip da Luna? Acerta a bola sem marca do sorteio.',
   'story.seu-ze-banca.1.speaker': 'Rita Odds',
   'story.seu-ze-banca.1.text':
-    'Fechado. Vamos ver se essa corrida compra o chip da Luna.',
+    'Fechado. Vamos ver se esse sorteio compra o chip da Luna.',
   'story.seu-ze-banca.2.speaker': 'Seu Zé',
   'story.seu-ze-banca.2.text': 'Pode crer. Ganha primeiro — rota vem depois.',
   'story.seu-ze-banca.title': 'Banca do Seu Zé',
@@ -408,10 +408,10 @@ export const storyPtBR: Record<string, string> = {
     'A Nair disse que você vinha. Fio sobrando na laje de baixo — pesa o saco brilhante, ignora ferrugem.',
   'story.side-morro-copper.1.speaker': 'Rita Odds',
   'story.side-morro-copper.1.text':
-    'Teste de skill, não cara ou coroa. Me aponta pros sacos.',
+    'Teste de pulso, não cara ou coroa. Me aponta pros sacos.',
   'story.side-morro-copper.2.speaker': 'Catador do Morro',
   'story.side-morro-copper.2.text':
-    'Ganha e a Antena Tech fala. Perde e ainda deve a aposta — tenta de novo com olho afiado.',
+    'Ganha e a Antena Tech fala. Perde e ainda deve a aposta — recalibra o jack e volta.',
   'story.side-morro-copper.title': 'Odd do cobre sobrando',
   'story.side-morro-tank.0.speaker': 'Antena Tech',
   'story.side-morro-tank.0.text':
@@ -421,7 +421,7 @@ export const storyPtBR: Record<string, string> = {
   'story.side-morro-tank.title': "Odd da caixa d'água",
   'story.side-torre-tip.0.speaker': 'Busboy',
   'story.side-torre-tip.0.text':
-    'High roller dá gorjeta em ficha que "cai". Aposta se você pega uma antes da câmera piscar.',
+    'Tubarão dá gorjeta em ficha que "cai". Aposta se você pega uma antes da câmera piscar.',
   'story.side-torre-tip.1.speaker': 'Rita Odds',
   'story.side-torre-tip.1.text': 'Mão quieta, saída quieta. Vamos ver.',
   'story.side-torre-tip.title': 'Odd da gorjeta do dealer',
@@ -432,9 +432,9 @@ export const storyPtBR: Record<string, string> = {
   'story.torre-elevator.1.text': 'Já subi escada pior. Chama o carro.',
   'story.torre-elevator.2.speaker': 'Elevador',
   'story.torre-elevator.2.text':
-    'Acerta o timing e a porta abre no cromado com fade. Erra e vira a aposta — tenta de novo.',
+    'Acerta o timing e a porta abre no cromado com a luz baixando. Erra e vira a aposta — chama o carro outra vez.',
   'story.torre-elevator.3.speaker': 'Rita Odds',
-  'story.torre-elevator.3.text': 'Cromado ou retry — vou subir. Chama.',
+  'story.torre-elevator.3.text': 'Cromado ou de novo — vou subir. Chama.',
   'story.torre-elevator.title': 'Chamada do elevador',
   'story.torre-final.0.speaker': 'Augusto Casa',
   'story.torre-final.0.text': 'O Brasil inteiro é meu cassino. Você é só mais uma ficha.',
@@ -443,13 +443,13 @@ export const storyPtBR: Record<string, string> = {
     'Uma ficha? Eu sou o morro, a feira, o calçadão e o pixo. Três fases — agulha, leitura, terminal.',
   'story.torre-final.2.speaker': 'Augusto Casa',
   'story.torre-final.2.text':
-    'Skill não te salva da casa. Três fases. Erra uma e refaz — a aposta espera limpar tudo.',
+    'Técnica não te salva da casa. Três fases. Erra uma e refaz — a aposta espera limpar tudo.',
   'story.torre-final.3.speaker': 'Rita Odds',
   'story.torre-final.3.text': 'Ótimo. Cansei de jogar seu dado. Distribui a cidade.',
   'story.torre-final.title': 'Duelo na Torre Casa Suprema',
   'story.torre-foyer.0.speaker': 'Guarda do Foyer',
   'story.torre-foyer.0.text':
-    'Crachá ou aposta. A Casa não deixa odd de rua entrar no pit de graça.',
+    'Crachá ou aposta. A Casa não deixa odd de rua entrar no salão de graça.',
   'story.torre-foyer.1.speaker': 'Rita Odds',
   'story.torre-foyer.1.text': 'Trouxe escândalo e morro. Isso basta de crachá?',
   'story.torre-foyer.2.speaker': 'Guarda do Foyer',
@@ -460,15 +460,15 @@ export const storyPtBR: Record<string, string> = {
   'story.torre-foyer.title': 'Crachá no foyer',
   'story.torre-negotiate.0.speaker': 'Anfitrião VIP',
   'story.torre-negotiate.0.text':
-    'Rake tá sendo desviado. Ainda posso te fazer sair sorrindo — ou com papel que queima.',
+    'Comissão tá sendo desviada. Ainda posso te fazer sair sorrindo — ou com papel que queima.',
   'story.torre-negotiate.1.speaker': 'Rita Odds',
   'story.torre-negotiate.1.text': 'Fala o preço. O timer já tá na sua cara.',
   'story.torre-negotiate.2.choice.0.label': 'Pegar a ficha do silêncio',
   'story.torre-negotiate.2.choice.0.reply':
     'Ficha do silêncio no bolso. Porta quieta. Alavancagem fina.',
-  'story.torre-negotiate.2.choice.1.label': 'Exigir o espelho do pit',
+  'story.torre-negotiate.2.choice.1.label': 'Exigir o espelho do salão',
   'story.torre-negotiate.2.choice.1.reply':
-    'Espelho do pit. Se o Augusto blefar, os livros ainda gritam.',
+    'Espelho do salão. Se o Augusto blefar, os livros ainda gritam.',
   'story.torre-negotiate.2.choice.2.label': 'Sair sorrindo',
   'story.torre-negotiate.2.choice.2.reply':
     'Sorriso pras câmeras. Sem papel. Puro nervo.',
@@ -481,22 +481,22 @@ export const storyPtBR: Record<string, string> = {
   'story.torre-negotiate.title': 'Negociar a saída VIP',
   'story.torre-pit.0.speaker': 'Dealer do Salão',
   'story.torre-pit.0.text':
-    'VIP tá lá em cima, mas o pit quer mão de aquecimento. Acha o baralho de verdade — meu polegar volta num canto macio; brilho de papel alumínio e plástico são cenário.',
+    'VIP tá lá em cima, mas o salão quer mão de aquecimento. Acha o baralho de verdade — meu polegar volta num canto macio; brilho de papel alumínio e plástico são cenário.',
   'story.torre-pit.1.speaker': 'Rita Odds',
-  'story.torre-pit.1.text': 'Então converte. Uma mão limpa antes dos high rollers.',
+  'story.torre-pit.1.text': 'Então converte. Uma mão limpa antes dos tubarões.',
   'story.torre-pit.2.speaker': 'Dealer do Salão',
   'story.torre-pit.2.text':
     'Carta marcada em três pontos. Aposta que você acha o baralho real antes do gerente.',
   'story.torre-pit.3.speaker': 'Rita Odds',
   'story.torre-pit.3.text': 'Cresci lendo asfalto marcado. Fechado.',
-  'story.torre-pit.title': 'Aquecimento no pit',
+  'story.torre-pit.title': 'Aquecimento no salão',
   'story.torre-vip.0.speaker': 'Anfitrião VIP',
-  'story.torre-vip.0.text': 'O elevador cuspiu você limpo. High rollers querem show.',
+  'story.torre-vip.0.text': 'O elevador cuspiu você limpo. Tubarões querem show.',
   'story.torre-vip.1.speaker': 'Rita Odds',
   'story.torre-vip.1.text': 'Uma mão quieta. Depois o Augusto.',
   'story.torre-vip.2.speaker': 'Anfitrião VIP',
   'story.torre-vip.2.text':
-    'Desvia o rake antes da segurança piscar. Depois disso — a gente conversa termos.',
+    'Desvia a comissão antes da segurança piscar. Depois disso — a gente conversa termos.',
   'story.torre-vip.title': 'Salão VIP',
   'story.torre-final.hush.speaker': 'Augusto Casa',
   'story.torre-final.hush.text':

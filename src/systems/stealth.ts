@@ -66,7 +66,8 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
   goal: { x: 34, y: 12 },
   goalRadius: 1.1,
   targetMs: 90_000,
-  coverRadius: 0.48,
+  // Playtest #28: smaller cover pads — optimal path still ≥1.4s dwell, humans ~3–6 tries.
+  coverRadius: 0.44,
   cover: [
     { x: 15, y: 12 },
     { x: 20, y: 11 },
@@ -75,7 +76,6 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
   ],
   drones: [
     {
-      // West gate — modestly harder than v1.21 (playtest #26: ~15s first clear).
       id: 'drone-a',
       path: [
         { x: 17, y: 8 },
@@ -87,7 +87,6 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
       range: 3.1,
     },
     {
-      // Mid — opposite phase; slightly faster so gaps stay tight.
       id: 'drone-b',
       path: [
         { x: 23, y: 16 },
@@ -99,7 +98,6 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
       range: 3.1,
     },
     {
-      // East gate — no free sprint at the finish.
       id: 'drone-c',
       path: [
         { x: 29, y: 8 },

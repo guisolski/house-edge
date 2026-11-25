@@ -126,7 +126,7 @@ describe('v1.21.0 interact gate — held-key only + short arm', () => {
     vi.spyOn(Date, 'now').mockRestore();
   });
 
-  it('modal confirm ignores Interact held at open; fresh press after 250ms ok', () => {
+  it('modal confirm ignores Interact held at open; fresh press after 400ms ok', () => {
     const session = new GameSession(213);
     session.startNew();
     session.runStoryBeat('boteco-nair');
@@ -136,7 +136,7 @@ describe('v1.21.0 interact gate — held-key only + short arm', () => {
     // Released but still inside 250ms arm.
     expect(session.allowModalConfirm()).toBe(false);
     const t0 = Date.now();
-    vi.spyOn(Date, 'now').mockReturnValue(t0 + 260);
+    vi.spyOn(Date, 'now').mockReturnValue(t0 + 420);
     expect(session.allowModalConfirm()).toBe(true);
     vi.spyOn(Date, 'now').mockRestore();
   });

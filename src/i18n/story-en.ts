@@ -378,10 +378,10 @@ export const storyEn: Record<string, string> = {
   'story.prova-luna.title': 'Pendrive on a freela',
   'story.seu-ze-banca.0.speaker': 'Seu Zé',
   'story.seu-ze-banca.0.text':
-    'Everything’s licensed now, kid. Want Luna’s chip? Win the rooftop moto race.',
+    'Everything’s licensed now, kid. Want Luna’s chip? Call the unmarked draw ball.',
   'story.seu-ze-banca.1.speaker': 'Rita Odds',
   'story.seu-ze-banca.1.text':
-    'Deal. Let’s see if this race is enough to buy Luna’s chip.',
+    'Deal. Let’s see if this draw is enough to buy Luna’s chip.',
   'story.seu-ze-banca.2.speaker': 'Seu Zé',
   'story.seu-ze-banca.2.text': 'Pode crer. Win first — routes come after.',
   'story.seu-ze-banca.title': "Seu Zé's booth",

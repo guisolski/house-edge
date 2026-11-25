@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.22.2] — 2026-11-25
+
+### Fixed
+
+- **pt-BR (P0)**: epilogue closing, credits, non-objective bets, Nair rematch, travel prompts, world signs, NPC display names/tags; cut anglicisms; distinct retry lines; Seu Zé uses lottery (not Fio gate copy); narrower choice clues; VIP Host clue clearer.
+- **Enter (P0)**: after any skill, rematch needs fresh **KeyE** (never Enter/Space); beaten story NPCs show done line; elevator success panel clears on VIP floor; Escape close no longer eats the next KeyE; choice/dialog arms ~400ms.
+- **Exits / tags (P1)**: exit pad stand range 1.85; objective-prefer targeting + tags.
+- **Neon Snap / Lobby Cam (P1/P2)**: tighter cover (~3–6 tries); Lobby Cam more misses + longer timer; Margin sets `morro_return_ok` so hill return is optional.
+
+### Tests
+
+- Extended no-hardcoded-ui + full-story pt-BR scan + catalog blocklist; `session-v1222`, `exit-pad`, localize-helpers coverage ≥90%.
+
 All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),

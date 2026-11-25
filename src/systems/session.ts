@@ -722,8 +722,8 @@ export class GameSession {
 
   /** Call when dialogue/skill/bet opens. `interactHeld` = Interact down at open. */
   noteModalOpened(interactHeld: boolean): void {
-    // Playtest #26: 250ms so Enter×3 right after E cannot select a choice.
-    this.modalConfirmArmUntil = Date.now() + 250;
+    // Playtest #28: 400ms so Enter×3 right after E cannot select a choice.
+    this.modalConfirmArmUntil = Date.now() + 400;
     this.modalConfirmNeedsRelease = interactHeld;
   }
 
@@ -950,20 +950,27 @@ export class GameSession {
       payout: won ? payout : 0,
       stake: won ? stake : 0,
     });
-    if (!this.ui.is('ending') && !this.elevating) {
-      this.toastSkill(won, payout, storyBeat);
-      this.ui.go('play');
-      // Playtest #28: require a fresh KeyE after any skill — never Enter rematch.
-      this.rematchNeedsKeyE = true;
-      this.armInteractLock(this.interactKeyDown, 400);
-      if (won) this.noteTutorialProgress('firstBet');
-      this.setTutorialOverlay(false);
+    if (!this.ui.is('ending')) {
+      this.afterSkillUi(won, payout, storyBeat);
     }
     this.pendingBetId = null;
     this.pendingStake = 0;
     this.skillProgress = null;
     this.stealthProgress = null;
     return true;
+  }
+
+  /** Clear skill HUD (unless elevating) and require a fresh KeyE to rematch. */
+  private afterSkillUi(won: boolean, payout: number, storyBeat: string | null): void {
+    if (!this.elevating) {
+      this.toastSkill(won, payout, storyBeat);
+      this.ui.go('play');
+    }
+    // Playtest #28: fresh KeyE after any skill — never Enter rematch (incl. VIP).
+    this.rematchNeedsKeyE = true;
+    this.armInteractLock(this.interactKeyDown, 400);
+    if (won) this.noteTutorialProgress('firstBet');
+    this.setTutorialOverlay(false);
   }
 
   /** Top up credits so a story skill stake is always payable. */
@@ -1086,9 +1093,9 @@ export class GameSession {
     );
     if (setsFlag) this.story.setFlag(setsFlag, true);
     // Epilogue: skip the reply transcript — show ONLY Saúde as its own panel.
+    // lastDialogue is already locale-localized from runStoryBeat.
     if (this.pendingStoryBeat === 'epilogue-laje') {
-      const beat = getBeat('epilogue-laje');
-      const saude = beat?.dialogue.find(
+      const saude = this.lastDialogue.find(
         (l) => /Saúde/i.test(l.text) && !l.choices?.length,
       );
       if (saude) {
@@ -1212,19 +1219,22 @@ export class GameSession {
   }
 
   closeModal(): void {
+    // Only demand a fresh Interact release when Interact is actually held
+    // (Escape/click close must not eat the next KeyE — playtest #28 Luna).
+    const held = this.interactKeyDown;
     if (this.ui.is('dialogue')) {
       this.advanceDialogue();
-      this.armInteractLock();
+      this.armInteractLock(held);
       return;
     }
     this.ui.backToPlay();
-    this.armInteractLock();
+    this.armInteractLock(held);
   }
 
   /**
    * After Close/skill: rematch arm + require a fresh key-up after the arm
    * (4× Enter @80ms stays safe; release during the arm does not clear the gate).
-   * Skill finish uses 700ms so needle Enter spam cannot reopen Nair into a bet.
+   * Skill finish uses rematchNeedsKeyE + short arm so Enter never rematches.
    */
   private armInteractLock(interactHeld = true, ms = 500): void {
     this.interactLockUntil = Date.now() + ms;

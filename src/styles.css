@@ -110,11 +110,11 @@ canvas.excalibur-game {
   flex: 1 1 auto;
   min-height: 12rem;
   /* Leave room for ending-actions so roll text is not clipped behind buttons. */
-  max-height: min(42vh, calc(100% - 7.5rem));
-  margin-bottom: 0.5rem;
-  padding-bottom: 3.5rem;
+  max-height: min(48vh, calc(100% - 6.5rem));
+  margin-bottom: 0.35rem;
+  padding-bottom: 2.5rem;
   overflow: hidden;
-  mask-image: linear-gradient(transparent, #000 8%, #000 88%, transparent);
+  mask-image: linear-gradient(transparent, #000 6%, #000 92%, transparent);
 }
 
 .ending-panel.ending-credits .ending-actions {
@@ -129,8 +129,9 @@ canvas.excalibur-game {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  padding: 4rem 0 10rem;
-  animation: credits-scroll 22s linear infinite;
+  /* Extra bottom pad so scrolling lines clear the action buttons. */
+  padding: 3rem 0 12rem;
+  animation: credits-scroll 26s linear infinite;
 }
 
 .credits-roll.credits-skipped {

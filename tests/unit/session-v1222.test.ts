@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GameSession } from '../../src/systems/session';
 import { EXIT_STAND_RANGE } from '../../src/systems/interaction';
+import { setLocale } from '../../src/i18n';
 
 function stubStorage(): void {
   const store = new Map<string, string>();
@@ -63,6 +64,19 @@ describe('v1.22.2 Enter rematch + exit pad + beaten NPC', () => {
     const line = session.getDialogue()[0]?.text ?? '';
     expect(line.length).toBeGreaterThan(8);
     expect(line).not.toMatch(/Ice-cold water|Onboarding timing/i);
+  });
+
+  it('epilogue Saúde closing line localizes in pt-BR', () => {
+    setLocale('pt-BR');
+    const session = new GameSession(2804);
+    session.startNew();
+    session.story.setFlag('casa_quebrada', true);
+    session.runStoryBeat('epilogue-laje');
+    session.pickDialogueChoice('keep_signal', 'reply');
+    const line = session.getDialogue()[0]?.text ?? '';
+    expect(line).toMatch(/créditos|cidade/i);
+    expect(line).not.toMatch(/The credits roll for everyone/i);
+    setLocale('en');
   });
 
   it('exit stand range covers the painted pad (~1.85 tiles)', () => {

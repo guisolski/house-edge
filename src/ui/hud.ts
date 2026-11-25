@@ -212,9 +212,9 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
         !offerBet &&
         lines.length > 0 &&
         lines.every((l) => /Saúde/i.test(l.text));
-      // Playtest #26: arm ALL choice dialogs ≥250ms so Enter-after-E can't auto-pick.
-      // Epilogue stays longer (500ms) for the deliberate closing beat.
-      const choiceArmAt = hasChoice ? Date.now() + (epi ? 500 : 250) : undefined;
+      // Playtest #28: arm choice dialogs ≥400ms so Enter-after-E can't auto-pick.
+      // Epilogue stays longer (600ms) for the deliberate closing beat.
+      const choiceArmAt = hasChoice ? Date.now() + (epi ? 600 : 400) : undefined;
       const holdCloseUntil = closingOnly ? Date.now() + 3000 : undefined;
       paintDialogue(p.dialogue, lines, {
         offerBet,

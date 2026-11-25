@@ -1,7 +1,7 @@
 /**
  * Playtest #26 FAIL3: real keyboard on Nair at spawn — not runStoryBeat.
  * E → dialogue → Enter closes → Enter×4 @80ms must not reopen;
- * E → Enter×3 must not select a choice in the first 250ms.
+ * E → Enter×3 must not select a choice in the first 400ms.
  */
 import { test, expect } from '@playwright/test';
 
@@ -15,7 +15,7 @@ test('prod: Enter spam after closing Nair at spawn does not reopen', async ({ pa
   await page.keyboard.press('KeyE');
   await expect(page.locator('.dialogue-body')).toBeVisible({ timeout: 3000 });
   // Arm window — wait out choice lock, then pick Loud.
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(450);
   const choice = page.locator('.dialogue-choice').first();
   await expect(choice).toBeVisible();
   await choice.click();
@@ -34,7 +34,7 @@ test('prod: Enter spam after closing Nair at spawn does not reopen', async ({ pa
   await expect(page.locator('.btn-take-bet')).toHaveCount(0);
 });
 
-test('prod: Enter after E does not auto-pick a choice in 250ms', async ({ page }) => {
+test('prod: Enter after E does not auto-pick a choice in 400ms', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'New Game' }).click();
   await expect(page.locator('.play-hud')).toBeVisible();
@@ -57,7 +57,7 @@ test('prod: Enter after E does not auto-pick a choice in 250ms', async ({ page }
         __HOUSE_EDGE__: { session: { allowModalConfirm: () => boolean } };
       }
     ).__HOUSE_EDGE__;
-    // Immediately after open the arm may still be live; after ~250ms it clears.
+    // Immediately after open the arm may still be live; after ~400ms it clears.
     return typeof he.session.allowModalConfirm === 'function';
   });
   expect(elapsedOk).toBe(true);

@@ -53,7 +53,7 @@ export const skillEn = {
   'skill.feira-lockbox.prompt': 'Pick the Casa lockbox under the forró stage.',
   'skill.feira-radio.prompt': 'Tune the pirate dial — match 3 clicks.',
   'skill.feira-tipster.clue':
-    'Barraca Tia taps lids — one buzzes in the palm; the hot lid and the hollow one stay quiet.',
+    'Barraca Tia rests a palm on each lid — only the wired one answers with a shiver; sun-baked and hollow stay mute.',
   'skill.feira-tipster.option.0': 'Sun crate',
   'skill.feira-tipster.option.1': 'Hum crate',
   'skill.feira-tipster.option.2': 'Empty crate',
@@ -75,14 +75,14 @@ export const skillEn = {
   'skill.morro-return-fio.prompt': 'Ghost the private splice — match 3 tones.',
   'skill.morro-return-nair.prompt': 'Toast with the hill — stop on warm.',
   'skill.pastel-surpresa.clue':
-    'Kiko checks the tray that trembles his wrist — the quiet stacks are decoys for tourists.',
+    'Kiko trusts the tray that oils his fingertips — quiet middle stacks and left steam are tourist bait.',
   'skill.pastel-surpresa.option.0': 'Left steam',
   'skill.pastel-surpresa.option.1': 'Middle quiet',
   'skill.pastel-surpresa.option.2': 'Right buzz',
   'skill.pastel-surpresa.prompt': 'Which pastel crate is wired?',
   'skill.pixo-challenge.prompt': 'Spray on the beat.',
   'skill.prova-vazamento.clue':
-    'Luna marks the quiet paper trail — vanity clips and machine noise are smokescreens.',
+    'Luna wants the quiet arithmetic cameras never filmed — vanity clips and machine noise are smokescreens.',
   'skill.prova-vazamento.option.0': 'Influencer clip',
   'skill.prova-vazamento.option.1': 'ATM glitch',
   'skill.prova-vazamento.option.2': 'Pit ledger',
@@ -96,20 +96,20 @@ export const skillEn = {
   'skill.side-morro-copper.prompt': 'Weigh the spare copper — which bag is light?',
   'skill.torre-elevator.prompt': 'Call the express car — stop on green.',
   'skill.torre-foyer.clue':
-    'Foyer Guard ignores plastic badges — he only blinks when the city’s dirty secret walks in.',
+    'Foyer Guard waves plastic past — he only flinches when yesterday’s hill gossip already hit every screen.',
   'skill.torre-foyer.option.0': 'Tourist pass',
   'skill.torre-foyer.option.1': 'Staff QR',
   'skill.torre-foyer.option.2': 'Scandal leak',
   'skill.torre-foyer.prompt': 'Bluff the badge reader.',
   'skill.torre-negotiate.clue':
-    'Any sealed exit works — quiet buyout, table glass, or a clean walk. Just decide before the smile freezes.',
+    'Name any door before the smile freezes — the house stamps every exit you pick the same way.',
   'skill.torre-negotiate.option.0': 'Take the hush chip',
   'skill.torre-negotiate.option.1': 'Demand the pit mirror',
   'skill.torre-negotiate.option.2': 'Walk out smiling',
   'skill.torre-negotiate.prompt':
     'VIP Host offers three exits — pick before the smile hardens.',
   'skill.torre-pit.clue':
-    'The dealer’s hands linger on the pack that looks handled; foil and factory plastic are decoys.',
+    'Trust the soft corner the dealer keeps closest to his cuff; shiny foil and sealed plastic are tourist bait.',
   'skill.torre-pit.option.0': 'Dog-eared',
   'skill.torre-pit.option.1': 'Gold foil',
   'skill.torre-pit.option.2': 'Shrink-wrap',

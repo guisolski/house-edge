@@ -99,6 +99,8 @@ function wirePlayer(session: GameSession, hud: HudHandles): void {
     }
   });
   session.bus.on('district:entered', () => {
+    // Elevator ride ends on VIP — force-clear any leftover skill success panel.
+    if (session.ui.is('play')) hud.showHud();
     hud.updateStats();
     hud.updatePrompt();
   });

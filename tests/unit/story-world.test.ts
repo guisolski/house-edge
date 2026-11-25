@@ -51,10 +51,9 @@ describe('StorySystem', () => {
 
   it('hides each optional Morro return via its own skipIfFlag', () => {
     const story = new StorySystem(new EventBus(), STORY_BEATS);
-    story.hydrate(
-      { unlocked_torre: true, escandalo_aberto: true, trusted_hill: true },
-      ['morro-return-nair'],
-    );
+    story.hydrate({ unlocked_torre: true, escandalo_aberto: true, trusted_hill: true }, [
+      'morro-return-nair',
+    ]);
     let ids = story.availableBeats('morro-neon').map((b) => b.id);
     expect(ids).not.toContain('morro-return-nair');
     expect(ids).toContain('morro-return-fio');

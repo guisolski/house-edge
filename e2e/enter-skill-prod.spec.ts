@@ -14,7 +14,7 @@ test('prod: Enter×4×2 after needle no bet; KeyE Nair done; Luna E works', asyn
   await page.waitForTimeout(150);
   await page.keyboard.press('KeyE');
   await expect(page.locator('.dialogue-choice').first()).toBeVisible({ timeout: 3000 });
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(450);
   await page.locator('.dialogue-choice').first().click();
   await expect(page.locator('.btn-take-bet')).toBeVisible();
   await page.locator('.btn-take-bet').click();
