@@ -14,6 +14,7 @@ const KEY_MAP: Record<string, ActionName> = {
   Enter: Actions.Interact,
   KeyF: Actions.Bet,
   Escape: Actions.Menu,
+  Backspace: Actions.Menu,
   KeyM: Actions.Mute,
   ShiftLeft: Actions.Run,
   ShiftRight: Actions.Run,

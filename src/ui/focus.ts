@@ -22,7 +22,8 @@ export function activateFocused(panel: HTMLElement): void {
     active.click();
     return;
   }
-  enabledButtons(panel)[0]?.click();
+  // Do not fall back to buttons[0] — that made Enter on a focused language
+  // row (or canvas) start New Game / switch locale by accident (playtest #27).
 }
 
 function enabledButtons(panel: HTMLElement): HTMLButtonElement[] {

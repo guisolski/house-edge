@@ -415,15 +415,11 @@ function paintOneNpcTag(o: {
     camY: o.camY,
   });
   if (avoid.hideLabel && !o.row.force) return;
-  const aside =
-    Math.hypot(o.row.npc.x - o.me.x, o.row.npc.y - o.me.y) < 1.35
-      ? o.row.npc.x >= o.me.x
-        ? 0.35
-        : -0.35
-      : 0;
+  const nearMe = Math.hypot(o.row.npc.x - o.me.x, o.row.npc.y - o.me.y) < 1.35;
+  const aside = nearMe ? (o.row.npc.x >= o.me.x ? 0.55 : -0.55) : 0;
   const px = (o.row.npc.x + aside) * TILE_PX + 16 - o.camX;
-  // Lift above CHAR_SCALE sprites (~108px) so tags sit above heads.
-  const tagLift = 74;
+  // Lift above CHAR_SCALE sprites (~108px); extra lift when overlapping Rita.
+  const tagLift = nearMe ? 96 : 78;
   let stack = o.i * -40;
   let py = o.row.npc.y * TILE_PX - tagLift - o.camY + avoid.dy + o.bob + stack;
   for (const p of o.placed) {
@@ -1042,10 +1038,11 @@ function pushNpcSorts(o: {
     if (!o.playing && d > 8) continue;
     const img = npcAnimSprite(o.baked, npc, timeS);
     const near = o.playing && d < 1.35;
-    const asideX = near ? (npc.x >= me.x ? 0.35 : -0.35) : 0;
+    // Step aside + sort behind Rita so a green NPC never sits under her sprite.
+    const asideX = near ? (npc.x >= me.x ? 0.55 : -0.55) : 0;
     const drawX = npc.x + asideX;
     o.items.push({
-      y: npc.y,
+      y: near ? npc.y - 0.08 : npc.y,
       x: drawX,
       draw: () =>
         blitSortedSprite({

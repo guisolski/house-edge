@@ -46,38 +46,43 @@ function wireLifecycle(
     hud.showCreditsRoll();
   });
   session.bus.on('input:action', (p) => {
-    if (p.action === 'interact' && !p.pressed) {
-      session.noteInteractRelease();
-      return;
-    }
-    // After Close: ignore Interact on play until release + short arm.
-    if (p.action === 'interact' && p.pressed && session.ui.is('play')) {
-      if (!session.allowInteractInput()) return;
-    }
-    // Modal confirm: ignore Interact held from before the panel opened.
-    if (
-      p.action === 'interact' &&
-      p.pressed &&
-      !session.ui.is('play') &&
-      !session.ui.is('title')
-    ) {
-      if (!session.allowModalConfirm()) return;
-    }
-    if (p.pressed) {
-      const before = session.ui.get();
-      handleAction(session, hud, p.action);
-      const after = session.ui.get();
-      // Opening a modal with Interact held — require key-up before confirm.
-      if (
-        p.action === 'interact' &&
-        before !== after &&
-        after !== 'play' &&
-        after !== 'title'
-      ) {
-        session.noteModalOpened(true);
-      }
-    }
+    routeInputAction(session, hud, p.action, p.pressed);
   });
+}
+
+function routeInputAction(
+  session: GameSession,
+  hud: HudHandles,
+  action: string,
+  pressed: boolean,
+): void {
+  if (action === 'interact' && !pressed) {
+    session.noteInteractRelease();
+    return;
+  }
+  if (action === 'interact' && pressed) session.noteInteractPressed();
+  if (action === 'interact' && pressed && !gateInteract(session)) return;
+  if (!pressed) return;
+  const before = session.ui.get();
+  handleAction(session, hud, action);
+  const after = session.ui.get();
+  if (
+    action === 'interact' &&
+    before !== after &&
+    after !== 'play' &&
+    after !== 'title'
+  ) {
+    session.noteModalOpened(true);
+  }
+  if (after === 'play') session.setTutorialOverlay(false);
+  else if (after !== 'title') session.setTutorialOverlay(true);
+}
+
+/** Play rematch arm + modal confirm arm for Interact. */
+function gateInteract(session: GameSession): boolean {
+  if (session.ui.is('play')) return session.allowInteractInput();
+  if (session.ui.is('title')) return true;
+  return session.allowModalConfirm();
 }
 
 function wirePlayer(session: GameSession, hud: HudHandles): void {
@@ -86,6 +91,11 @@ function wirePlayer(session: GameSession, hud: HudHandles): void {
   // Always refresh on move — a throttled trailing write left stale E prompts.
   session.bus.on('player:moved', () => {
     hud.updatePrompt();
+    session.noteTutorialProgress('moved');
+    // Objective step: once the player has moved, the HUD marker is on-screen.
+    if (session.tutorialStep() === 'objective') {
+      session.noteTutorialProgress('sawObjective');
+    }
   });
   session.bus.on('district:entered', () => {
     hud.updateStats();
@@ -154,8 +164,17 @@ function handleTitleAction(
   action: string,
 ): boolean {
   if (!session.ui.is('title')) return false;
+  // Playtest #27: language row is a real menu — arrows move focus, Enter activates.
+  if (action === 'up' || action === 'left') {
+    hud.gamepadNav('up');
+    return true;
+  }
+  if (action === 'down' || action === 'right') {
+    hud.gamepadNav('down');
+    return true;
+  }
   if (action === 'interact' || action === 'bet') {
-    session.startNew();
+    hud.gamepadNav('confirm');
     hud.syncScreen();
   }
   return true;
@@ -192,8 +211,25 @@ function handleModalNav(session: GameSession, hud: HudHandles, action: string): 
   return false;
 }
 
+function handleTutorialKeys(
+  session: GameSession,
+  hud: HudHandles,
+  action: string,
+): boolean {
+  if (!session.tutorialIsPanelVisible() || !session.ui.is('play')) return false;
+  // Esc skips; Tab advances via panel keydown. WASD/E still drive the world so
+  // steps advance by doing the action (move / interact / …).
+  if (action === 'menu') {
+    session.skipTutorialNow();
+    hud.showTutorial(false);
+    return true;
+  }
+  return false;
+}
+
 function handleAction(session: GameSession, hud: HudHandles, action: string): void {
   if (handleTitleAction(session, hud, action)) return;
+  if (handleTutorialKeys(session, hud, action)) return;
   if (session.isSequenceSkillActive()) {
     if (action === 'menu') {
       session.cancelBet();

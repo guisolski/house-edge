@@ -55,6 +55,7 @@ export function createGameApp(host: HTMLElement): GameApp {
   wireSessionEvents(session, hud, audio, modes, touch);
   bindInputs(host, session, state, modes, world);
   session.bus.on('game:started', () => {
+    // Autofocus canvas so keyboard works without a prior click (playtest #27).
     world.canvas.focus({ preventScroll: true });
   });
   const deps: TickDeps = {
@@ -153,14 +154,24 @@ function detectInitialMode(): 'keyboard' | 'touch' | 'gamepad' {
 function ensureCanvasFocus(host: HTMLElement, canvas: HTMLCanvasElement): void {
   canvas.tabIndex = 0;
   canvas.setAttribute('aria-label', 'House Edge world');
-  const focus = (): void => {
+  const focusCanvas = (): void => {
+    // Never steal focus from the title language / New Game row.
+    if (host.querySelector('.title-screen:not([hidden])')) return;
     canvas.focus({ preventScroll: true });
   };
-  host.addEventListener('pointerdown', focus);
-  canvas.addEventListener('pointerdown', focus);
-  window.addEventListener('focus', focus);
-  // After New Game, HUD buttons steal focus — reclaim on play start.
-  queueMicrotask(focus);
+  host.addEventListener('pointerdown', (ev) => {
+    if ((ev.target as HTMLElement | null)?.closest?.('.title-screen')) return;
+    focusCanvas();
+  });
+  canvas.addEventListener('pointerdown', focusCanvas);
+  // Autofocus title controls on load so arrows/Enter work without a prior click.
+  queueMicrotask(() => {
+    const titleBtn = host.querySelector(
+      '.title-screen button',
+    ) as HTMLButtonElement | null;
+    if (titleBtn) titleBtn.focus({ preventScroll: true });
+    else focusCanvas();
+  });
 }
 
 function makeEngine(host: HTMLElement): ex.Engine {

@@ -172,6 +172,7 @@ describe('v1.20.2 interact input gate', () => {
     const session = new GameSession(26);
     session.startNew();
     session.runStoryBeat('boteco-nair');
+    session.noteInteractPressed();
     session.closeModal();
     expect(session.allowInteractInput()).toBe(false);
     session.noteInteractRelease();
@@ -180,7 +181,8 @@ describe('v1.20.2 interact input gate', () => {
     vi.spyOn(Date, 'now').mockReturnValue(now + 500);
     // Release during lock was pending — clears once the timer expires.
     expect(session.allowInteractInput()).toBe(true);
-    // Fresh close — blocked until release even after the arm.
+    // Fresh close while still holding Interact — blocked until release even after arm.
+    session.noteInteractPressed();
     session.closeModal();
     expect(session.allowInteractInput()).toBe(false);
     vi.spyOn(Date, 'now').mockReturnValue(now + 1200);

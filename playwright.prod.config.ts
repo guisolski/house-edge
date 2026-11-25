@@ -7,7 +7,7 @@ const BASE = `http://127.0.0.1:${PORT}`;
 export default defineConfig({
   testDir: './e2e',
   testMatch:
-    /(neon-snap-prod|neon-snap-clear-prod|neon-snap-done-prod|prompt-spawn-prod|enter-debounce-prod)\.spec\.ts/,
+    /(neon-snap-prod|neon-snap-clear-prod|neon-snap-done-prod|prompt-spawn-prod|enter-debounce-prod|enter-skill-prod)\.spec\.ts/,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

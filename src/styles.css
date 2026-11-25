@@ -306,7 +306,13 @@ canvas.excalibur-game {
 }
 
 .tutorial-panel {
-  top: 22%;
+  /* Corner card — never covers NPC tags / sprites mid-screen (playtest #27). */
+  left: 12px;
+  top: 72px;
+  right: auto;
+  transform: none;
+  width: min(340px, 92vw);
+  max-height: 42vh;
   z-index: 14;
   border-color: var(--yellow, #ffdf00);
 }

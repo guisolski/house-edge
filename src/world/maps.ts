@@ -421,7 +421,8 @@ function buildMorro(): MapDef {
     tiles,
     buildings,
     signs: [
-      { x: 8, y: 11, label: 'BOTECO NAIR', color: '#ffdf00' },
+      // Above the boteco wall — not on the ramp walk band (playtest #27 occlusion).
+      { x: 8, y: 8, label: 'BOTECO NAIR', color: '#ffdf00' },
       { x: 10, y: 20, label: 'LAJE BET', color: '#ffdf00' },
       // High on terrace glass — clear of Seu Zé (34,18) and Fair exit.
       { x: 24, y: 8, label: 'ODDS 24h', color: '#ff2bd6' },

@@ -53,11 +53,12 @@ describe('v1.20.1 objective E-prompt preference', () => {
     const session = new GameSession(22);
     session.startNew();
     session.runStoryBeat('boteco-nair');
+    session.noteInteractPressed();
     session.closeModal();
     // Still time-locked briefly.
     expect(session.interact()).toBe(false);
     expect(session.interact(true)).toBe(false);
-    // Expire the time lock — fromInput still requires key release.
+    // Expire the time lock — held Interact still blocked until release.
     const now = Date.now();
     vi.spyOn(Date, 'now').mockReturnValue(now + 1000);
     expect(session.interact(true)).toBe(false);

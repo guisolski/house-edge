@@ -63,6 +63,9 @@ export const uiPtBR = {
   'ui.tutorialSkip': 'Pular',
   'ui.tutorialNext': 'Próximo',
   'ui.tutorialDone': 'Entendi',
+  'ui.tutorialKeys': 'Tab = próximo · Esc = pular',
+  'ui.tutorialKeysGamepad': 'Y = próximo · B = pular',
+  'ui.tutorialKeysTouch': 'Toque em Próximo ou Pular',
   'ui.tutorial.move.keyboard': 'WASD ou setas movem a Rita. Segure Shift para correr.',
   'ui.tutorial.move.touch':
     'Arraste o analógico para mover. Toque duas vezes para um sprint curto.',

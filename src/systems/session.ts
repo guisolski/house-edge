@@ -60,10 +60,14 @@ import {
   advanceTutorial,
   consumeMinigameTip,
   createTutorialState,
+  noteTutorialAction,
+  setTutorialOverlayHidden,
   skipTutorial,
   tutorialFinished,
   tutorialFlags,
+  tutorialPanelVisible,
   tutorialStepId,
+  type TutorialAction,
   type TutorialState,
 } from './tutorial';
 import { t, tf } from '../i18n';
@@ -124,6 +128,8 @@ export class GameSession {
   private interactNeedsRelease = false;
   /** Key-up arrived during the time lock — apply after lock expires. */
   private interactReleasePending = false;
+  /** True while Interact (E/Enter/Space/A) is physically down. */
+  private interactKeyDown = false;
   /** Modal confirm (dialogue/skill): ignore Interact held at open until key-up. */
   private modalConfirmNeedsRelease = false;
   private modalConfirmArmUntil = 0;
@@ -197,12 +203,16 @@ export class GameSession {
 
   advanceTutorialStep(): void {
     this.tutorial = advanceTutorial(this.tutorial);
-    if (tutorialFinished(this.tutorial)) {
-      this.story.setFlag('tutorialDone', true);
-      this.bus.emit('ui:tutorial', { active: false });
-      this.persist();
-    } else {
-      this.bus.emit('ui:tutorial', { active: true });
+    this.emitTutorial();
+  }
+
+  /** Advance when the player does the matching action (move / E / objective / bet). */
+  noteTutorialProgress(action: TutorialAction): void {
+    if (!this.tutorial.active) return;
+    const before = this.tutorial.stepIndex;
+    this.tutorial = noteTutorialAction(this.tutorial, action);
+    if (this.tutorial.stepIndex !== before || tutorialFinished(this.tutorial)) {
+      this.emitTutorial();
     }
   }
 
@@ -211,6 +221,33 @@ export class GameSession {
     this.story.setFlag('tutorialDone', true);
     this.bus.emit('ui:tutorial', { active: false });
     this.persist();
+  }
+
+  /** Hide tutorial panel under dialogs/menus/minigames; restore on play. */
+  setTutorialOverlay(hidden: boolean): void {
+    if (!this.tutorial.active) return;
+    const next = setTutorialOverlayHidden(this.tutorial, hidden);
+    if (next === this.tutorial) return;
+    this.tutorial = next;
+    this.bus.emit('ui:tutorial', {
+      active: tutorialPanelVisible(this.tutorial),
+    });
+  }
+
+  tutorialIsPanelVisible(): boolean {
+    return tutorialPanelVisible(this.tutorial);
+  }
+
+  private emitTutorial(): void {
+    if (tutorialFinished(this.tutorial)) {
+      this.story.setFlag('tutorialDone', true);
+      this.bus.emit('ui:tutorial', { active: false });
+      this.persist();
+      return;
+    }
+    this.bus.emit('ui:tutorial', {
+      active: tutorialPanelVisible(this.tutorial),
+    });
   }
 
   /** First-time tip for a minigame kind; null if already seen. */
@@ -632,19 +669,29 @@ export class GameSession {
   }
 
   /**
-   * Input-layer gate after Close: ignore Interact while the arm is live.
-   * A key-up during the arm clears needsRelease only after the arm expires
-   * (so 4× Enter @80ms cannot rematch, but mouse-Close still frees E after 500ms).
+   * Input-layer gate after Close/skill: ignore Interact while the arm is live.
+   * Key-up during the arm clears needsRelease only after the arm expires
+   * (so 4× Enter @80ms cannot rematch). If the lock expired while Interact is
+   * up (mouse/Space finished the needle), clear needsRelease so Luna's first E works.
    */
   allowInteractInput(): boolean {
     const now = Date.now();
     if (now < this.interactLockUntil) return false;
+    if (this.interactNeedsRelease && !this.interactKeyDown) {
+      this.interactNeedsRelease = false;
+      this.interactReleasePending = false;
+    }
     if (this.interactReleasePending) {
       this.interactNeedsRelease = false;
       this.interactReleasePending = false;
     }
     if (this.interactNeedsRelease) return false;
     return true;
+  }
+
+  /** Track physical Interact key state for rematch / first-press gates. */
+  noteInteractPressed(): void {
+    this.interactKeyDown = true;
   }
 
   /**
@@ -674,7 +721,10 @@ export class GameSession {
     if (!fromInput && Date.now() < this.interactLockUntil) return false;
     // Standing on an elevator pad always uses the car before other NPCs.
     const elev = this.nearbyElevatorPad();
-    if (elev) return this.interactNpc(elev);
+    if (elev) {
+      this.noteTutorialProgress('interacted');
+      return this.interactNpc(elev);
+    }
     const npc = this.nearbyNpc();
     const objNpc = this.objectiveNpcInRange();
     const objHit = Boolean(objNpc && npc && npc.id === objNpc.id);
@@ -686,8 +736,14 @@ export class GameSession {
       lockedExitInRange: Boolean(locked),
       otherNpcInRange: Boolean(npc) && !objHit,
     });
-    if (kind === 'objective' && npc) return this.interactNpc(npc);
-    if (kind === 'travel' && exit) return this.travelTo(exit.toDistrict);
+    if (kind === 'objective' && npc) {
+      this.noteTutorialProgress('interacted');
+      return this.interactNpc(npc);
+    }
+    if (kind === 'travel' && exit) {
+      this.noteTutorialProgress('interacted');
+      return this.travelTo(exit.toDistrict);
+    }
     if (kind === 'locked') {
       this.bus.emit('ui:toast', {
         message: t('ui.toast.pathLocked'),
@@ -695,7 +751,10 @@ export class GameSession {
       });
       return false;
     }
-    if (kind === 'npc' && npc) return this.interactNpc(npc);
+    if (kind === 'npc' && npc) {
+      this.noteTutorialProgress('interacted');
+      return this.interactNpc(npc);
+    }
     this.bus.emit('ui:toast', { message: t('ui.toast.nobodyInRange'), kind: 'info' });
     return false;
   }
@@ -878,7 +937,10 @@ export class GameSession {
     if (!this.ui.is('ending') && !this.elevating) {
       this.toastSkill(won, payout, storyBeat);
       this.ui.go('play');
-      this.armInteractLock();
+      // Playtest #27: longer arm after needle so Enter spam can't reopen + bet.
+      this.armInteractLock(this.interactKeyDown, 700);
+      if (won) this.noteTutorialProgress('firstBet');
+      this.setTutorialOverlay(false);
     }
     this.pendingBetId = null;
     this.pendingStake = 0;
@@ -1143,18 +1205,19 @@ export class GameSession {
   }
 
   /**
-   * After Close: 500ms rematch arm + require a fresh key-up after the arm
+   * After Close/skill: rematch arm + require a fresh key-up after the arm
    * (4× Enter @80ms stays safe; release during the arm does not clear the gate).
-   * Modal-open dropped Enter is handled separately via noteModalOpened / allowModalConfirm.
+   * Skill finish uses 700ms so needle Enter spam cannot reopen Nair into a bet.
    */
-  private armInteractLock(interactHeld = true): void {
-    this.interactLockUntil = Date.now() + 500;
+  private armInteractLock(interactHeld = true, ms = 500): void {
+    this.interactLockUntil = Date.now() + ms;
     this.interactNeedsRelease = interactHeld;
     this.interactReleasePending = false;
   }
 
   /** Call on Interact key-up so a held Enter can't chain rematch dialogs. */
   noteInteractRelease(): void {
+    this.interactKeyDown = false;
     this.modalConfirmNeedsRelease = false;
     // Key-up during the time lock only counts once the arm expires —
     // still require a *post-arm* release so Enter spam @80ms can't rematch.

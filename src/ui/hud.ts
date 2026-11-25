@@ -180,6 +180,8 @@ function baseShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudHa
     showHud: () => {
       only(p, 'play');
       refresh(p, session);
+      // Restore tutorial corner card when returning to play (if still active).
+      if (session.tutorialIsPanelVisible()) h.showTutorial(true);
     },
     updateStats: () => refresh(p, session),
     showToast: (message, kind) => paintToast(p.toast, message, kind),
@@ -440,6 +442,10 @@ function only(p: Parts, which: string): void {
   setVisible(map[which]!, true);
   // World E-prompt lives outside play HUD — hide it whenever a modal owns the screen.
   if (which !== 'play') setVisible(p.prompt, false);
+  // Playtest #27: tutorial must never draw over dialogs / menu / minigames.
+  if (which !== 'play') {
+    setVisible(p.tutorial, false);
+  }
   blurIfHidden();
 }
 
@@ -475,6 +481,8 @@ function fillTitle(panel: HTMLElement, session: GameSession): void {
       });
     }),
   );
+  // Keyboard/gamepad can reach language → New Game without a prior click.
+  focusFirst(panel);
 }
 
 function langRow(onPick: (code: LocaleCode) => void): HTMLElement {
@@ -533,7 +541,7 @@ function paintTutorial(
   h: HudHandles,
   active: boolean,
 ): void {
-  if (!active) {
+  if (!active || !session.tutorialIsPanelVisible()) {
     clearNode(p.tutorial);
     setVisible(p.tutorial, false);
     return;
@@ -548,25 +556,46 @@ function paintTutorial(
   const tut = session.getTutorial();
   const idx = tut.stepIndex + 1;
   clearNode(p.tutorial);
+  const keysHint =
+    mode === 'gamepad'
+      ? t('ui.tutorialKeysGamepad')
+      : mode === 'touch'
+        ? t('ui.tutorialKeysTouch')
+        : t('ui.tutorialKeys');
   p.tutorial.append(
     el('h2', '', `${UI.story} (${idx}/${tutorialStepCount()})`),
     el('p', 'tutorial-body', t(tutorialCopyKey(step, mode))),
+    el('p', 'tutorial-keys hint', keysHint),
   );
   const actions = el('div', 'panel-actions');
   const last = idx >= tutorialStepCount();
+  const advance = (): void => {
+    session.advanceTutorialStep();
+    h.showTutorial(session.tutorialIsPanelVisible());
+  };
   actions.append(
     button(UI.tutorialSkip, () => {
       session.skipTutorialNow();
       h.showTutorial(false);
     }),
-    button(last ? UI.tutorialDone : UI.tutorialNext, () => {
-      session.advanceTutorialStep();
-      h.showTutorial(session.getTutorial().active);
-    }),
+    button(last ? UI.tutorialDone : UI.tutorialNext, advance),
   );
   p.tutorial.append(actions);
+  // Tab / gamepad Y = next without stealing WASD/E from the world.
+  const onKey = (ev: KeyboardEvent): void => {
+    if (!p.tutorial.isConnected || p.tutorial.hasAttribute('hidden')) {
+      window.removeEventListener('keydown', onKey, true);
+      return;
+    }
+    if (ev.key === 'Tab' || ev.code === 'Tab' || ev.code === 'KeyY') {
+      ev.preventDefault();
+      ev.stopPropagation();
+      advance();
+    }
+  };
+  window.addEventListener('keydown', onKey, true);
   setVisible(p.tutorial, true);
-  focusFirst(p.tutorial);
+  // Keep focus on the canvas so WASD/E reach the world; buttons stay clickable.
 }
 
 function menuHintFor(panel: HTMLElement): string {
@@ -595,6 +624,9 @@ function refresh(p: Parts, session: GameSession): void {
   p.objective.textContent = `▸ ${obj.text}`;
   p.objectiveDetail.textContent = obj.detail ?? '';
   setVisible(p.objectiveDetail, Boolean(obj.detail));
+  // Locale may have changed on the title screen — keep hint line in sync.
+  const mode = (p.root.dataset.inputMode as InputMode) || 'keyboard';
+  applyMode(p, mode);
 }
 
 function paintFps(node: HTMLElement, sample: FpsSample | null): void {
@@ -772,5 +804,6 @@ function activePanel(p: Parts, session: GameSession): HTMLElement | null {
   if (s === 'dialogue') return p.dialogue;
   if (s === 'ending') return p.ending;
   if (s === 'title') return p.title;
+  if (s === 'play' && session.tutorialIsPanelVisible()) return p.tutorial;
   return null;
 }

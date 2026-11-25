@@ -103,6 +103,7 @@ describe('v1.21.0 interact gate — held-key only + short arm', () => {
     const session = new GameSession(212);
     session.startNew();
     session.runStoryBeat('boteco-nair');
+    session.noteInteractPressed();
     session.closeModal();
     expect(session.allowInteractInput()).toBe(false);
     const t0 = Date.now();
@@ -110,6 +111,17 @@ describe('v1.21.0 interact gate — held-key only + short arm', () => {
     // Still held — blocked.
     expect(session.allowInteractInput()).toBe(false);
     session.noteInteractRelease();
+    expect(session.allowInteractInput()).toBe(true);
+    vi.spyOn(Date, 'now').mockRestore();
+  });
+
+  it('after arm expires with key up, first E works (mouse/Space finished skill)', () => {
+    const session = new GameSession(214);
+    session.startNew();
+    session.runStoryBeat('boteco-nair');
+    session.closeModal(); // arms rematch; key was never pressed
+    const t0 = Date.now();
+    vi.spyOn(Date, 'now').mockReturnValue(t0 + 550);
     expect(session.allowInteractInput()).toBe(true);
     vi.spyOn(Date, 'now').mockRestore();
   });

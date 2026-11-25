@@ -3,10 +3,13 @@ import {
   advanceTutorial,
   consumeMinigameTip,
   createTutorialState,
+  noteTutorialAction,
+  setTutorialOverlayHidden,
   skipTutorial,
   tutorialCopyKey,
   tutorialFinished,
   tutorialFlags,
+  tutorialPanelVisible,
   tutorialStepId,
 } from '../../src/systems/tutorial';
 
@@ -15,6 +18,7 @@ describe('tutorial', () => {
     const s = createTutorialState();
     expect(s.active).toBe(true);
     expect(tutorialStepId(s)).toBe('move');
+    expect(tutorialPanelVisible(s)).toBe(true);
   });
 
   it('skips when tutorialDone flag is set', () => {
@@ -33,6 +37,30 @@ describe('tutorial', () => {
     }
     expect(seen).toEqual(['move', 'interact', 'objective', 'bets', 'creditsRep']);
     expect(tutorialFlags(s).tutorialDone).toBe(true);
+  });
+
+  it('advances by matching player actions', () => {
+    let s = createTutorialState();
+    expect(noteTutorialAction(s, 'interacted')).toEqual(s); // wrong action
+    s = noteTutorialAction(s, 'moved');
+    expect(tutorialStepId(s)).toBe('interact');
+    s = noteTutorialAction(s, 'interacted');
+    expect(tutorialStepId(s)).toBe('objective');
+    s = noteTutorialAction(s, 'sawObjective');
+    expect(tutorialStepId(s)).toBe('bets');
+    s = noteTutorialAction(s, 'firstBet');
+    expect(tutorialStepId(s)).toBe('creditsRep');
+    // Last step needs explicit advance / Tab — action does not finish it.
+    expect(noteTutorialAction(s, 'firstBet')).toEqual(s);
+  });
+
+  it('hides panel under overlays without losing step', () => {
+    let s = createTutorialState();
+    s = setTutorialOverlayHidden(s, true);
+    expect(tutorialPanelVisible(s)).toBe(false);
+    expect(tutorialStepId(s)).toBe('move');
+    s = setTutorialOverlayHidden(s, false);
+    expect(tutorialPanelVisible(s)).toBe(true);
   });
 
   it('skip finishes immediately', () => {
