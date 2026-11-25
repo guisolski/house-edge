@@ -228,7 +228,7 @@ export const uiPtBR = {
   'ui.toast.missHint.audiencia-publica':
     'Margin: o que o morro já assinou pesa; brilho de assessoria escorrega.',
   'ui.toast.missHint.torre-foyer':
-    'Guarda: plástico passa; só trava quando o boato já mandou na sala.',
+    'Guarda: crachá de plástico passa — só trava quando o boato já mandou na sala.',
   'ui.toast.missHint.torre-pit':
     'Dealer: baralho cansado da casa — folha e plástico são pra turista.',
   'ui.toast.missHint.influencer-duelo':

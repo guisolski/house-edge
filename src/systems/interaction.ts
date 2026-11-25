@@ -257,8 +257,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'mole-contact',
     name: englishNpcName('mole-contact'),
     districtId: 'avenida-odds',
-    // Playtest #31: pad-clear (≥INTERACT_RANGE), 4-way, tag spacing.
-    x: 9,
+    // Playtest #34: south of courier, clear of Fair sign (2,10) + east arrival lane.
+    x: 10,
     y: 13,
     wanderRadius: 0,
     beatId: 'avenida-twist',

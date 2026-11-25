@@ -5,6 +5,7 @@ import type { DialogueLine } from '../core/types';
 import type { InputMode } from '../systems/input-mode';
 import { focusNext, focusPrev, activateFocused } from './focus';
 import {
+  bindEnterGate,
   button,
   focusFirst,
   paintBet,
@@ -14,6 +15,7 @@ import {
   paintTravel,
   paintUpgrades,
 } from './panels';
+import { handleTabTrap } from './focus';
 import { bakeSprite } from '../rendering/bake';
 import { makeEndingScene } from '../rendering/pixel-gen';
 import type { FpsSample } from '../rendering/fps';
@@ -83,6 +85,14 @@ export function createHud(session: GameSession, mount: HTMLElement): HudHandles 
   const parts = emptyParts();
   const handles = makeHandles(session, parts);
   wireDom(session, parts, handles);
+  // Playtest #34: Tab never escapes open modals into browser chrome.
+  window.addEventListener(
+    'keydown',
+    (ev) => {
+      handleTabTrap(activePanel(parts, session), ev);
+    },
+    true,
+  );
   mount.appendChild(parts.root);
   return handles;
 }
@@ -442,26 +452,32 @@ function paintEnding(
   );
   if (confirming) {
     p.ending.dataset.endingConfirm = '1';
-    p.ending.append(
-      el('p', 'ending-confirm', UI.playAgainConfirm),
-      button(UI.playAgainYes, () => {
-        blurActive();
-        queueMicrotask(() => session.startNew());
-      }),
-      button(UI.playAgainNo, () => paintEnding(p, session, h, text, false)),
-    );
+    const yes = button(UI.playAgainYes, () => {
+      blurActive();
+      queueMicrotask(() => session.startNew());
+    });
+    const no = button(UI.playAgainNo, () => paintEnding(p, session, h, text, false));
+    bindEnterGate(yes, () => yes.click());
+    bindEnterGate(no, () => no.click());
+    p.ending.append(el('p', 'ending-confirm', UI.playAgainConfirm), yes, no);
+    session.noteModalOpened(session.isInteractHeld());
   } else {
     delete p.ending.dataset.endingConfirm;
     const actions = el('div', 'panel-actions ending-actions');
-    actions.append(
-      button(UI.continueExploring, () => {
-        blurActive();
-        session.continueExploring();
-        h.syncScreen();
-      }),
-      button(UI.playAgain, () => paintEnding(p, session, h, text, true)),
-    );
+    const goExplore = (): void => {
+      blurActive();
+      session.continueExploring();
+      h.syncScreen();
+    };
+    const cont = button(UI.continueExploring, goExplore);
+    cont.classList.add('btn-continue-exploring');
+    const again = button(UI.playAgain, () => paintEnding(p, session, h, text, true));
+    bindEnterGate(cont, goExplore);
+    bindEnterGate(again, () => again.click());
+    actions.append(cont, again);
     p.ending.append(actions);
+    // Playtest #34: victory must accept Enter/Space/E immediately — clear mash arm.
+    session.clearModalConfirmGate();
   }
   focusFirst(p.ending);
 }

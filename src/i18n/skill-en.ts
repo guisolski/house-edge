@@ -41,7 +41,7 @@ export const skillEn = {
   'skill.duelo-casa.blurb': 'Multi-phase showdown — timing, read, and hack.',
   'skill.duelo-casa.phase.0.prompt': 'Phase 1 — stop the house needle.',
   'skill.duelo-casa.phase.1.clue':
-    'Augusto fills the room with theater. Watch the cuff when the volume climbs — ink jitters, grins don’t.',
+    'Augusto sells theater with teeth and the crowd. When volume climbs, the tell is paper under his palm — ink jitters while the grin holds.',
   'skill.duelo-casa.phase.1.option.0': 'All-in grin',
   'skill.duelo-casa.phase.1.option.1': 'Ledger twitch',
   'skill.duelo-casa.phase.1.option.2': 'Crowd roar',
@@ -102,7 +102,7 @@ export const skillEn = {
   'skill.side-morro-copper.prompt': 'Weigh the spare copper — which bag is light?',
   'skill.torre-elevator.prompt': 'Call the express car — stop on green.',
   'skill.torre-foyer.clue':
-    'Foyer Guard waves plastic past like weather. He only locks when he thinks the whole lobby already knows what you know.',
+    'Foyer Guard waves plastic badges past like rain. He only clamps when the rumor already owns the room — not a tourist stamp, not a staff beep.',
   'skill.torre-foyer.option.0': 'Tourist pass',
   'skill.torre-foyer.option.1': 'Staff QR',
   'skill.torre-foyer.option.2': 'Open secret',

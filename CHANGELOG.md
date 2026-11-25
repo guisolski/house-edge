@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.22.8] — 2026-11-25
+
+### Fixed
+
+- **Victory modal (P0)**: focus Continuar explorando on open; Enter/Space/E activate; Esc = continue exploring; clear mash arm so the panel never soft-locks; e2e keyboard dismiss.
+- **Dialogue first Enter (P1)**: after arm, always focus option 1; fresh keydown activates (mash guard kept).
+- **Clues (P1)**: Augusto Fase 2 points at paper-under-palm (Livro nervoso); Guarda points at public rumor (Segredo aberto), not tourist plastic.
+- **pt-BR / focus / tags (P1)**: infinitive choice labels (+ lint); Tab trap in modals; Contato Vira-Casaca nudged off FEIRA CENTRAL sign.
+
 ## [1.22.7] — 2026-11-25
 
 ### Fixed

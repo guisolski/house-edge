@@ -42,7 +42,7 @@ export const skillPtBR = {
   'skill.duelo-casa.blurb': 'Confronto em fases — agulha, leitura e hack.',
   'skill.duelo-casa.phase.0.prompt': 'Fase 1 — para a agulha da casa.',
   'skill.duelo-casa.phase.1.clue':
-    'O Augusto enche a sala de teatro. Olha o punho quando o volume sobe — tinta treme, sorriso não.',
+    'O Augusto vende teatro com dente e galera. Quando o volume sobe, a entrega é o papel sob a palma — a tinta treme e o sorriso segura.',
   'skill.duelo-casa.phase.1.option.0': 'Sorriso na mesa',
   'skill.duelo-casa.phase.1.option.1': 'Livro nervoso',
   'skill.duelo-casa.phase.1.option.2': 'Rugido da galera',
@@ -104,7 +104,7 @@ export const skillPtBR = {
   'skill.side-morro-copper.prompt': 'Pesa o cobre sobrando — qual saco é leve?',
   'skill.torre-elevator.prompt': 'Chama o elevador expresso — para no verde.',
   'skill.torre-foyer.clue':
-    'O guarda do foyer deixa plástico passar como chuva. Só trava quando acha que o lobby inteiro já sabe o que você sabe.',
+    'O guarda deixa crachá de plástico passar como chuva. Só trava quando o boato já mandou na sala — não carimbo de turista, não bip de equipe.',
   'skill.torre-foyer.option.0': 'Passe turista',
   'skill.torre-foyer.option.1': 'QR da equipe',
   'skill.torre-foyer.option.2': 'Segredo aberto',
@@ -113,7 +113,7 @@ export const skillPtBR = {
     'O Anfitrião olha a gaveta quieta perto do punho — câmera ama sorriso, livro ama espelho, mas ele só amolece quando a sala fica muda.',
   'skill.torre-negotiate.option.0': 'Pegar a ficha do silêncio',
   'skill.torre-negotiate.option.1': 'Exigir o espelho do salão',
-  'skill.torre-negotiate.option.2': 'Sai sorrindo',
+  'skill.torre-negotiate.option.2': 'Sair sorrindo',
   'skill.torre-negotiate.prompt':
     'O Anfitrião VIP oferece três saídas — escolhe antes do sorriso endurecer.',
   'skill.torre-pit.clue':

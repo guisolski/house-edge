@@ -75,7 +75,7 @@ function choiceKeyReady(opts: DialogueOpts): boolean {
  * Uses event.key so NumpadEnter counts (playtest #32).
  * Do NOT stopPropagation — window ActionState must still bump the arm.
  */
-function bindEnterGate(btn: HTMLButtonElement, onKey: () => void): void {
+export function bindEnterGate(btn: HTMLButtonElement, onKey: () => void): void {
   btn.addEventListener(
     'keydown',
     (e) => {
@@ -198,21 +198,33 @@ export function paintDialogue(
   panel.append(body, actions);
   const primary = panel.querySelector('.btn-take-bet') as HTMLElement | null;
   if (pendingChoices?.length) {
-    // Playtest #32/#33: blur at open (mash-safe); after arm, focus first choice
-    // so one clean Enter works without Tab.
+    // Playtest #32/#34: blur at open (mash-safe); after arm, always focus option 1
+    // visually — pick still gated; a fresh (non-repeat) Enter then activates.
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
     const armAt = opts.choiceArmAt ?? Date.now();
     const delay = Math.max(0, armAt - Date.now()) + 20;
-    window.setTimeout(() => {
+    const focusFirstChoice = (): void => {
       if (!panel.isConnected) return;
-      if (opts.allowChoice && !opts.allowChoice()) return;
+      if (!panel.querySelector('button.dialogue-choice')) return;
+      const ae = document.activeElement;
+      if (ae instanceof HTMLButtonElement && panel.contains(ae)) return;
       const first = panel.querySelector(
         'button.dialogue-choice:not([disabled])',
       ) as HTMLButtonElement | null;
       first?.focus();
-    }, delay);
+    };
+    window.setTimeout(focusFirstChoice, delay);
+    // If Interact was held through the arm, re-focus on first post-arm release.
+    const onUp = (e: KeyboardEvent): void => {
+      if (!isConfirmKey(e) && e.code !== 'KeyE') return;
+      if (Date.now() < armAt) return;
+      focusFirstChoice();
+      window.removeEventListener('keyup', onUp, true);
+    };
+    window.addEventListener('keyup', onUp, true);
+    window.setTimeout(() => window.removeEventListener('keyup', onUp, true), 4000);
   } else if (primary) primary.focus();
   else focusFirst(panel);
   requestAnimationFrame(() => {

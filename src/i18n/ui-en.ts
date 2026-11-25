@@ -227,7 +227,7 @@ export const uiEn = {
   'ui.toast.missHint.audiencia-publica':
     'Margin: what the hill already signed weighs; glossy spin slides off.',
   'ui.toast.missHint.torre-foyer':
-    'Guard: plastic passes; he freezes when the rumor already owns the room.',
+    'Guard: plastic badges sail through — he freezes only when the rumor already owns the room.',
   'ui.toast.missHint.torre-pit':
     'Dealer: house pack looks tired — foil and plastic are tourist bait.',
   'ui.toast.missHint.influencer-duelo':

@@ -184,8 +184,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Bluff the badge reader.',
     target: 2,
     options: ['Tourist pass', 'Staff QR', 'Open secret'],
-    // Playtest #31: no option-token echo — Guard fears what’s already public.
-    clue: 'Foyer Guard waves plastic past like weather. He only locks when he thinks the whole lobby already knows what you know.',
+    // Playtest #34: plastic/tourist sails through; only a public rumor freezes him.
+    clue: 'Foyer Guard waves plastic badges past like rain. He only clamps when the rumor already owns the room — not a tourist stamp, not a staff beep.',
   },
   'torre-pit': {
     kind: 'puzzle',

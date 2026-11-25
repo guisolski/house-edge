@@ -87,14 +87,15 @@ function gateInteract(session: GameSession): boolean {
   return session.allowModalConfirm();
 }
 
-/** Playtest #33: menu/Viajar must not inherit mash arm from the opening Enter. */
+/** Playtest #33/#34: menu/Viajar/ending must not inherit mash arm from Enter. */
 function armAfterModalOpen(session: GameSession, after: string): void {
   if (after === 'play' || after === 'title') return;
   if (
     after === 'menu' ||
     after === 'travel' ||
     after === 'jobs' ||
-    after === 'upgrades'
+    after === 'upgrades' ||
+    after === 'ending'
   ) {
     session.clearModalConfirmGate();
     return;
@@ -202,16 +203,43 @@ function handleTitleAction(
   return true;
 }
 
-function handleEscModal(session: GameSession, hud: HudHandles): boolean {
-  // Playtest #32/#33: Esc on "wipe save?" acts as Voltar (ending or settings).
-  if (session.ui.is('ending')) {
-    const ending = document.querySelector('.ending-panel') as HTMLElement | null;
-    if (ending?.dataset.endingConfirm === '1') {
-      hud.showEnding(UI.wonEnding);
-      return true;
-    }
-    return false;
+function handleEndingEsc(session: GameSession, hud: HudHandles): boolean {
+  const ending = document.querySelector('.ending-panel') as HTMLElement | null;
+  // Playtest #32/#33: Esc on wipe confirm = Voltar.
+  if (ending?.dataset.endingConfirm === '1') {
+    hud.showEnding(UI.wonEnding);
+    return true;
   }
+  // Playtest #34: Esc on victory = Continuar explorando (never soft-lock).
+  if (ending && !ending.classList.contains('ending-credits')) {
+    session.continueExploring();
+    hud.syncScreen();
+    hud.showHud();
+    return true;
+  }
+  return false;
+}
+
+function closeOverlayToPlay(session: GameSession, hud: HudHandles): void {
+  if (session.ui.is('bet') || session.ui.is('skill')) {
+    session.cancelBet();
+  } else if (session.ui.is('dialogue')) {
+    session.closeModal();
+  } else {
+    session.releaseModalToPlay();
+  }
+  const ae = document.activeElement;
+  if (ae instanceof HTMLElement) ae.blur();
+  const canvas = document.querySelector(
+    'canvas.world-canvas, canvas.engine-canvas',
+  ) as HTMLCanvasElement | null;
+  canvas?.focus({ preventScroll: true });
+  hud.syncScreen();
+  hud.showHud();
+}
+
+function handleEscModal(session: GameSession, hud: HudHandles): boolean {
+  if (session.ui.is('ending')) return handleEndingEsc(session, hud);
   if (session.ui.is('menu')) {
     const menu = document.querySelector('.menu-panel') as HTMLElement | null;
     if (menu?.dataset.menuConfirm === '1') {
@@ -228,22 +256,7 @@ function handleEscModal(session: GameSession, hud: HudHandles): boolean {
     session.ui.is('jobs') ||
     session.ui.is('upgrades')
   ) {
-    if (session.ui.is('bet') || session.ui.is('skill')) {
-      session.cancelBet();
-    } else if (session.ui.is('dialogue')) {
-      session.closeModal();
-    } else {
-      session.releaseModalToPlay();
-    }
-    // Blur focused Cancel/Sair so keys reach the canvas ActionState path.
-    const ae = document.activeElement;
-    if (ae instanceof HTMLElement) ae.blur();
-    const canvas = document.querySelector(
-      'canvas.world-canvas, canvas.engine-canvas',
-    ) as HTMLCanvasElement | null;
-    canvas?.focus({ preventScroll: true });
-    hud.syncScreen();
-    hud.showHud();
+    closeOverlayToPlay(session, hud);
     return true;
   }
   return false;

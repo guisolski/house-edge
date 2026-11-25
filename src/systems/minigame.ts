@@ -516,8 +516,8 @@ function duelSkill(betId: string): SkillDef {
         prompt: 'Phase 2 — call Augusto’s bluff.',
         target: 1,
         options: ['All-in grin', 'Ledger twitch', 'Crowd roar'],
-        // Playtest #31: no tremor/shake/paper giveaway — cuff betrays nerves.
-        clue: 'Augusto fills the room with theater. Watch the cuff when the volume climbs — ink jitters, grins don’t.',
+        // Playtest #34: paper-under-palm → ledger; grin holds (not the tell).
+        clue: 'Augusto sells theater with teeth and the crowd. When volume climbs, the tell is paper under his palm — ink jitters while the grin holds.',
       },
       {
         kind: 'hack',
