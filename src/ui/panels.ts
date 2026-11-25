@@ -60,13 +60,12 @@ export function paintDialogue(
   }
   const actions = el('div', 'panel-actions');
   if (pendingChoices?.length && opts.onChoice) {
-    // Style choices first — Take the bet appears only after a pick (no loop with both).
+    // Mandatory choices: no Close — Enter/focus lands on the first option.
     for (const c of pendingChoices) {
       const btn = button(c.label, () => opts.onChoice?.(c.setsFlag, c.reply));
       btn.classList.add('dialogue-choice');
       actions.appendChild(btn);
     }
-    actions.appendChild(button(UI.close, opts.onClose));
   } else if (opts.offerBet && opts.onAcceptBet) {
     actions.append(
       button(UI.takeBet, opts.onAcceptBet),
@@ -358,7 +357,7 @@ function paintSequenceSkill(
     bindSequenceTimer(body, session, seq, phase.timerMs, settled, after);
   }
   const used = [...new Set(seq)] as SeqKey[];
-  const onKey = (keyIndex: number): void => {
+  const buffer = createSequenceKeyBuffer((keyIndex) => {
     if (settled.v) return;
     const beforePhase = session.getSkillProgress()?.phaseIndex;
     session.submitSkill(keyIndex);
@@ -370,7 +369,8 @@ function paintSequenceSkill(
     }
     const left = missCap ? ` · misses ${next.misses}/${missCap}` : '';
     status.textContent = `Match ${next.seqIndex + 1} / ${seq.length} — next key…${left}`;
-  };
+  });
+  const onKey = (keyIndex: number): void => buffer.push(keyIndex);
   const pad = el('div', 'skill-seq-pad');
   for (const key of used) {
     pad.appendChild(button(key, () => onKey(SEQ_KEYS.indexOf(key))));
@@ -378,12 +378,33 @@ function paintSequenceSkill(
   actions.appendChild(pad);
   actions.appendChild(el('p', 'skill-seq', 'Esc cancels · arrows are sequence only'));
   panelKeyHook(actions, (ev) => {
+    if (ev.repeat) return;
     const sym = SEQ_KEY_CODES[ev.code];
     if (!sym || !used.includes(sym)) return;
     ev.preventDefault();
     ev.stopPropagation();
     onKey(SEQ_KEYS.indexOf(sym));
   });
+}
+
+/**
+ * Queue every keydown immediately so rapid taps (~150ms) never drop
+ * between frame polls / UI paint.
+ */
+export function createSequenceKeyBuffer(submit: (keyIndex: number) => void): {
+  push: (keyIndex: number) => void;
+} {
+  const q: number[] = [];
+  let draining = false;
+  return {
+    push(keyIndex: number): void {
+      q.push(keyIndex);
+      if (draining) return;
+      draining = true;
+      while (q.length) submit(q.shift()!);
+      draining = false;
+    },
+  };
 }
 
 const SEQ_KEY_CODES: Record<string, SeqKey> = {

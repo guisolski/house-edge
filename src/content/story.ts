@@ -843,7 +843,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     dialogue: [
       {
         speaker: 'Pit Dealer',
-        text: 'VIP’s upstairs, but the pit wants a warm-up hand. Spot the real deck — my thumb worries the dog-eared one; gold foil and shrink-wrap are props.',
+        text: 'VIP’s upstairs, but the pit wants a warm-up hand. Spot the real deck — my thumb keeps returning to one soft corner; foil shine and plastic wrap are show props.',
       },
       {
         speaker: 'Rita Odds',

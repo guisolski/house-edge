@@ -303,6 +303,8 @@ function drawNearbyNpcNames(
   const objName = state.marker?.name;
   for (const npc of state.session.floorNpcs()) {
     if (npc.districtId !== me.districtId) continue;
+    // Neon already names elevator cars — no duplicate floating tag.
+    if (npc.id.startsWith('elevator') || !npc.name) continue;
     const d = Math.hypot(npc.x - me.x, npc.y - me.y);
     if (d > 1.8) continue;
     // Objective marker already labels the quest target.
@@ -311,6 +313,9 @@ function drawNearbyNpcNames(
       tileX: npc.x,
       tileY: npc.y,
       signs: map.signs,
+      tagText: npc.name,
+      camX,
+      camY,
     });
     if (avoid.hideLabel) continue;
     const px = npc.x * TILE_PX + 16 - camX;
@@ -354,7 +359,7 @@ function drawStealthDrones(
     ctx.fillStyle = '#ff2bd6';
     ctx.fillRect(cx - 3, cy - 3, 6, 6);
   }
-  // Goal beacon.
+  // Goal beacon + EXIT label + player→exit arrow.
   const g = stealth.def.goal;
   const gx = g.x * TILE_PX + 16 - camX;
   const gy = g.y * TILE_PX + 16 - camY;
@@ -363,6 +368,18 @@ function drawStealthDrones(
   ctx.beginPath();
   ctx.arc(gx, gy, 14, 0, Math.PI * 2);
   ctx.stroke();
+  paintMarkerLabel(ctx, gx, gy - 22, 'EXIT', ctx.canvas.width);
+  const me = state.session.player.getStats();
+  const px = me.x * TILE_PX + 16 - camX;
+  const py = me.y * TILE_PX + 16 - camY;
+  const ang = Math.atan2(gy - py, gx - px);
+  ctx.fillStyle = '#ffdf00cc';
+  ctx.beginPath();
+  ctx.moveTo(px + Math.cos(ang) * 22, py + Math.sin(ang) * 22);
+  ctx.lineTo(px + Math.cos(ang + 2.5) * 12, py + Math.sin(ang + 2.5) * 12);
+  ctx.lineTo(px + Math.cos(ang - 2.5) * 12, py + Math.sin(ang - 2.5) * 12);
+  ctx.closePath();
+  ctx.fill();
 }
 
 function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCamera> {
@@ -1146,13 +1163,18 @@ function drawSideMarkers(
   camX: number,
   camY: number,
 ): void {
-  // Dim dots only — never compete with the main yellow objective arrow.
+  // Dim dots for side quests; VIP elevator gets a readable exit arrow.
   const markers = state.session.sideMarkers();
   const obj = state.marker;
   for (const m of markers) {
     if (obj && m.x === obj.x && m.y === obj.y) continue;
     const px = m.x * TILE_PX + 16 - camX;
     const py = m.y * TILE_PX - 6 - camY;
+    if (m.label.startsWith('Elevator')) {
+      paintBigArrow(ctx, px, py - 12, '#c8d0d8');
+      paintMarkerLabel(ctx, px, py - 40, m.label, ctx.canvas.width);
+      continue;
+    }
     ctx.fillStyle = '#2bfff244';
     ctx.beginPath();
     ctx.arc(px, py, 3, 0, Math.PI * 2);

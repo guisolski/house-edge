@@ -200,7 +200,7 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
               if (session.getPendingStoryBeat() !== 'epilogue-laje') return;
               session.closeModal();
               h.syncScreen();
-            }, 2800);
+            }, 3500);
           }
         },
         onClose: () => {
@@ -527,31 +527,38 @@ function paintPrompt(prompt: HTMLElement, session: GameSession): void {
     return;
   }
   void alt;
-  if (kind === 'objective' && npc) {
-    const verb = npc.id.startsWith('elevator') ? 'E — Use' : 'E';
-    prompt.textContent = `${verb} (${npc.name})`;
-    placePrompt(prompt, session);
+  const label = promptLabel(kind, npc, exit, session);
+  if (!label) {
+    setVisible(prompt, false);
     return;
+  }
+  prompt.textContent = label;
+  placePrompt(prompt, session);
+}
+
+function promptVerb(npc: { id: string; name: string }): string {
+  if (npc.id === 'elevator-vip') return 'E — Ride down';
+  if (npc.id.startsWith('elevator')) return 'E — Use';
+  return 'E';
+}
+
+function promptLabel(
+  kind: string,
+  npc: ReturnType<GameSession['nearbyNpc']>,
+  exit: ReturnType<GameSession['nearbyExit']>,
+  session: GameSession,
+): string | null {
+  if (kind === 'objective' && npc) {
+    return `${promptVerb(npc)}${npc.name ? ` (${npc.name})` : ''}`;
   }
   if (kind === 'travel' && exit) {
     const dest =
       session.world.get(exit.toDistrict)?.name ?? exit.label.replace(/^Exit → /, '');
-    prompt.textContent = `E — Travel to ${dest}`;
-    placePrompt(prompt, session);
-    return;
+    return `E — Travel to ${dest}`;
   }
-  if (kind === 'locked') {
-    prompt.textContent = 'E — Path locked';
-    placePrompt(prompt, session);
-    return;
-  }
-  if (npc) {
-    const verb = npc.id.startsWith('elevator') ? 'E — Use' : 'E';
-    prompt.textContent = `${verb} (${npc.name})`;
-    placePrompt(prompt, session);
-    return;
-  }
-  setVisible(prompt, false);
+  if (kind === 'locked') return 'E — Path locked';
+  if (npc) return `${promptVerb(npc)}${npc.name ? ` (${npc.name})` : ''}`;
+  return null;
 }
 
 /** Anchor the E-prompt just above the on-screen player when we know the pixel. */
@@ -587,10 +594,10 @@ function runCreditPopup(node: HTMLElement, delta: number): void {
 
 function runTransition(node: HTMLElement, kind: string): void {
   node.className = `fx-transition fx-${kind}`;
-  node.textContent = kind === 'elevator' ? '▲ Elevator' : '';
+  node.textContent = kind === 'elevator' ? '▲ Elevator\nVIP Salon · Floor 42' : '';
   setVisible(node, true);
-  // Longer fade covers map swap / elevator bake so FPS stays ≥50 under throttle.
-  const ms = kind === 'elevator' ? 900 : 720;
+  // ~1.2s visible ride with floor indicator (matches session hold).
+  const ms = kind === 'elevator' ? 1200 : 720;
   window.setTimeout(() => setVisible(node, false), ms);
 }
 

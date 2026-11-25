@@ -52,8 +52,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'antena-tech',
     name: 'Antena Tech',
     districtId: 'morro-neon',
-    x: 10,
-    y: 10,
+    // Clear of RAMP neon (7,12) and BOTECO (8,11).
+    x: 6,
+    y: 9,
     beatId: 'morro-antena',
     extraBeatIds: ['side-morro-tank'],
     jobBetId: 'antena-sinal',
@@ -83,8 +84,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'seu-ze',
     name: 'Seu Zé',
     districtId: 'morro-neon',
+    // South of ODDS 24h (24,8) — clear of neon + Fair exit pad (36,16).
     x: 30,
-    y: 16,
+    y: 18,
     beatId: 'seu-ze-banca',
     jobBetId: 'laje-lottery',
     color: '#ffdf00',
@@ -116,8 +118,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'catador-feira',
     name: 'Catador da Feira',
     districtId: 'feira-central',
-    x: 18,
-    y: 12,
+    // South aisle — clear of FEIRA neon (15,8).
+    x: 20,
+    y: 15,
     beatId: 'feira-catador',
     jobBetId: 'feira-garrafa',
     safeJobId: 'safe-feira-central',
@@ -214,9 +217,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'mole-contact',
     name: 'Mole Contact',
     districtId: 'avenida-odds',
-    // South plaza — clear of ODDS 24h neon (16,6).
-    x: 14,
-    y: 16,
+    // Boulevard south edge — clear of ODDS 24h neon (16,5) and barricade.
+    x: 12,
+    y: 14,
     beatId: 'avenida-twist',
     extraBeatIds: ['avenida-betrayal'],
     jobBetId: 'twist-vazamento',
@@ -271,9 +274,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'stealth-cam',
     name: 'Lobby Cam Tech',
     districtId: 'avenida-odds',
-    // South of CASA SUPREMA neon (28,6).
-    x: 34,
-    y: 16,
+    // South of CASA SUPREMA neon (28,5), east of barricade.
+    x: 36,
+    y: 14,
     beatId: 'avenida-stealth',
     color: '#6ec8e8',
     bodyVariant: 1,
@@ -283,7 +286,7 @@ const NPCS: readonly WorldNpc[] = [
     name: 'Dr. Margin',
     districtId: 'avenida-odds',
     x: 22,
-    y: 16,
+    y: 14,
     beatId: 'lobby-margin',
     color: '#4a6cff',
     bodyVariant: 0,
@@ -292,9 +295,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'mensageiro-avenida',
     name: 'Mensageiro',
     districtId: 'avenida-odds',
-    // Clear of west exit pad (5,12).
-    x: 10,
-    y: 16,
+    // Boulevard asphalt — clear of west exit pad (5,12) and south barricade.
+    x: 9,
+    y: 13,
     beatId: 'avenida-radar',
     safeJobId: 'safe-avenida-odds',
     color: '#c9b037',
@@ -303,8 +306,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'cage-runner',
     name: 'Cage Runner',
     districtId: 'avenida-odds',
-    x: 16,
-    y: 16,
+    x: 14,
+    y: 14,
     beatId: 'avenida-server',
     jobBetId: 'avenida-server',
     color: '#7bc96f',
@@ -346,20 +349,22 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'elevator',
+    // Canvas tag hidden — neon already says ELEVATOR ↑.
     name: 'Elevator',
     districtId: 'torre-casa',
     x: 24,
-    y: 10,
+    y: 11,
     beatId: 'torre-elevator',
     color: '#c8d0d8',
     floor: 'foyer',
   },
   {
     id: 'elevator-vip',
+    // Canvas tag hidden — neon already says ELEVATOR ↓.
     name: 'Elevator',
     districtId: 'torre-casa',
     x: 20,
-    y: 7,
+    y: 9,
     color: '#c8d0d8',
     floor: 'vip',
   },
@@ -367,8 +372,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'vip-host',
     name: 'VIP Host',
     districtId: 'torre-casa',
+    // Clear of VIP SALON neon (14,4) and elevator pad (20,9).
     x: 30,
-    y: 12,
+    y: 13,
     beatId: 'torre-vip',
     extraBeatIds: ['torre-negotiate'],
     jobBetId: 'torre-vip',
@@ -380,9 +386,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'ceo',
     name: 'Augusto Casa',
     districtId: 'torre-casa',
-    // Keep clear of the VIP elevator (20,7) so E on the pad uses the car.
+    // Keep clear of the VIP elevator (20,9) so E on the pad uses the car.
     x: 32,
-    y: 14,
+    y: 15,
     beatId: 'torre-final',
     color: '#ff3b5c',
     bodyVariant: 0,
@@ -515,7 +521,28 @@ function pickNearest(
 /** Doorway trigger radius — walk-in fires inside this. */
 export const EXIT_STAND_RANGE = 2.2;
 /** Hysteresis: latch clears only after leaving this larger radius (stops bounce-back). */
-export const EXIT_CLEAR_RANGE = 3.8;
+export const EXIT_CLEAR_RANGE = 4.2;
+/** Tiles inward from the reciprocal pad on arrival (must exceed CLEAR). */
+export const EXIT_ARRIVAL_OFFSET = 5;
+/** Cooldown after travel before any pad can re-arm (≥1.5s run toward pad). */
+export const EXIT_COOLDOWN_MS = 1600;
+
+/** Inward facing + spawn offset so arrival is never standing on the pad. */
+export function arrivalSpawnFromPad(pad: {
+  x: number;
+  y: number;
+  districtId: DistrictId;
+}): { x: number; y: number; dx: number; dy: number } {
+  // West-edge pads face east; east-edge pads face west.
+  const dx = pad.x < 20 ? 1 : -1;
+  const dy = 0;
+  return {
+    x: pad.x + dx * EXIT_ARRIVAL_OFFSET,
+    y: pad.y + dy * EXIT_ARRIVAL_OFFSET,
+    dx,
+    dy,
+  };
+}
 
 export type NearestExitQuery = {
   exits: readonly DistrictExit[];

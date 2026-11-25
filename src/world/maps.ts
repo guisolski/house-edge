@@ -89,11 +89,12 @@ export function buildTorreVip(): MapDef {
   for (let x = 8; x < 34; x += 4) props.push({ x, y: 10, kind: 'lamp' });
   props.push(
     { x: 12, y: 9, kind: 'crowd' },
-    { x: 20, y: 9, kind: 'crowd' },
     { x: 28, y: 9, kind: 'crowd' },
     { x: 16, y: 11, kind: 'kiosk' },
     { x: 24, y: 11, kind: 'crate' },
   );
+  // Visible descend pad — walk/E on the car returns to foyer.
+  paintExitPad(tiles, w, 20, 9);
   return {
     districtId: 'torre-casa',
     width: w,
@@ -101,10 +102,10 @@ export function buildTorreVip(): MapDef {
     tiles,
     buildings,
     signs: [
-      { x: 18, y: 5, label: 'VIP SALON', color: '#ffdf00' },
+      { x: 12, y: 4, label: 'VIP SALON', color: '#ffdf00' },
       { x: 10, y: 8, label: 'HIGH ROLLERS', color: '#ff2bd6' },
-      { x: 26, y: 8, label: 'PRIVATE TABLE', color: '#ffdf00' },
-      { x: 20, y: 7, label: 'ELEVATOR ↓', color: '#c8d0d8' },
+      { x: 28, y: 6, label: 'PRIVATE TABLE', color: '#ffdf00' },
+      { x: 20, y: 6, label: 'ELEVATOR ↓', color: '#c8d0d8' },
     ],
     props,
     landmark: { x: 18, y: 6, kind: 'casa-tower' },
@@ -369,9 +370,10 @@ function buildMorro(): MapDef {
     tiles,
     buildings,
     signs: [
-      { x: 12, y: 14, label: 'BOTECO NAIR', color: '#ffdf00' },
+      { x: 8, y: 11, label: 'BOTECO NAIR', color: '#ffdf00' },
       { x: 10, y: 20, label: 'LAJE BET', color: '#ffdf00' },
-      { x: 27, y: 14, label: 'ODDS 24h', color: '#ff2bd6' },
+      // High on terrace glass — clear of Seu Zé (34,18) and Fair exit.
+      { x: 24, y: 8, label: 'ODDS 24h', color: '#ff2bd6' },
       { x: 19, y: 12, label: 'STAIRS', color: '#b8ff2b' },
       { x: 7, y: 12, label: 'RAMP', color: '#b8ff2b' },
       { x: 32, y: 12, label: 'RAMP', color: '#b8ff2b' },
@@ -474,8 +476,9 @@ function buildFeira(): MapDef {
     tiles,
     buildings,
     signs: [
-      { x: 15, y: 10, label: 'FEIRA', color: '#ffdf00' },
-      { x: 28, y: 10, label: 'ODDS 24h', color: '#ff2bd6' },
+      // North stall row — clear of Catador (20,15) and plaza NPCs.
+      { x: 12, y: 7, label: 'FEIRA', color: '#ffdf00' },
+      { x: 28, y: 7, label: 'ODDS 24h', color: '#ff2bd6' },
       { x: 5, y: 11, label: '> Morro Neon', color: '#2bfff2' },
       { x: 35, y: 12, label: '> Odds Avenue', color: '#2bfff2' },
     ],
@@ -494,6 +497,12 @@ function buildAvenida(): MapDef {
   rect({ tiles, w, x0: 1, y0: 9, x1: w - 2, y1: 14, kind: 'asphalt' });
   hStrip(tiles, w, 8, 1, w - 2, 'plaza');
   hStrip(tiles, w, 15, 1, w - 2, 'plaza');
+  // Solid south barricade under the Neon Snap corridor — no free east-west bypass.
+  rect({ tiles, w, x0: 13, y0: 15, x1: 33, y1: 16, kind: 'blocked' });
+  // North glass lip pillars so the roof line isn't a free bypass either.
+  for (const x of [16, 20, 24, 28, 32]) {
+    set(tiles, w, x, 8, 'blocked');
+  }
   rect({ tiles, w, x0: 1, y0: 1, x1: w - 2, y1: 1, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: h - 2, x1: w - 2, y1: h - 2, kind: 'blocked' });
   paintExitPad(tiles, w, 5, 12);
@@ -595,7 +604,8 @@ function buildTorre(): MapDef {
     signs: [
       { x: 16, y: 5, label: 'CASA SUPREMA', color: '#ffdf00' },
       { x: 12, y: 9, label: 'PIT FLOOR', color: '#ff2bd6' },
-      { x: 22, y: 8, label: 'ELEVATOR ↑', color: '#c8d0d8' },
+      // Above the car (24,11) — tagless elevator NPC stands on the pad.
+      { x: 24, y: 7, label: 'ELEVATOR ↑', color: '#c8d0d8' },
       { x: 5, y: 10, label: '> Odds Avenue', color: '#2bfff2' },
     ],
     props,

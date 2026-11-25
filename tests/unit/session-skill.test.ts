@@ -159,8 +159,8 @@ describe('session skill encounters', () => {
     vi.advanceTimersByTime(1200);
     const s = session.player.getStats();
     expect(session.ui.is('play')).toBe(true);
-    expect(s.x).toBe(30);
-    expect(s.y).toBe(10);
+    expect(s.x).toBe(28);
+    expect(s.y).toBe(11);
     expect(session.getMap().signs.some((g) => g.label.includes('VIP SALON'))).toBe(true);
     expect(session.story.getCompleted()).toContain('torre-elevator');
     vi.useRealTimers();

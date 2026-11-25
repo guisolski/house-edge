@@ -19,7 +19,9 @@ import {
   nearestNpc,
   npcStoryBeatIds,
   EXIT_CLEAR_RANGE,
+  EXIT_COOLDOWN_MS,
   EXIT_STAND_RANGE,
+  arrivalSpawnFromPad,
   type DistrictExit,
   type WorldNpc,
 } from './interaction';
@@ -76,10 +78,14 @@ export class GameSession {
   private skillProgress: SkillProgress | null = null;
   private stealthProgress: StealthProgress | null = null;
   private elevating = false;
-  /** After travel, ignore pads until the player walks clear of EXIT_CLEAR_RANGE. */
+  /** After travel, ignore the arrival pad until leave CLEAR + cooldown. */
   private exitLatch = false;
-  /** Brief time latch so a held key cannot bounce on the reciprocal pad. */
+  /** Cooldown after travel before the arrival pad can re-arm. */
   private exitLatchUntil = 0;
+  /** True once the player has left CLEAR of the arrival pad. */
+  private exitCleared = false;
+  /** Reciprocal pad id that bounced us here — only this pad is gated. */
+  private arrivalExitId: string | null = null;
   /** True while Rita is on the distinct VIP floor map. */
   private vipFloor = false;
   private skillStreak = 0;
@@ -115,6 +121,9 @@ export class GameSession {
     this.vipFloor = false;
     this.exitLatch = false;
     this.exitLatchUntil = 0;
+    // Fresh spawn can use pads; travelTo gates only the arrival pad.
+    this.exitCleared = true;
+    this.arrivalExitId = null;
     this.stealthProgress = null;
     this.skillStreak = 0;
     this.creditsRoll = false;
@@ -237,15 +246,23 @@ export class GameSession {
     this.bus.emit('audio:play-sfx', { id: 'travel' });
     this.vipFloor = false;
     this.player.setDistrict(districtId);
-    // Arrive at the reciprocal pad (not mid-street spawn) with latch engaged.
+    // Spawn a few tiles OFF the reciprocal pad, facing inward — never on the trigger.
     const arrival = this.exits.find(
       (e) => e.districtId === districtId && e.toDistrict === from,
     );
-    if (arrival) this.player.setPosition(arrival.x, arrival.y);
-    else this.player.setPosition(district.spawn.x, district.spawn.y);
+    if (arrival) {
+      const spawn = arrivalSpawnFromPad(arrival);
+      this.player.setPosition(spawn.x, spawn.y);
+      this.player.setFacing(spawn.dx, spawn.dy);
+      this.arrivalExitId = arrival.id;
+    } else {
+      this.player.setPosition(district.spawn.x, district.spawn.y);
+      this.arrivalExitId = null;
+    }
     this.exitLatch = true;
-    // Time latch + spatial hysteresis — stops Odds↔Tower bounce from a held step.
-    this.exitLatchUntil = Date.now() + 450;
+    this.exitCleared = false;
+    // Cooldown + leave/re-enter on the arrival pad only — other doors stay open.
+    this.exitLatchUntil = Date.now() + EXIT_COOLDOWN_MS;
     this.ui.go('play');
     this.bus.emit('district:entered', { districtId });
     return true;
@@ -325,8 +342,6 @@ export class GameSession {
 
   nearbyExit(): DistrictExit | null {
     if (this.vipFloor) return null;
-    // Time latch only while still standing on/near a pad after arrival.
-    if (this.exitLatch || Date.now() < this.exitLatchUntil) return null;
     const s = this.player.getStats();
     const exit = nearestExit({
       exits: this.exits,
@@ -336,13 +351,13 @@ export class GameSession {
       range: EXIT_STAND_RANGE,
     });
     if (!exit) return null;
+    if (this.arrivalPadBlocked(exit)) return null;
     return this.world.isUnlocked(exit.toDistrict) ? exit : null;
   }
 
   /** Locked exit underfoot / adjacent — for toast + prompt feedback. */
   nearbyLockedExit(): DistrictExit | null {
     if (this.vipFloor) return null;
-    if (this.exitLatch || Date.now() < this.exitLatchUntil) return null;
     const s = this.player.getStats();
     const exit = nearestExit({
       exits: this.exits,
@@ -351,18 +366,36 @@ export class GameSession {
       y: s.y,
       range: EXIT_STAND_RANGE,
     });
-    if (!exit) return null;
+    if (!exit || this.arrivalPadBlocked(exit)) return null;
     return this.world.isUnlocked(exit.toDistrict) ? null : exit;
   }
 
+  /** Only the reciprocal arrival pad is gated (leave + cooldown + re-enter). */
+  private arrivalPadBlocked(exit: DistrictExit): boolean {
+    if (!this.arrivalExitId || exit.id !== this.arrivalExitId) return false;
+    if (Date.now() < this.exitLatchUntil || this.exitLatch || !this.exitCleared) {
+      return true;
+    }
+    // Gate satisfied — release so walk-in / E works on this pad again.
+    this.arrivalExitId = null;
+    return false;
+  }
+
   private refreshExitLatch(): void {
-    if (!this.exitLatch && Date.now() >= this.exitLatchUntil) return;
+    if (!this.arrivalExitId) return;
     const s = this.player.getStats();
-    const here = this.exits.filter((e) => e.districtId === s.districtId);
-    // Clear spatial + time latch once outside the larger hysteresis radius.
-    if (shouldClearExitLatch(s, here, EXIT_CLEAR_RANGE)) {
+    const arrival = this.exits.find((e) => e.id === this.arrivalExitId);
+    if (!arrival) {
       this.exitLatch = false;
-      this.exitLatchUntil = 0;
+      this.exitCleared = true;
+      this.arrivalExitId = null;
+      return;
+    }
+    // Arm re-entry after leaving CLEAR; drop the gate once cooldown also elapsed.
+    if (shouldClearExitLatch(s, [arrival], EXIT_CLEAR_RANGE)) {
+      this.exitLatch = false;
+      this.exitCleared = true;
+      if (Date.now() >= this.exitLatchUntil) this.arrivalExitId = null;
     }
   }
 
@@ -387,7 +420,7 @@ export class GameSession {
   /** Optional side-quest markers in the current district. */
   sideMarkers(): { x: number; y: number; label: string }[] {
     const s = this.player.getStats();
-    return sideQuestMarkers({
+    const marks = sideQuestMarkers({
       beats: STORY_BEATS,
       completed: this.story.getCompleted(),
       flags: (f) => this.story.getFlag(f),
@@ -396,6 +429,12 @@ export class GameSession {
       exits: this.exits,
       unlocked: (id) => this.world.isUnlocked(id as DistrictId),
     });
+    // VIP floor: always mark the descend pad (no district travel exits up here).
+    if (this.vipFloor) {
+      const elev = this.floorNpcs().find((n) => n.id === 'elevator-vip');
+      if (elev) marks.push({ x: elev.x, y: elev.y, label: 'Elevator ↓' });
+    }
+    return marks;
   }
 
   /** Nearest odd-job giver (same district first). */
@@ -479,7 +518,16 @@ export class GameSession {
       return false;
     }
     this.pendingBetId = betId;
-    this.pendingStake = stake;
+    // Hush chip softens the final rail — cheaper Augusto stake.
+    if (betId === 'duelo-casa' && this.story.getFlag('neg_hush')) {
+      this.pendingStake = Math.max(bet.stakeMin ?? 1, Math.floor(stake * 0.8));
+      this.bus.emit('ui:toast', {
+        message: 'Hush chip softens the rail (−20% stake).',
+        kind: 'success',
+      });
+    } else {
+      this.pendingStake = stake;
+    }
     this.bus.emit('bet:offered', { betId, title: bet.title });
     // In-world stealth corridor (Neon Snap) — walk Odds Avenue, dodge drones.
     const stealthDef = stealthForBet(betId);
@@ -958,14 +1006,20 @@ export class GameSession {
       from: 'torre-casa',
       to: 'torre-casa',
     });
+    this.ui.go('transition');
     this.vipFloor = false;
-    this.player.setPosition(24, 11);
+    this.player.setPosition(24, 12);
     this.player.setFacing(0, 1);
-    this.bus.emit('ui:toast', {
-      message: 'Elevator returns to the pit foyer.',
-      kind: 'info',
-    });
-    this.bus.emit('district:entered', { districtId: 'torre-casa' });
+    const finish = (): void => {
+      this.ui.go('play');
+      this.bus.emit('ui:toast', {
+        message: 'Elevator returns to the pit foyer.',
+        kind: 'info',
+      });
+      this.bus.emit('district:entered', { districtId: 'torre-casa' });
+    };
+    if (typeof setTimeout === 'function') setTimeout(finish, 1200);
+    else finish();
   }
 
   private tryNpcStory(npc: WorldNpc): boolean {
@@ -994,8 +1048,18 @@ export class GameSession {
     this.pendingStoryBeat = beatId;
     this.pendingBetAfterDialogue = beat.betId ?? null;
     this.lastDialogue = [...beat.dialogue];
+    // Hush chip consequence: Augusto notices the quiet door.
+    if (beatId === 'torre-final' && this.story.getFlag('neg_hush')) {
+      this.lastDialogue = [
+        {
+          speaker: 'Augusto Casa',
+          text: 'That hush chip rattles in your pocket. Security already looked away — cheap courage before the duel.',
+        },
+        ...this.lastDialogue,
+      ];
+    }
     this.ui.go('dialogue');
-    for (const line of beat.dialogue) {
+    for (const line of this.lastDialogue) {
       this.bus.emit('ui:dialogue', { speaker: line.speaker, text: line.text });
     }
     return true;
@@ -1077,7 +1141,7 @@ export class GameSession {
     this.persist();
   }
 
-  /** Visible elevator ride: fade + swap to the distinct VIP floor map. */
+  /** Visible elevator ride: ~1.2s fade with floor indicator + VIP map swap. */
   private runElevatorRide(): void {
     this.elevating = true;
     this.bus.emit('world:transition', {
@@ -1088,10 +1152,10 @@ export class GameSession {
     this.bus.emit('fx:flash', { kind: 'travel' });
     this.bus.emit('audio:play-sfx', { id: 'travel' });
     this.ui.go('transition');
-    // Floor state swaps immediately so objectives/NPCs resolve; UI fades ~1.1s.
+    // Floor state swaps immediately so objectives/NPCs resolve; UI fades ~1.2s.
     this.vipFloor = true;
-    this.player.setPosition(30, 10);
-    this.player.setFacing(0, 1);
+    this.player.setPosition(28, 11);
+    this.player.setFacing(1, 0);
     const finish = (): void => {
       this.elevating = false;
       this.ui.go('play');
@@ -1101,7 +1165,7 @@ export class GameSession {
         kind: 'success',
       });
     };
-    if (typeof setTimeout === 'function') setTimeout(finish, 1100);
+    if (typeof setTimeout === 'function') setTimeout(finish, 1200);
     else finish();
   }
 

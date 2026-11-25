@@ -388,7 +388,7 @@ export function lockpickClueDeducible(phase: SkillPhase): boolean {
   const clue = phase.clue.toLowerCase();
   const hooks =
     clue.match(
-      /\b(left|right|outer|center|middle|shoulder|riser|seat|soft|pair|third|sticker|grease|oil|stage|worn|cage)\b/g,
+      /\b(left|right|outer|center|middle|shoulder|riser|seat|soft|pair|third|sticker|grease|oil|stage|worn|cage|hinge|floor|post|click|far)\b/g,
     ) ?? [];
   return hooks.length >= 3;
 }

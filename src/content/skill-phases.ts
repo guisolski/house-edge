@@ -185,8 +185,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Spot the real deck.',
     target: 0,
     options: ['Dog-eared', 'Gold foil', 'Shrink-wrap'],
-    // Answer Dog-eared — never say dog/ear; worn edge / thumb only.
-    clue: 'Pit Dealer’s thumb worries the worn corner; shine and plastic are show props.',
+    // Answer Dog-eared — never say dog/ear/worn; thumb + props only.
+    clue: 'Pit Dealer’s thumb keeps returning to one soft corner; shine and plastic are show props.',
   },
   'torre-elevator': {
     kind: 'timing',
@@ -248,11 +248,12 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     kind: 'lockpick',
     prompt: 'Crack the server-cage tumblers before the sweep.',
     target: 0,
+    // Pins: high / flush / mid / high — positional grease hooks, no height labels.
     pins: [2, 0, 1, 2],
     hiddenPin: 2,
     timerMs: 32_000,
     pickDurability: 3,
-    clue: 'Oil wear marks the outer pair. The third tumbler’s sticker is a decoy — trust the cage grease.',
+    clue: 'Left hinge grease climbs the cage post; next seat kisses the floor plate. Third tumbler’s click sits between them; the far-right post matches the left hinge. Sticker on three is a decoy.',
   },
   'avenida-betrayal': {
     kind: 'choice',

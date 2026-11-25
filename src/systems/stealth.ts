@@ -95,6 +95,30 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
       halfAngle: Math.PI / 6,
       range: 3.6,
     },
+    {
+      // South-street sweeper — covers the plaza bypass between barricades.
+      id: 'drone-d',
+      path: [
+        { x: 13, y: 15 },
+        { x: 34, y: 15 },
+        { x: 13, y: 15 },
+      ],
+      speed: 2.6,
+      halfAngle: Math.PI / 3.2,
+      range: 4.0,
+    },
+    {
+      // North glass sweeper — blocks roof-line bypass above the asphalt.
+      id: 'drone-e',
+      path: [
+        { x: 14, y: 9 },
+        { x: 33, y: 9 },
+        { x: 14, y: 9 },
+      ],
+      speed: 2.5,
+      halfAngle: Math.PI / 3.5,
+      range: 3.8,
+    },
   ],
 };
 
@@ -224,4 +248,103 @@ export function winStealth(progress: StealthProgress): StealthProgress {
 export function stealthForBet(betId: string): StealthDef | null {
   if (betId === 'avenida-drone') return AVENIDA_DRONE_STEALTH;
   return null;
+}
+
+function tileKey(x: number, y: number): string {
+  return `${x},${y}`;
+}
+
+/** Mark every tile a drone cone covers in its current pose. */
+function markConeCoverage(covered: Set<string>, d: StealthDroneState): void {
+  const r = Math.ceil(d.range);
+  const y0 = Math.floor(d.y) - r;
+  const y1 = Math.ceil(d.y) + r;
+  const x0 = Math.floor(d.x) - r;
+  const x1 = Math.ceil(d.x) + r;
+  for (let y = y0; y <= y1; y += 1) {
+    for (let x = x0; x <= x1; x += 1) {
+      const hit = pointInCone({
+        origin: { x: d.x, y: d.y },
+        facing: d.facing,
+        halfAngle: d.halfAngle,
+        range: d.range,
+        point: { x: x + 0.5, y: y + 0.5 },
+      });
+      if (hit) covered.add(tileKey(x, y));
+    }
+  }
+}
+
+/** Union of cone tiles across a sampled patrol cycle. */
+export function coneCoverageOverCycle(
+  def: StealthDef,
+  opts?: { sampleDt?: number; cycleSec?: number },
+): Set<string> {
+  const sampleDt = opts?.sampleDt ?? 0.25;
+  const cycleSec = opts?.cycleSec ?? 12;
+  const covered = new Set<string>();
+  let p = startStealth(def);
+  const samples = Math.ceil(cycleSec / sampleDt);
+  for (let i = 0; i < samples; i += 1) {
+    for (const d of p.drones) markConeCoverage(covered, d);
+    p = tickStealth(p, sampleDt);
+  }
+  return covered;
+}
+
+/**
+ * True if a grid path from start→goal exists on tiles that are NEVER covered
+ * by any drone cone across a sampled patrol cycle (a drone-free bypass).
+ */
+export function droneFreePathExists(
+  def: StealthDef,
+  walkable: (x: number, y: number) => boolean,
+  opts?: { sampleDt?: number; cycleSec?: number },
+): boolean {
+  const covered = coneCoverageOverCycle(def, opts);
+  const start = { x: Math.round(def.start.x), y: Math.round(def.start.y) };
+  const goal = { x: Math.round(def.goal.x), y: Math.round(def.goal.y) };
+  return bfsUncovered(start, goal, walkable, covered);
+}
+
+const BFS_DIRS = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+] as const;
+
+function bfsUncovered(
+  start: Vec2,
+  goal: Vec2,
+  walkable: (x: number, y: number) => boolean,
+  covered: Set<string>,
+): boolean {
+  const q: Vec2[] = [start];
+  const seen = new Set<string>([tileKey(start.x, start.y)]);
+  while (q.length) {
+    const cur = q.shift()!;
+    if (cur.x === goal.x && cur.y === goal.y) return true;
+    pushUncoveredNeighbors(cur, { walkable, covered, seen, q });
+  }
+  return false;
+}
+
+function pushUncoveredNeighbors(
+  cur: Vec2,
+  ctx: {
+    walkable: (x: number, y: number) => boolean;
+    covered: Set<string>;
+    seen: Set<string>;
+    q: Vec2[];
+  },
+): void {
+  for (const d of BFS_DIRS) {
+    const nx = cur.x + d[0];
+    const ny = cur.y + d[1];
+    const k = tileKey(nx, ny);
+    if (ctx.seen.has(k) || !ctx.walkable(nx, ny) || ctx.covered.has(k)) continue;
+    ctx.seen.add(k);
+    ctx.q.push({ x: nx, y: ny });
+  }
 }

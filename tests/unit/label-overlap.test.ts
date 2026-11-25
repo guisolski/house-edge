@@ -2,12 +2,16 @@ import { describe, expect, it } from 'vitest';
 import {
   boxesIntersect,
   estimateSignBox,
+  estimateSpriteBox,
   estimateTagBox,
   labelOffsetForSigns,
 } from '../../src/rendering/label-layout';
-import { buildDistrictMap } from '../../src/world/maps';
+import { buildDistrictMap, buildTorreVip } from '../../src/world/maps';
 import { districtNpcs } from '../../src/systems/interaction';
 import type { DistrictId } from '../../src/core/types';
+import type { MapDef } from '../../src/world/maps';
+import type { WorldNpc } from '../../src/systems/interaction';
+import type { ScreenBox } from '../../src/rendering/label-layout';
 
 const DISTRICTS: DistrictId[] = [
   'morro-neon',
@@ -16,7 +20,39 @@ const DISTRICTS: DistrictId[] = [
   'torre-casa',
 ];
 
-describe('label / sign bounding boxes', () => {
+function assertNpcClearOfSigns(opts: {
+  id: string;
+  vip: boolean;
+  npc: WorldNpc;
+  signs: ScreenBox[];
+  mapSigns: MapDef['signs'];
+}): void {
+  const { id, vip, npc, signs, mapSigns } = opts;
+  const avoid = labelOffsetForSigns({
+    tileX: npc.x,
+    tileY: npc.y,
+    signs: mapSigns,
+    tagText: npc.name,
+  });
+  const sprite = estimateSpriteBox({ tileX: npc.x, tileY: npc.y });
+  const tag = avoid.hideLabel
+    ? null
+    : estimateTagBox({
+        tileX: npc.x,
+        tileY: npc.y,
+        text: npc.name,
+        dy: avoid.dy,
+      });
+  const where = `${id}${vip ? '-vip' : ''}: "${npc.name}" @(${npc.x},${npc.y})`;
+  for (const sign of signs) {
+    expect(boxesIntersect(sprite, sign), `${where} sprite overlaps sign`).toBe(false);
+    if (tag) {
+      expect(boxesIntersect(tag, sign), `${where} tag overlaps sign`).toBe(false);
+    }
+  }
+}
+
+describe('label / sign / sprite / prompt bounding boxes', () => {
   it('boxesIntersect detects overlap and separation', () => {
     expect(
       boxesIntersect(
@@ -32,32 +68,24 @@ describe('label / sign bounding boxes', () => {
     ).toBe(false);
   });
 
-  it('every district: visible NPC tags do not intersect neon/EXIT signs', () => {
-    for (const id of DISTRICTS) {
-      const map = buildDistrictMap(id);
-      const npcs = districtNpcs().filter((n) => n.districtId === id);
+  it('every district + VIP: visible NPC tags/sprites miss every sign', () => {
+    const maps = [
+      ...DISTRICTS.map((id) => ({ id, map: buildDistrictMap(id), vip: false })),
+      { id: 'torre-casa' as DistrictId, map: buildTorreVip(), vip: true },
+    ];
+    for (const { id, map, vip } of maps) {
+      const npcs = districtNpcs().filter(
+        (n) =>
+          n.districtId === id &&
+          (vip ? n.floor === 'vip' : n.floor !== 'vip') &&
+          !n.id.startsWith('elevator') &&
+          n.name,
+      );
       const signs = map.signs.map((s) =>
         estimateSignBox({ tileX: s.x, tileY: s.y, label: s.label }),
       );
       for (const npc of npcs) {
-        const avoid = labelOffsetForSigns({
-          tileX: npc.x,
-          tileY: npc.y,
-          signs: map.signs,
-        });
-        if (avoid.hideLabel) continue;
-        const tag = estimateTagBox({
-          tileX: npc.x,
-          tileY: npc.y,
-          text: npc.name,
-          dy: avoid.dy,
-        });
-        for (const sign of signs) {
-          expect(
-            boxesIntersect(tag, sign),
-            `${id}: "${npc.name}" @(${npc.x},${npc.y}) overlaps a sign`,
-          ).toBe(false);
-        }
+        assertNpcClearOfSigns({ id, vip, npc, signs, mapSigns: map.signs });
       }
     }
   });
@@ -66,8 +94,17 @@ describe('label / sign bounding boxes', () => {
     const near = labelOffsetForSigns({
       tileX: 16,
       tileY: 5,
-      signs: [{ x: 16, y: 5 }],
+      signs: [{ x: 16, y: 5, label: 'ODDS 24h' }],
+      tagText: 'Mole Contact',
     });
     expect(near.hideLabel).toBe(true);
+  });
+
+  it('VIP floor has a visible elevator exit pad + sign', () => {
+    const vip = buildTorreVip();
+    expect(vip.signs.some((s) => /ELEVATOR/i.test(s.label))).toBe(true);
+    const elev = districtNpcs().find((n) => n.id === 'elevator-vip');
+    expect(elev).toBeTruthy();
+    expect(elev!.floor).toBe('vip');
   });
 });

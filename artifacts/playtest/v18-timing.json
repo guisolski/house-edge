@@ -1,0 +1,210 @@
+{
+  "documentTitle": "House Edge v1.18.0",
+  "uiVersion": "v1.18.0",
+  "newGameIso": "2026-11-25T07:57:08.406Z",
+  "endingIso": "2026-11-25T08:07:09.649Z",
+  "wallClockMs": 601243,
+  "wallClock": "10:01",
+  "ending": true,
+  "epilogue": true,
+  "drone": true,
+  "negotiate": true,
+  "beatsStamped": 36,
+  "fps": {
+    "min": 59.9981544250319,
+    "avg": 60.00820996809127
+  },
+  "completedCount": 37,
+  "stamps": [
+    {
+      "label": "New Game",
+      "iso": "2026-11-25T07:57:08.406Z",
+      "ms": 0
+    },
+    {
+      "label": "boteco-nair",
+      "iso": "2026-11-25T07:57:23.826Z",
+      "ms": 15420
+    },
+    {
+      "label": "side-morro-copper",
+      "iso": "2026-11-25T07:57:39.156Z",
+      "ms": 30750
+    },
+    {
+      "label": "morro-antena",
+      "iso": "2026-11-25T07:57:57.991Z",
+      "ms": 49585
+    },
+    {
+      "label": "luna-beco",
+      "iso": "2026-11-25T07:58:13.317Z",
+      "ms": 64911
+    },
+    {
+      "label": "morro-fios",
+      "iso": "2026-11-25T07:58:32.144Z",
+      "ms": 83738
+    },
+    {
+      "label": "seu-ze-banca",
+      "iso": "2026-11-25T07:58:50.393Z",
+      "ms": 101987
+    },
+    {
+      "label": "feira-kiko",
+      "iso": "2026-11-25T07:59:05.717Z",
+      "ms": 117311
+    },
+    {
+      "label": "feira-catador",
+      "iso": "2026-11-25T07:59:21.043Z",
+      "ms": 132637
+    },
+    {
+      "label": "bia-set",
+      "iso": "2026-11-25T07:59:36.368Z",
+      "ms": 147962
+    },
+    {
+      "label": "feira-dancer",
+      "iso": "2026-11-25T07:59:51.694Z",
+      "ms": 163288
+    },
+    {
+      "label": "feira-forro",
+      "iso": "2026-11-25T08:00:07.018Z",
+      "ms": 178612
+    },
+    {
+      "label": "feira-lockbox",
+      "iso": "2026-11-25T08:00:29.855Z",
+      "ms": 201449
+    },
+    {
+      "label": "feira-radio",
+      "iso": "2026-11-25T08:00:48.678Z",
+      "ms": 220272
+    },
+    {
+      "label": "feira-tipster",
+      "iso": "2026-11-25T08:01:04.003Z",
+      "ms": 235597
+    },
+    {
+      "label": "feira-courier",
+      "iso": "2026-11-25T08:01:15.272Z",
+      "ms": 246866
+    },
+    {
+      "label": "prova-luna",
+      "iso": "2026-11-25T08:01:29.752Z",
+      "ms": 261346
+    },
+    {
+      "label": "avenida-twist",
+      "iso": "2026-11-25T08:01:48.576Z",
+      "ms": 280170
+    },
+    {
+      "label": "avenida-checkpoint",
+      "iso": "2026-11-25T08:02:03.898Z",
+      "ms": 295492
+    },
+    {
+      "label": "avenida-courier",
+      "iso": "2026-11-25T08:02:22.728Z",
+      "ms": 314322
+    },
+    {
+      "label": "avenida-influencer",
+      "iso": "2026-11-25T08:02:38.052Z",
+      "ms": 329646
+    },
+    {
+      "label": "avenida-drone",
+      "iso": "2026-11-25T08:02:56.880Z",
+      "ms": 348474
+    },
+    {
+      "label": "avenida-radar",
+      "iso": "2026-11-25T08:03:08.148Z",
+      "ms": 359742
+    },
+    {
+      "label": "avenida-server",
+      "iso": "2026-11-25T08:03:30.984Z",
+      "ms": 382578
+    },
+    {
+      "label": "avenida-atm",
+      "iso": "2026-11-25T08:03:49.810Z",
+      "ms": 401404
+    },
+    {
+      "label": "avenida-stealth",
+      "iso": "2026-11-25T08:04:08.631Z",
+      "ms": 420225
+    },
+    {
+      "label": "avenida-betrayal",
+      "iso": "2026-11-25T08:04:23.960Z",
+      "ms": 435554
+    },
+    {
+      "label": "lobby-margin",
+      "iso": "2026-11-25T08:04:39.285Z",
+      "ms": 450879
+    },
+    {
+      "label": "morro-return-nair",
+      "iso": "2026-11-25T08:04:54.612Z",
+      "ms": 466206
+    },
+    {
+      "label": "morro-return-fio",
+      "iso": "2026-11-25T08:05:13.434Z",
+      "ms": 485028
+    },
+    {
+      "label": "torre-foyer",
+      "iso": "2026-11-25T08:05:28.761Z",
+      "ms": 500355
+    },
+    {
+      "label": "torre-pit",
+      "iso": "2026-11-25T08:05:44.080Z",
+      "ms": 515674
+    },
+    {
+      "label": "torre-elevator",
+      "iso": "2026-11-25T08:06:00.311Z",
+      "ms": 531905
+    },
+    {
+      "label": "torre-vip",
+      "iso": "2026-11-25T08:06:13.693Z",
+      "ms": 545287
+    },
+    {
+      "label": "torre-negotiate",
+      "iso": "2026-11-25T08:06:31.520Z",
+      "ms": 563114
+    },
+    {
+      "label": "torre-final",
+      "iso": "2026-11-25T08:06:58.374Z",
+      "ms": 589968
+    },
+    {
+      "label": "epilogue-laje",
+      "iso": "2026-11-25T08:07:09.649Z",
+      "ms": 601243
+    },
+    {
+      "label": "Ending wall",
+      "iso": "2026-11-25T08:07:09.649Z",
+      "ms": 601243
+    }
+  ]
+}

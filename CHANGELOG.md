@@ -5,6 +5,30 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.0] — 2026-11-25
+
+### Added
+
+- Neon Snap: south/north barricades + extra patrol drones; on-screen EXIT arrow; `droneFreePathExists` invariant.
+- Pad arrivals spawn **off-pad** facing inward; leave/re-enter gate + 1.6s cooldown.
+- VIP floor: visible elevator pad, `Elevator ↓` marker arrow, ride-down prompt.
+- Sequence keydown input buffer (no dropped taps at ~150ms).
+- Elevator fade ~1.2s with **VIP Salon · Floor 42** indicator.
+- Hush chip consequence: Augusto line + −20% duel stake.
+
+### Fixed
+
+- Tag/sprite vs sign AABB coverage (all districts + VIP); elevator cars no longer duplicate neon labels.
+- Seu Zé / Catador / Antena / VIP layout cleared of neon; BOTECO / FEIRA / ODDS / ELEVATOR repositioned.
+- Epilogue: no Close on mandatory choices; choices stay visible; Saúde holds ≥3.5s.
+- Cage lockpick + Pit Dealer dialogue/clue re-audit (no dog-eared leak).
+- Pad bounce Odds↔Fair from held run.
+
+### Tests
+
+- Unit: extended label/sprite overlap, drone-free path, pad 1.5s walk, sequence buffer, hush stake, elevator 1.2s.
+- E2e: exit leave/re-enter after cooldown.
+
 ## [1.17.0] — 2026-11-25
 
 ### Added

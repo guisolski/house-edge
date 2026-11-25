@@ -452,14 +452,29 @@ canvas.excalibur-game {
 }
 
 .dialogue-body {
-  max-height: min(42vh, 320px);
+  max-height: min(36vh, 260px);
   overflow-y: auto;
   overflow-wrap: anywhere;
   word-break: break-word;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .dialogue-body .line {
   line-height: 1.35;
+}
+
+.dialogue-panel {
+  display: flex;
+  flex-direction: column;
+  max-height: min(70vh, 520px);
+}
+
+.dialogue-panel .panel-actions {
+  flex-shrink: 0;
+  border-top: 1px solid #2bfff233;
+  padding-top: 0.5rem;
+  background: var(--panel);
 }
 
 /* UX-3 / UX-7: touch chrome only when mode=touch */
@@ -709,7 +724,14 @@ canvas.excalibur-game {
 
 .fx-elevator {
   background: linear-gradient(180deg, #050508 0%, #1a2040 50%, #050508 100%);
-  animation: fx-fade-in 0.25s ease-out;
+  animation: fx-fade-in 0.35s ease-out;
+  white-space: pre-line;
+  text-align: center;
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes fx-fade-in {

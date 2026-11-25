@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { GameSession } from '../../src/systems/session';
@@ -15,7 +15,7 @@ import {
   startSkill,
 } from '../../src/systems/minigame';
 import { BETS } from '../../src/content/bets';
-import { districtExits } from '../../src/systems/interaction';
+import { districtExits, EXIT_COOLDOWN_MS } from '../../src/systems/interaction';
 
 describe('v1.16.0 title / dialogue / pads', () => {
   it('package version is semver 1.x', () => {
@@ -41,6 +41,7 @@ describe('v1.16.0 title / dialogue / pads', () => {
   });
 
   it('walk-in travel fires for every exit pad within stand range', () => {
+    vi.useFakeTimers();
     const s = new GameSession(7);
     s.startNew();
     for (const id of ['feira-central', 'avenida-odds', 'torre-casa'] as const) {
@@ -48,11 +49,12 @@ describe('v1.16.0 title / dialogue / pads', () => {
     }
     for (const exit of districtExits()) {
       s.travelTo(exit.districtId);
-      // Clear latch, then step onto the pad from one tile away.
-      const clearX = exit.x > 20 ? exit.x - 8 : exit.x + 8;
+      // Clear latch + expire cooldown, then step onto the pad from one tile away.
+      const clearX = exit.x > 20 ? exit.x - 10 : exit.x + 10;
       s.player.setPosition(clearX, exit.y);
       s.move(0, 1);
       s.move(0, -1);
+      vi.advanceTimersByTime(EXIT_COOLDOWN_MS + 50);
       const approachX = exit.x > 2 ? exit.x - 1 : exit.x + 1;
       s.player.setPosition(approachX, exit.y);
       const before = s.player.getStats().districtId;
@@ -61,9 +63,10 @@ describe('v1.16.0 title / dialogue / pads', () => {
       expect(ok, exit.id).toBe(true);
       expect(s.player.getStats().districtId, exit.id).toBe(exit.toDistrict);
     }
+    vi.useRealTimers();
   });
 
-  it('arrival from Casa Tower lands on the Odds Avenue pad (not mid-street spawn)', () => {
+  it('arrival from Casa Tower spawns off the Odds Avenue pad facing inward', () => {
     const s = new GameSession(11);
     s.startNew();
     s.world.unlock('feira-central');
@@ -76,8 +79,9 @@ describe('v1.16.0 title / dialogue / pads', () => {
     const pad = districtExits().find(
       (e) => e.districtId === 'avenida-odds' && e.toDistrict === 'torre-casa',
     )!;
-    expect(pos.x).toBe(pad.x);
-    expect(pos.y).toBe(pad.y);
+    // Off-pad spawn (v1.18) — still near the reciprocal door, not mid-street.
+    expect(Math.hypot(pos.x - pad.x, pos.y - pad.y)).toBeGreaterThan(2);
+    expect(Math.hypot(pos.x - pad.x, pos.y - pad.y)).toBeLessThan(8);
   });
 
   it('sequence skill owns arrow input while chase/hack/evade is active', () => {

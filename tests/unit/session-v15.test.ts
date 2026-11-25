@@ -104,6 +104,7 @@ describe('session v1.5 recovery and upgrades', () => {
   });
 
   it('auto-travels when stepping onto exit; guards empty bet paths', () => {
+    vi.useFakeTimers();
     const session = new GameSession(8);
     session.startNew();
     session.world.unlock('feira-central');
@@ -119,13 +120,15 @@ describe('session v1.5 recovery and upgrades', () => {
     session.ui.go('menu');
     expect(session.interact()).toBe(false);
     expect(session.doSafeJob('missing-job')).toBe(false);
-    // Locked exit toast path — walk clear of arrival latch first.
+    // Locked exit toast path — walk clear of arrival latch + cooldown first.
     session.ui.go('play');
     session.travelTo('feira-central');
     session.player.setPosition(14, 14);
     session.move(1, 0);
+    vi.advanceTimersByTime(1700);
     session.player.setPosition(38, 13);
     expect(session.nearbyLockedExit()?.toDistrict).toBe('avenida-odds');
     expect(session.interact()).toBe(false);
+    vi.useRealTimers();
   });
 });

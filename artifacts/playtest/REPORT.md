@@ -1,66 +1,55 @@
-# Playtest REPORT — House Edge v1.17.0
+# Playtest REPORT — House Edge v1.18.0
 
-Independent follow-up after v1.16.0 (e30474b / user measured ~17 min walk; art 6.5, fun 5.5). Goal: real Odds Avenue stealth, clue audit, tag/sign bbox test, title Enter, Esc modals, lockpick nav, epilogue Saúde, pad latch, side-hustle label, elevator fade, sequence tension + art, measured REPORT.
+Independent playtest #19 of v1.17.0 (ratings art 7, fun 6; story ~20 min; FPS ~60 / min 52 in Augusto). Goal: tag/sprite/sign bbox coverage, Neon Snap no free path, pad leave/re-enter, VIP exit, epilogue choices, sequence buffer, elevator 1.2s, clue re-audit, hush chip consequence.
 
 ## Verdict: PASS
 
-`make check` + full e2e (38/38) green locally. Coverage branches **91%+**.
-
-CI (`5df85f7`): GitHub **quality** / **build** / **deploy (Pages)** all success.
+`make check` + full e2e (38/38) green. Coverage branches **91%+**. Paced New Game → ending wall-clock **10:01** (user walking playtest #19 ~20 min). FPS travel sample min ~60 / avg ~60.
 
 ## Bugs fixed
 
-| #   | Issue                                             | Result                                                                |
-| --- | ------------------------------------------------- | --------------------------------------------------------------------- |
-| 1   | Neon Snap was a fake 6-step sequence              | PASS — in-world drones + sight cones; spot→checkpoint, no credit loss |
-| 2   | Clue gates wrong / leaky (Stage Hand, Pit, Tia…)  | PASS — data-driven audit (unique tokens + synonyms); all clues fixed  |
-| 3   | NPC/pad tags still overlap signs                  | PASS — bbox test per district; proximity tags; pad arrows hide labels |
-| 4   | Title Enter/Space/A ignored                       | PASS — starts New Game                                                |
-| 5   | Esc ignored on stake / Cage Runner; lockpick Down | PASS — Esc cancels bet/skill; Cancel skipped in lockpick D-pad nav    |
-| 6   | Nair Saúde missing after choice                   | PASS — line shown after either choice; ~2.8s before credits           |
-| 7   | Pad bounce Odds↔Tower                             | PASS — spatial hysteresis + time latch; unit test                     |
-| 8   | Post-credits ice pour unlabeled                   | PASS — **Side hustle: ice pour**                                      |
-| 9   | Elevator instant                                  | PASS — ~1.1s fade; VIP floor swaps immediately under the fade         |
+| #   | Issue                                              | Result                                                                 |
+| --- | -------------------------------------------------- | ---------------------------------------------------------------------- |
+| 1   | Tag/sign overlaps (Seu Zé, Catador, Elevator, VIP) | PASS — bbox covers tags+sprites+all districts+VIP; elevator unlabeled  |
+| 2   | Neon Snap south bypass                             | PASS — barricades + 5 drones; EXIT arrow; no drone-free path test      |
+| 3   | Pad bounce Odds↔Fair                               | PASS — off-pad spawn, arrival-only gate, 1.6s cooldown; e2e clear wait |
+| 4   | VIP no visible exit                                | PASS — elevator pad + `Elevator ↓` arrow + Ride down prompt            |
+| 5   | Epilogue choices below scroll / Close / Saúde      | PASS — no Close on choices; sticky actions; Saúde ≥3.5s                |
+| 6   | Sequence drops keys ~150ms                         | PASS — keydown buffer; rapid-input unit test                           |
+| 7   | Elevator fade too fast                             | PASS — ~1.2s + Floor 42 indicator                                      |
+| 8   | Cage / Pit clues                                   | PASS — lockpick positional grease; Pit dialogue no dog-eared           |
+| 9   | Hush chip no consequence                           | PASS — Augusto line + −20% duel stake                                  |
 
 ## Fun / art
 
-- Sequences: timers + `maxMisses` fail the encounter; needle zones/speeds varied.
-- Art: pulsed neon, rain + steam particles, stronger NPC idle bob / walk cadence.
+- Neon Snap EXIT beacon + player→exit arrow; south/north barricades force the drone corridor.
+- Elevator ride shows `VIP Salon · Floor 42` during the fade.
 
-## Measured playthrough time
+## Measured
 
-| Method                       | Duration    | Notes                                       |
-| ---------------------------- | ----------- | ------------------------------------------- |
-| User walk (v1.16 baseline)   | **~17 min** | 03:03:05 → 03:19:54                         |
-| Paced Node measure (v1.17)   | **~12 min** | Dialogue @ ~220 wpm + skill thinks + travel |
-| Story-walk e2e (accelerated) | ~4 s        | Tile walk + debug stealth skip              |
-| Story-complete harness       | ~1 s        | Instant skills                              |
-
-Stealth corridor target budget **45–90 s** of real play when walked (not skipped).
-
-## Performance
-
-- Travel FPS sample: see `v17-07-fps-travel.png` (F3 overlay during hops).
-- Throttle e2e @ 4×: PASS (≥50).
+| Metric                          | Value                                    |
+| ------------------------------- | ---------------------------------------- |
+| User playtest #19 (walking)     | ~20 min                                  |
+| Paced harness (v18-timing.json) | **10:01** wall (07:57:08 → 08:07:09 UTC) |
+| Ending / epilogue               | true / true                              |
+| FPS travel sample               | min ~60, avg ~60                         |
+| E2e                             | 38/38 desktop + mobile                   |
+| Unit coverage branches          | 91%+                                     |
 
 ## Artifacts
 
-- `v17-01-title-play.png` — title **v1.17.0**
-- `v17-02-after-story.png` — post ending / free roam
-- `v17-03-credits-skip.png` — Skip credits
-- `v17-04-lockpick-tension.png` — Stage Hand clue (no height labels)
-- `v17-05-drone-stealth.png` — live drones + sight cones on Odds Avenue
-- `v17-06-negotiate.png` — VIP negotiate
-- `v17-06-side-hustle.png` — post-credits ice pour labeled side hustle
-- `v17-07-fps-travel.png` — FPS during district hops
-- `v17-timing.json` — timing dump
+- `v18-01-title-play.png` … `v18-07-fps-travel.png`
+- `v18-timing.json`
+- Desktop district stills (`v18-desktop-*.png`)
 
-## Scores (this round)
+## Scores (playtest #19 baseline → this build)
 
-- Art: **7.5** (stealth cones, neon pulse, steam/rain, NPC bob)
-- Fun: **7.5** (real stealth beat, sequence fail tension, fixed clues)
+|     | #19 (v1.17.0) | v1.18.0 target |
+| --- | ------------- | -------------- |
+| Art | 7             | hold / lift    |
+| Fun | 6             | hold / lift    |
 
-## Gaps / next
+## Gaps
 
-- Optional: longer human tile-walk clock for v1.17 specifically.
-- Optional: ending lines that mention drone_low / negotiate flags.
+- Optional: ending lines that mention drone_low / negotiate flags beyond hush.
+- CI tip SHA noted after GitHub quality/build/deploy green.

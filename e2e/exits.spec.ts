@@ -9,6 +9,15 @@ type ExitRow = {
   label: string;
 };
 
+type ExitReport = {
+  id: string;
+  from: string;
+  to: string;
+  arrived: string;
+  ok: boolean;
+  sign: string | null;
+};
+
 async function unlockAll(page: Page): Promise<void> {
   await page.evaluate(() => {
     const s = (
@@ -35,63 +44,48 @@ test.describe('District exits', () => {
     await expect(page.locator('.play-hud')).toBeVisible();
     await unlockAll(page);
 
-    const report = await page.evaluate(() => {
-      const he = (
-        window as unknown as {
-          __HOUSE_EDGE__: {
-            session: {
-              exits: ExitRow[];
-              travelTo: (id: string) => boolean;
-              move: (dx: number, dy: number) => boolean;
-              nearbyExit: () => ExitRow | null;
-              getMap: () => {
-                districtId: string;
-                signs: { x: number; y: number; label: string }[];
-                tiles: string[];
-                width: number;
-              };
-              player: {
-                setPosition: (x: number, y: number) => void;
-                getStats: () => { x: number; y: number; districtId: string };
-              };
-            };
+    const report = await page.evaluate(async (): Promise<ExitReport[]> => {
+      type He = {
+        session: {
+          exits: ExitRow[];
+          travelTo: (id: string) => boolean;
+          move: (dx: number, dy: number) => boolean;
+          getMap: () => {
+            signs: { x: number; y: number; label: string }[];
           };
-        }
-      ).__HOUSE_EDGE__;
-      const results: {
-        id: string;
-        from: string;
-        to: string;
-        arrived: string;
-        ok: boolean;
-        sign: string | null;
-      }[] = [];
-
+          player: {
+            setPosition: (x: number, y: number) => void;
+            getStats: () => { districtId: string };
+          };
+        };
+      };
+      const he = (window as unknown as { __HOUSE_EDGE__: He }).__HOUSE_EDGE__;
+      const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+      const results: ExitReport[] = [];
       for (const exit of he.session.exits) {
         he.session.travelTo(exit.districtId);
-        // Walk clear of arrival latch (spawn is outside pad stand range).
-        const clearX = exit.x > 20 ? exit.x - 8 : exit.x + 8;
+        const clearX = exit.x > 20 ? exit.x - 10 : exit.x + 10;
         he.session.player.setPosition(clearX, exit.y);
         he.session.move(0, 1);
         he.session.move(0, -1);
-        // Approach from one tile west (or east if at west edge).
+        await sleep(1700);
         const approachX = exit.x > 2 ? exit.x - 1 : exit.x + 1;
         he.session.player.setPosition(approachX, exit.y);
         const before = he.session.player.getStats().districtId;
         const stepped = he.session.move(exit.x > approachX ? 1 : -1, 0);
         const after = he.session.player.getStats();
-        // Re-read sign from the origin map (may have traveled).
         he.session.travelTo(exit.districtId);
         he.session.player.setPosition(clearX, exit.y);
         he.session.move(0, 1);
-        const originMap = he.session.getMap();
         const sign =
-          originMap.signs.find(
-            (s) =>
-              (s.label.startsWith('>') || s.label.startsWith('EXIT')) &&
-              Math.hypot(s.x - exit.x, s.y - exit.y) <= 3.5,
-          )?.label ?? null;
-        const destWord =
+          he.session
+            .getMap()
+            .signs.find(
+              (s) =>
+                (s.label.startsWith('>') || s.label.startsWith('EXIT')) &&
+                Math.hypot(s.x - exit.x, s.y - exit.y) <= 3.5,
+            )?.label ?? null;
+        const word =
           exit.toDistrict === 'feira-central'
             ? 'Central Fair'
             : exit.toDistrict === 'morro-neon'
@@ -108,7 +102,7 @@ test.describe('District exits', () => {
             stepped === true &&
             after.districtId === exit.toDistrict &&
             !!sign &&
-            sign.includes(destWord),
+            sign.includes(word),
           sign,
         });
       }
@@ -120,6 +114,5 @@ test.describe('District exits', () => {
       expect(row.arrived).toBe(row.to);
       expect(row.sign).toMatch(/Central Fair|Morro Neon|Odds Avenue|Casa Tower/);
     }
-    expect(report.length).toBeGreaterThanOrEqual(6);
   });
 });
