@@ -1336,10 +1336,9 @@ function refreshMarkerCache(state: ViewState, frame: number): void {
     y: obj.targetY,
     districtId: obj.districtId ?? '',
     name: obj.targetName ?? '',
-      arrowOnly:
-        /Fair|Avenue|Tower|Morro Neon|Elevator|Feira|Avenida|Torre|Elevador/i.test(
-          obj.targetName ?? '',
-        ),
+    arrowOnly: /Fair|Avenue|Tower|Morro Neon|Elevator|Feira|Avenida|Torre|Elevador/i.test(
+      obj.targetName ?? '',
+    ),
     npcOwns: false,
   };
 }

@@ -547,7 +547,7 @@ describe('session deep paths', () => {
     expect(session.getAudio().masterVolume).toBe(0);
   });
 
-  it('toasts come-back-later when npc beat is done and no job', () => {
+  it('beaten story NPC without job shows done dialogue (no rematch)', () => {
     const session = new GameSession(13);
     session.startNew();
     for (const id of ['boteco-nair', 'morro-antena', 'luna-beco']) {
@@ -558,7 +558,9 @@ describe('session deep paths', () => {
     session.story.setFlag('conheceu_luna', true);
     session.player.setPosition(22, 16);
     expect(session.nearbyNpc()?.id).toBe('luna');
-    expect(session.interact()).toBe(false);
+    expect(session.interact()).toBe(true);
+    expect(session.ui.is('dialogue')).toBe(true);
+    expect(session.ui.is('bet')).toBe(false);
   });
 
   it('finishes dialogue-only path and locked exit nearby', () => {

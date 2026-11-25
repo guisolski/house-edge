@@ -1,9 +1,11 @@
 import type { BetDefinition, DistrictId } from '../core/types';
 import { BETS } from '../content/bets';
+import { t } from '../i18n';
 
 export type GrindJob = {
   id: string;
-  label: string;
+  /** i18n key under ui.grind.* — resolve with jobLabel(). */
+  labelKey: string;
   /** If set, opens a bet. Otherwise pays flatPay with no risk. */
   betId?: string;
   /** Guaranteed credits for safe odd jobs (no stake). */
@@ -22,7 +24,7 @@ const DISTRICTS: DistrictId[] = [
 /** Safe odd jobs — always available even at negative rep / 0 credits. */
 const SAFE_JOBS: readonly GrindJob[] = DISTRICTS.map((districtId) => ({
   id: `safe-${districtId}`,
-  label: '[SAFE] Odd jobs — flat 20cr, no bet',
+  labelKey: 'ui.grind.safe',
   flatPay: 20,
   minReputation: -999,
   districtId,
@@ -32,70 +34,70 @@ const SAFE_JOBS: readonly GrindJob[] = DISTRICTS.map((districtId) => ({
 const BET_JOBS: readonly GrindJob[] = [
   {
     id: 'job-agua',
-    label: '[SIDE HUSTLE · RNG] Boteco water rotation',
+    labelKey: 'ui.grind.agua',
     betId: 'agua-gelada',
     minReputation: 0,
     districtId: 'morro-neon',
   },
   {
     id: 'job-laje',
-    label: '[SIDE HUSTLE · RNG] Rooftop draw booth',
+    labelKey: 'ui.grind.laje',
     betId: 'laje-lottery',
     minReputation: 0,
     districtId: 'morro-neon',
   },
   {
     id: 'job-corrida',
-    label: '[SIDE HUSTLE · RNG] Laje moto dash',
+    labelKey: 'ui.grind.corrida',
     betId: 'corrida-moto',
     minReputation: 2,
     districtId: 'morro-neon',
   },
   {
     id: 'job-pastel',
-    label: '[SIDE HUSTLE · RNG] Surprise-pastel stall',
+    labelKey: 'ui.grind.pastel',
     betId: 'pastel-surpresa',
     minReputation: 0,
     districtId: 'feira-central',
   },
   {
     id: 'job-freela',
-    label: '[SIDE HUSTLE · RNG] Fair deliveries',
+    labelKey: 'ui.grind.freela',
     betId: 'freela-entregas',
     minReputation: 0,
     districtId: 'feira-central',
   },
   {
     id: 'job-samba',
-    label: '[SIDE HUSTLE · RNG] Forró set odds',
+    labelKey: 'ui.grind.samba',
     betId: 'samba-odds',
     minReputation: 1,
     districtId: 'feira-central',
   },
   {
     id: 'job-pixo',
-    label: '[SIDE HUSTLE · RNG] Commissioned pixo',
+    labelKey: 'ui.grind.pixo',
     betId: 'pixo-challenge',
     minReputation: 0,
     districtId: 'avenida-odds',
   },
   {
     id: 'job-atm',
-    label: '[SIDE HUSTLE · RNG] Casa ATM glitch hunt',
+    labelKey: 'ui.grind.atm',
     betId: 'avenida-atm',
     minReputation: 0,
     districtId: 'avenida-odds',
   },
   {
     id: 'job-vip',
-    label: '[SIDE HUSTLE · RNG] VIP table rake skim',
+    labelKey: 'ui.grind.vip',
     betId: 'torre-vip',
     minReputation: 0,
     districtId: 'torre-casa',
   },
   {
     id: 'job-duelo-grind',
-    label: '[SIDE HUSTLE · RNG] Rematch at the high table',
+    labelKey: 'ui.grind.duelo',
     betId: 'duelo-casa',
     minReputation: 3,
     districtId: 'torre-casa',
@@ -103,6 +105,10 @@ const BET_JOBS: readonly GrindJob[] = [
 ];
 
 const JOBS: readonly GrindJob[] = [...SAFE_JOBS, ...BET_JOBS];
+
+export function jobLabel(job: GrindJob): string {
+  return t(job.labelKey);
+}
 
 export function listJobs(districtId: string, reputation: number): GrindJob[] {
   return JOBS.filter((j) => j.districtId === districtId && reputation >= j.minReputation);

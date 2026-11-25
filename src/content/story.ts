@@ -386,11 +386,11 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Barraca Tia',
-        text: 'East crates look sweeter. West crates hum. Place the odd — then Lavador will walk you to Luna.',
+        text: 'One crate baked by sun (sol), one that sings (canta) in the palm, one hollow (vazia). Place the odd — then Lavador will walk you to Luna.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'East it is. After this, asphalt only.',
+        text: 'I’ll take the one that sings. After this, asphalt only.',
       },
     ],
   },
@@ -727,7 +727,8 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     title: 'Coffee with Dr. Margin',
     districtId: 'avenida-odds',
     requiredFlags: ['betrayal_ok'],
-    setsFlags: ['escandalo_aberto', 'unlocked_torre'],
+    // Unlock tower without forced hill backtrack; return beats stay optional.
+    setsFlags: ['escandalo_aberto', 'unlocked_torre', 'morro_return_ok'],
     betId: 'audiencia-publica',
     unlocksDistrict: 'torre-casa',
     dialogue: [
@@ -753,8 +754,10 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     id: 'morro-return-nair',
     title: 'Return: trust the hill',
     districtId: 'morro-neon',
+    optional: true,
     requiredFlags: ['unlocked_torre', 'escandalo_aberto'],
-    setsFlags: ['morro_return_ok', 'trusted_hill'],
+    setsFlags: ['trusted_hill'],
+    // Margin already sets morro_return_ok — skip forced hill backtrack.
     skipIfFlag: 'morro_return_ok',
     betId: 'morro-return-nair',
     dialogue: [
@@ -784,8 +787,9 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     id: 'morro-return-fio',
     title: 'Return: cut a private wire',
     districtId: 'morro-neon',
+    optional: true,
     requiredFlags: ['unlocked_torre', 'escandalo_aberto'],
-    setsFlags: ['morro_return_ok', 'cut_private'],
+    setsFlags: ['cut_private'],
     skipIfFlag: 'morro_return_ok',
     betId: 'morro-return-fio',
     dialogue: [
@@ -811,7 +815,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     id: 'torre-foyer',
     title: 'Foyer badge check',
     districtId: 'torre-casa',
-    requiredFlags: ['unlocked_torre', 'escandalo_aberto', 'morro_return_ok'],
+    requiredFlags: ['unlocked_torre', 'escandalo_aberto'],
     setsFlags: ['foyer_ok'],
     betId: 'torre-foyer',
     dialogue: [

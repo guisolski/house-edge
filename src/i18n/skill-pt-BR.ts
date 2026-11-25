@@ -9,7 +9,7 @@ export const skillPtBR = {
   'skill.agua-gelada.prompt': 'Pega o gelo na hora — para no frio.',
   'skill.antena-sinal.prompt': 'Emenda o jack pirata — repete a sequência de bips.',
   'skill.audiencia-publica.clue':
-    'Doutor Margin só cruza o que as lajes registraram em tinta — teatro e ameaça caem.',
+    'Doutor Margin cruza papel da comunidade, não release de imprensa nem ameaça vazia.',
   'skill.audiencia-publica.option.0': 'RP da corp',
   'skill.audiencia-publica.option.1': 'Livro do morro',
   'skill.audiencia-publica.option.2': 'Ameaça vazia',
@@ -54,7 +54,7 @@ export const skillPtBR = {
   'skill.feira-lockbox.prompt': 'Abre o cofre da Casa debaixo do palco do forró.',
   'skill.feira-radio.prompt': 'Sintoniza o dial pirata — repete 3 cliques.',
   'skill.feira-tipster.clue':
-    'A Barraca Tia diz que quem canta debaixo da tampa não é forno de sol nem oco.',
+    'A Barraca Tia bate nas tampas — uma zumbe na palma; a quente e a oca ficam quietas.',
   'skill.feira-tipster.option.0': 'Caixa sol',
   'skill.feira-tipster.option.1': 'Caixa que canta',
   'skill.feira-tipster.option.2': 'Caixa vazia',
@@ -84,7 +84,7 @@ export const skillPtBR = {
   'skill.pastel-surpresa.prompt': 'Qual caixa de pastel tá armada?',
   'skill.pixo-challenge.prompt': 'Pixa no beat.',
   'skill.prova-vazamento.clue':
-    'O pendrive da Luna marca o tiro de misericórdia nos livros — barulho e vaidade são cortina de fumaça.',
+    'A Luna marca o rastro quieto no papel — clip de vaidade e barulho de máquina são cortina.',
   'skill.prova-vazamento.option.0': 'Clip da influencer',
   'skill.prova-vazamento.option.1': 'Bug do caixa',
   'skill.prova-vazamento.option.2': 'Livro do pit',
@@ -98,20 +98,20 @@ export const skillPtBR = {
   'skill.side-morro-copper.prompt': 'Pesa o cobre sobrando — qual saco é leve?',
   'skill.torre-elevator.prompt': 'Chama o elevador expresso — para no verde.',
   'skill.torre-foyer.clue':
-    'O guarda do foyer encolhe com o que a audiência já tornou pública — crachá plástico dispara alarme.',
+    'O guarda do foyer ignora crachá plástico — só pisca quando o segredo sujo da cidade entra.',
   'skill.torre-foyer.option.0': 'Passe turista',
   'skill.torre-foyer.option.1': 'QR staff',
   'skill.torre-foyer.option.2': 'Vazamento do escândalo',
   'skill.torre-foyer.prompt': 'Blefa no leitor de crachá.',
   'skill.torre-negotiate.clue':
-    'O relógio no rosto deles é a aposta real — sela qualquer porta antes do sorriso endurecer.',
+    'Qualquer saída lacrada serve — compra quieta, vidro da mesa ou sair limpo. Decide antes do sorriso gelar.',
   'skill.torre-negotiate.option.0': 'Pega o chip do silêncio',
   'skill.torre-negotiate.option.1': 'Exige o espelho do pit',
   'skill.torre-negotiate.option.2': 'Sai sorrindo',
   'skill.torre-negotiate.prompt':
     'O host VIP oferece três saídas — escolhe antes do sorriso endurecer.',
   'skill.torre-pit.clue':
-    'O polegar do dealer volta num canto macio; brilho e plástico são cenário.',
+    'As mãos do dealer demoram no baralho que parece manuseado; folha e plástico de fábrica são isca.',
   'skill.torre-pit.option.0': 'Orelha de cachorro',
   'skill.torre-pit.option.1': 'Folha dourada',
   'skill.torre-pit.option.2': 'Shrink-wrap',

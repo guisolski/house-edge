@@ -131,6 +131,13 @@ export class GameSession {
   private interactReleasePending = false;
   /** True while Interact (E/Enter/Space/A) is physically down. */
   private interactKeyDown = false;
+  /** Physical key code of the current Interact press (KeyE / Enter / Space / …). */
+  private lastInteractCode: string | null = null;
+  /**
+   * Playtest #28: after any skill result, Enter/Space must not rematch —
+   * only a fresh KeyE (or gamepad/touch) on the NPC.
+   */
+  private rematchNeedsKeyE = false;
   /** Modal confirm (dialogue/skill): ignore Interact held at open until key-up. */
   private modalConfirmNeedsRelease = false;
   private modalConfirmArmUntil = 0;
@@ -536,8 +543,8 @@ export class GameSession {
     const toY = exit.y - s.y;
     const len = Math.hypot(toX, toY) || 1;
     const facing = (face.dx * toX + face.dy * toY) / len;
-    // Must be on the pad (≤0.85) or facing into it from the rim.
-    const onPad = Math.hypot(toX, toY) <= 0.85;
+    // Must be on the pad (≤1.6) or facing into it from the rim.
+    const onPad = Math.hypot(toX, toY) <= 1.6;
     if (!onPad && facing < 0.35) {
       this.exitDwellId = null;
       this.exitDwellSince = 0;
@@ -671,13 +678,20 @@ export class GameSession {
 
   /**
    * Input-layer gate after Close/skill: ignore Interact while the arm is live.
-   * Key-up during the arm clears needsRelease only after the arm expires
-   * (so 4× Enter @80ms cannot rematch). If the lock expired while Interact is
-   * up (mouse/Space finished the needle), clear needsRelease so Luna's first E works.
+   * After a skill result, Enter/Space never rematch — only KeyE / pad / touch.
+   * Key-up during the arm clears needsRelease only after the arm expires.
    */
   allowInteractInput(): boolean {
     const now = Date.now();
     if (now < this.interactLockUntil) return false;
+    if (this.rematchNeedsKeyE) {
+      const code = this.lastInteractCode;
+      if (code === 'Enter' || code === 'Space') return false;
+      this.rematchNeedsKeyE = false;
+      this.interactNeedsRelease = false;
+      this.interactReleasePending = false;
+      return true;
+    }
     if (this.interactNeedsRelease && !this.interactKeyDown) {
       this.interactNeedsRelease = false;
       this.interactReleasePending = false;
@@ -691,8 +705,9 @@ export class GameSession {
   }
 
   /** Track physical Interact key state for rematch / first-press gates. */
-  noteInteractPressed(): void {
+  noteInteractPressed(code?: string): void {
     this.interactKeyDown = true;
+    this.lastInteractCode = code ?? null;
   }
 
   /**
@@ -938,8 +953,9 @@ export class GameSession {
     if (!this.ui.is('ending') && !this.elevating) {
       this.toastSkill(won, payout, storyBeat);
       this.ui.go('play');
-      // Playtest #27: longer arm after needle so Enter spam can't reopen + bet.
-      this.armInteractLock(this.interactKeyDown, 700);
+      // Playtest #28: require a fresh KeyE after any skill — never Enter rematch.
+      this.rematchNeedsKeyE = true;
+      this.armInteractLock(this.interactKeyDown, 400);
       if (won) this.noteTutorialProgress('firstBet');
       this.setTutorialOverlay(false);
     }
@@ -1309,10 +1325,25 @@ export class GameSession {
       this.toastNpcBusy(npc);
       return false;
     }
+    // Playtest #28: already-beaten story NPCs give a done line — no rematch bet on E.
+    if (this.npcStoryBeatDone(npc)) {
+      const doneKey = `ui.npcDone.${npc.id}`;
+      const doneText = t(doneKey);
+      return this.showNpcDoneLine(
+        npc,
+        doneText === doneKey ? t('ui.npcDone.default') : doneText,
+      );
+    }
     if (npc.jobBetId) return this.offerBet(npc.jobBetId);
     if (npc.safeJobId) return this.doSafeJob(npc.safeJobId);
     this.toastNpcBusy(npc);
     return false;
+  }
+
+  /** True when the NPC's primary story beat is already completed. */
+  private npcStoryBeatDone(npc: WorldNpc): boolean {
+    if (!npc.beatId) return false;
+    return this.story.getCompleted().includes(npc.beatId);
   }
 
   /** One-shot thank-you dialogue with no bet attached. */

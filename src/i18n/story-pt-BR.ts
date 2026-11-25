@@ -284,9 +284,9 @@ export const storyPtBR: Record<string, string> = {
   'story.feira-tipster.1.text': 'Prefiro não comer rastreador. Me aponta pro limpo.',
   'story.feira-tipster.2.speaker': 'Barraca Tia',
   'story.feira-tipster.2.text':
-    'Caixa do leste parece mais doce. Caixa do oeste zumbe. Coloca a odd — depois o Lavador te leva até a Luna.',
+    'Uma caixa quente de sol, uma que canta na palma, uma vazia. Coloca a odd — depois o Lavador te leva até a Luna.',
   'story.feira-tipster.3.speaker': 'Rita Odds',
-  'story.feira-tipster.3.text': 'Leste então. Depois disso, só asfalto.',
+  'story.feira-tipster.3.text': 'Vou na que canta. Depois disso, só asfalto.',
   'story.feira-tipster.title': 'Dica nas caixas de manga',
   'story.intro-laje.0.speaker': 'Rita Odds',
   'story.intro-laje.0.text':

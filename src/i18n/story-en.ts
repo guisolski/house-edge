@@ -285,9 +285,9 @@ export const storyEn: Record<string, string> = {
     'I’d rather not eat a tracker. Point me at the clean one.',
   'story.feira-tipster.2.speaker': 'Barraca Tia',
   'story.feira-tipster.2.text':
-    'East crates look sweeter. West crates hum. Place the odd — then Lavador will walk you to Luna.',
+    'One crate baked by sun (sol), one that sings (canta) in the palm, one hollow (vazia). Place the odd — then Lavador will walk you to Luna.',
   'story.feira-tipster.3.speaker': 'Rita Odds',
-  'story.feira-tipster.3.text': 'East it is. After this, asphalt only.',
+  'story.feira-tipster.3.text': 'I’ll take the one that sings. After this, asphalt only.',
   'story.feira-tipster.title': 'Tipster at the mango crates',
   'story.intro-laje.0.speaker': 'Rita Odds',
   'story.intro-laje.0.text':

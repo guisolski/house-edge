@@ -74,7 +74,7 @@ describe('coverage edge branches', () => {
     expect(
       estimateHourly({
         id: 'bare-job',
-        label: 'Bare',
+        labelKey: 'ui.grind.agua',
         betId: 'agua-gelada',
         minReputation: 0,
         districtId: 'morro-neon',
@@ -167,7 +167,7 @@ describe('save upgrade world branches', () => {
     expect(
       estimateHourly({
         id: 'x',
-        label: 'x',
+        labelKey: 'ui.grind.safe',
         betId: 'missing',
         minReputation: 0,
         districtId: 'x',

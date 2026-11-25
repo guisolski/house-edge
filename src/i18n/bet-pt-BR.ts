@@ -16,7 +16,8 @@ export const betPtBR = {
   'bet.corrida-moto.description':
     'Racha ilegal entre antenas e varais. Aposta no piloto da quebrada.',
   'bet.pastel-surpresa.title': 'Pastel surpresa da feira',
-  'bet.pastel-surpresa.description': 'Pode ser carne, queijo… ou ficha de dívida da Casa.',
+  'bet.pastel-surpresa.description':
+    'Pode ser carne, queijo… ou ficha de dívida da Casa.',
   'bet.feira-garrafa.title': 'Garrafa no calçadão',
   'bet.feira-garrafa.description':
     'Vasculha o lixo da feira atrás de vidro retornável antes da milícia passar.',
@@ -27,8 +28,7 @@ export const betPtBR = {
   'bet.freela-entregas.description':
     'Deixa um pacote no beco sem a milícia corp te parar.',
   'bet.pixo-challenge.title': 'Pixo na fachada OddsCorp',
-  'bet.pixo-challenge.description':
-    'Sobe o andaime, pinta a verdade, desce vivo.',
+  'bet.pixo-challenge.description': 'Sobe o andaime, pinta a verdade, desce vivo.',
   'bet.samba-odds.title': 'Samba vs jingle corp',
   'bet.samba-odds.description':
     'Quem leva o duelo: o malandro do morro ou o influencer na folha?',
@@ -66,7 +66,8 @@ export const betPtBR = {
   'bet.duelo-casa.description':
     'Duelo de perícia em fases contra o Augusto — timing, leitura e hack. Errar dói na aposta; sem cara-ou-coroa.',
   'bet.feira-tipster.title': 'Caixa de manga com chip',
-  'bet.feira-tipster.description': 'Aposta qual caixa de manga zunindo tem rastreador da Casa.',
+  'bet.feira-tipster.description':
+    'Aposta qual caixa de manga zunindo tem rastreador da Casa.',
   'bet.torre-foyer.title': 'Checagem de crachá no foyer',
   'bet.torre-foyer.description': 'Blefa a segurança do foyer antes do salão abrir.',
   'bet.torre-pit.title': 'Aquecimento no piso do salão',
@@ -89,7 +90,8 @@ export const betPtBR = {
   'bet.side-morro-copper.title': 'Carga de cobre sobrando',
   'bet.side-morro-copper.description': 'Odd pequena de sucata na laje. Crédito quieto.',
   'bet.side-morro-tank.title': 'Encher a caixa d’água',
-  'bet.side-morro-tank.description': 'Aposta que a caixa do morro enche antes da sede da manhã.',
+  'bet.side-morro-tank.description':
+    'Aposta que a caixa do morro enche antes da sede da manhã.',
   'bet.side-feira-mango.title': 'Aposta na caixa de manga',
   'bet.side-feira-mango.description':
     'Madura ou podre — a barraca só fala depois que você aposta.',

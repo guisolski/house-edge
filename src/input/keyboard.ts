@@ -34,7 +34,7 @@ export function applyKey(
 export function bindKeyboard(
   target: Window,
   state: ActionState,
-  onAction: (action: ActionName, pressed: boolean) => void,
+  onAction: (action: ActionName, pressed: boolean, code: string) => void,
 ): () => void {
   const down = makeHandler(state, onAction, true);
   const up = makeHandler(state, onAction, false);
@@ -48,7 +48,7 @@ export function bindKeyboard(
 
 function makeHandler(
   state: ActionState,
-  onAction: (action: ActionName, pressed: boolean) => void,
+  onAction: (action: ActionName, pressed: boolean, code: string) => void,
   pressed: boolean,
 ): (e: KeyboardEvent) => void {
   return (e: KeyboardEvent): void => {
@@ -57,6 +57,6 @@ function makeHandler(
     const action = applyKey(state, e.code, pressed);
     if (!action) return;
     if (pressed) e.preventDefault();
-    onAction(action, pressed);
+    onAction(action, pressed, e.code);
   };
 }

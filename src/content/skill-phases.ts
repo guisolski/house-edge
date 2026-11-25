@@ -89,15 +89,15 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Which mango crate hums?',
     target: 1,
     options: ['Sun crate', 'Hum crate', 'Empty crate'],
-    // Answer Hum crate — never say "hum"; point at vibration/song vs sun/hollow.
-    clue: 'Barraca Tia says the one that sings under the lid is neither sun-baked nor hollow.',
+    // Answer Hum crate — never say hum; buzzes vs hot/hollow lids.
+    clue: 'Barraca Tia taps lids — one buzzes in the palm; the hot lid and the hollow one stay quiet.',
   },
   'prova-vazamento': {
     kind: 'choice',
     prompt: 'Which leak drops the house first?',
     target: 2,
     options: ['Influencer clip', 'ATM glitch', 'Pit ledger'],
-    clue: 'Luna’s pendrive labels the kill shot in the books — noise and vanity are smokescreens.',
+    clue: 'Luna marks the quiet paper trail — vanity clips and machine noise are smokescreens.',
   },
   'twist-vazamento': {
     kind: 'hack',
@@ -138,8 +138,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     target: 0,
     steps: 5,
     sequence: ['←', '↑', '→', '↑', '→'],
-    timerMs: 18_000,
-    maxMisses: 2,
+    timerMs: 20_000,
+    maxMisses: 3,
   },
   // Fallback only — live Neon Snap uses in-world stealth, not this sequence.
   'avenida-drone': {
@@ -157,7 +157,7 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Which testimony sticks?',
     target: 1,
     options: ['Corp PR', 'Hill ledger', 'Empty threat'],
-    clue: 'Dr. Margin only cross-exams what the lajes wrote in ink — theater and threats fold.',
+    clue: 'Dr. Margin cross-exams community paper, not press releases or empty threats.',
   },
   'morro-return-nair': {
     kind: 'timing',
@@ -180,15 +180,15 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Bluff the badge reader.',
     target: 2,
     options: ['Tourist pass', 'Staff QR', 'Scandal leak'],
-    clue: 'Foyer Guard flinches at what the hearing already made public — plastic badges ping alarms.',
+    clue: 'Foyer Guard ignores plastic badges — he only blinks when the city’s dirty secret walks in.',
   },
   'torre-pit': {
     kind: 'puzzle',
     prompt: 'Spot the real deck.',
     target: 0,
     options: ['Dog-eared', 'Gold foil', 'Shrink-wrap'],
-    // Answer Dog-eared — never say dog/ear/worn; thumb + props only.
-    clue: 'Pit Dealer’s thumb keeps returning to one soft corner; shine and plastic are show props.',
+    // Answer Dog-eared — never say dog/ear; handled pack vs foil/plastic.
+    clue: 'The dealer’s hands linger on the pack that looks handled; foil and factory plastic are decoys.',
   },
   'torre-elevator': {
     kind: 'timing',
@@ -211,7 +211,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     // Any offer wins — consistent with dialogue “Deal’s sealed” on hush/mirror/smile.
     target: 0,
     options: ['Take the hush chip', 'Demand the pit mirror', 'Walk out smiling'],
-    clue: 'The clock on their face is the real stake — seal any door before the smile hardens.',
+    // Any exit wins — avoid naming hush/chip/take (answer tokens).
+    clue: 'Any sealed exit works — quiet buyout, table glass, or a clean walk. Just decide before the smile freezes.',
     timerMs: 12_000,
   },
   'side-morro-copper': {

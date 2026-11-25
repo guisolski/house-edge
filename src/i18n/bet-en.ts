@@ -27,7 +27,8 @@ export const betEn = {
   'bet.freela-entregas.description':
     'Drop a package in the alley without corp militia stopping you.',
   'bet.pixo-challenge.title': 'Pixo on the OddsCorp facade',
-  'bet.pixo-challenge.description': 'Climb the scaffold, paint the truth, climb down alive.',
+  'bet.pixo-challenge.description':
+    'Climb the scaffold, paint the truth, climb down alive.',
   'bet.samba-odds.title': 'Samba vs corp jingle',
   'bet.samba-odds.description':
     'Who wins the duel: the hill malandro or the influencer on payroll?',

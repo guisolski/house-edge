@@ -83,9 +83,9 @@ function bindInputs(
   modes: InputModeTracker,
   world: ReturnType<typeof createWorldView>,
 ): void {
-  bindKeyboard(window, state, (action, pressed) => {
+  bindKeyboard(window, state, (action, pressed, code) => {
     modes.note('keyboard');
-    session.bus.emit('input:action', { action, pressed });
+    session.bus.emit('input:action', { action, pressed, code });
   });
   window.addEventListener(
     'keydown',

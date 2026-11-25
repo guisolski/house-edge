@@ -66,7 +66,7 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
   goal: { x: 34, y: 12 },
   goalRadius: 1.1,
   targetMs: 90_000,
-  coverRadius: 0.6,
+  coverRadius: 0.48,
   cover: [
     { x: 15, y: 12 },
     { x: 20, y: 11 },

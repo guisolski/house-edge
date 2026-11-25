@@ -10,7 +10,7 @@ export const skillEn = {
   'skill.agua-gelada.prompt': 'Catch the ice pour — stop on cold.',
   'skill.antena-sinal.prompt': 'Splice the pirate jack — match the beep sequence.',
   'skill.audiencia-publica.clue':
-    'Dr. Margin only cross-exams what the lajes wrote in ink — theater and threats fold.',
+    'Dr. Margin cross-exams community paper, not press releases or empty threats.',
   'skill.audiencia-publica.option.0': 'Corp PR',
   'skill.audiencia-publica.option.1': 'Hill ledger',
   'skill.audiencia-publica.option.2': 'Empty threat',
@@ -53,7 +53,7 @@ export const skillEn = {
   'skill.feira-lockbox.prompt': 'Pick the Casa lockbox under the forró stage.',
   'skill.feira-radio.prompt': 'Tune the pirate dial — match 3 clicks.',
   'skill.feira-tipster.clue':
-    'Barraca Tia says the one that sings under the lid is neither sun-baked nor hollow.',
+    'Barraca Tia taps lids — one buzzes in the palm; the hot lid and the hollow one stay quiet.',
   'skill.feira-tipster.option.0': 'Sun crate',
   'skill.feira-tipster.option.1': 'Hum crate',
   'skill.feira-tipster.option.2': 'Empty crate',
@@ -82,7 +82,7 @@ export const skillEn = {
   'skill.pastel-surpresa.prompt': 'Which pastel crate is wired?',
   'skill.pixo-challenge.prompt': 'Spray on the beat.',
   'skill.prova-vazamento.clue':
-    'Luna’s pendrive labels the kill shot in the books — noise and vanity are smokescreens.',
+    'Luna marks the quiet paper trail — vanity clips and machine noise are smokescreens.',
   'skill.prova-vazamento.option.0': 'Influencer clip',
   'skill.prova-vazamento.option.1': 'ATM glitch',
   'skill.prova-vazamento.option.2': 'Pit ledger',
@@ -96,20 +96,20 @@ export const skillEn = {
   'skill.side-morro-copper.prompt': 'Weigh the spare copper — which bag is light?',
   'skill.torre-elevator.prompt': 'Call the express car — stop on green.',
   'skill.torre-foyer.clue':
-    'Foyer Guard flinches at what the hearing already made public — plastic badges ping alarms.',
+    'Foyer Guard ignores plastic badges — he only blinks when the city’s dirty secret walks in.',
   'skill.torre-foyer.option.0': 'Tourist pass',
   'skill.torre-foyer.option.1': 'Staff QR',
   'skill.torre-foyer.option.2': 'Scandal leak',
   'skill.torre-foyer.prompt': 'Bluff the badge reader.',
   'skill.torre-negotiate.clue':
-    'The clock on their face is the real stake — seal any door before the smile hardens.',
+    'Any sealed exit works — quiet buyout, table glass, or a clean walk. Just decide before the smile freezes.',
   'skill.torre-negotiate.option.0': 'Take the hush chip',
   'skill.torre-negotiate.option.1': 'Demand the pit mirror',
   'skill.torre-negotiate.option.2': 'Walk out smiling',
   'skill.torre-negotiate.prompt':
     'VIP Host offers three exits — pick before the smile hardens.',
   'skill.torre-pit.clue':
-    'Pit Dealer’s thumb keeps returning to one soft corner; shine and plastic are show props.',
+    'The dealer’s hands linger on the pack that looks handled; foil and factory plastic are decoys.',
   'skill.torre-pit.option.0': 'Dog-eared',
   'skill.torre-pit.option.1': 'Gold foil',
   'skill.torre-pit.option.2': 'Shrink-wrap',

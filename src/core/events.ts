@@ -39,7 +39,7 @@ export type GameEvents = {
   'ui:tutorial': { active: boolean };
   'audio:play-sfx': { id: string };
   'audio:volume': { master: number; muted: boolean };
-  'input:action': { action: string; pressed: boolean };
+  'input:action': { action: string; pressed: boolean; code?: string };
 };
 
 export type GameEventName = keyof GameEvents;

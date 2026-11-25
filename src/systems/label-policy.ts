@@ -18,7 +18,7 @@ function shouldShowPlate(
   obj: Objective,
 ): boolean {
   if (npcIsObjective(npc, obj)) return true;
-  return Math.hypot(npc.x - me.x, npc.y - me.y) <= 1.5;
+  return Math.hypot(npc.x - me.x, npc.y - me.y) <= 2.8;
 }
 
 /**

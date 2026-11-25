@@ -49,13 +49,25 @@ describe('StorySystem', () => {
     expect(ended).toHaveBeenCalledWith({ endingId: 'povo-no-controle' });
   });
 
-  it('hides sibling Morro return branch via skipIfFlag', () => {
+  it('hides each optional Morro return via its own skipIfFlag', () => {
     const story = new StorySystem(new EventBus(), STORY_BEATS);
     story.hydrate(
-      { unlocked_torre: true, escandalo_aberto: true, morro_return_ok: true },
+      { unlocked_torre: true, escandalo_aberto: true, trusted_hill: true },
       ['morro-return-nair'],
     );
-    const ids = story.availableBeats('morro-neon').map((b) => b.id);
+    let ids = story.availableBeats('morro-neon').map((b) => b.id);
+    expect(ids).not.toContain('morro-return-nair');
+    expect(ids).toContain('morro-return-fio');
+    story.hydrate(
+      {
+        unlocked_torre: true,
+        escandalo_aberto: true,
+        trusted_hill: true,
+        cut_private: true,
+      },
+      ['morro-return-nair', 'morro-return-fio'],
+    );
+    ids = story.availableBeats('morro-neon').map((b) => b.id);
     expect(ids).not.toContain('morro-return-nair');
     expect(ids).not.toContain('morro-return-fio');
   });

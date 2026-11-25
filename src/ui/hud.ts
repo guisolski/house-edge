@@ -245,7 +245,8 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
     showSkill: () => {
       only(p, 'skill');
       paintSkill(p.skill, session, () => h.syncScreen());
-      focusFirst(p.skill);
+      // Sequence skills already focus Cancel inside paintSkill — don't steal to first pad.
+      if (!session.isSequenceSkillActive()) focusFirst(p.skill);
     },
     showTravel: () => {
       only(p, 'travel');

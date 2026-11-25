@@ -46,7 +46,7 @@ function wireLifecycle(
     hud.showCreditsRoll();
   });
   session.bus.on('input:action', (p) => {
-    routeInputAction(session, hud, p.action, p.pressed);
+    routeInputAction(session, hud, p.action, p.pressed, p.code);
   });
 }
 
@@ -55,12 +55,13 @@ function routeInputAction(
   hud: HudHandles,
   action: string,
   pressed: boolean,
+  code?: string,
 ): void {
   if (action === 'interact' && !pressed) {
     session.noteInteractRelease();
     return;
   }
-  if (action === 'interact' && pressed) session.noteInteractPressed();
+  if (action === 'interact' && pressed) session.noteInteractPressed(code);
   if (action === 'interact' && pressed && !gateInteract(session)) return;
   if (!pressed) return;
   const before = session.ui.get();
@@ -135,7 +136,10 @@ function wireUi(session: GameSession, hud: HudHandles, audio: AudioEngine): void
   });
   session.bus.on('fx:flash', (p) => hud.flash(p.kind));
   session.bus.on('fx:credits', (p) => hud.creditPopup(p.delta));
-  session.bus.on('world:transition', (p) => hud.playTransition(p.kind, p.label));
+  session.bus.on('world:transition', (p) => {
+    hud.showHud();
+    hud.playTransition(p.kind, p.label);
+  });
   session.bus.on('story:ended', () => {
     /* showEnding also wired above; keep play HUD from racing it */
   });

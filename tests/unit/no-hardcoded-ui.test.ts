@@ -19,6 +19,8 @@ const FILES = [
   'src/content/bets.ts',
   'src/systems/grind.ts',
   'src/systems/betting.ts',
+  'src/systems/label-policy.ts',
+  'src/systems/objectives.ts',
 ];
 
 /** Known English player-facing phrases that must live in i18n catalogs. */
@@ -33,6 +35,7 @@ const BLOCKLIST = [
   'Offer expires',
   'Submit lock',
   'Side hustle',
+  'SIDE HUSTLE',
   'Combo ×',
   'Clue:',
   'Win chance',
@@ -58,6 +61,8 @@ const BLOCKLIST = [
   'POLICE LINE',
   'CENTRAL FAIR',
   'PIT FLOOR',
+  'Odd jobs — flat',
+  'We’re done here',
 ];
 
 function stripComments(src: string): string {

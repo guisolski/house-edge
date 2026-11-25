@@ -6,7 +6,7 @@ import { localizeBet } from '../i18n/localize-bet';
 import { localizeDistrictName } from '../i18n/localize-district';
 import type { GameSession } from '../systems/session';
 import type { DialogueLine } from '../core/types';
-import { listJobs } from '../systems/grind';
+import { jobLabel, listJobs } from '../systems/grind';
 import {
   formatOdds,
   formatWinChance,
@@ -218,7 +218,9 @@ export function paintSkill(
   if (phase?.kind === 'lockpick') cancel.dataset.skipNav = '1';
   actions.appendChild(cancel);
   panel.append(body, actions);
-  focusFirst(panel);
+  // Sequence skills: focus Cancel only — arrows drive the pad, not first option.
+  if (session.isSequenceSkillActive()) cancel.focus();
+  else focusFirst(panel);
 }
 
 function paintPhaseControls(
@@ -326,14 +328,28 @@ function paintChoiceSkill(
   phase?: SkillPhase,
 ): void {
   let settled = false;
+  // Arm 280ms so leftover Enter from Take bet / dialogue can't pick option 0.
+  const armUntil = Date.now() + 280;
   const settle = (i: number): void => {
-    if (settled) return;
+    if (settled || Date.now() < armUntil) return;
     settled = true;
     session.submitSkill(i);
     after();
   };
   options.forEach((label, i) => {
-    actions.appendChild(button(label, () => settle(i)));
+    const btn = button(label, () => settle(i));
+    btn.addEventListener(
+      'keydown',
+      (e) => {
+        if (Date.now() >= armUntil) return;
+        if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      },
+      true,
+    );
+    actions.appendChild(btn);
   });
   const ms = phase?.timerMs;
   if (ms && ms > 0) {
@@ -659,11 +675,7 @@ function appendBetDetails(
   const localized = localizeBet(bet);
   panel.append(
     el('h2', '', sideHustle ? t('ui.sideHustle.title') : localized.title),
-    el(
-      'p',
-      'bet-desc',
-      sideHustle ? t('ui.sideHustle.descBet') : localized.description,
-    ),
+    el('p', 'bet-desc', sideHustle ? t('ui.sideHustle.descBet') : localized.description),
     stakeLine,
     el(
       'p',
@@ -773,7 +785,7 @@ export function paintJobs(
   if (!jobs.length) panel.appendChild(el('p', '', UI.noJobs));
   for (const job of jobs) {
     panel.appendChild(
-      button(job.label, () => {
+      button(jobLabel(job), () => {
         if (job.flatPay) {
           session.doSafeJob(job.id);
           after();
