@@ -6,6 +6,8 @@ Independent playtest #19 of v1.17.0 (ratings art 7, fun 6; story ~20 min; FPS ~6
 
 `make check` + full e2e (38/38) green. Coverage branches **91%+**. Paced New Game → ending wall-clock **10:01** (user walking playtest #19 ~20 min). FPS travel sample min ~60 / avg ~60.
 
+CI (`5872d45`): GitHub **quality** / **build** / **deploy (Pages)** all success.
+
 ## Bugs fixed
 
 | #   | Issue                                              | Result                                                                 |
@@ -52,4 +54,3 @@ Independent playtest #19 of v1.17.0 (ratings art 7, fun 6; story ~20 min; FPS ~6
 ## Gaps
 
 - Optional: ending lines that mention drone_low / negotiate flags beyond hush.
-- CI tip SHA noted after GitHub quality/build/deploy green.
