@@ -6,6 +6,8 @@ Independent playtest #22 of v1.19.1 (~22 min, no softlock; art 7.5 / fun 6.5). S
 
 Neon Snap south/north asphalt strips sealed with solid tiles + police barrier / container props. Prod-build Playwright holds Shift+Right 4s and asserts the player never clears the segment (`endX` stayed **11** on both strips).
 
+CI (`8c877f2`): GitHub **quality** / **build** / **deploy (Pages)** all success.
+
 ## Bugs fixed
 
 | #   | Issue                                      | Result                                                             |
