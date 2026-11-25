@@ -102,6 +102,21 @@ function wireModes(
 }
 
 function handleAction(session: GameSession, hud: HudHandles, action: string): void {
+  // Modal navigation: arrows/WASD cycle focus; E/Space/Enter activates.
+  if (!session.ui.is('play') && !session.ui.is('title')) {
+    if (action === 'up' || action === 'left') {
+      hud.gamepadNav('up');
+      return;
+    }
+    if (action === 'down' || action === 'right') {
+      hud.gamepadNav('down');
+      return;
+    }
+    if (action === 'interact') {
+      hud.gamepadNav('confirm');
+      return;
+    }
+  }
   if (action === 'interact') onInteract(session, hud);
   if (action === 'bet') onBet(session, hud);
   if (action === 'menu') onMenu(session, hud);
@@ -109,11 +124,6 @@ function handleAction(session: GameSession, hud: HudHandles, action: string): vo
 }
 
 function onInteract(session: GameSession, hud: HudHandles): void {
-  if (session.ui.is('dialogue')) {
-    session.closeModal();
-    hud.syncScreen();
-    return;
-  }
   if (!session.ui.is('play')) return;
   session.interact();
   hud.syncScreen();

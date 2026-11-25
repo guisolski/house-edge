@@ -176,8 +176,22 @@ export class GameSession {
     return true;
   }
 
+  /**
+   * Elevator pad wins when the player stands on/near the car (≤1.6 tiles),
+   * even if another objective NPC is still in the wider interact radius.
+   */
+  nearbyElevatorPad(): WorldNpc | null {
+    const s = this.player.getStats();
+    const elev = this.floorNpcs().find((n) => n.id.startsWith('elevator'));
+    if (!elev || elev.districtId !== s.districtId) return null;
+    if (Math.hypot(elev.x - s.x, elev.y - s.y) > 1.6) return null;
+    return elev;
+  }
+
   /** Objective NPC first when in range; otherwise nearest preferred story NPC. */
   nearbyNpc(): WorldNpc | null {
+    const elev = this.nearbyElevatorPad();
+    if (elev) return elev;
     const s = this.player.getStats();
     const face = this.player.getFacing();
     const pool = this.floorNpcs();
@@ -328,6 +342,9 @@ export class GameSession {
 
   interact(): boolean {
     if (!this.ui.is('play')) return false;
+    // Standing on an elevator pad always uses the car before other NPCs.
+    const elev = this.nearbyElevatorPad();
+    if (elev) return this.interactNpc(elev);
     const npc = this.nearbyNpc();
     const obj = this.objective();
     const objHit = Boolean(npc && obj.targetName && npc.name === obj.targetName);
@@ -599,14 +616,23 @@ export class GameSession {
     this.ui.go('play');
   }
 
-  /** Apply a dialogue choice flag mid-beat. */
+  /** Apply a dialogue choice flag mid-beat. Choices are stripped so they don't loop. */
   pickDialogueChoice(setsFlag?: string, reply?: string): void {
+    // Drop choice buttons from the transcript — pick once, then Continue / Take bet.
+    this.lastDialogue = this.lastDialogue.map((line) =>
+      line.choices ? { speaker: line.speaker, text: line.text } : line,
+    );
     if (setsFlag) this.story.setFlag(setsFlag, true);
     if (reply) {
       this.lastDialogue = [...this.lastDialogue, { speaker: 'Rita Odds', text: reply }];
       this.bus.emit('ui:dialogue', { speaker: 'Rita Odds', text: reply });
     }
     this.bus.emit('audio:play-sfx', { id: 'ui' });
+  }
+
+  /** True when the open dialogue still has unresolved choice buttons. */
+  hasOpenDialogueChoices(): boolean {
+    return this.lastDialogue.some((l) => Boolean(l.choices?.length));
   }
 
   getPendingBet(): BetDefinition | null {
@@ -731,10 +757,18 @@ export class GameSession {
       return;
     }
     if (this.pendingStoryBeat) {
-      this.finishBeat(this.pendingStoryBeat);
+      const id = this.pendingStoryBeat;
       this.pendingStoryBeat = null;
+      this.finishBeat(id);
+      // Ending / credits must stick — do not bounce back to play.
+      if (this.ui.is('ending')) return;
     }
     this.ui.backToPlay();
+  }
+
+  /** Pending dialogue beat id (tests / HUD). */
+  getPendingStoryBeat(): string | null {
+    return this.pendingStoryBeat;
   }
 
   setMuted(muted: boolean): void {

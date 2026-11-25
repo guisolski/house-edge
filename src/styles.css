@@ -100,36 +100,71 @@ canvas.excalibur-game {
   border-radius: 4px;
 }
 
+.ending-panel.ending-credits {
+  overflow: hidden;
+}
+
+.credits-viewport {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 10rem;
+  max-height: 36vh;
+  overflow: hidden;
+  mask-image: linear-gradient(transparent, #000 12%, #000 88%, transparent);
+}
+
 .credits-roll {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  max-height: 40vh;
-  overflow: auto;
-  animation: credits-rise 12s linear 1;
+  gap: 0.55rem;
+  padding: 2rem 0;
+  animation: credits-scroll 18s linear infinite;
+}
+
+.credits-roll.credits-skipped {
+  animation: none;
+  transform: translateY(-70%);
 }
 
 .credits-roll .credits-line {
   margin: 0;
   color: var(--cyan);
   font-size: 0.95rem;
+  text-align: center;
 }
 
 .credits-roll .credits-thanks {
   margin-top: 0.75rem;
   color: var(--yellow, #ffdf00);
   font-weight: 600;
+  text-align: center;
 }
 
-@keyframes credits-rise {
+@keyframes credits-scroll {
   from {
-    transform: translateY(28%);
-    opacity: 0.35;
+    transform: translateY(55%);
   }
   to {
-    transform: translateY(0);
-    opacity: 1;
+    transform: translateY(-75%);
   }
+}
+
+.dialogue-choice:focus,
+.dialogue-choice:focus-visible {
+  outline: 2px solid var(--yellow, #ffdf00);
+  outline-offset: 2px;
+  background: #2bfff222;
+}
+
+.lockpick-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.lockpick-pin {
+  font-variant-numeric: tabular-nums;
+  min-width: 6.5rem;
 }
 
 .panel-body {

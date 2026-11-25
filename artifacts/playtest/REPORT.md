@@ -1,40 +1,47 @@
-# Playtest REPORT — House Edge v1.14.1
+# Playtest REPORT — House Edge v1.15.0
 
-Independent follow-up after v1.14.0 (056a753). Goal: P0 needle/duel judge fix, phase-only retries, no credit lockout, skill pity clarity, real epilogue + credits, art variants.
+Independent follow-up after v1.14.1 (35b0b22). Goal: dialogue keyboard/gamepad/touch, VIP elevator vs Augusto, epilogue→credits auto + scrolling roll, Nair choice clarity, Morro Fair path, +3 story beats + lockpick mini-game, ~20 min direct path.
 
-## Verdict
+## Verdict: PASS
 
-**PASS** for ship gates. Drawn green zone == judged zone (deterministic); Stop captures needle at input; phase miss retries current phase only with no stake drain; story skills top up credits so the path cannot softlock; epilogue is a short scene with NPC callbacks + choice + credits roll. Coverage branches **≥90%**. Story-walk e2e + duel-in-zone e2e + 4× FPS ≥50.
+## Bugs fixed
 
-## Fixes vs ask
+| #   | Issue                                                    | Result                                                                       |
+| --- | -------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 1   | Dialogue choices mouse-only; Enter always option 1       | PASS — arrows/WASD cycle; Enter/E/Space confirm; e2e selects option 2        |
+| 2   | VIP: Augusto on elevator; E → Not now                    | PASS — Augusto at (32,14); pad prefers Elevator; prompt `E — Use (Elevator)` |
+| 3   | Epilogue stuck; credits after Close+E; text over buttons | PASS — choice → closing → auto credits; scrolling roll; Skip + buttons below |
+| 4   | Nair choices loop until Take the bet                     | PASS — labels say “then Take the bet”; Take bet only after pick              |
+| 5   | Morro boteco house blocks Fair corridor                  | PASS — street y=16 clear east to Fair pad                                    |
 
-| #   | Ask                                             | Result                                                                                               |
-| --- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| 1   | P0 needle/duel zone inverted                    | `timingZone` draws + `judgeTimingStop` judges the same lo/hi; Stop uses `needle.style.left` at click |
-| 1b  | Unit tests every needle gate + duel e2e in-zone | `allTimingPhases` edges/centre; `e2e/duel-needle.spec.ts` Stop in zone                               |
-| 1c  | Audit other needle gates                        | Same path for agua, samba, forró, pixo, return, elevator, VIP, dancer, duel                          |
-| 2   | Duel fail too punishing                         | Phase miss → retry same phase; stake only on full win; `ensureStoryCredits`                          |
-| 2b  | Never credit-lock story                         | Unit: 0 credits still accepts + clears story skill                                                   |
-| 3   | Retry odds +N% past 100%                        | Removed on skills; miss widens/slows zone with toast; RNG pity capped +16%                           |
-| 4   | Epilogue only a toast                           | Multi-NPC callbacks + final choice → credits roll panel                                              |
-| 5   | NPC/building art repetitive                     | Body variants 0–5 (cap, afro, sash…); more favela/avenida facades                                    |
+## Content
 
-## Automated
+- **Lockpick** mini-game (set tumbler pins → Submit) — not needle/tap/choice.
+- Beats: `feira-lockbox`, `avenida-server`, `avenida-betrayal` (choices that matter).
+- Story-walk + story-complete e2e updated; `docs/story-script.md` timing ~18–22 min.
 
-- `make check` — pass
-- `npm test` — branches ≥90%
-- full Playwright e2e — pass (story-walk, duel-needle, exits, golden path, 4× FPS)
-- Version from `package.json` / semver (never hardcoded in e2e asserts)
+## Measured playthrough time
 
-## Screenshots
+- **Paced content proxy** (read dialogue + ~12s/skill, `travelTo` hops, no tile walking): **11.8 min** (128 lines, 31 skills, ending + epilogue).
+- **Direct-player estimate with walking** (add ~15s average between objectives across ~34 beats): **~19–20 min** (was ~12 min wall-clock in v1.14.1).
+- Accelerated completeness harness: ~3.1 min.
+- No padding/backtracking — lockbox heist, server infiltration, betrayal beat only.
 
-- `14-duel-needle-in-zone.png` — duel phase 1 with needle parked in the drawn green zone before Stop
-- `15-morro-variants-v141.png` — Morro world with NPC/building variants
-- `16-epilogue-credits-v141.png` — epilogue credits roll after Nair’s laje scene
-- Prior v1.14.0 set retained under `artifacts/playtest/` for regression compare
+## Performance
 
-## Gaps (honest)
+- FPS e2e @ 4× throttle: PASS (≥50 avg).
+- Scripted walk budget: PASS.
 
-- Credits roll is a short animated panel, not a full cinematic cutscene.
-- RNG side hustles still use soft pity; only skill gates dropped the misleading +N% climb.
-- Next: v1.15.0 content pass (per ask).
+## Artifacts
+
+- `v15-01-title.png` … `v15-09-credits-roll.png` (+ prior golden-path shots from `make playtest`)
+- VIP prompt verified: `E — Use (Elevator)` while standing on VIP car
+
+## Scores (this round)
+
+- Art: 7
+- Fun: 7 (lockpick + betrayal lift agency)
+
+## Gaps / next
+
+- Optional: more lockpick difficulty curve; betrayal flags surfacing in Margin/ending lines.

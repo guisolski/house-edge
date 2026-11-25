@@ -1,4 +1,6 @@
-/** All player-facing UI copy (English). */
+/** All player-facing UI copy (English). Version comes from package.json — never hardcode. */
+
+import pkg from '../../package.json';
 
 export const UI = {
   title: 'HOUSE EDGE',
@@ -24,12 +26,13 @@ export const UI = {
   cancel: 'Cancel',
   stakeUp: 'Stake +',
   stakeDown: 'Stake −',
-  version: 'v1.14.1',
+  version: `v${pkg.version}`,
   wonEnding: 'The Casa falls. The table is yours.',
   endingBlurb:
     'Funk and samba take the streets. Visit Nair on the hill for the epilogue — then the credits roll.',
   creditsTitle: 'HOUSE EDGE — Credits',
   creditsThanks: 'Thanks for playing. The neon remembers.',
+  skipCredits: 'Skip credits',
   continueExploring: 'Continue exploring',
   playAgain: 'Play again',
   playAgainConfirm: 'This wipes your save and restarts the story. Sure?',
@@ -38,7 +41,7 @@ export const UI = {
   hintKeyboard: 'WASD move · Shift run · E interact · Esc menu · M mute · F3 FPS',
   hintGamepad: 'Stick move · A interact · B bet · Start menu',
   hintTouch: 'Use the stick + action buttons',
-  hintMenuKeyboard: 'Esc resume · WASD unused · E confirm',
+  hintMenuKeyboard: 'Esc resume · Arrows / WASD navigate · E / Enter / Space confirm',
   hintMenuGamepad: 'B back · A confirm · Stick navigate',
   hintMenuTouch: 'Tap Resume or use on-screen buttons',
   noJobs: 'No side jobs here — raise rep or change district.',

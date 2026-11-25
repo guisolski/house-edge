@@ -102,6 +102,7 @@ describe('session skill encounters', () => {
       'bia-set',
       'feira-dancer',
       'feira-forro',
+      'feira-lockbox',
       'feira-radio',
       'feira-tipster',
       'feira-courier',
@@ -111,8 +112,10 @@ describe('session skill encounters', () => {
       'avenida-courier',
       'avenida-influencer',
       'avenida-radar',
+      'avenida-server',
       'avenida-atm',
       'avenida-stealth',
+      'avenida-betrayal',
       'lobby-margin',
       'morro-return-nair',
       'torre-foyer',
@@ -137,6 +140,9 @@ describe('session skill encounters', () => {
       'dancer_ok',
       'courier_shadow_ok',
       'stealth_ok',
+      'lockbox_ok',
+      'server_ok',
+      'betrayal_ok',
     ]) {
       session.story.setFlag(f, true);
     }

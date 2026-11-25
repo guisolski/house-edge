@@ -194,6 +194,14 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
         onChoice: (setsFlag, reply) => {
           session.pickDialogueChoice(setsFlag, reply);
           h.showDialogue(session.getDialogue());
+          // Epilogue: show closing line briefly, then credits without another Close.
+          if (session.getPendingStoryBeat() === 'epilogue-laje') {
+            window.setTimeout(() => {
+              if (session.getPendingStoryBeat() !== 'epilogue-laje') return;
+              session.closeModal();
+              h.syncScreen();
+            }, 900);
+          }
         },
         onClose: () => {
           session.closeModal();
@@ -275,11 +283,13 @@ function showCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
 
 function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
   clearNode(p.ending);
+  p.ending.classList.add('ending-credits');
   const art = el('canvas', 'ending-art') as HTMLCanvasElement;
   const src = endingArt();
   art.width = src.width;
   art.height = src.height;
   art.getContext('2d')?.drawImage(src, 0, 0);
+  const viewport = el('div', 'credits-viewport');
   const roll = el('div', 'credits-roll');
   roll.append(
     el('h2', '', UI.creditsTitle),
@@ -287,13 +297,24 @@ function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
     el('p', 'credits-line', 'Dona Nair — honest ice, open laje'),
     el('p', 'credits-line', 'Capitã & Fio — antenna + chase tiles'),
     el('p', 'credits-line', 'Luna — pit ledger on the feed'),
+    el('p', 'credits-line', 'Mole Contact — the twist that cut'),
+    el('p', 'credits-line', 'Lockbox crew — Fair stage + server cage'),
     el('p', 'credits-line', 'Augusto Casa — the house that fell'),
     el('p', 'credits-line', 'Morro · Feira · Avenida · Torre'),
     el('p', 'credits-thanks', UI.creditsThanks),
+    el('p', 'credits-line', '—'),
+    el('p', 'credits-line', 'Pixel neon · free / CC0 + AI art'),
+    el('p', 'credits-line', 'Built with Excalibur · Vite · Playwright'),
+    el('p', 'credits-thanks', 'Skip anytime — buttons stay below the roll.'),
   );
-  p.ending.append(art, roll);
+  viewport.appendChild(roll);
+  p.ending.append(art, viewport);
   const actions = el('div', 'panel-actions ending-actions');
+  const skip = (): void => {
+    roll.classList.add('credits-skipped');
+  };
   actions.append(
+    button(UI.skipCredits, skip),
     button(UI.continueExploring, () => {
       blurActive();
       session.continueExploring();
@@ -316,6 +337,7 @@ function paintEnding(
   confirming: boolean,
 ): void {
   clearNode(p.ending);
+  p.ending.classList.remove('ending-credits');
   const art = el('canvas', 'ending-art') as HTMLCanvasElement;
   const src = endingArt();
   art.width = src.width;
@@ -603,7 +625,9 @@ function activePanel(p: Parts, session: GameSession): HTMLElement | null {
   if (s === 'skill') return p.skill;
   if (s === 'travel') return p.travel;
   if (s === 'jobs') return p.jobs;
+  if (s === 'upgrades') return p.upgrades;
   if (s === 'dialogue') return p.dialogue;
+  if (s === 'ending') return p.ending;
   if (s === 'title') return p.title;
   return null;
 }

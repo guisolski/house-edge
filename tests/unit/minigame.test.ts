@@ -26,6 +26,10 @@ describe('minigame skill system', () => {
 
     const duel = skillForBet('duelo-casa', 'duel');
     expect(duel?.phases).toHaveLength(3);
+
+    const lock = skillForBet('avenida-server', 'lockpick');
+    expect(lock?.phases[0]?.kind).toBe('lockpick');
+    expect(lock?.phases[0]?.pins?.length).toBe(4);
   });
 
   it('timing succeeds inside the green window', () => {

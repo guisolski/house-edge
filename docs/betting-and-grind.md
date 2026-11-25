@@ -4,7 +4,9 @@
 
 Bet corporations (led by Casa Suprema) replaced cash prices with wagers. Even water is an odd. The house edge is a narrative villain and a mechanical tax.
 
-## Story skill loop (v1.14+)
+## Story skill loop (v1.15+)
+
+Story gates use skill mini-games: **timing**, **choice**, **puzzle**, **chase**, **hack**, **lockpick**, and multi-phase **duel**. Lockpick is set-each-tumbler-then-Submit (not needle / not single-tap sequence).
 
 Main-path story bets are **skill encounters**, not coin flips:
 

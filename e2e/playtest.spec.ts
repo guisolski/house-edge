@@ -71,13 +71,19 @@ test.describe('Playtest golden path', () => {
 
     await page.keyboard.press('KeyE');
     await expect(page.locator('.dialogue-panel')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Take the bet' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Walk away' })).toBeVisible();
+    await expect(page.locator('button.dialogue-choice')).toHaveCount(2);
     await expect(
-      page.getByRole('button', { name: /Play it loud|Play it quiet/ }),
+      page.getByRole('button', {
+        name: /Loud — then Take the bet|Quiet — then Take the bet/,
+      }),
     ).toHaveCount(2);
     await page.screenshot({ path: path.join(ART, '03-dialogue.png') });
-    await page.getByRole('button', { name: 'Take the bet' }).click();
+    await page.getByRole('button', { name: /Loud — then Take the bet/ }).click();
+    await expect(
+      page.getByRole('button', { name: 'Take the bet', exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Walk away' })).toBeVisible();
+    await page.getByRole('button', { name: 'Take the bet', exact: true }).click();
     // Story gates open skill UI (not RNG bet panel).
     await expect(page.locator('.skill-panel')).toBeVisible();
     await expect(page.locator('.skill-panel')).toContainText('Stake at risk');

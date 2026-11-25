@@ -12,6 +12,9 @@ import {
 import { DISTRICTS } from '../content/districts';
 import { UPGRADES } from '../systems/upgrade';
 import {
+  encodePins,
+  LOCK_PIN_LEVELS,
+  phasePins,
   phaseSequence,
   SEQ_KEYS,
   timingZone,
@@ -50,17 +53,18 @@ export function paintDialogue(
   }
   const actions = el('div', 'panel-actions');
   if (pendingChoices?.length && opts.onChoice) {
+    // Style choices first — Take the bet appears only after a pick (no loop with both).
     for (const c of pendingChoices) {
-      actions.appendChild(button(c.label, () => opts.onChoice?.(c.setsFlag, c.reply)));
+      const btn = button(c.label, () => opts.onChoice?.(c.setsFlag, c.reply));
+      btn.classList.add('dialogue-choice');
+      actions.appendChild(btn);
     }
-  }
-  if (opts.offerBet && opts.onAcceptBet) {
+    actions.appendChild(button(UI.close, opts.onClose));
+  } else if (opts.offerBet && opts.onAcceptBet) {
     actions.append(
       button(UI.takeBet, opts.onAcceptBet),
       button(UI.walkAway, opts.onClose),
     );
-  } else if (!pendingChoices?.length) {
-    actions.appendChild(button(UI.close, opts.onClose));
   } else {
     actions.appendChild(button(UI.close, opts.onClose));
   }
@@ -99,6 +103,8 @@ export function paintSkill(
   const actions = el('div', 'panel-actions skill-actions');
   if (phase?.kind === 'timing') {
     paintTimingSkill(body, actions, session, after, phase);
+  } else if (phase?.kind === 'lockpick') {
+    paintLockpickSkill(body, actions, session, after, phase);
   } else if (phase?.kind === 'choice' || phase?.kind === 'puzzle') {
     paintChoiceSkill(actions, phase.options ?? ['A', 'B', 'C'], session, after);
   } else if (phase) {
@@ -172,6 +178,49 @@ function paintChoiceSkill(
       }),
     );
   });
+}
+
+function paintLockpickSkill(
+  body: HTMLElement,
+  actions: HTMLElement,
+  session: GameSession,
+  after: () => void,
+  phase: SkillPhase,
+): void {
+  const target = phasePins(phase);
+  const heights = target.map(() => 0);
+  const row = el('div', 'lockpick-row');
+  const labels: HTMLButtonElement[] = [];
+  const refresh = (): void => {
+    labels.forEach((btn, i) => {
+      const h = heights[i] ?? 0;
+      btn.textContent = `Pin ${i + 1}: ${'▮'.repeat(h + 1)}${'▯'.repeat(LOCK_PIN_LEVELS - 1 - h)}`;
+    });
+  };
+  target.forEach((_, i) => {
+    const btn = button(`Pin ${i + 1}`, () => {
+      heights[i] = ((heights[i] ?? 0) + 1) % LOCK_PIN_LEVELS;
+      refresh();
+    });
+    btn.classList.add('lockpick-pin');
+    labels.push(btn);
+    row.appendChild(btn);
+  });
+  body.append(
+    el(
+      'p',
+      'skill-clue',
+      phase.clue ? `Clue: ${phase.clue}` : 'Set every tumbler, then Submit.',
+    ),
+    row,
+  );
+  refresh();
+  actions.appendChild(
+    button('Submit lock', () => {
+      session.submitSkill(encodePins(heights));
+      after();
+    }),
+  );
 }
 
 function paintSequenceSkill(

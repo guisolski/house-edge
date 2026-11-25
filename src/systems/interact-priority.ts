@@ -42,3 +42,18 @@ export function spawnClearOfExits(
 ): boolean {
   return shouldClearExitLatch(spawn, exits, range);
 }
+
+/**
+ * True when no blocking NPC’s interact radius covers a pad/elevator
+ * (elevators themselves are allowed on their own pad).
+ */
+export function padClearOfNpcOverlap(
+  pad: { x: number; y: number },
+  npcs: readonly { id: string; x: number; y: number }[],
+  interactRange: number,
+): boolean {
+  return npcs.every((n) => {
+    if (n.id.startsWith('elevator')) return true;
+    return Math.hypot(n.x - pad.x, n.y - pad.y) > interactRange;
+  });
+}

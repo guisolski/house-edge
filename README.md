@@ -1,6 +1,6 @@
 # House Edge
 
-Top-down cyberpunk bets in a Brazilian megacity. Story gates are skill encounters (timing, choice, chase, hack — not coin flips). Play Rita Odds from Morro Neon to Casa Suprema Tower (~20 min main path).
+Top-down cyberpunk bets in a Brazilian megacity. Story gates are skill encounters (timing, choice, chase, hack, lockpick — not coin flips). Play Rita Odds from Morro Neon to Casa Suprema Tower (~20 min main path).
 
 ## Quick start
 

@@ -10,6 +10,7 @@ describe('input mapping', () => {
     expect(applyKey(state, 'KeyW', true)).toBe(Actions.Up);
     expect(applyKey(state, 'KeyD', true)).toBe(Actions.Right);
     expect(movementDelta(state)).toEqual({ dx: 1, dy: -1 });
+    expect(applyKey(state, 'Enter', true)).toBe(Actions.Interact);
     expect(applyKey(state, 'KeyZ', true)).toBeNull();
   });
 

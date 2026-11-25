@@ -5,7 +5,8 @@ export type ResourceId = 'credits' | 'reputation' | 'agua' | 'fichas';
 export type BetKind = 'dialogue' | 'purchase' | 'race' | 'draw' | 'job' | 'story';
 
 /** Skill encounter kind — story gates prefer this over pure RNG. */
-export type SkillKind = 'timing' | 'choice' | 'puzzle' | 'chase' | 'hack' | 'duel';
+export type SkillKind =
+  'timing' | 'choice' | 'puzzle' | 'chase' | 'hack' | 'duel' | 'lockpick';
 
 export type Odds = {
   numerator: number;

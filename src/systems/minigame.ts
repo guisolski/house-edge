@@ -1,15 +1,19 @@
 /** Skill encounters that replace pure RNG for story gates. */
 
-export type SkillKind = 'timing' | 'choice' | 'puzzle' | 'chase' | 'hack' | 'duel';
+export type SkillKind =
+  'timing' | 'choice' | 'puzzle' | 'chase' | 'hack' | 'duel' | 'lockpick';
 
 /** Simon-style keys — arrows (movement) + colors (terminals). */
 export const SEQ_KEYS = ['↑', '→', '↓', '←', 'R', 'G', 'B', 'Y'] as const;
 export type SeqKey = (typeof SEQ_KEYS)[number];
 
+/** Pin height levels for lockpick (0 = sunk, 2 = raised). */
+export const LOCK_PIN_LEVELS = 3;
+
 export type SkillPhase = {
   kind: Exclude<SkillKind, 'duel'>;
   prompt: string;
-  /** Correct option index / stop window center (0–1) / unused for sequence. */
+  /** Correct option index / stop window center (0–1) / encoded lockpick / unused. */
   target: number;
   /** Timing green-zone half-width (0–0.5). Wider = easier. */
   window?: number;
@@ -22,7 +26,37 @@ export type SkillPhase = {
   steps?: number;
   /** Simon sequence the player must reproduce (one key at a time). */
   sequence?: SeqKey[];
+  /** Lockpick target pin heights (0–2 each). */
+  pins?: number[];
 };
+
+/** Encode pin heights as a single base-3 integer for skill attempts. */
+export function encodePins(pins: readonly number[]): number {
+  let n = 0;
+  let mul = 1;
+  for (const p of pins) {
+    n +=
+      (Math.max(0, Math.min(LOCK_PIN_LEVELS - 1, Math.round(p))) % LOCK_PIN_LEVELS) * mul;
+    mul *= LOCK_PIN_LEVELS;
+  }
+  return n;
+}
+
+export function decodePins(value: number, count: number): number[] {
+  const out: number[] = [];
+  let n = Math.max(0, Math.round(value));
+  for (let i = 0; i < count; i += 1) {
+    out.push(n % LOCK_PIN_LEVELS);
+    n = Math.floor(n / LOCK_PIN_LEVELS);
+  }
+  return out;
+}
+
+export function phasePins(phase: SkillPhase): number[] {
+  if (phase.pins?.length) return [...phase.pins];
+  const n = phase.steps ?? 3;
+  return Array.from({ length: n }, (_, i) => (i + 1) % LOCK_PIN_LEVELS);
+}
 
 export type SkillDef = {
   kind: SkillKind;
@@ -189,6 +223,9 @@ export function perfectAttempt(progress: SkillProgress): SkillAttempt {
     const key = seq[progress.seqIndex] ?? seq[0]!;
     return { phaseIndex: progress.phaseIndex, value: SEQ_KEYS.indexOf(key) };
   }
+  if (phase.kind === 'lockpick') {
+    return { phaseIndex: progress.phaseIndex, value: encodePins(phasePins(phase)) };
+  }
   return { phaseIndex: progress.phaseIndex, value: phase.target };
 }
 
@@ -207,6 +244,10 @@ export function judgePhase(phase: SkillPhase, value: number): boolean {
     // Full-sequence match is handled in attemptSkill; this is for single-shot tests.
     const seq = phaseSequence(phase);
     return Math.round(value) === SEQ_KEYS.indexOf(seq[0]!);
+  }
+  if (phase.kind === 'lockpick') {
+    const pins = phasePins(phase);
+    return Math.round(value) === encodePins(pins);
   }
   return Math.round(value) === phase.target;
 }
@@ -262,6 +303,8 @@ function skillBlurb(kind: SkillKind): string {
       return 'Reproduce the path before the mark slips away.';
     case 'hack':
       return 'Match the terminal sequence.';
+    case 'lockpick':
+      return 'Set each tumbler pin, then submit the lock.';
     case 'duel':
       return 'Multi-phase showdown — timing, read, and hack.';
     default:
@@ -464,6 +507,27 @@ function singlePhase(betId: string, kind: Exclude<SkillKind, 'duel'>): SkillPhas
       window: 0.15,
       needleSpeed: 0.95,
     },
+    'feira-lockbox': {
+      kind: 'lockpick',
+      prompt: 'Pick the Casa lockbox under the forró stage.',
+      target: 0,
+      pins: [1, 2, 0],
+      clue: 'Middle pin rides high; left sits mid; right sinks flush.',
+    },
+    'avenida-server': {
+      kind: 'lockpick',
+      prompt: 'Crack the server-cage tumblers before the sweep.',
+      target: 0,
+      pins: [2, 0, 1, 2],
+      clue: 'Outer pins high, second sunk, third mid — four tumblers.',
+    },
+    'avenida-betrayal': {
+      kind: 'choice',
+      prompt: 'Who sold the hill’s bytes?',
+      target: 1,
+      options: ['Blame Luna', 'Blame the mole', 'Blame Margin'],
+      clue: 'The mole’s burner still pings Casa — Luna’s archive is clean; Margin’s hearing is theater.',
+    },
   };
   return (
     table[betId] ?? {
@@ -483,6 +547,7 @@ function singlePhase(betId: string, kind: Exclude<SkillKind, 'duel'>): SkillPhas
         kind === 'choice' || kind === 'puzzle'
           ? 'Default clue names Option A as the safe pick.'
           : undefined,
+      pins: kind === 'lockpick' ? [1, 0, 2] : undefined,
     }
   );
 }

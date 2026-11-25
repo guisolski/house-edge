@@ -5,6 +5,29 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.0] — 2026-11-25
+
+### Added
+
+- **Lockpick** mini-game (set tumbler pins, then Submit) — used in Fair lockbox + Odds Avenue server-cage heist.
+- Three main-path beats: Casa lockbox under the stage, server-cage infiltration, betrayal on the boulevard (choices that matter).
+- Dialogue choice navigation: arrows / WASD + Enter / E / Space (also gamepad + touch); choices strip after pick so they cannot loop.
+- Scrolling credits roll with Skip; buttons stay below the viewport.
+- Title version reads from `package.json` (no hardcoded UI version string).
+
+### Fixed
+
+- VIP: Augusto Casa moved off the elevator pad; standing on the car prefers Elevator over NPC “Not now”.
+- Every exit / elevator pad stays outside NPC interact radii (unit-tested).
+- Epilogue: choice → closing line → credits automatically (Close no longer required; ending no longer bounces to play).
+- Dona Nair first talk: choice labels point at Take the bet; reply confirms the loop is done.
+- Morro Neon: clear east asphalt corridor to the Central Fair pad (blocking boteco house removed).
+
+### Tests
+
+- Unit: dialogue choice strip, VIP elevator priority, pad/NPC clearance, lockpick encode/judge, epilogue credits.
+- E2e: keyboard selects dialogue option 2; story-complete / story-walk include new beats.
+
 ## [1.14.1] — 2026-11-25
 
 ### Fixed

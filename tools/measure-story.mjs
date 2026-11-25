@@ -2,6 +2,7 @@ import { chromium } from '../node_modules/playwright/index.mjs';
 
 const beats = [
   'boteco-nair',
+  'side-morro-copper',
   'morro-antena',
   'luna-beco',
   'morro-fios',
@@ -9,18 +10,25 @@ const beats = [
   'feira-kiko',
   'feira-catador',
   'bia-set',
+  'feira-dancer',
   'feira-forro',
+  'feira-lockbox',
   'feira-radio',
   'feira-tipster',
   'feira-courier',
   'prova-luna',
   'avenida-twist',
   'avenida-checkpoint',
+  'avenida-courier',
   'avenida-influencer',
   'avenida-radar',
+  'avenida-server',
   'avenida-atm',
+  'avenida-stealth',
+  'avenida-betrayal',
   'lobby-margin',
   'morro-return-nair',
+  'morro-return-fio',
   'torre-foyer',
   'torre-pit',
   'torre-elevator',
@@ -29,34 +37,18 @@ const beats = [
   'epilogue-laje',
 ];
 
-const districts = {
-  'boteco-nair': 'morro-neon',
-  'morro-antena': 'morro-neon',
-  'luna-beco': 'morro-neon',
-  'morro-fios': 'morro-neon',
-  'seu-ze-banca': 'morro-neon',
-  'feira-kiko': 'feira-central',
-  'feira-catador': 'feira-central',
-  'bia-set': 'feira-central',
-  'feira-forro': 'feira-central',
-  'feira-radio': 'feira-central',
-  'feira-tipster': 'feira-central',
-  'feira-courier': 'feira-central',
-  'prova-luna': 'feira-central',
-  'avenida-twist': 'avenida-odds',
-  'avenida-checkpoint': 'avenida-odds',
-  'avenida-influencer': 'avenida-odds',
-  'avenida-radar': 'avenida-odds',
-  'avenida-atm': 'avenida-odds',
-  'lobby-margin': 'avenida-odds',
-  'morro-return-nair': 'morro-neon',
-  'torre-foyer': 'torre-casa',
-  'torre-pit': 'torre-casa',
-  'torre-elevator': 'torre-casa',
-  'torre-vip': 'torre-casa',
-  'torre-final': 'torre-casa',
-  'epilogue-laje': 'morro-neon',
-};
+const districts = Object.fromEntries(
+  beats.map((id) => {
+    if (id.startsWith('feira') || id === 'bia-set' || id === 'prova-luna') {
+      return [id, 'feira-central'];
+    }
+    if (id.startsWith('avenida') || id === 'lobby-margin') {
+      return [id, 'avenida-odds'];
+    }
+    if (id.startsWith('torre')) return [id, 'torre-casa'];
+    return [id, 'morro-neon'];
+  }),
+);
 
 const browser = await chromium.launch({
   executablePath: '/usr/local/bin/google-chrome',
@@ -85,7 +77,7 @@ const result = await page.evaluate(
     for (const id of beats) {
       if (he.session.ui.is('ending')) he.session.continueExploring();
       go(districts[id]);
-      await sleep(700);
+      await sleep(600);
       for (let a = 0; a < 40; a++) {
         while (he.session.player.getStats().credits < 15 && safe < 200) {
           const before = he.session.player.getStats().credits;
@@ -94,21 +86,26 @@ const result = await page.evaluate(
             he.session.player.addCredits(25);
           }
           safe++;
-          await sleep(180);
+          await sleep(150);
         }
         if (!he.session.runStoryBeat(id)) break;
         const dlg = he.session.getDialogue?.() || [];
         lines += dlg.length;
-        await sleep(Math.max(1100, dlg.length * 850));
+        he.session.pickDialogueChoice?.('rita_loud', 'Loud it is.');
+        await sleep(Math.max(900, dlg.length * 700));
         if (!he.session.acceptStoryBet()) {
           he.session.closeModal();
           if (he.session.story.getCompleted().includes(id)) break;
           continue;
         }
-        await sleep(2200);
-        he.session.confirmBet();
+        await sleep(1800);
+        if (he.session.ui.is('skill')) {
+          he.session.completeSkillPerfect();
+        } else {
+          he.session.confirmBet();
+        }
         bets++;
-        await sleep(700);
+        await sleep(600);
         if (he.session.story.getCompleted().includes(id)) break;
       }
     }
@@ -116,10 +113,10 @@ const result = await page.evaluate(
     return {
       ending: he.session.story.getCompleted().includes('torre-final'),
       epilogue: he.session.story.getCompleted().includes('epilogue-laje'),
+      completed: he.session.story.getCompleted().length,
       lines,
       bets,
       safe,
-      objective: he.session.objective().text,
     };
   },
   { beats, districts },

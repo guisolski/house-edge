@@ -3,8 +3,14 @@ import {
   resolveInteractPriority,
   shouldClearExitLatch,
   spawnClearOfExits,
+  padClearOfNpcOverlap,
 } from '../../src/systems/interact-priority';
-import { districtExits, EXIT_STAND_RANGE } from '../../src/systems/interaction';
+import {
+  districtExits,
+  districtNpcs,
+  EXIT_STAND_RANGE,
+  INTERACT_RANGE,
+} from '../../src/systems/interaction';
 import { DISTRICTS } from '../../src/content/districts';
 
 describe('interact priority', () => {
@@ -77,5 +83,21 @@ describe('interact priority', () => {
         `${d.id} spawn ${d.spawn.x},${d.spawn.y}`,
       ).toBe(true);
     }
+  });
+
+  it('exits and elevators are not covered by NPC interact radii', () => {
+    const npcs = districtNpcs();
+    for (const exit of districtExits()) {
+      expect(
+        padClearOfNpcOverlap(
+          exit,
+          npcs.filter((n) => n.districtId === exit.districtId),
+          INTERACT_RANGE,
+        ),
+      ).toBe(true);
+    }
+    expect(
+      padClearOfNpcOverlap({ x: 0, y: 0 }, [{ id: 'npc', x: 1, y: 0 }], INTERACT_RANGE),
+    ).toBe(false);
   });
 });

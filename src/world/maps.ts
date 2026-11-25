@@ -259,14 +259,15 @@ function morroHouseSpots(): {
     { x: 25, y: 8, style: 5, bw: 3, bh: 2 },
     { x: 30, y: 7, style: 1, bw: 2, bh: 2 },
     { x: 34, y: 8, style: 7, bw: 3, bh: 2 },
-    // Street band — leave spawn, NPCs, plaza approaches, and exit corridor clear.
+    // Street band — leave spawn, NPCs, plaza approaches, and a clear east corridor to Fair.
+    // (No house on y=16 asphalt — that used to block the direct path to the Fair pad.)
     { x: 2, y: 14, style: 4, bw: 2, bh: 2 },
-    { x: 15, y: 16, style: 6, bw: 2, bh: 2 },
     // Lower terrace (pulled off ramp feet so bases aren't walk targets).
     { x: 2, y: 21, style: 1, bw: 3, bh: 2 },
     { x: 10, y: 21, style: 7, bw: 2, bh: 2 },
     { x: 14, y: 21, style: 4, bw: 3, bh: 2 },
     { x: 25, y: 21, style: 0, bw: 2, bh: 2 },
+    { x: 28, y: 21, style: 6, bw: 2, bh: 2 },
     { x: 35, y: 21, style: 2, bw: 3, bh: 2 },
   ];
 }

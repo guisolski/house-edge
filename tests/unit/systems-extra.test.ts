@@ -263,6 +263,7 @@ describe('story beat targets', () => {
       'feira-catador',
       'bia-set',
       'feira-forro',
+      'feira-lockbox',
       'feira-radio',
       'feira-tipster',
       'feira-courier',
@@ -271,7 +272,10 @@ describe('story beat targets', () => {
       'avenida-checkpoint',
       'avenida-influencer',
       'avenida-radar',
+      'avenida-server',
       'avenida-atm',
+      'avenida-stealth',
+      'avenida-betrayal',
       'lobby-margin',
       'morro-return-nair',
       'torre-foyer',
@@ -290,6 +294,9 @@ describe('story beat targets', () => {
       'morro_return_ok',
       'foyer_ok',
       'pit_ok',
+      'lockbox_ok',
+      'server_ok',
+      'betrayal_ok',
     ]);
     const obj = currentObjective({
       beats: STORY_BEATS,

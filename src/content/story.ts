@@ -36,24 +36,26 @@ export const STORY_BEATS: readonly StoryBeat[] = [
         text: 'What a country. Hit me with the ice-water odd — I’ll time the pour myself.',
         choices: [
           {
-            label: 'Play it loud — rally the hill',
+            label: 'Loud — then Take the bet',
             setsFlag: 'rita_loud',
-            reply: 'Loud it is. If Casa wants a show, the laje can shout.',
+            reply:
+              'Loud it is. Style’s locked — next tap Take the bet for the ice pour. No more looping the menu.',
           },
           {
-            label: 'Play it quiet — ghost the meters',
+            label: 'Quiet — then Take the bet',
             setsFlag: 'rita_quiet',
-            reply: 'Quiet. Slip through the neon and cut their meters where it hurts.',
+            reply:
+              'Quiet. Style’s locked — next tap Take the bet for the ice pour. The choices won’t come back.',
           },
         ],
       },
       {
         speaker: 'Dona Nair',
-        text: 'Luna’s been sniffing around the LED antenna. Pirate signal nonsense. First, Catador needs spare copper weighed — he won’t move until you do.',
+        text: 'Either way, the ice odd is the door. Take the bet when you’re ready — then Catador weighs copper before Antena Tech talks.',
       },
       {
         speaker: 'Dona Nair',
-        text: 'Then find Antena Tech on the mid terrace. Drink slow. Casa bills the ice cubes now.',
+        text: 'Luna’s been sniffing around the LED antenna. Pirate signal nonsense. Drink slow. Casa bills the ice cubes now.',
       },
     ],
   },
@@ -299,10 +301,48 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     ],
   },
   {
+    id: 'feira-lockbox',
+    title: 'Casa lockbox under the stage',
+    districtId: 'feira-central',
+    requiredFlags: ['forro_ok'],
+    setsFlags: ['lockbox_ok'],
+    betId: 'feira-lockbox',
+    dialogue: [
+      {
+        speaker: 'Stage Hand',
+        text: 'Forró shook a Casa lockbox loose under the risers. Militia will reclaim it after the set — unless you pick it first.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'A mid-fair heist. Tumblers, not dice. What’s inside?',
+      },
+      {
+        speaker: 'Stage Hand',
+        text: 'Ledger chips and a spare keycard for Odds Avenue cages. Set the pins — clue’s on the scratched plate.',
+        choices: [
+          {
+            label: 'Crack it for the hill',
+            setsFlag: 'lockbox_for_hill',
+            reply: 'Chips for the hill. If Casa cries, the calçadão laughs louder.',
+          },
+          {
+            label: 'Crack it for leverage',
+            setsFlag: 'lockbox_for_leverage',
+            reply: 'Leverage first. I’ll spend the chips when Augusto blinks.',
+          },
+        ],
+      },
+      {
+        speaker: 'Stage Hand',
+        text: 'Either score feeds the radio pirate next. Miss a pin and the stake tips — retry the same tumblers.',
+      },
+    ],
+  },
+  {
     id: 'feira-radio',
     title: 'Pirate radio odds',
     districtId: 'feira-central',
-    requiredFlags: ['forro_ok'],
+    requiredFlags: ['lockbox_ok'],
     setsFlags: ['radio_ok'],
     betId: 'feira-radio',
     dialogue: [
@@ -367,11 +407,11 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Lavador da Feira',
-        text: 'Stay on the asphalt strip. She’s just past the pink ODDS 24h sign — cyan hair, same asphalt lane. Don’t climb the stalls.',
+        text: 'Stay on the asphalt strip mid-fair — cyan hair by the radio crates, same lane. Don’t climb the stalls.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'Asphalt past ODDS 24h. Got it.',
+        text: 'Asphalt mid-fair, cyan hair. Got it.',
       },
       {
         speaker: 'Lavador da Feira',
@@ -520,16 +560,54 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     ],
   },
   {
+    id: 'avenida-server',
+    title: 'Server-cage infiltration',
+    districtId: 'avenida-odds',
+    requiredFlags: ['radar_ok'],
+    setsFlags: ['server_ok'],
+    betId: 'avenida-server',
+    dialogue: [
+      {
+        speaker: 'Cage Runner',
+        text: 'Militia vans cleared. There’s a Casa server cage off the glass strip — four tumblers, one quiet minute.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Infiltration, not a coin flip. If I crack it, the ATM glitch gets a clean uplink.',
+      },
+      {
+        speaker: 'Cage Runner',
+        text: 'Clue’s etched under the latch. Set every pin, submit once. Miss and tip the stake — same cage, same pins.',
+        choices: [
+          {
+            label: 'Pull the pit mirror files',
+            setsFlag: 'server_mirror',
+            reply: 'Mirror the pit. Augusto’s private rake tables come with me.',
+          },
+          {
+            label: 'Plant a deadman’s beacon',
+            setsFlag: 'server_beacon',
+            reply: 'Beacon planted. If the hearing stalls, the feed still screams.',
+          },
+        ],
+      },
+      {
+        speaker: 'Cage Runner',
+        text: 'After the cage, the ATM hacker waits south. Don’t linger — cams wake on a bad pin.',
+      },
+    ],
+  },
+  {
     id: 'avenida-atm',
     title: 'ATM glitch hunt',
     districtId: 'avenida-odds',
-    requiredFlags: ['radar_ok'],
+    requiredFlags: ['server_ok'],
     setsFlags: ['atm_ok'],
     betId: 'avenida-atm',
     dialogue: [
       {
         speaker: 'ATM Hacker',
-        text: 'Casa ATMs round down to the centavo and pocket the drift. Bet you can trigger the glitch before lockout.',
+        text: 'Cage uplink’s live. Casa ATMs round down to the centavo and pocket the drift. Trigger the glitch before lockout.',
       },
       {
         speaker: 'Rita Odds',
@@ -559,7 +637,46 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Lobby Cam Tech',
-        text: 'Miss a step and you tip the stake. Then coffee with Margin — bring the scandal, not the footage.',
+        text: 'Miss a step and you tip the stake. Then the betrayal meet — then coffee with Margin.',
+      },
+    ],
+  },
+  {
+    id: 'avenida-betrayal',
+    title: 'Betrayal on the boulevard',
+    districtId: 'avenida-odds',
+    requiredFlags: ['stealth_ok'],
+    setsFlags: ['betrayal_ok'],
+    betId: 'avenida-betrayal',
+    dialogue: [
+      {
+        speaker: 'Mole Contact',
+        text: 'Stop. The “leak” was never Luna’s alone — I sold a slice back to Casa for a clean exit. Your hill bytes have a mole scar.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'You used us. The antenna, the pendrive, the fair — all so Augusto could watch the script?',
+      },
+      {
+        speaker: 'Mole Contact',
+        text: 'Call it. Skill read: who sold the hill’s bytes? Clue’s in the burner ping. Your choice after still matters at Margin’s table.',
+        choices: [
+          {
+            label: 'Keep Luna close',
+            setsFlag: 'trust_luna',
+            reply:
+              'Luna stays. The mole burns. We walk into Margin with receipts, not revenge.',
+          },
+          {
+            label: 'Cut soft allies',
+            setsFlag: 'cut_soft',
+            reply: 'I cut soft allies. Only cold ledger walks into that hearing.',
+          },
+        ],
+      },
+      {
+        speaker: 'Mole Contact',
+        text: 'Either way, Margin’s coffee is next. Win the testimony — the tower unlocks.',
       },
     ],
   },
@@ -567,7 +684,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     id: 'lobby-margin',
     title: 'Coffee with Dr. Margin',
     districtId: 'avenida-odds',
-    requiredFlags: ['stealth_ok'],
+    requiredFlags: ['betrayal_ok'],
     setsFlags: ['escandalo_aberto', 'unlocked_torre'],
     betId: 'audiencia-publica',
     unlocksDistrict: 'torre-casa',
@@ -578,7 +695,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Rita Odds',
-        text: 'People will see the house edge eating schools, hospitals, and water.',
+        text: 'People will see the house edge eating schools, hospitals, and water. And the mole scar on our own bytes.',
       },
       {
         speaker: 'Dr. Margin',
