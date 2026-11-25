@@ -4,7 +4,14 @@ Independent check against v1.10.0 feedback (Casa exit teleport, Fair art, story 
 
 ## Verdict
 
-**Bugs: PASS** (Casa west aisle no longer teleports). **Story length: ~21 min careful / ~5–12 min speedrun.** **Art: ~7/10** (Fair stalls/crowds improved; still blocky). Console: **0 errors**. FPS **~60**.
+**Bugs: PASS** (Casa west aisle no longer teleports). **Story length: ~21 min careful / ~5–12 min speedrun.** **Art: ~7/10** (Fair stalls/crowds improved; still blocky). Console: **0 errors**. FPS **~60** (desktop 4× throttle restored after bake).
+
+## Perf (4× CPU throttle, Desktop Chrome)
+
+| Build                                       | Throttled avg FPS               |
+| ------------------------------------------- | ------------------------------- |
+| v1.11 pre-bake (CI run 45517085944)         | **~24–25** (fail, budget ≥50)   |
+| After bake static scenery + cached backdrop | **~60** local; CI must stay ≥50 |
 
 ## Before → After
 

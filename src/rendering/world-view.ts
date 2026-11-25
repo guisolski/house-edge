@@ -71,6 +71,17 @@ type MapCache = {
   layer: HTMLCanvasElement;
 };
 
+type BackdropCache = {
+  key: string;
+  canvas: HTMLCanvasElement;
+};
+
+type SortBlit = {
+  y: number;
+  x: number;
+  draw: () => void;
+};
+
 export function createWorldView(session: GameSession): WorldView {
   const state = makeViewState(session);
   window.addEventListener('resize', () => {
@@ -147,6 +158,7 @@ type ViewState = {
   meter: FpsMeter;
   cam: ReturnType<typeof createCamera>;
   mapCache: MapCache | null;
+  backdrop: BackdropCache | null;
   showFps: boolean;
   lastSample: FpsSample;
   resizeW: number;
@@ -167,6 +179,7 @@ function makeViewState(session: GameSession): ViewState {
     meter: new FpsMeter(),
     cam: createCamera(),
     mapCache: null,
+    backdrop: null,
     showFps: false,
     lastSample: { fps: 60, frameMs: 16, avgFps: 60, avgFrameMs: 16 },
     resizeW: 0,
@@ -278,11 +291,11 @@ function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCa
   const viewCamY = cam.y - pad.padY;
   ctx.imageSmoothingEnabled = false;
   // Never fill with flat district brand colours — dark themed scenery only.
-  paintBackdrop(ctx, canvas.width, canvas.height, stats.districtId);
+  paintBackdrop(state, ctx, canvas.width, canvas.height, stats.districtId);
   const layer = state.mapCache?.layer;
   if (layer) ctx.drawImage(layer, -viewCamX, -viewCamY);
-  // Buildings, props, landmark, and characters share one y-sort pass.
-  drawSortedScene(ctx, state, frame, viewCamX, viewCamY);
+  // Static stalls/buildings/props are baked into the map layer; only actors y-sort.
+  drawSortedActors(ctx, state, frame, viewCamX, viewCamY);
   paintPlayOverlays({
     ctx,
     state,
@@ -291,8 +304,6 @@ function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCa
     camX: viewCamX,
     camY: viewCamY,
     frame,
-    map,
-    baked,
   });
   drawMarker(ctx, state, viewCamX, viewCamY, frame);
   if (showFps) drawFpsOverlay(ctx, sample);
@@ -307,14 +318,13 @@ function paintPlayOverlays(o: {
   camX: number;
   camY: number;
   frame: number;
-  map: MapDef;
-  baked: Baked;
 }): void {
-  if (o.state.session.ui.is('play')) {
+  if (!o.state.session.ui.is('play')) return;
+  // Lights every other frame — radial 'lighter' blit is costly under CPU throttle.
+  if ((o.frame & 1) === 0) {
     drawFewLights(o.ctx, o.state, o.px, o.py, o.camX, o.camY);
-    if ((o.frame & 1) === 0) drawRain(o.ctx, o.frame);
   }
-  paintSignsScreen(o.ctx, o.map, o.baked, o.camX, o.camY);
+  if ((o.frame & 3) === 0) drawRain(o.ctx, o.frame);
 }
 
 function ensureMapCache(state: ViewState, map: MapDef, baked: Baked): void {
@@ -326,18 +336,30 @@ function ensureMapCache(state: ViewState, map: MapDef, baked: Baked): void {
 }
 
 function paintBackdrop(
+  state: ViewState,
   ctx: CanvasRenderingContext2D,
   w: number,
   h: number,
   districtId: DistrictId,
 ): void {
-  const grad = ctx.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0, '#05040c');
-  grad.addColorStop(0.5, Palette.nightSky);
-  grad.addColorStop(1, '#0c1014');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, w, h);
-  paintSceneryBand(ctx, w, h, districtId);
+  const key = `${districtId}:${w}x${h}`;
+  if (!state.backdrop || state.backdrop.key !== key) {
+    const layer = document.createElement('canvas');
+    layer.width = w;
+    layer.height = h;
+    const bctx = layer.getContext('2d');
+    if (bctx) {
+      const grad = bctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, '#05040c');
+      grad.addColorStop(0.5, Palette.nightSky);
+      grad.addColorStop(1, '#0c1014');
+      bctx.fillStyle = grad;
+      bctx.fillRect(0, 0, w, h);
+      paintSceneryBand(bctx, w, h, districtId);
+    }
+    state.backdrop = { key, canvas: layer };
+  }
+  ctx.drawImage(state.backdrop.canvas, 0, 0);
 }
 
 /** Varied skyline silhouettes so letterbox edges are never a single flat colour. */
@@ -385,14 +407,98 @@ function bakeMapLayer(map: MapDef, baked: Baked): HTMLCanvasElement {
   paintStairSides(ctx, map);
   paintMapEdges(ctx, map);
   paintTerraceEdges(ctx, map);
-  // Tall props/buildings are drawn per-frame with actors (shared y-sort).
-  for (const s of map.signs) {
-    const key = `${s.label}|${s.color}`;
-    if (!baked.sign.has(key)) baked.sign.set(key, bakeSignWithText(s.label, s.color));
-  }
+  // Market stalls, crowds, buildings, landmark, signs — baked once (foot-y order).
+  bakeStaticDecor(ctx, map, baked);
   ctx.fillStyle = '#2bfff210';
   ctx.fillRect(0, 0, layer.width, layer.height);
   return layer;
+}
+
+/** Static scenery into the map cache so the hot path only sorts NPCs + player. */
+function bakeStaticDecor(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): void {
+  const items: SortBlit[] = [];
+  pushBakedBuildings(items, ctx, map, baked);
+  pushBakedProps(items, ctx, map, baked);
+  pushBakedLandmark(items, ctx, map, baked);
+  pushBakedSigns(items, ctx, map, baked);
+  items.sort((a, b) => a.y - b.y || a.x - b.x);
+  for (const it of items) it.draw();
+}
+
+function pushBakedBuildings(
+  items: SortBlit[],
+  ctx: CanvasRenderingContext2D,
+  map: MapDef,
+  baked: Baked,
+): void {
+  for (const b of map.buildings) {
+    const set = baked.building[b.kind] ?? baked.building.morro!;
+    const spr = set[b.style % set.length]!;
+    items.push({
+      y: b.y + b.h - 1,
+      x: b.x,
+      draw: () => drawBuildingSprite(ctx, b, spr, 0, 0),
+    });
+  }
+}
+
+function pushBakedProps(
+  items: SortBlit[],
+  ctx: CanvasRenderingContext2D,
+  map: MapDef,
+  baked: Baked,
+): void {
+  for (const p of map.props) {
+    const img = baked.props[p.kind];
+    items.push({
+      y: p.y,
+      x: p.x,
+      draw: () =>
+        blitImage(ctx, img, p.x * TILE_PX, p.y * TILE_PX - img.height + TILE_PX),
+    });
+  }
+}
+
+function pushBakedLandmark(
+  items: SortBlit[],
+  ctx: CanvasRenderingContext2D,
+  map: MapDef,
+  baked: Baked,
+): void {
+  const lm = baked.landmark.get(map.landmark.kind) ?? baked.landmark.get('led-tower')!;
+  items.push({
+    y: map.landmark.y,
+    x: map.landmark.x,
+    draw: () =>
+      blitImage(
+        ctx,
+        lm,
+        map.landmark.x * TILE_PX,
+        map.landmark.y * TILE_PX - lm.height + TILE_PX,
+      ),
+  });
+}
+
+function pushBakedSigns(
+  items: SortBlit[],
+  ctx: CanvasRenderingContext2D,
+  map: MapDef,
+  baked: Baked,
+): void {
+  for (const s of map.signs) {
+    const key = `${s.label}|${s.color}`;
+    let img = baked.sign.get(key);
+    if (!img) {
+      img = bakeSignWithText(s.label, s.color);
+      baked.sign.set(key, img);
+    }
+    const signImg = img;
+    items.push({
+      y: s.y,
+      x: s.x,
+      draw: () => blitImage(ctx, signImg, s.x * TILE_PX, s.y * TILE_PX - 8),
+    });
+  }
 }
 
 function paintTerraceEdges(ctx: CanvasRenderingContext2D, map: MapDef): void {
@@ -460,24 +566,6 @@ function paintStairSides(ctx: CanvasRenderingContext2D, map: MapDef): void {
       const side: StairSide = !left ? 'left' : !right ? 'right' : 'mid';
       blitImage(ctx, baked[side], x * TILE_PX, y * TILE_PX);
     }
-  }
-}
-
-function paintSignsScreen(
-  ctx: CanvasRenderingContext2D,
-  map: MapDef,
-  baked: Baked,
-  camX: number,
-  camY: number,
-): void {
-  for (const s of map.signs) {
-    const key = `${s.label}|${s.color}`;
-    let img = baked.sign.get(key);
-    if (!img) {
-      img = bakeSignWithText(s.label, s.color);
-      baked.sign.set(key, img);
-    }
-    blitImage(ctx, img, s.x * TILE_PX - camX, s.y * TILE_PX - 28 - camY);
   }
 }
 
@@ -570,14 +658,8 @@ function drawPlayerMarker(o: {
   o.ctx.fill();
 }
 
-type SortBlit = {
-  y: number;
-  x: number;
-  draw: () => void;
-};
-
-/** Buildings, props, landmark, NPCs, player — one foot-y sort. */
-function drawSortedScene(
+/** NPCs + player only — static scenery is already in the map cache layer. */
+function drawSortedActors(
   ctx: CanvasRenderingContext2D,
   state: ViewState,
   frame: number,
@@ -585,15 +667,11 @@ function drawSortedScene(
   camY: number,
 ): void {
   const { session, baked } = state;
-  const map = session.getMap();
   const stats = session.player.getStats();
   const anim = Math.floor(frame / 10) % 2;
   const bob = Math.sin(frame / 12) * 1.5;
   const view = { ctx, camX, camY, bob, vw: ctx.canvas.width, vh: ctx.canvas.height };
   const items: SortBlit[] = [];
-  pushBuildingSorts(items, map, baked, ctx, camX, camY);
-  pushPropSorts(items, map, baked, ctx, camX, camY);
-  pushLandmarkSort(items, map, baked, ctx, camX, camY);
   pushNpcSorts(items, session, baked, stats.districtId, anim, view);
   pushPlayerSort(items, baked, stats, anim, view);
   items.sort((a, b) => a.y - b.y || a.x - b.x);
@@ -675,49 +753,6 @@ function pushPlayerSort(
   });
 }
 
-function inViewTile(p: {
-  tx: number;
-  ty: number;
-  camX: number;
-  camY: number;
-  vw: number;
-  vh: number;
-  pad?: number;
-}): boolean {
-  const pad = p.pad ?? 3;
-  const x = p.tx * TILE_PX - p.camX;
-  const y = p.ty * TILE_PX - p.camY;
-  return (
-    x > -TILE_PX * pad &&
-    y > -TILE_PX * pad &&
-    x < p.vw + TILE_PX * pad &&
-    y < p.vh + TILE_PX * pad
-  );
-}
-
-function pushBuildingSorts(
-  items: SortBlit[],
-  map: MapDef,
-  baked: Baked,
-  ctx: CanvasRenderingContext2D,
-  camX: number,
-  camY: number,
-): void {
-  const vw = ctx.canvas.width;
-  const vh = ctx.canvas.height;
-  for (const b of map.buildings) {
-    const footY = b.y + b.h - 1;
-    if (!inViewTile({ tx: b.x, ty: footY, camX, camY, vw, vh, pad: 4 })) continue;
-    const set = baked.building[b.kind] ?? baked.building.morro!;
-    const spr = set[b.style % set.length]!;
-    items.push({
-      y: footY,
-      x: b.x,
-      draw: () => drawBuildingSprite(ctx, b, spr, camX, camY),
-    });
-  }
-}
-
 function drawBuildingSprite(
   ctx: CanvasRenderingContext2D,
   b: MapDef['buildings'][number],
@@ -736,56 +771,6 @@ function drawBuildingSprite(
     return;
   }
   blitImage(ctx, spr, x, y);
-}
-
-function pushPropSorts(
-  items: SortBlit[],
-  map: MapDef,
-  baked: Baked,
-  ctx: CanvasRenderingContext2D,
-  camX: number,
-  camY: number,
-): void {
-  const vw = ctx.canvas.width;
-  const vh = ctx.canvas.height;
-  for (const p of map.props) {
-    if (!inViewTile({ tx: p.x, ty: p.y, camX, camY, vw, vh })) continue;
-    const img = baked.props[p.kind];
-    // Same foot-y anchor as buildings / actors (tall lamps, crowds, kiosks).
-    items.push({
-      y: p.y,
-      x: p.x,
-      draw: () =>
-        blitImage(
-          ctx,
-          img,
-          p.x * TILE_PX - camX,
-          p.y * TILE_PX - img.height + TILE_PX - camY,
-        ),
-    });
-  }
-}
-
-function pushLandmarkSort(
-  items: SortBlit[],
-  map: MapDef,
-  baked: Baked,
-  ctx: CanvasRenderingContext2D,
-  camX: number,
-  camY: number,
-): void {
-  const lm = baked.landmark.get(map.landmark.kind) ?? baked.landmark.get('led-tower')!;
-  items.push({
-    y: map.landmark.y,
-    x: map.landmark.x,
-    draw: () =>
-      blitImage(
-        ctx,
-        lm,
-        map.landmark.x * TILE_PX - camX,
-        map.landmark.y * TILE_PX - lm.height + TILE_PX - camY,
-      ),
-  });
 }
 
 function blitSortedSprite(p: {
@@ -976,4 +961,5 @@ function fitCanvas(canvas: HTMLCanvasElement, state: ViewState): void {
   state.resizeH = h;
   canvas.width = w;
   canvas.height = h;
+  state.backdrop = null;
 }

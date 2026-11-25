@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Casa Suprema west exit is a single visible pad (no hidden aisle teleport to Odds Avenue).
 - Exit pads are 1-tile, aligned with EXIT signs; unit test asserts every exit overlaps a visible EXIT sprite/sign.
-- Tall props (lamps, crowds, kiosks) share the same foot-y sort as buildings and actors.
+- Perf: bake static buildings/props/landmark/signs into the map cache; per-frame y-sort is NPCs+player only; cached letterbox backdrop — restores ≥50 FPS under 4× CPU throttle on desktop.
 
 ### Changed
 
