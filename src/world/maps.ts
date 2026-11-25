@@ -52,6 +52,65 @@ export function buildDistrictMap(id: DistrictId): MapDef {
   return buildTorre();
 }
 
+/** Distinct VIP floor — separate layout from the foyer/pit. */
+export function buildTorreVip(): MapDef {
+  const w = 40;
+  const h = 24;
+  const tiles = fill(w, h, 'interior');
+  const buildings: MapDef['buildings'] = [];
+  const props: MapDef['props'] = [];
+  seal(tiles, w, h);
+  rect({ tiles, w, x0: 3, y0: 3, x1: w - 4, y1: h - 4, kind: 'interior' });
+  // Gold carpet aisle + private salons.
+  rect({ tiles, w, x0: 6, y0: 8, x1: 34, y1: 12, kind: 'plaza' });
+  rect({ tiles, w, x0: 16, y0: 4, x1: 24, y1: 7, kind: 'plaza' });
+  const booths: { x: number; y: number; style: number; bw: number; bh: number }[] = [
+    { x: 6, y: 4, style: 3, bw: 4, bh: 2 },
+    { x: 28, y: 4, style: 4, bw: 4, bh: 2 },
+    { x: 8, y: 14, style: 5, bw: 3, bh: 2 },
+    { x: 14, y: 15, style: 6, bw: 4, bh: 2 },
+    { x: 22, y: 14, style: 7, bw: 3, bh: 2 },
+    { x: 28, y: 15, style: 0, bw: 4, bh: 2 },
+    { x: 18, y: 18, style: 1, bw: 5, bh: 2 },
+  ];
+  for (const b of booths) {
+    houseBlock({
+      tiles,
+      w,
+      buildings,
+      x: b.x,
+      y: b.y,
+      style: b.style,
+      kind: 'torre',
+      bw: b.bw,
+      bh: b.bh,
+    });
+  }
+  for (let x = 8; x < 34; x += 4) props.push({ x, y: 10, kind: 'lamp' });
+  props.push(
+    { x: 12, y: 9, kind: 'crowd' },
+    { x: 20, y: 9, kind: 'crowd' },
+    { x: 28, y: 9, kind: 'crowd' },
+    { x: 16, y: 11, kind: 'kiosk' },
+    { x: 24, y: 11, kind: 'crate' },
+  );
+  return {
+    districtId: 'torre-casa',
+    width: w,
+    height: h,
+    tiles,
+    buildings,
+    signs: [
+      { x: 18, y: 5, label: 'VIP SALON', color: '#ffdf00' },
+      { x: 10, y: 8, label: 'HIGH ROLLERS', color: '#ff2bd6' },
+      { x: 26, y: 8, label: 'PRIVATE TABLE', color: '#ffdf00' },
+      { x: 20, y: 7, label: 'ELEVATOR ↓', color: '#c8d0d8' },
+    ],
+    props,
+    landmark: { x: 18, y: 6, kind: 'casa-tower' },
+  };
+}
+
 function fill(w: number, h: number, kind: TileKind): TileKind[] {
   return Array.from({ length: w * h }, () => kind);
 }
@@ -487,7 +546,7 @@ function buildAvenida(): MapDef {
 function buildTorre(): MapDef {
   const w = 40;
   const h = 24;
-  // Luxury casino floor — carpet interior, not another neon boulevard.
+  // Foyer / pit floor — VIP is a separate map via buildTorreVip().
   const tiles = fill(w, h, 'interior');
   const buildings: MapDef['buildings'] = [];
   const props: MapDef['props'] = [];
@@ -496,7 +555,6 @@ function buildTorre(): MapDef {
   rect({ tiles, w, x0: 4, y0: 10, x1: 35, y1: 14, kind: 'plaza' });
   // Single door inset from the west wall — readable EXIT sign + destination.
   paintExitPad(tiles, w, 5, 12);
-  // Tables / VIP booths (torre sprites = casino furniture, not towers).
   const tables: { x: number; y: number; style: number; bw: number; bh: number }[] = [
     { x: 8, y: 3, style: 0, bw: 3, bh: 2 },
     { x: 14, y: 3, style: 1, bw: 4, bh: 2 },
@@ -534,9 +592,8 @@ function buildTorre(): MapDef {
     buildings,
     signs: [
       { x: 16, y: 5, label: 'CASA SUPREMA', color: '#ffdf00' },
-      { x: 26, y: 11, label: 'VIP TABLE', color: '#ffdf00' },
       { x: 12, y: 9, label: 'PIT FLOOR', color: '#ff2bd6' },
-      { x: 22, y: 8, label: 'ELEVATOR', color: '#c8d0d8' },
+      { x: 22, y: 8, label: 'ELEVATOR ↑', color: '#c8d0d8' },
       { x: 5, y: 10, label: '> Odds Avenue', color: '#2bfff2' },
     ],
     props,

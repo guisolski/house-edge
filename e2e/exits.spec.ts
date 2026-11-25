@@ -69,6 +69,11 @@ test.describe('District exits', () => {
 
       for (const exit of he.session.exits) {
         he.session.travelTo(exit.districtId);
+        // Walk clear of arrival latch (spawn is outside pad stand range).
+        const clearX = exit.x > 20 ? exit.x - 8 : exit.x + 8;
+        he.session.player.setPosition(clearX, exit.y);
+        he.session.move(0, 1);
+        he.session.move(0, -1);
         // Approach from one tile west (or east if at west edge).
         const approachX = exit.x > 2 ? exit.x - 1 : exit.x + 1;
         he.session.player.setPosition(approachX, exit.y);
@@ -77,6 +82,8 @@ test.describe('District exits', () => {
         const after = he.session.player.getStats();
         // Re-read sign from the origin map (may have traveled).
         he.session.travelTo(exit.districtId);
+        he.session.player.setPosition(clearX, exit.y);
+        he.session.move(0, 1);
         const originMap = he.session.getMap();
         const sign =
           originMap.signs.find(

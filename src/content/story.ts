@@ -486,7 +486,11 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Rita Odds',
-        text: 'Your audience is rented. Mine grew up on this asphalt.',
+        text: 'Your numbers spike overnight — bought likes. Real hill tags don’t jump like that, and this isn’t a Casa promo.',
+      },
+      {
+        speaker: 'Odds Influencer',
+        text: 'Cute read. Prove it on the panel before my next filter drop.',
       },
     ],
   },
@@ -680,7 +684,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     dialogue: [
       {
         speaker: 'Pit Dealer',
-        text: 'VIP’s upstairs, but the pit wants a warm-up hand. House chips only — your street credits convert at a cut.',
+        text: 'VIP’s upstairs, but the pit wants a warm-up hand. Spot the real deck — my thumb worries the dog-eared one; gold foil and shrink-wrap are props.',
       },
       {
         speaker: 'Rita Odds',
@@ -790,19 +794,23 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     dialogue: [
       {
         speaker: 'Dona Nair',
-        text: 'Tower’s quiet. Fair’s loud. Avenue’s confused. Sit. Water’s on the house — for once.',
+        text: 'Rita. Sit. The ice is honest tonight — no odd attached. You walked the hill, the fair, the avenue, and you made Augusto sweat.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'For once. The hill still has debts, but they’re ours to name.',
+        text: 'He called it skill. I called it the city. The ledger still has names, but they’re ours now.',
       },
       {
-        speaker: 'Luna Pixel',
-        text: 'Feed’s still pirate. Side jobs stay open if you want another odd. The city doesn’t clock out.',
+        speaker: 'Dona Nair',
+        text: 'Good. Keep the pirate feed warm. When Casa rebuilds, the laje remembers who paid first.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'Neither do I. But tonight the laje belongs to us.',
+        text: 'Then toast with me — not for luck. For the sequence we matched with our eyes open.',
+      },
+      {
+        speaker: 'Dona Nair',
+        text: 'Saúde. Side hustles stay optional. The story’s yours to rest on. Come back when the neon asks again.',
       },
     ],
   },

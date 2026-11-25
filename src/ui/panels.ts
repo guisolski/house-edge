@@ -11,6 +11,7 @@ import {
 } from '../systems/betting';
 import { DISTRICTS } from '../content/districts';
 import { UPGRADES } from '../systems/upgrade';
+import { phaseSequence, SEQ_KEYS, type SeqKey } from '../systems/minigame';
 
 export function button(label: string, onClick: () => void): HTMLButtonElement {
   const btn = el('button', 'btn', label);
@@ -72,6 +73,7 @@ export function paintSkill(
   if (!progress || !bet) return;
   const phase = progress.def.phases[progress.phaseIndex];
   const body = el('div', 'panel-body skill-body');
+  const streak = session.getSkillStreak();
   body.append(
     el('h2', '', progress.def.title),
     el('p', 'bet-desc', progress.def.blurb),
@@ -82,13 +84,26 @@ export function paintSkill(
       `Phase ${progress.phaseIndex + 1}/${progress.def.phases.length}: ${phase?.prompt ?? ''}`,
     ),
   );
+  if (streak > 0) {
+    body.appendChild(el('p', 'skill-streak', `Combo ×${streak} — bonus on next win`));
+  }
+  if (phase?.clue) {
+    body.appendChild(el('p', 'skill-clue', `Clue: ${phase.clue}`));
+  }
   const actions = el('div', 'panel-actions skill-actions');
   if (phase?.kind === 'timing') {
-    paintTimingSkill(body, actions, session, after);
+    paintTimingSkill(
+      body,
+      actions,
+      session,
+      after,
+      phase.window ?? 0.12,
+      phase.needleSpeed,
+    );
   } else if (phase?.kind === 'choice' || phase?.kind === 'puzzle') {
     paintChoiceSkill(actions, phase.options ?? ['A', 'B', 'C'], session, after);
-  } else {
-    paintSequenceSkill(actions, phase?.steps ?? 3, session, after);
+  } else if (phase) {
+    paintSequenceSkill(body, actions, session, after);
   }
   actions.appendChild(
     button(UI.cancel, () => {
@@ -105,15 +120,21 @@ function paintTimingSkill(
   actions: HTMLElement,
   session: GameSession,
   after: () => void,
+  windowHalf: number,
+  needleSpeed = 0.8,
 ): void {
   const meter = el('div', 'skill-meter');
   const needle = el('div', 'skill-needle');
   const zone = el('div', 'skill-zone');
+  const center = 0.5;
+  zone.style.left = `${Math.max(0, (center - windowHalf) * 100)}%`;
+  zone.style.width = `${windowHalf * 2 * 100}%`;
   meter.append(zone, needle);
   body.appendChild(meter);
   let t = 0;
+  const step = Math.max(0.02, 0.028 * needleSpeed);
   const tick = window.setInterval(() => {
-    t = (t + 0.04) % 1;
+    t = (t + step) % 1;
     needle.style.left = `${t * 100}%`;
   }, 32);
   actions.appendChild(
@@ -142,24 +163,80 @@ function paintChoiceSkill(
 }
 
 function paintSequenceSkill(
+  body: HTMLElement,
   actions: HTMLElement,
-  steps: number,
   session: GameSession,
   after: () => void,
 ): void {
-  let hit = 0;
-  const status = el('p', 'skill-seq', `0 / ${steps}`);
-  actions.appendChild(status);
-  actions.appendChild(
-    button('Tap sequence', () => {
-      hit += 1;
-      status.textContent = `${hit} / ${steps}`;
-      if (hit >= steps) {
-        session.submitSkill(hit);
-        after();
-      }
-    }),
+  const progress = session.getSkillProgress();
+  const phase = progress?.def.phases[progress.phaseIndex];
+  if (!progress || !phase) return;
+  const seq = phaseSequence(phase);
+  const pattern = el('p', 'skill-pattern', `Sequence: ${seq.join('  ')}`);
+  const status = el(
+    'p',
+    'skill-seq',
+    `Match ${progress.seqIndex + 1} / ${seq.length} — next key…`,
   );
+  body.append(pattern, status);
+  const pad = el('div', 'skill-seq-pad');
+  const used = [...new Set(seq)] as SeqKey[];
+  const onKey = (keyIndex: number): void => {
+    const beforePhase = session.getSkillProgress()?.phaseIndex;
+    session.submitSkill(keyIndex);
+    const next = session.getSkillProgress();
+    if (!next || next.done) {
+      after();
+      return;
+    }
+    // Still mid-sequence — refresh status without clearing pad.
+    if (next.phaseIndex === beforePhase) {
+      status.textContent = `Match ${next.seqIndex + 1} / ${seq.length} — next key…`;
+      return;
+    }
+    after();
+  };
+  for (const key of used) {
+    const idx = SEQ_KEYS.indexOf(key);
+    pad.appendChild(
+      button(key, () => {
+        onKey(idx);
+      }),
+    );
+  }
+  actions.appendChild(pad);
+  const onKeyDown = (ev: KeyboardEvent): void => {
+    const map: Record<string, SeqKey> = {
+      ArrowUp: '↑',
+      ArrowRight: '→',
+      ArrowDown: '↓',
+      ArrowLeft: '←',
+      KeyW: '↑',
+      KeyD: '→',
+      KeyS: '↓',
+      KeyA: '←',
+      KeyR: 'R',
+      KeyG: 'G',
+      KeyB: 'B',
+      KeyY: 'Y',
+    };
+    const sym = map[ev.code];
+    if (!sym || !used.includes(sym)) return;
+    ev.preventDefault();
+    onKey(SEQ_KEYS.indexOf(sym));
+  };
+  panelKeyHook(actions, onKeyDown);
+}
+
+function panelKeyHook(root: HTMLElement, handler: (ev: KeyboardEvent) => void): void {
+  const fn = (ev: KeyboardEvent): void => {
+    if (!root.isConnected) {
+      window.removeEventListener('keydown', fn);
+      return;
+    }
+    handler(ev);
+  };
+  window.addEventListener('keydown', fn);
 }
 
 export function paintBet(

@@ -17,6 +17,7 @@ import {
 import { bakeSprite } from '../rendering/bake';
 import { makeEndingScene } from '../rendering/pixel-gen';
 import type { FpsSample } from '../rendering/fps';
+import { resolveInteractPriority } from '../systems/interact-priority';
 
 export type HudHandles = {
   root: HTMLElement;
@@ -441,29 +442,38 @@ function paintPrompt(prompt: HTMLElement, session: GameSession): void {
   const npc = session.nearbyNpc();
   const alt = session.nearbyAltNpc();
   const obj = session.objective();
-  // Objective NPC in range beats a nearby exit for the primary E line.
-  const objNpc = npc && obj.targetName && npc.name === obj.targetName ? npc : null;
-  if (objNpc) {
-    const verb = objNpc.id === 'elevator' ? 'E — Use' : 'E';
+  const objHit = Boolean(npc && obj.targetName && npc.name === obj.targetName);
+  const kind = resolveInteractPriority({
+    objectiveNpcInRange: objHit,
+    unlockedExitInRange: Boolean(exit),
+    lockedExitInRange: Boolean(locked),
+    otherNpcInRange: Boolean(npc) && !objHit,
+  });
+  if (kind === 'none') {
+    setVisible(prompt, false);
+    return;
+  }
+  if (kind === 'objective' && npc) {
+    const verb = npc.id.startsWith('elevator') ? 'E — Use' : 'E';
     const extra = alt ? ` · also ${alt.name}` : '';
-    prompt.textContent = `${verb} (${objNpc.name})${extra}`;
+    prompt.textContent = `${verb} (${npc.name})${extra}`;
     setVisible(prompt, true);
     return;
   }
-  if (exit) {
+  if (kind === 'travel' && exit) {
     const dest =
       session.world.get(exit.toDistrict)?.name ?? exit.label.replace(/^Exit → /, '');
     prompt.textContent = `E — Travel to ${dest}`;
     setVisible(prompt, true);
     return;
   }
-  if (locked) {
+  if (kind === 'locked') {
     prompt.textContent = 'E — Path locked';
     setVisible(prompt, true);
     return;
   }
   if (npc) {
-    const verb = npc.id === 'elevator' ? 'E — Use' : 'E';
+    const verb = npc.id.startsWith('elevator') ? 'E — Use' : 'E';
     const extra = alt ? ` · also ${alt.name}` : '';
     prompt.textContent = `${verb} (${npc.name})${extra}`;
     setVisible(prompt, true);

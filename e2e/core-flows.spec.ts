@@ -32,7 +32,7 @@ test.describe('House Edge core flows', () => {
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Side Jobs' }).click();
     await expect(page.locator('.jobs-panel')).toBeVisible();
-    await page.getByRole('button', { name: 'Boteco water rotation' }).click();
+    await page.getByRole('button', { name: /Boteco water rotation/ }).click();
     await expect(page.locator('.bet-panel')).toBeVisible();
     await expect(page.locator('.bet-panel')).toContainText('Stake');
   });

@@ -22,7 +22,7 @@ import {
   type DistrictExit,
   type WorldNpc,
 } from './interaction';
-import { buildDistrictMap, tileAt, type MapDef } from '../world/maps';
+import { buildDistrictMap, buildTorreVip, tileAt, type MapDef } from '../world/maps';
 import { slideStep } from '../world/slide';
 import { currentObjective, sideQuestMarkers, type Objective } from './objectives';
 import {
@@ -32,6 +32,7 @@ import {
   startSkill,
   type SkillProgress,
 } from './minigame';
+import { resolveInteractPriority, shouldClearExitLatch } from './interact-priority';
 
 const SAFE_JOB_COOLDOWN_MS = 10_000;
 const SAFE_JOB_CAP = 6;
@@ -61,6 +62,12 @@ export class GameSession {
   private lastSafeJobMs = 0;
   private skillProgress: SkillProgress | null = null;
   private elevating = false;
+  /** After travel, ignore pads until the player walks clear. */
+  private exitLatch = false;
+  /** True while Rita is on the distinct VIP floor map. */
+  private vipFloor = false;
+  private skillStreak = 0;
+  private vipMap: MapDef = buildTorreVip();
 
   constructor(seed = 42, bus = new EventBus()) {
     this.bus = bus;
@@ -73,8 +80,19 @@ export class GameSession {
     for (const d of DISTRICTS) this.maps.set(d.id, buildDistrictMap(d.id));
   }
 
+  isVipFloor(): boolean {
+    return this.vipFloor;
+  }
+
+  getSkillStreak(): number {
+    return this.skillStreak;
+  }
+
   startNew(): void {
     this.applySave(createDefaultSave());
+    this.vipFloor = false;
+    this.exitLatch = false;
+    this.skillStreak = 0;
     this.ui.go('play');
     this.story.completeBeat('intro-laje');
     this.bus.emit('game:started', { newGame: true });
@@ -100,7 +118,19 @@ export class GameSession {
 
   getMap(): MapDef {
     const id = this.player.getStats().districtId;
+    if (id === 'torre-casa' && this.vipFloor) return this.vipMap;
     return this.maps.get(id) ?? buildDistrictMap(id);
+  }
+
+  /** NPCs visible on the active Casa floor (or all NPCs elsewhere). */
+  floorNpcs(): WorldNpc[] {
+    const id = this.player.getStats().districtId;
+    if (id !== 'torre-casa') return this.npcs;
+    const want = this.vipFloor ? 'vip' : 'foyer';
+    return this.npcs.filter((n) => {
+      if (n.districtId !== 'torre-casa') return true;
+      return (n.floor ?? 'foyer') === want;
+    });
   }
 
   move(dx: number, dy: number): boolean {
@@ -112,8 +142,9 @@ export class GameSession {
     this.player.setFacing(dest.x - s.x || dx, dest.y - s.y || dy);
     // NPCs are non-blocking — walk-through keeps interaction from trapping the player.
     this.player.setPosition(dest.x, dest.y);
+    this.refreshExitLatch();
     // Walk-on travel only on exit tiles (plus-pad). Stand margin still shows E — Travel.
-    if (tileAt(map, dest.x, dest.y) === 'exit') {
+    if (!this.vipFloor && tileAt(map, dest.x, dest.y) === 'exit') {
       const exit = this.nearbyExit();
       if (exit) return this.travelTo(exit.toDistrict);
     }
@@ -128,8 +159,10 @@ export class GameSession {
     this.bus.emit('world:transition', { kind: 'fade', from, to: districtId });
     this.bus.emit('fx:flash', { kind: 'travel' });
     this.bus.emit('audio:play-sfx', { id: 'travel' });
+    this.vipFloor = false;
     this.player.setDistrict(districtId);
     this.player.setPosition(district.spawn.x, district.spawn.y);
+    this.exitLatch = true;
     this.ui.go('play');
     this.bus.emit('district:entered', { districtId });
     return true;
@@ -139,11 +172,12 @@ export class GameSession {
   nearbyNpc(): WorldNpc | null {
     const s = this.player.getStats();
     const face = this.player.getFacing();
+    const pool = this.floorNpcs();
     const available = new Set(this.story.availableBeats(s.districtId).map((b) => b.id));
     const obj = this.objective();
     const objectiveNpc =
       obj.targetName && obj.districtId === s.districtId
-        ? this.npcs.find(
+        ? pool.find(
             (n) =>
               n.districtId === s.districtId &&
               n.name === obj.targetName &&
@@ -152,7 +186,7 @@ export class GameSession {
         : undefined;
     if (objectiveNpc) return objectiveNpc;
     return nearestNpc({
-      npcs: this.npcs,
+      npcs: pool,
       districtId: s.districtId,
       x: s.x,
       y: s.y,
@@ -169,7 +203,7 @@ export class GameSession {
     const face = this.player.getFacing();
     const available = new Set(this.story.availableBeats(s.districtId).map((b) => b.id));
     const alt = nearestNpc({
-      npcs: this.npcs.filter((n) => n.id !== primary?.id),
+      npcs: this.floorNpcs().filter((n) => n.id !== primary?.id),
       districtId: s.districtId,
       x: s.x,
       y: s.y,
@@ -181,6 +215,7 @@ export class GameSession {
   }
 
   nearbyExit(): DistrictExit | null {
+    if (this.exitLatch || this.vipFloor) return null;
     const s = this.player.getStats();
     const exit = nearestExit({
       exits: this.exits,
@@ -195,6 +230,7 @@ export class GameSession {
 
   /** Locked exit underfoot / adjacent — for toast + prompt feedback. */
   nearbyLockedExit(): DistrictExit | null {
+    if (this.exitLatch || this.vipFloor) return null;
     const s = this.player.getStats();
     const exit = nearestExit({
       exits: this.exits,
@@ -205,6 +241,13 @@ export class GameSession {
     });
     if (!exit) return null;
     return this.world.isUnlocked(exit.toDistrict) ? null : exit;
+  }
+
+  private refreshExitLatch(): void {
+    if (!this.exitLatch) return;
+    const s = this.player.getStats();
+    const here = this.exits.filter((e) => e.districtId === s.districtId);
+    if (shouldClearExitLatch(s, here, EXIT_STAND_RANGE)) this.exitLatch = false;
   }
 
   /** Dismiss ending and keep the completed save for side jobs / grind. */
@@ -276,25 +319,27 @@ export class GameSession {
     if (!this.ui.is('play')) return false;
     const npc = this.nearbyNpc();
     const obj = this.objective();
-    // Objective target in range wins over exit travel.
-    if (npc && obj.targetName && npc.name === obj.targetName) {
-      return this.interactNpc(npc);
-    }
+    const objHit = Boolean(npc && obj.targetName && npc.name === obj.targetName);
     const exit = this.nearbyExit();
-    if (exit) return this.travelTo(exit.toDistrict);
     const locked = this.nearbyLockedExit();
-    if (locked) {
+    const kind = resolveInteractPriority({
+      objectiveNpcInRange: objHit,
+      unlockedExitInRange: Boolean(exit),
+      lockedExitInRange: Boolean(locked),
+      otherNpcInRange: Boolean(npc) && !objHit,
+    });
+    if (kind === 'objective' && npc) return this.interactNpc(npc);
+    if (kind === 'travel' && exit) return this.travelTo(exit.toDistrict);
+    if (kind === 'locked') {
       this.bus.emit('ui:toast', {
         message: 'Path locked — finish the current bet first.',
         kind: 'info',
       });
       return false;
     }
-    if (!npc) {
-      this.bus.emit('ui:toast', { message: 'Nobody in range.', kind: 'info' });
-      return false;
-    }
-    return this.interactNpc(npc);
+    if (kind === 'npc' && npc) return this.interactNpc(npc);
+    this.bus.emit('ui:toast', { message: 'Nobody in range.', kind: 'info' });
+    return false;
   }
 
   offerBet(betId: string): boolean {
@@ -364,7 +409,16 @@ export class GameSession {
       this.player.getStats().credits,
     );
     this.player.addCredits(-stake);
-    const payout = won ? payoutForWin(stake, bet.odds) : 0;
+    let payout = won ? payoutForWin(stake, bet.odds) : 0;
+    if (won) {
+      this.skillStreak += 1;
+      if (this.skillStreak >= 2) {
+        const bonus = Math.min(40, 5 * this.skillStreak);
+        payout += bonus;
+      }
+    } else {
+      this.skillStreak = 0;
+    }
     this.player.addCredits(payout);
     const rep =
       (won ? bet.reputationDeltaWin : bet.reputationDeltaLose) +
@@ -566,7 +620,7 @@ export class GameSession {
       completed: this.story.getCompleted(),
       flags: (f) => this.story.getFlag(f),
       districtId: s.districtId,
-      npcs: this.npcs,
+      npcs: this.floorNpcs(),
       exits: this.exits,
       unlocked: (id) => this.world.isUnlocked(id as DistrictId),
     });
@@ -644,6 +698,10 @@ export class GameSession {
     this.bus.emit('npc:interacted', { npcId: npc.id });
     this.bus.emit('fx:flash', { kind: 'interact' });
     this.bus.emit('audio:play-sfx', { id: 'interact' });
+    if (npc.id === 'elevator-vip' && this.vipFloor) {
+      this.descendVipElevator();
+      return true;
+    }
     if (this.tryNpcStory(npc)) return true;
     if (this.npcStoryBlocksRematch(npc)) {
       this.toastNpcBusy(npc);
@@ -653,6 +711,22 @@ export class GameSession {
     if (npc.safeJobId) return this.doSafeJob(npc.safeJobId);
     this.toastNpcBusy(npc);
     return false;
+  }
+
+  private descendVipElevator(): void {
+    this.bus.emit('world:transition', {
+      kind: 'elevator',
+      from: 'torre-casa',
+      to: 'torre-casa',
+    });
+    this.vipFloor = false;
+    this.player.setPosition(24, 11);
+    this.player.setFacing(0, 1);
+    this.bus.emit('ui:toast', {
+      message: 'Elevator returns to the pit foyer.',
+      kind: 'info',
+    });
+    this.bus.emit('district:entered', { districtId: 'torre-casa' });
   }
 
   private tryNpcStory(npc: WorldNpc): boolean {
@@ -759,7 +833,7 @@ export class GameSession {
     this.persist();
   }
 
-  /** Visible elevator ride: fade + relocate Rita to the VIP floor. */
+  /** Visible elevator ride: fade + swap to the distinct VIP floor map. */
   private runElevatorRide(): void {
     this.elevating = true;
     this.bus.emit('world:transition', {
@@ -770,13 +844,14 @@ export class GameSession {
     this.bus.emit('fx:flash', { kind: 'travel' });
     this.bus.emit('audio:play-sfx', { id: 'travel' });
     this.ui.go('transition');
-    // VIP floor stand near the host (north terrace of the tower map).
-    this.player.setPosition(30, 8);
+    this.vipFloor = true;
+    this.player.setPosition(30, 10);
     this.player.setFacing(0, 1);
     this.elevating = false;
     this.ui.go('play');
+    this.bus.emit('district:entered', { districtId: 'torre-casa' });
     this.bus.emit('ui:toast', {
-      message: 'Elevator doors open on the VIP floor.',
+      message: 'Elevator doors open on the VIP salon.',
       kind: 'success',
     });
   }

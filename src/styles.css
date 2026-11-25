@@ -521,9 +521,33 @@ canvas.excalibur-game {
 }
 
 .skill-phase,
-.skill-seq {
+.skill-seq,
+.skill-pattern {
   color: var(--cyan);
   font-weight: 700;
+}
+
+.skill-clue {
+  color: var(--yellow);
+  font-size: 0.95rem;
+  margin: 0.35rem 0 0.6rem;
+}
+
+.skill-streak {
+  color: #ff8c42;
+  font-weight: 700;
+}
+
+.skill-seq-pad {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.skill-seq-pad .btn {
+  min-width: 3rem;
+  font-size: 1.25rem;
 }
 
 .fx-flash {

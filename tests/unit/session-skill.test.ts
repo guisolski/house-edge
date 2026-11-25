@@ -6,6 +6,7 @@ import {
   judgePhase,
   startSkill,
   attemptSkill,
+  perfectAttempt,
 } from '../../src/systems/minigame';
 
 class MemoryStorage {
@@ -129,9 +130,52 @@ describe('session skill encounters', () => {
     expect(session.acceptStoryBet()).toBe(true);
     expect(session.completeSkillPerfect()).toBe(true);
     const s = session.player.getStats();
+    expect(session.isVipFloor()).toBe(true);
     expect(s.x).toBe(30);
-    expect(s.y).toBe(8);
+    expect(s.y).toBe(10);
+    expect(session.getMap().signs.some((g) => g.label.includes('VIP SALON'))).toBe(true);
     expect(session.story.getCompleted()).toContain('torre-elevator');
+  });
+
+  it('exit latch blocks chain-travel until player walks clear of pads', () => {
+    const session = new GameSession(3);
+    session.startNew();
+    session.world.unlock('feira-central');
+    session.world.unlock('avenida-odds');
+    session.travelTo('avenida-odds');
+    // Spawn is clear; latch still set until a move clears stand range.
+    expect(session.nearbyExit()).toBeNull();
+    session.move(1, 0);
+    expect(session.nearbyExit()).toBeNull();
+  });
+
+  it('VIP elevator down returns to foyer; streak bonus accrues', () => {
+    const session = new GameSession(19);
+    session.startNew();
+    session.player.addCredits(200);
+    // Two perfect story skills to build streak.
+    session.runStoryBeat('boteco-nair');
+    session.acceptStoryBet();
+    expect(session.completeSkillPerfect()).toBe(true);
+    expect(session.getSkillStreak()).toBe(1);
+    session.story.setFlag('copper_weighed', true);
+    session.story.completeBeat('side-morro-copper');
+    session.runStoryBeat('morro-antena');
+    session.acceptStoryBet();
+    expect(session.completeSkillPerfect()).toBe(true);
+    expect(session.getSkillStreak()).toBeGreaterThanOrEqual(2);
+    // Force VIP floor + descend.
+    session.world.unlock('torre-casa');
+    session.travelTo('torre-casa');
+    session.story.setFlag('elevator_ok', true);
+    session.story.completeBeat('torre-elevator');
+    // Simulate ride.
+    (session as unknown as { vipFloor: boolean }).vipFloor = true;
+    session.player.setPosition(20, 7);
+    const elev = session.floorNpcs().find((n) => n.id === 'elevator-vip');
+    expect(elev).toBeTruthy();
+    expect(session.interact()).toBe(true);
+    expect(session.isVipFloor()).toBe(false);
   });
 
   it('nearbyAltNpc returns a different NPC when crowded', () => {
@@ -175,14 +219,14 @@ describe('session skill encounters', () => {
 
 describe('minigame branches', () => {
   it('covers chase/hack/choice judges and unknown bet fallback', () => {
-    expect(judgePhase({ kind: 'chase', prompt: 'x', target: 3, steps: 3 }, 3)).toBe(true);
-    expect(judgePhase({ kind: 'hack', prompt: 'x', target: 2, steps: 2 }, 1)).toBe(false);
+    expect(judgePhase({ kind: 'chase', prompt: 'x', target: 0, steps: 3 }, 0)).toBe(true);
+    expect(judgePhase({ kind: 'hack', prompt: 'x', target: 0, steps: 2 }, 1)).toBe(false);
     const fallback = skillForBet('unknown-bet', 'timing');
     expect(fallback?.phases[0]?.kind).toBe('timing');
     const choice = skillForBet('unknown-choice', 'choice');
     expect(choice?.phases[0]?.options?.length).toBeGreaterThan(0);
     let p = startSkill(skillForBet('fio-corrida', 'chase')!);
-    p = attemptSkill(p, { phaseIndex: 0, value: 4 });
+    while (!p.done) p = attemptSkill(p, perfectAttempt(p));
     expect(p.won).toBe(true);
     expect(skillForBet('x', undefined)).toBeNull();
     expect(skillForBet('x', 'duel')?.phases).toHaveLength(3);

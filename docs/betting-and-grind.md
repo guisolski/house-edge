@@ -4,18 +4,19 @@
 
 Bet corporations (led by Casa Suprema) replaced cash prices with wagers. Even water is an odd. The house edge is a narrative villain and a mechanical tax.
 
-## Story skill loop (v1.13+)
+## Story skill loop (v1.14+)
 
 Main-path story bets are **skill encounters**, not coin flips:
 
 1. Dialogue → Accept opens a skill panel (timing / choice / puzzle / chase / hack).
-2. Stake is at risk — a miss costs credits; the beat stays incomplete so you retry the skill.
-3. Win pays out and advances the story (flags / district unlocks).
-4. The final duel vs Augusto Casa is a **3-phase** skill fight (timing → read → hack).
+2. Choice/puzzle panels show a **clue** that names the correct option; chase/hack show a **Simon sequence** to reproduce (wrong tap fails).
+3. Stake is at risk — a miss costs credits; the beat stays incomplete so you retry the skill.
+4. Win pays out (combo streak bonus after the first win) and advances the story.
+5. The final duel vs Augusto Casa is a **3-phase** skill fight (timing → read → Simon hack).
 
 ## Grind / optional RNG loop
 
-Side jobs and rematch panels can still use odds math:
+Side Jobs labeled `[SIDE HUSTLE · RNG]` can still use odds math:
 
 1. Choose a stake (or accept the listed stake).
 2. Roll against `winChance` (includes house edge flavor).

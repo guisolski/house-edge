@@ -72,6 +72,15 @@ function districtName(id: string): string {
   return DISTRICTS.find((d) => d.id === id)?.name ?? id;
 }
 
+/** Short marker labels so edge pointers stay readable. */
+function districtShortName(id: string): string {
+  if (id === 'torre-casa') return 'Casa Tower';
+  if (id === 'feira-central') return 'Central Fair';
+  if (id === 'avenida-odds') return 'Odds Avenue';
+  if (id === 'morro-neon') return 'Morro Neon';
+  return districtName(id);
+}
+
 function beatNpc(ctx: ObjectiveCtx, beat: StoryBeat): WorldNpc | undefined {
   return ctx.npcs.find((n) => n.beatId === beat.id || n.extraBeatIds?.includes(beat.id));
 }
@@ -128,6 +137,7 @@ function travelObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
   const hop = firstHopExit(ctx, next.districtId);
   if (hop) {
     const hopPlace = districtName(hop.toDistrict);
+    const hopShort = districtShortName(hop.toDistrict);
     const direct = hop.toDistrict === next.districtId;
     const who = npc?.name ?? place;
     return {
@@ -135,7 +145,7 @@ function travelObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
         ? `Go to ${place} — talk to ${who}`
         : `Exit → ${hopPlace}, then ${place}`,
       detail: next.title,
-      targetName: hopPlace,
+      targetName: hopShort,
       targetX: hop.x,
       targetY: hop.y,
       districtId: ctx.districtId,

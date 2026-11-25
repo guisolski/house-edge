@@ -169,8 +169,10 @@ function onTick(deps: TickDeps, delta: number): void {
   deps.cooldown.ms = Math.max(0, deps.cooldown.ms - delta);
   maybeMove(deps);
   const id = deps.session.player.getStats().districtId;
-  if (id !== deps.lastDistrict.id) {
-    deps.lastDistrict.id = id;
+  const vip = deps.session.isVipFloor() ? 'vip' : 'foyer';
+  const mapKey = `${id}:${vip}`;
+  if (mapKey !== deps.lastDistrict.id) {
+    deps.lastDistrict.id = mapKey;
     deps.world.invalidateMap();
   }
   deps.frame.n += 1;

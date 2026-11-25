@@ -21,7 +21,8 @@ export const DISTRICTS: readonly DistrictDef[] = [
     unlockFlag: 'unlocked_feira',
     width: 44,
     height: 26,
-    spawn: { x: 8, y: 14 },
+    // Clear of west Morro pad (5,13) and east Odds pad (38,13).
+    spawn: { x: 14, y: 14 },
     color: Palette.brasilYellow,
     accent: Palette.neonCyan,
   },
@@ -32,8 +33,8 @@ export const DISTRICTS: readonly DistrictDef[] = [
     unlockFlag: 'unlocked_avenida',
     width: 46,
     height: 24,
-    // Clear of west Fair exit pad (5,12) + stand margin so arrival isn't a bounce-back.
-    spawn: { x: 12, y: 12 },
+    // Clear of west Fair pad (5,12) and east Casa pad (40,12).
+    spawn: { x: 16, y: 12 },
     color: Palette.brasilBlue,
     accent: Palette.neonLime,
   },
@@ -44,7 +45,8 @@ export const DISTRICTS: readonly DistrictDef[] = [
     unlockFlag: 'unlocked_torre',
     width: 40,
     height: 24,
-    spawn: { x: 10, y: 13 },
+    // Clear of west Odds Avenue exit pad (5,12).
+    spawn: { x: 14, y: 14 },
     color: Palette.neonMagenta,
     accent: Palette.brasilYellow,
   },

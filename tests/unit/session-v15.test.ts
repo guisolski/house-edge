@@ -119,9 +119,11 @@ describe('session v1.5 recovery and upgrades', () => {
     session.ui.go('menu');
     expect(session.interact()).toBe(false);
     expect(session.doSafeJob('missing-job')).toBe(false);
-    // Locked exit toast path
+    // Locked exit toast path — walk clear of arrival latch first.
     session.ui.go('play');
     session.travelTo('feira-central');
+    session.player.setPosition(14, 14);
+    session.move(1, 0);
     session.player.setPosition(38, 13);
     expect(session.nearbyLockedExit()?.toDistrict).toBe('avenida-odds');
     expect(session.interact()).toBe(false);

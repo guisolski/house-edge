@@ -14,6 +14,8 @@ export type WorldNpc = {
   color: string;
   /** Body / hair / outfit silhouette variant (0–3). */
   bodyVariant?: 0 | 1 | 2 | 3;
+  /** Casa tower floor — VIP map only shows vip NPCs. */
+  floor?: 'foyer' | 'vip';
 };
 
 export function npcStoryBeatIds(npc: WorldNpc): string[] {
@@ -298,6 +300,7 @@ const NPCS: readonly WorldNpc[] = [
     beatId: 'torre-foyer',
     color: '#6ec8e8',
     bodyVariant: 1,
+    floor: 'foyer',
   },
   {
     id: 'pit-dealer',
@@ -309,6 +312,7 @@ const NPCS: readonly WorldNpc[] = [
     jobBetId: 'torre-pit',
     color: '#d946ef',
     bodyVariant: 2,
+    floor: 'foyer',
   },
   {
     id: 'elevator',
@@ -318,27 +322,39 @@ const NPCS: readonly WorldNpc[] = [
     y: 10,
     beatId: 'torre-elevator',
     color: '#c8d0d8',
+    floor: 'foyer',
+  },
+  {
+    id: 'elevator-vip',
+    name: 'Elevator',
+    districtId: 'torre-casa',
+    x: 20,
+    y: 7,
+    color: '#c8d0d8',
+    floor: 'vip',
   },
   {
     id: 'vip-host',
     name: 'VIP Host',
     districtId: 'torre-casa',
     x: 30,
-    y: 8,
+    y: 10,
     beatId: 'torre-vip',
     jobBetId: 'torre-vip',
     color: '#ffd700',
     bodyVariant: 3,
+    floor: 'vip',
   },
   {
     id: 'ceo',
     name: 'Augusto Casa',
     districtId: 'torre-casa',
-    x: 22,
-    y: 8,
+    x: 20,
+    y: 9,
     beatId: 'torre-final',
     color: '#ff3b5c',
     bodyVariant: 0,
+    floor: 'vip',
   },
   {
     id: 'busboy-torre',
@@ -349,6 +365,7 @@ const NPCS: readonly WorldNpc[] = [
     extraBeatIds: ['side-torre-tip'],
     safeJobId: 'safe-torre-casa',
     color: '#9aa0a6',
+    floor: 'foyer',
   },
 ];
 

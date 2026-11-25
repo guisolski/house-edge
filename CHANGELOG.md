@@ -5,6 +5,24 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.0] — 2026-11-25
+
+### Added
+
+- Simon-style sequence gates (visible arrow/color pattern; wrong tap fails) for chase/hack + duel phase 3; keyboard/touch/gamepad.
+- Readable clues on every choice/puzzle skill gate; unit test asserts clue names the correct option.
+- Distinct Casa VIP salon map (layout/tables/crowd) after the elevator ride.
+- Skill combo/streak bonus; needle speed/zone vary by difficulty.
+- Side Jobs labeled `[SIDE HUSTLE · RNG]` so optional grind is obvious.
+
+### Fixed
+
+- Edge-pointer / exit sign labels clamp the full measured box inside the viewport.
+- E prompt: objective NPC > Travel pad > other NPCs; clears when out of range.
+- Exit pads: arrival latch prevents chain-travel; spawns clear of pads; pad label == destination tested.
+- Casa FPS hitch on district enter: prewarm/bake all districts + VIP + NPC sprites on load.
+- Epilogue with Dona Nair expanded into a satisfying short scene.
+
 ## [1.13.0] — 2026-11-25
 
 ### Added

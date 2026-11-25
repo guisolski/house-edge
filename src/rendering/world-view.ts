@@ -3,9 +3,16 @@ import type { DistrictId } from '../core/types';
 import type { GameSession } from '../systems/session';
 import type { WorldNpc } from '../systems/interaction';
 import { createCamera, followPlayer, viewportPadding } from '../world/camera';
-import { tileAt, type MapDef, type TileKind } from '../world/maps';
+import {
+  buildDistrictMap,
+  buildTorreVip,
+  tileAt,
+  type MapDef,
+  type TileKind,
+} from '../world/maps';
 import { bakeSprite, blitImage } from './bake';
 import { FpsMeter, type FpsSample } from './fps';
+import { layoutMarkerLabel } from './label-layout';
 import { drawPixelText, measurePixelText } from './pixel-font';
 import {
   makeAlley,
@@ -67,7 +74,8 @@ type Baked = {
 };
 
 type MapCache = {
-  districtId: string;
+  /** Includes VIP floor suffix so foyer/VIP don't share a stale bake. */
+  key: string;
   layer: HTMLCanvasElement;
 };
 
@@ -172,10 +180,12 @@ function makeViewState(session: GameSession): ViewState {
   canvas.className = 'world-canvas';
   canvas.width = 960;
   canvas.height = 540;
+  const baked = bakeAll();
+  prewarmDistricts(session, baked);
   const state: ViewState = {
     canvas,
     session,
-    baked: bakeAll(),
+    baked,
     meter: new FpsMeter(),
     cam: createCamera(),
     mapCache: null,
@@ -343,12 +353,29 @@ function paintPlayOverlays(o: {
   if ((o.frame & 3) === 0) drawRain(o.ctx, o.frame);
 }
 
+function mapCacheKey(session: GameSession, map: MapDef): string {
+  if (map.districtId === 'torre-casa' && session.isVipFloor()) return 'torre-vip';
+  return map.districtId;
+}
+
 function ensureMapCache(state: ViewState, map: MapDef, baked: Baked): void {
-  if (state.mapCache?.districtId === map.districtId) return;
+  const key = mapCacheKey(state.session, map);
+  if (state.mapCache?.key === key) return;
   state.mapCache = {
-    districtId: map.districtId,
+    key,
     layer: bakeMapLayer(map, baked),
   };
+}
+
+/** Bake every district (+ VIP) on boot so first travel into Casa doesn't hitch. */
+function prewarmDistricts(session: GameSession, baked: Baked): void {
+  const ids: DistrictId[] = ['morro-neon', 'feira-central', 'avenida-odds', 'torre-casa'];
+  for (const id of ids) bakeMapLayer(buildDistrictMap(id), baked);
+  bakeMapLayer(buildTorreVip(), baked);
+  for (const npc of session.npcs) {
+    npcSprite(baked, npc, 0);
+    npcSprite(baked, npc, 1);
+  }
 }
 
 function paintBackdrop(
@@ -505,7 +532,7 @@ function signImage(baked: Baked, label: string, color: string): HTMLCanvasElemen
   return img;
 }
 
-/** Draw signs in screen space; clamp so wide EXIT labels stay inside the map. */
+/** Draw signs in screen space; clamp so wide EXIT labels stay inside the viewport. */
 function drawLiveSigns(
   ctx: CanvasRenderingContext2D,
   state: ViewState,
@@ -514,13 +541,19 @@ function drawLiveSigns(
   camY: number,
 ): void {
   const maxX = map.width * TILE_PX;
+  const viewW = state.canvas.width;
+  const pad = 8;
   for (const s of map.signs) {
     const img = signImage(state.baked, s.label, s.color);
     let sx = s.x * TILE_PX;
     // Keep full destination text on-screen (east exits used to clip mid-word).
     if (sx + img.width > maxX - TILE_PX)
       sx = Math.max(TILE_PX, maxX - TILE_PX - img.width);
-    blitImage(ctx, img, sx - camX, s.y * TILE_PX - 8 - camY);
+    let screenX = sx - camX;
+    if (screenX + img.width > viewW - pad)
+      screenX = Math.max(pad, viewW - pad - img.width);
+    if (screenX < pad) screenX = pad;
+    blitImage(ctx, img, screenX, s.y * TILE_PX - 8 - camY);
   }
 }
 
@@ -722,7 +755,7 @@ function pushNpcSorts(
   view: SortView,
 ): void {
   const me = session.player.getStats();
-  for (const npc of session.npcs) {
+  for (const npc of session.floorNpcs()) {
     if (npc.districtId !== districtId) continue;
     const img = npcSprite(baked, npc, anim);
     // Soft step-aside when Rita walks through — visual only (NPCs stay non-blocking).
@@ -1026,8 +1059,8 @@ function paintObjectiveMarker(m: ObjectiveMark): void {
   const px = clamp(rawX, margin, m.viewW - margin);
   const py = clamp(rawY, 120, m.viewH - margin);
   paintBigArrow(m.ctx, px, py, Palette.brasilYellow);
-  const short = shortenLabel(m.label, 14);
-  const label = short ? `${short} · ${m.distTiles}m` : `${m.distTiles}m`;
+  // Prefer full destination name; layoutMarkerLabel shortens only if it cannot fit.
+  const label = m.label ? `${m.label} · ${m.distTiles}m` : `${m.distTiles}m`;
   paintMarkerLabel(m.ctx, px, py - 22, label, m.viewW);
 }
 
@@ -1062,25 +1095,18 @@ function paintMarkerLabel(
 ): void {
   ctx.font = 'bold 14px monospace';
   ctx.textAlign = 'center';
-  const pad = 10;
-  const w = Math.min(220, ctx.measureText(text).width + 14);
-  // Keep the full label box on-screen (flip/clamp instead of clipping).
-  let left = px - w / 2;
-  if (left < pad) left = pad;
-  if (left + w > viewW - pad) left = Math.max(pad, viewW - pad - w);
-  const cx = left + w / 2;
+  const box = layoutMarkerLabel({
+    text,
+    anchorX: px,
+    viewW,
+    measure: (t) => ctx.measureText(t).width,
+  });
   ctx.fillStyle = '#000000dd';
-  ctx.fillRect(left, py - 14, w, 20);
+  ctx.fillRect(box.left, py - 14, box.width, 20);
   ctx.strokeStyle = Palette.brasilYellow;
-  ctx.strokeRect(left, py - 14, w, 20);
+  ctx.strokeRect(box.left, py - 14, box.width, 20);
   ctx.fillStyle = Palette.brasilYellow;
-  ctx.fillText(text, cx, py);
-}
-
-function shortenLabel(label: string, max: number): string {
-  if (!label) return '';
-  if (label.length <= max) return label;
-  return `${label.slice(0, Math.max(1, max - 1))}…`;
+  ctx.fillText(box.text, box.cx, py);
 }
 
 function clamp(v: number, lo: number, hi: number): number {
