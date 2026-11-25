@@ -1,0 +1,162 @@
+{
+  "version": "1.20.2",
+  "base": "http://127.0.0.1:43126/",
+  "totalMs": 21415,
+  "totalMin": 0.36,
+  "stamps": [
+    {
+      "label": "New Game",
+      "ms": 0
+    },
+    {
+      "label": "boteco-nair",
+      "ms": 113
+    },
+    {
+      "label": "side-morro-copper",
+      "ms": 1044
+    },
+    {
+      "label": "morro-antena",
+      "ms": 1276
+    },
+    {
+      "label": "luna-beco",
+      "ms": 1500
+    },
+    {
+      "label": "morro-fios",
+      "ms": 1733
+    },
+    {
+      "label": "seu-ze-banca",
+      "ms": 1968
+    },
+    {
+      "label": "feira-kiko",
+      "ms": 2201
+    },
+    {
+      "label": "feira-catador",
+      "ms": 2432
+    },
+    {
+      "label": "bia-set",
+      "ms": 2667
+    },
+    {
+      "label": "feira-dancer",
+      "ms": 3574
+    },
+    {
+      "label": "feira-forro",
+      "ms": 3822
+    },
+    {
+      "label": "feira-lockbox",
+      "ms": 4083
+    },
+    {
+      "label": "feira-radio",
+      "ms": 4986
+    },
+    {
+      "label": "feira-tipster",
+      "ms": 5217
+    },
+    {
+      "label": "feira-courier",
+      "ms": 5450
+    },
+    {
+      "label": "prova-luna",
+      "ms": 5598
+    },
+    {
+      "label": "avenida-twist",
+      "ms": 5832
+    },
+    {
+      "label": "avenida-checkpoint",
+      "ms": 6066
+    },
+    {
+      "label": "avenida-courier",
+      "ms": 6300
+    },
+    {
+      "label": "avenida-influencer",
+      "ms": 6532
+    },
+    {
+      "label": "avenida-drone",
+      "ms": 6764
+    },
+    {
+      "label": "neon-snap-cleared",
+      "ms": 11785
+    },
+    {
+      "label": "avenida-radar",
+      "ms": 11940
+    },
+    {
+      "label": "avenida-server",
+      "ms": 12081
+    },
+    {
+      "label": "avenida-atm",
+      "ms": 12984
+    },
+    {
+      "label": "avenida-stealth",
+      "ms": 13215
+    },
+    {
+      "label": "avenida-betrayal",
+      "ms": 13447
+    },
+    {
+      "label": "lobby-margin",
+      "ms": 14349
+    },
+    {
+      "label": "morro-return-nair",
+      "ms": 14581
+    },
+    {
+      "label": "morro-return-fio",
+      "ms": 14814
+    },
+    {
+      "label": "torre-foyer",
+      "ms": 15050
+    },
+    {
+      "label": "torre-pit",
+      "ms": 15282
+    },
+    {
+      "label": "torre-elevator",
+      "ms": 15598
+    },
+    {
+      "label": "torre-vip",
+      "ms": 15833
+    },
+    {
+      "label": "torre-negotiate",
+      "ms": 16066
+    },
+    {
+      "label": "torre-final",
+      "ms": 16964
+    },
+    {
+      "label": "epilogue-closing",
+      "ms": 21415
+    }
+  ],
+  "neonSnapClearMs": 5021,
+  "note": "Full story on prod; Neon Snap cleared with real KeyD (no completeSkillPerfect). Epilogue captured on fresh page after torre-final chrome crash."
+}

@@ -551,8 +551,14 @@ function buildAvenida(): MapDef {
   paintExitPad(tiles, w, 2, 12);
   paintExitPad(tiles, w, 43, 12);
   for (let x = 4; x < 42; x += 6) props.push({ x, y: 11, kind: 'lamp' });
-  // Props off the center walk row so the corridor stays clear.
-  props.push({ x: 20, y: 12, kind: 'moto' }, { x: 8, y: 11, kind: 'crate' });
+  // Neon Snap cover crates (match stealth cover tiles) + approach prop.
+  props.push(
+    { x: 8, y: 11, kind: 'moto' },
+    { x: 15, y: 12, kind: 'crate' },
+    { x: 20, y: 11, kind: 'crate' },
+    { x: 26, y: 12, kind: 'crate' },
+    { x: 31, y: 11, kind: 'crate' },
+  );
   // Solid-looking police barriers / shipping containers on sealed strips.
   for (let x = 12; x <= 34; x += 2) {
     props.push({ x, y: 9, kind: 'barrier' }, { x, y: 14, kind: 'barrier' });

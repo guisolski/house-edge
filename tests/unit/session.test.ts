@@ -61,6 +61,8 @@ describe('GameSession basics', () => {
   it('interacts with nearby npc and blocks out of range', () => {
     const session = new GameSession(7);
     session.startNew();
+    // Spawn sits beside Nair — walk west out of range first.
+    session.player.setPosition(4, 20);
     expect(session.interact()).toBe(false);
     session.player.setPosition(14, 16);
     expect(session.nearbyNpc()?.id).toBe('dona-nair');

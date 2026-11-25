@@ -53,9 +53,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'antena-tech',
     name: 'Antena Tech',
     districtId: 'morro-neon',
-    // Mid terrace west — clear of Nair (14,16) and Catador (4,16).
-    x: 8,
-    y: 15,
+    // West ridge — well clear of spawn/Nair interact bubble (12–14,16).
+    x: 5,
+    y: 10,
     beatId: 'morro-antena',
     extraBeatIds: ['side-morro-tank'],
     jobBetId: 'antena-sinal',
@@ -120,9 +120,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'catador-feira',
     name: 'Catador da Feira',
     districtId: 'feira-central',
-    // South aisle — clear of Barraca Tia + FEIRA neon.
+    // South aisle — clear of Bia (18,10) and Barraca Tia.
     x: 26,
-    y: 15,
+    y: 16,
     beatId: 'feira-catador',
     jobBetId: 'feira-garrafa',
     safeJobId: 'safe-feira-central',
@@ -133,8 +133,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'bia',
     name: 'Bia Forró',
     districtId: 'feira-central',
-    x: 22,
-    y: 11,
+    // North stage — clear of Catador (26,16) tag stack.
+    x: 18,
+    y: 10,
     beatId: 'bia-set',
     color: '#ff6eb4',
     bodyVariant: 3,
@@ -143,7 +144,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'dancer-feira',
     name: 'Dancer Sol',
     districtId: 'feira-central',
-    x: 28,
+    // Mid aisle — clear of DJ interact bubble.
+    x: 26,
     y: 14,
     beatId: 'feira-dancer',
     color: '#ff9f1c',
@@ -153,9 +155,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'forro-dj',
     name: 'DJ Forró',
     districtId: 'feira-central',
-    // East stage — clear of Bia interact radius.
+    // East stage — clear of Odds pad (38,13) and Dancer (26,14).
     x: 34,
-    y: 12,
+    y: 10,
     beatId: 'feira-forro',
     jobBetId: 'forro-crowd',
     color: '#d946ef',
@@ -289,7 +291,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'margin',
     name: 'Dr. Margin',
     districtId: 'avenida-odds',
-    x: 20,
+    // East of mid — clear of Mole Contact (10,12) approach bubble.
+    x: 27,
     y: 12,
     beatId: 'lobby-margin',
     color: '#4a6cff',

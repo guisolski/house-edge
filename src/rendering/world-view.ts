@@ -304,7 +304,7 @@ function paintPlayHud(
   drawSideMarkers(ctx, state, camX, camY);
 }
 
-/** Name tags: nearest 2 within ~1.8 tiles, stacked so crowded Fair/Odds don't overlap. */
+/** Name tags: nearest 2 within ~1.6 tiles, stacked with screen-space gap. */
 function drawNearbyNpcNames(
   ctx: CanvasRenderingContext2D,
   state: ViewState,
@@ -319,11 +319,12 @@ function drawNearbyNpcNames(
     if (npc.districtId !== me.districtId) continue;
     if (npc.id.startsWith('elevator') || !npc.name) continue;
     const d = Math.hypot(npc.x - me.x, npc.y - me.y);
-    if (d > 1.8) continue;
+    if (d > 1.6) continue;
     if (objName && npc.name === objName) continue;
     near.push({ npc, d });
   }
   near.sort((a, b) => a.d - b.d);
+  const placed: { x: number; y: number }[] = [];
   near.slice(0, 2).forEach((row, i) => {
     const avoid = labelOffsetForSigns({
       tileX: row.npc.x,
@@ -335,26 +336,33 @@ function drawNearbyNpcNames(
     });
     if (avoid.hideLabel) return;
     const px = row.npc.x * TILE_PX + 16 - camX;
-    // Stack second tag above the first so ATM/Luna clusters stay readable.
-    const stack = i * -22;
-    const py = row.npc.y * TILE_PX - 28 - camY + avoid.dy + stack;
+    // Stack second tag well above the first (Bia / Catador / ATM clusters).
+    let stack = i * -36;
+    let py = row.npc.y * TILE_PX - 28 - camY + avoid.dy + stack;
+    // Nudge further if still colliding with another tag in screen space.
+    for (const p of placed) {
+      if (Math.hypot(px - p.x, py - p.y) < 28) {
+        stack -= 36;
+        py = row.npc.y * TILE_PX - 28 - camY + avoid.dy + stack;
+      }
+    }
+    placed.push({ x: px, y: py });
     paintMarkerLabel(ctx, px, py, row.npc.name, ctx.canvas.width);
   });
 }
 
-/** Readable translucent sight cone (fill + outline) for one drone. */
+/** Steady translucent sight cone — always drawn (brightness may pulse). */
 function paintDroneCone(
   ctx: CanvasRenderingContext2D,
   d: { x: number; y: number; facing: number; halfAngle: number; range: number },
   camX: number,
   camY: number,
-  detail: boolean,
+  frame: number,
 ): void {
   const cx = d.x * TILE_PX + 16 - camX;
   const cy = d.y * TILE_PX + 16 - camY;
   const reach = d.range * TILE_PX;
-  // Cheaper wedge on Odds Avenue FPS path; still readable fill + outline.
-  const steps = detail ? 14 : 8;
+  const steps = 10;
   ctx.beginPath();
   ctx.moveTo(cx, cy);
   for (let i = 0; i <= steps; i += 1) {
@@ -362,7 +370,10 @@ function paintDroneCone(
     ctx.lineTo(cx + Math.cos(a) * reach, cy + Math.sin(a) * reach);
   }
   ctx.closePath();
-  ctx.fillStyle = '#2bfff248';
+  // Pulse alpha only — never skip frames (playtest #24 flicker made cones unreadable).
+  const pulse = 0x40 + Math.floor(12 * (0.5 + 0.5 * Math.sin(frame * 0.08)));
+  const fill = `#2bfff2${pulse.toString(16).padStart(2, '0')}`;
+  ctx.fillStyle = fill;
   ctx.fill();
   ctx.strokeStyle = '#ffdf00cc';
   ctx.lineWidth = 2;
@@ -383,9 +394,7 @@ function drawStealthDrones(
 ): void {
   const stealth = state.session.getStealthProgress();
   if (!stealth || stealth.done) return;
-  // Every other frame keeps Odds Avenue near the 50 FPS budget.
-  if ((frame & 1) === 1) return;
-  for (const d of stealth.drones) paintDroneCone(ctx, d, camX, camY, false);
+  for (const d of stealth.drones) paintDroneCone(ctx, d, camX, camY, frame);
   // Goal beacon + EXIT label + player→exit arrow.
   const g = stealth.def.goal;
   const gx = g.x * TILE_PX + 16 - camX;

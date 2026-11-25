@@ -1,53 +1,45 @@
-# Playtest REPORT — House Edge v1.20.1
+# Playtest REPORT — House Edge v1.20.2
 
-Independent playtest #23 of v1.20.0 (Neon Snap fixed; boss 3 phases; credits; ~29 min incl. test overhead; art 7 / fun 6). Ship **v1.20.1**.
+Independent playtest #24 of v1.20.1 (live tab title confirmed): **REGRESSION** — Neon Snap unbeatable (cone flicker/bursts, no readable safe window; never reached Casa/epilogue). PASS on #24: Fio=pad, needle Enter, Take-bet focus, checkpoint idle 15s, Odds FPS 56–61. Ship **v1.20.2**.
 
-## Verdict: PASS
+## Verdict: PASS (fixes landed)
 
-Epilogue closing line is its own scrolled panel (≥3s) with required Close. Objective E-prompt wins in-range clusters. Prod/dev e2e green.
+Neon Snap readable + walk-solvable; spawn E-prompt is Dona Nair; Enter rematch gated; crowded tags de-overlapped. Prod e2e clears Neon Snap with real keys.
 
 ## Bugs fixed
 
-| #   | Issue                                         | Result                                                          |
-| --- | --------------------------------------------- | --------------------------------------------------------------- |
-| 1   | Epilogue closing below fold / auto-credits    | PASS — own panel, scroll, ≥3s, key/Close required; e2e viewport |
-| 2   | E-prompt neighbour before objective; tag pile | PASS — objective-first + nearest-2 stacked tags; unit cluster   |
-| 3   | Enter chains rematch after lockbox/dialog     | PASS — 400ms + key-release gate                                 |
-| 4   | Needle Stop late; Enter ignored               | PASS — keydown sample; Enter/Space/A                            |
-| 5   | Lobby Cam Enter chose Walk away               | PASS — focus `.btn-take-bet`                                    |
-| 6   | Fio sequence ≠ pad                            | PASS — `↑ → ↓ ←`                                                |
-| 7   | Elevator west → Odds; no Casa enter label     | PASS — exit (5,18); `Enter Casa Tower →`                        |
-| 8   | Odds mid-lane block ~x305                     | PASS — floor tiles + re-assert y11–12 asphalt                   |
-| 9   | Checkpoint idling spotted                     | PASS — checkpoint (12,11) cone-free                             |
-| 10  | Nair under Boteco / behind tenement           | PASS — (14,16) forward plaza                                    |
-| 11  | Odds FPS ~30                                  | PASS — cheaper cones + tag cap                                  |
+| #   | Issue                                       | Result                                                                  |
+| --- | ------------------------------------------- | ----------------------------------------------------------------------- |
+| 1   | Neon Snap unbeatable (flicker + lane sweep) | PASS — steady cones, alternating patrols + cover, ≥1.2s walk windows    |
+| 2   | E-prompt Antena/DJ/Margin steals objective  | PASS — spawn beside Nair; NPCs spaced; live `nearbyNpc` objective-first |
+| 3   | Enter spam rematch after Close              | PASS — input-layer release + 400ms gate                                 |
+| 4   | Crowded tags overlap (Bia/Catador)          | PASS — nearest-2, larger stack, screen nudge                            |
 
 ## Measured
 
-| Metric                      | Value                                    |
-| --------------------------- | ---------------------------------------- |
-| User playtest #23 (walking) | ~29 min (v1.20.0, incl. overhead)        |
-| Story-walk e2e (desktop)    | ~17.8s wall (objective walk + E only)    |
-| Paced scripted beats (prod) | ~32s / 0.53 min (`v201-timing.json`)     |
-| Epilogue closing hold       | ≥3s before Close arms                    |
-| E2e                         | 48/48 desktop+mobile; prod Neon Snap 2/2 |
-| Unit coverage branches      | 90.14% (988/1096)                        |
+| Metric                      | Value                                                         |
+| --------------------------- | ------------------------------------------------------------- |
+| Story-walk e2e (desktop)    | ~18.1s wall (objective walk + E only)                         |
+| Paced scripted beats (prod) | ~21.4s / 0.36 min (`v202-timing.json`)                        |
+| Neon Snap prod clear        | ~5.0s real KeyD adaptive walk; `drone_ok`                     |
+| E2e                         | desktop+mobile + prod (`neon-snap-clear` / prompt / debounce) |
+| Unit coverage branches      | 90.16% (1008/1118)                                            |
 
 ## Artifacts
 
-- `v201-epilogue-closing-line.png` — Saúde line visible in viewport (e2e)
-- `v201-epilogue-closing-line-prod.png` — same on vite preview of `dist`
-- `v201-credits-prod.png` — credits after Close
-- `v201-timing.json` — paced beat stamps on prod build
-- Prior Neon Snap barrier shots remain valid under the sealed corridor
+- `v202-neon-snap-cleared-prod.png` — corridor cleared on prod build (real inputs)
+- `v202-epilogue-closing-line-prod.png` — Saúde closing line on prod
+- `v202-credits-prod.png` — credits after Close
+- `v202-timing.json` — paced beat stamps on prod preview
+- `v202-01-title-play.png` / `v202-neon-snap-start.png`
 
-## Scores (playtest #23 baseline → this build)
+## Scores (playtest #24 baseline → this build)
 
-|     | #23 (v1.20.0) | v1.20.1 target   |
-| --- | ------------- | ---------------- |
-| Art | 7             | hold             |
-| Fun | 6             | lift (prompt/UI) |
+|     | #24 (v1.20.1) | v1.20.2 target      |
+| --- | ------------- | ------------------- |
+| Art | hold          | hold                |
+| Fun | blocked       | restore (Neon Snap) |
 
 ## Gaps
 
-- Further Odds FX budget if FPS still dips under heavier drone counts.
+- Human playtest of v1.20.2 still needed to confirm cone readability + tag spacing under real walking FPS.

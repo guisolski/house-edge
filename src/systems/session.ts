@@ -105,6 +105,8 @@ export class GameSession {
   private interactLockUntil = 0;
   /** After a dialog closes, require Interact key release before re-arming. */
   private interactNeedsRelease = false;
+  /** Key-up arrived during the time lock — apply after lock expires. */
+  private interactReleasePending = false;
 
   constructor(seed = 42, bus = new EventBus()) {
     this.bus = bus;
@@ -242,6 +244,13 @@ export class GameSession {
 
   isStealthActive(): boolean {
     return Boolean(this.stealthProgress && !this.stealthProgress.done);
+  }
+
+  /** True when the player is not inside any live drone cone (cover counts). */
+  isStealthSafe(): boolean {
+    if (!this.stealthProgress || this.stealthProgress.done) return true;
+    const s = this.player.getStats();
+    return !anyDroneSpots(this.stealthProgress, { x: s.x, y: s.y });
   }
 
   /** E2e / harness: skip the stealth corridor. */
@@ -511,13 +520,28 @@ export class GameSession {
   }
 
   /**
+   * Input-layer gate: after any dialog closes, ignore Interact until the key is
+   * released AND 400ms have passed. Call from wiring before handleAction.
+   */
+  allowInteractInput(): boolean {
+    const now = Date.now();
+    if (now < this.interactLockUntil) return false;
+    if (this.interactReleasePending) {
+      this.interactNeedsRelease = false;
+      this.interactReleasePending = false;
+    }
+    if (this.interactNeedsRelease) return false;
+    return true;
+  }
+
+  /**
    * @param fromInput — when true (keyboard/gamepad), also require Interact key release
    * after a dialog closes. Programmatic callers (story-walk / tests) omit this.
    */
   interact(fromInput = false): boolean {
     if (!this.ui.is('play')) return false;
-    if (Date.now() < this.interactLockUntil) return false;
-    if (fromInput && this.interactNeedsRelease) return false;
+    if (fromInput && !this.allowInteractInput()) return false;
+    if (!fromInput && Date.now() < this.interactLockUntil) return false;
     // Standing on an elevator pad always uses the car before other NPCs.
     const elev = this.nearbyElevatorPad();
     if (elev) return this.interactNpc(elev);
@@ -975,11 +999,17 @@ export class GameSession {
   private armInteractLock(): void {
     this.interactLockUntil = Date.now() + 400;
     this.interactNeedsRelease = true;
+    this.interactReleasePending = false;
   }
 
   /** Call on Interact key-up so a held Enter can't chain rematch dialogs. */
   noteInteractRelease(): void {
+    if (Date.now() < this.interactLockUntil) {
+      this.interactReleasePending = true;
+      return;
+    }
     this.interactNeedsRelease = false;
+    this.interactReleasePending = false;
   }
 
   /** Side Jobs / Travel / Upgrades Close → main pause menu (not straight to play). */

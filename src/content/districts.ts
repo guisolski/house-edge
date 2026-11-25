@@ -10,7 +10,8 @@ export const DISTRICTS: readonly DistrictDef[] = [
     unlockFlag: null,
     width: 42,
     height: 30,
-    spawn: { x: 8, y: 15 },
+    // Beside Dona Nair (14,16) — Antena Tech stays out of interact range.
+    spawn: { x: 12, y: 16 },
     color: Palette.brasilGreen,
     accent: Palette.neonMagenta,
   },

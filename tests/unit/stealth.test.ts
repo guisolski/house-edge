@@ -92,8 +92,9 @@ describe('stealth progress', () => {
     expect(p.done && p.won).toBe(true);
   });
 
-  it('corridor has 5 drones and a 45–90s target window', () => {
-    expect(AVENIDA_DRONE_STEALTH.drones.length).toBe(5);
+  it('corridor has 3 alternating drones and a 45–90s target window', () => {
+    expect(AVENIDA_DRONE_STEALTH.drones.length).toBe(3);
+    expect(AVENIDA_DRONE_STEALTH.cover?.length).toBeGreaterThanOrEqual(3);
     expect(AVENIDA_DRONE_STEALTH.targetMs).toBeGreaterThanOrEqual(45_000);
     expect(AVENIDA_DRONE_STEALTH.targetMs).toBeLessThanOrEqual(90_000);
   });

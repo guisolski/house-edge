@@ -48,6 +48,10 @@ function wireLifecycle(
       session.noteInteractRelease();
       return;
     }
+    // After any dialog closes: ignore Interact on play until release + 400ms.
+    if (p.action === 'interact' && p.pressed && session.ui.is('play')) {
+      if (!session.allowInteractInput()) return;
+    }
     if (p.pressed) handleAction(session, hud, p.action);
   });
 }

@@ -25,6 +25,9 @@ export type StealthDef = {
   drones: DroneDef[];
   /** Soft time budget (ms) for HUD; does not auto-fail. */
   targetMs: number;
+  /** Cover props — stand within coverRadius to hide from cones. */
+  cover?: Vec2[];
+  coverRadius?: number;
 };
 
 export type StealthDroneState = {
@@ -50,78 +53,70 @@ export type StealthProgress = {
   won: boolean;
 };
 
-/** Odds Avenue drone evade corridor (glass-shadow lane). */
+/**
+ * Odds Avenue Neon Snap — alternating vertical patrols (no lane-wide sweepers).
+ * Barriers already seal north/south bypass; cones stay readable with steady fill.
+ * Cover crates give ≥1.2s safe dwell windows at walk speed.
+ */
 export const AVENIDA_DRONE_STEALTH: StealthDef = {
   id: 'avenida-drone',
   districtId: 'avenida-odds',
   start: { x: 12, y: 12 },
-  // West of the first patrol — must stay outside every cone over a cycle.
   checkpoint: { x: 12, y: 11 },
   goal: { x: 34, y: 12 },
   goalRadius: 1.2,
-  targetMs: 75_000,
+  targetMs: 90_000,
+  coverRadius: 0.65,
+  cover: [
+    { x: 15, y: 12 },
+    { x: 20, y: 11 },
+    { x: 26, y: 12 },
+    { x: 31, y: 11 },
+  ],
   drones: [
     {
+      // West gate — starts north so the mid-lane opens first.
       id: 'drone-a',
       path: [
-        { x: 18, y: 8 },
-        { x: 18, y: 16 },
-        { x: 18, y: 8 },
+        { x: 17, y: 8 },
+        { x: 17, y: 16 },
+        { x: 17, y: 8 },
       ],
-      speed: 2.2,
-      halfAngle: Math.PI / 5,
-      range: 4.2,
+      speed: 1.05,
+      halfAngle: Math.PI / 6.5,
+      range: 3.1,
     },
     {
+      // Mid — opposite phase (starts south) so gaps alternate with A.
       id: 'drone-b',
       path: [
-        { x: 24, y: 15 },
-        { x: 24, y: 9 },
-        { x: 28, y: 9 },
-        { x: 28, y: 15 },
-        { x: 24, y: 15 },
+        { x: 23, y: 16 },
+        { x: 23, y: 8 },
+        { x: 23, y: 16 },
       ],
-      speed: 2.0,
-      halfAngle: Math.PI / 5.5,
-      range: 4.0,
+      speed: 1.05,
+      halfAngle: Math.PI / 6.5,
+      range: 3.1,
     },
     {
+      // East gate — slightly slower / narrower.
       id: 'drone-c',
       path: [
-        { x: 31, y: 10 },
-        { x: 31, y: 14 },
-        { x: 31, y: 10 },
+        { x: 29, y: 8 },
+        { x: 29, y: 16 },
+        { x: 29, y: 8 },
       ],
-      speed: 1.8,
-      halfAngle: Math.PI / 6,
-      range: 3.6,
-    },
-    {
-      // South-street sweeper — covers the plaza bypass between barricades.
-      id: 'drone-d',
-      path: [
-        { x: 13, y: 15 },
-        { x: 34, y: 15 },
-        { x: 13, y: 15 },
-      ],
-      speed: 2.6,
-      halfAngle: Math.PI / 3.2,
-      range: 4.0,
-    },
-    {
-      // North glass sweeper — blocks roof-line bypass above the asphalt.
-      id: 'drone-e',
-      path: [
-        { x: 14, y: 9 },
-        { x: 33, y: 9 },
-        { x: 14, y: 9 },
-      ],
-      speed: 2.5,
-      halfAngle: Math.PI / 3.5,
-      range: 3.8,
+      speed: 0.95,
+      halfAngle: Math.PI / 7,
+      range: 2.9,
     },
   ],
 };
+
+/** Matches game walk cadence (src/game/app.ts WALK_MS). */
+export const WALK_TILE_MS = 52;
+/** Minimum guaranteed safe dwell a human can use between dashes. */
+export const MIN_SAFE_WINDOW_MS = 1200;
 
 function droneStateFromDef(d: DroneDef): StealthDroneState {
   const p0 = d.path[0]!;
@@ -171,7 +166,13 @@ export function pointInCone(q: ConeQuery): boolean {
   return Math.abs(ang) <= q.halfAngle;
 }
 
+export function inCover(def: StealthDef, player: Vec2): boolean {
+  const r = def.coverRadius ?? 0.65;
+  return (def.cover ?? []).some((c) => Math.hypot(c.x - player.x, c.y - player.y) <= r);
+}
+
 export function anyDroneSpots(progress: StealthProgress, player: Vec2): boolean {
+  if (inCover(progress.def, player)) return false;
   return progress.drones.some((d) =>
     pointInCone({
       origin: { x: d.x, y: d.y },
@@ -276,6 +277,12 @@ function markConeCoverage(covered: Set<string>, d: StealthDroneState): void {
   }
 }
 
+function clearCoverTiles(def: StealthDef, covered: Set<string>): void {
+  for (const c of def.cover ?? []) {
+    covered.delete(tileKey(Math.round(c.x), Math.round(c.y)));
+  }
+}
+
 /** Union of cone tiles across a sampled patrol cycle. */
 export function coneCoverageOverCycle(
   def: StealthDef,
@@ -290,6 +297,7 @@ export function coneCoverageOverCycle(
     for (const d of p.drones) markConeCoverage(covered, d);
     p = tickStealth(p, sampleDt);
   }
+  clearCoverTiles(def, covered);
   return covered;
 }
 
@@ -305,8 +313,6 @@ export function droneFreePathExists(
   const covered = coneCoverageOverCycle(def, opts);
   const start = { x: Math.round(def.start.x), y: Math.round(def.start.y) };
   const goal = { x: Math.round(def.goal.x), y: Math.round(def.goal.y) };
-  // Start/goal may be swept at some sample — a free bypass is an intermediate
-  // never-covered corridor on the real collision map (not "goal is covered").
   covered.delete(tileKey(start.x, start.y));
   covered.delete(tileKey(goal.x, goal.y));
   return bfsUncovered(start, goal, walkable, covered);

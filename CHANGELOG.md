@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.20.2] — 2026-11-25
+
+### Fixed
+
+- **Neon Snap (P0)**: cones always visible (steady fill + brightness pulse only — no every-other-frame flicker). Alternating vertical drones + cover crates; ≥1.2s safe dwell at walk speed. North/south barriers still seal bypass; y11–12 corridor stays open. Solvability unit test + prod e2e that clears with real walk keys (no `completeSkillPerfect`).
+- **E-prompt (P0)**: Morro spawn sits beside Dona Nair; Antena Tech moved off the spawn bubble. Fair DJ / Dancer / Odds Mole / Margin spaced past `INTERACT_RANGE`. Prod e2e asserts spawn prompt contains `Dona Nair`.
+- **Enter debounce (P0)**: input-layer gate — after any dialog closes, ignore Interact until key release **and** 400ms. Prod e2e: Close then 4× Enter @80ms → no dialog.
+- **Crowded tags**: nearer tag radius, larger stack offset, screen-space nudge so Bia/Catador/ATM clusters don’t overlap.
+
+### Tests
+
+- Unit: real-spawn Nair prompt, walk solvability + barrier corridor, interact input gate.
+- Prod e2e: `neon-snap-clear-prod`, `prompt-spawn-prod`, `enter-debounce-prod`.
+
 ## [1.20.1] — 2026-11-25
 
 ### Fixed
