@@ -2,7 +2,7 @@ import { DISTRICTS } from '../content/districts';
 import type { DistrictId, StoryBeat } from '../core/types';
 import type { WorldNpc, DistrictExit } from './interaction';
 
-/** GD-1: always show the next concrete objective. */
+/** GD-1: always show the next concrete objective with a world marker. */
 
 export type Objective = {
   text: string;
@@ -38,7 +38,7 @@ function freeRoamObjective(ctx: ObjectiveCtx): Objective {
   const epi = ctx.npcs.find((n) => n.extraBeatIds?.includes('epilogue-laje'));
   if (epi && epi.districtId === ctx.districtId) {
     return {
-      text: 'Free roam — or talk to Dona Nair for the laje epilogue.',
+      text: `Free roam — or talk to ${epi.name} for the laje epilogue.`,
       targetX: epi.x,
       targetY: epi.y,
       districtId: ctx.districtId,
@@ -134,21 +134,19 @@ function travelObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
 }
 
 function npcObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
-  const npc = ctx.npcs.find(
-    (n) =>
-      n.districtId === ctx.districtId &&
-      (n.beatId === next.id || n.extraBeatIds?.includes(next.id)),
-  );
+  const npc = beatNpc(ctx, next);
   if (npc) {
+    const verb = npc.id === 'elevator' ? 'Use' : 'Talk to';
     return {
-      text: `Talk to ${npc.name}: ${next.title}`,
+      text: `${verb} ${npc.name}: ${next.title}`,
       targetX: npc.x,
       targetY: npc.y,
       districtId: ctx.districtId,
     };
   }
+  // Softlock guard — should never ship; e2e + unit tests assert every beat is tagged.
   return {
-    text: `${next.title} — look around ${districtName(ctx.districtId)}`,
+    text: `${next.title} — missing target (bug)`,
     districtId: ctx.districtId,
   };
 }

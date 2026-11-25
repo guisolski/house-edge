@@ -32,7 +32,8 @@ export const DISTRICTS: readonly DistrictDef[] = [
     unlockFlag: 'unlocked_avenida',
     width: 46,
     height: 24,
-    spawn: { x: 6, y: 12 },
+    // Clear of west Fair exit pad (5,12) + stand margin so arrival isn't a bounce-back.
+    spawn: { x: 12, y: 12 },
     color: Palette.brasilBlue,
     accent: Palette.neonLime,
   },
@@ -43,7 +44,7 @@ export const DISTRICTS: readonly DistrictDef[] = [
     unlockFlag: 'unlocked_torre',
     width: 40,
     height: 24,
-    spawn: { x: 8, y: 13 },
+    spawn: { x: 10, y: 13 },
     color: Palette.neonMagenta,
     accent: Palette.brasilYellow,
   },

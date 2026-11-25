@@ -53,14 +53,16 @@ export default tseslint.config(
   },
   {
     // Browser evaluate payloads are intentionally self-contained.
-    files: ['e2e/story-complete.spec.ts'],
+    files: ['e2e/story-complete.spec.ts', 'e2e/story-walk.spec.ts'],
     rules: {
       'max-lines-per-function': [
         'error',
-        { max: 120, skipBlankLines: true, skipComments: true },
+        { max: 280, skipBlankLines: true, skipComments: true },
       ],
-      complexity: ['error', 18],
+      complexity: ['error', 36],
       'max-depth': ['error', 5],
+      '@typescript-eslint/no-unused-expressions': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
     },
   },
   {

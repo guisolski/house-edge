@@ -81,16 +81,17 @@ test.describe('District exits', () => {
         const sign =
           originMap.signs.find(
             (s) =>
-              s.label.startsWith('EXIT') && Math.hypot(s.x - exit.x, s.y - exit.y) <= 2.5,
+              (s.label.startsWith('>') || s.label.startsWith('EXIT')) &&
+              Math.hypot(s.x - exit.x, s.y - exit.y) <= 3.5,
           )?.label ?? null;
         const destWord =
           exit.toDistrict === 'feira-central'
-            ? 'FAIR'
+            ? 'Central Fair'
             : exit.toDistrict === 'morro-neon'
-              ? 'MORRO'
+              ? 'Morro Neon'
               : exit.toDistrict === 'avenida-odds'
-                ? 'ODDS'
-                : 'CASA';
+                ? 'Odds Avenue'
+                : 'Casa Tower';
         results.push({
           id: exit.id,
           from: before,
@@ -110,7 +111,7 @@ test.describe('District exits', () => {
     for (const row of report) {
       expect(row.ok, `${row.id} walk ${row.from}→${row.to} sign=${row.sign}`).toBe(true);
       expect(row.arrived).toBe(row.to);
-      expect(row.sign).toMatch(/^EXIT >/);
+      expect(row.sign).toMatch(/Central Fair|Morro Neon|Odds Avenue|Casa Tower/);
     }
     expect(report.length).toBeGreaterThanOrEqual(6);
   });

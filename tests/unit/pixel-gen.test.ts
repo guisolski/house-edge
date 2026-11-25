@@ -19,6 +19,7 @@ describe('pixel-gen', () => {
     expect(makePlayerSprite().height).toBe(54);
     expect(makeNpcSprite('#fff').height).toBe(54);
     expect(makeNpcSprite('#fff', 0, 'seu-ze').height).toBe(58);
+    expect(makeNpcSprite('#c8d0d8', 0, 'elevator').height).toBe(54);
     expect(makeAsphalt().pixels.length).toBe(256);
     expect(makePlaza().pixels.length).toBe(256);
     expect(makeStairs().pixels.length).toBe(256);

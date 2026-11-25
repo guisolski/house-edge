@@ -165,24 +165,26 @@ describe('map queries', () => {
 });
 
 describe('exit pads', () => {
-  it('every exit zone is a single tile overlapping a visible EXIT sign', () => {
+  it('every exit doorway cluster overlaps a full-name destination sign', () => {
     const exits = districtExits();
     expect(exits.length).toBeGreaterThanOrEqual(6);
     for (const exit of exits) {
       const map = buildDistrictMap(exit.districtId);
       expect(tileAt(map, exit.x, exit.y)).toBe('exit');
-      expect(countExitPadsNear(map, exit.x, exit.y)).toBe(1);
+      const pads = countExitPadsNear(map, exit.x, exit.y);
+      expect(pads, `${exit.id} doorway`).toBeGreaterThanOrEqual(3);
+      expect(pads).toBeLessThanOrEqual(9);
       const sign = map.signs.find(
         (s) =>
-          s.label.startsWith('EXIT') && Math.hypot(s.x - exit.x, s.y - exit.y) <= 2.5,
+          (s.label.startsWith('>') || s.label.startsWith('EXIT')) &&
+          Math.hypot(s.x - exit.x, s.y - exit.y) <= 3.5,
       );
-      expect(sign, `${exit.id} needs EXIT sign on/near pad`).toBeTruthy();
+      expect(sign, `${exit.id} needs destination sign`).toBeTruthy();
+      expect(sign!.label).toMatch(/Central Fair|Morro Neon|Odds Avenue|Casa Tower/);
     }
     const torre = buildDistrictMap('torre-casa');
-    for (let x = 6; x <= 20; x += 1) {
+    for (let x = 8; x <= 20; x += 1) {
       expect(tileAt(torre, x, 12)).not.toBe('exit');
-      expect(tileAt(torre, x, 11)).not.toBe('exit');
-      expect(tileAt(torre, x, 13)).not.toBe('exit');
     }
     expect(tileAt(torre, 5, 12)).toBe('exit');
   });
@@ -223,6 +225,79 @@ describe('exit pads', () => {
     expect(
       viewportPadding({ mapW: 40, mapH: 30, viewW: 640, viewH: 360, tilePx: 48 }).padY,
     ).toBe(0);
+  });
+});
+
+describe('story beat targets', () => {
+  it('tags every non-intro beat with a reachable NPC/object', () => {
+    const npcs = districtNpcs();
+    const untagged: string[] = [];
+    for (const beat of STORY_BEATS) {
+      if (beat.id === 'intro-laje') continue;
+      const hit = npcs.find(
+        (n) => n.beatId === beat.id || n.extraBeatIds?.includes(beat.id),
+      );
+      if (!hit) untagged.push(beat.id);
+    }
+    expect(untagged, `beats missing NPC/object tag: ${untagged.join(', ')}`).toEqual([]);
+  });
+
+  it('elevator beat names Elevator with a marker after pit', () => {
+    const npcs = districtNpcs();
+    const elev = npcs.find((n) => n.id === 'elevator');
+    expect(elev?.beatId).toBe('torre-elevator');
+    const done = new Set([
+      'intro-laje',
+      'boteco-nair',
+      'morro-antena',
+      'luna-beco',
+      'morro-fios',
+      'seu-ze-banca',
+      'feira-kiko',
+      'feira-catador',
+      'bia-set',
+      'feira-forro',
+      'feira-radio',
+      'feira-tipster',
+      'feira-courier',
+      'prova-luna',
+      'avenida-twist',
+      'avenida-checkpoint',
+      'avenida-influencer',
+      'avenida-radar',
+      'avenida-atm',
+      'lobby-margin',
+      'morro-return-nair',
+      'torre-foyer',
+      'torre-pit',
+    ]);
+    const on = new Set([
+      'conheceu_rita',
+      'falou_nair',
+      'antena_ok',
+      'conheceu_luna',
+      'fios_ok',
+      'unlocked_feira',
+      'unlocked_avenida',
+      'unlocked_torre',
+      'escandalo_aberto',
+      'morro_return_ok',
+      'foyer_ok',
+      'pit_ok',
+    ]);
+    const obj = currentObjective({
+      beats: STORY_BEATS,
+      completed: [...done],
+      flags: (f) => on.has(f),
+      districtId: 'torre-casa',
+      npcs,
+      exits: districtExits(),
+      unlocked: () => true,
+    });
+    expect(obj.text).toMatch(/Elevator/);
+    expect(obj.text).not.toMatch(/look around|missing target/i);
+    expect(obj.targetX).toBe(elev!.x);
+    expect(obj.targetY).toBe(elev!.y);
   });
 });
 

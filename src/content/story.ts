@@ -593,15 +593,15 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     betId: 'torre-elevator',
     dialogue: [
       {
-        speaker: 'Pit Dealer',
-        text: 'VIP’s upstairs. Elevator’s a coin flip — express or security stop. Bet the shaft.',
+        speaker: 'Elevator',
+        text: 'VIP’s upstairs. Coin flip — express car or security stop. Bet the shaft.',
       },
       {
         speaker: 'Rita Odds',
         text: 'I’ve climbed worse stairs. Call the car.',
       },
       {
-        speaker: 'Pit Dealer',
+        speaker: 'Elevator',
         text: 'Win and the doors open on chrome. Lose and you ride with the busboys. Place it.',
       },
       {

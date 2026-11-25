@@ -103,10 +103,10 @@ export class GameSession {
     this.player.setFacing(dx, dy);
     // NPCs are non-blocking — walk-through keeps interaction from trapping the player.
     this.player.setPosition(nx, ny);
-    // Stepping onto / adjacent to an unlocked exit pad travels.
-    const exit = this.nearbyExit();
-    if (exit && tileAt(map, nx, ny) === 'exit') {
-      return this.travelTo(exit.toDistrict);
+    // Walk-on travel only on exit tiles (plus-pad). Stand margin still shows E — Travel.
+    if (tileAt(map, nx, ny) === 'exit') {
+      const exit = this.nearbyExit();
+      if (exit) return this.travelTo(exit.toDistrict);
     }
     return true;
   }

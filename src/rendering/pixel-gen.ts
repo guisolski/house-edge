@@ -172,12 +172,27 @@ function paintNpcBody(p: BodyPaint): void {
   }
 }
 
+/** Visible elevator booth — interactable story target (not a person recolor). */
+export function makeElevatorSprite(frame = 0): PixelGrid {
+  const g = empty(32, 54, 'transparent');
+  const bob = frame % 2;
+  fillRect(g, { x: 4, y: 8 + bob, w: 24, h: 40 }, '#1a2030');
+  fillRect(g, { x: 6, y: 10 + bob, w: 20, h: 28 }, '#2a3848');
+  fillRect(g, { x: 8, y: 12 + bob, w: 7, h: 24 }, '#c8d0d8');
+  fillRect(g, { x: 17, y: 12 + bob, w: 7, h: 24 }, '#a8b0b8');
+  fillRect(g, { x: 14, y: 22 + bob, w: 4, h: 6 }, '#ffdf00');
+  fillRect(g, { x: 10, y: 6 + bob, w: 12, h: 3 }, Palette.neonCyan);
+  fillRect(g, { x: 12, y: 40 + bob, w: 8, h: 2 }, '#0a0a12');
+  return g;
+}
+
 export function makeNpcSprite(
   accent: string,
   frame = 0,
   npcId?: string,
   bodyVariant: BodyVariant = 0,
 ): PixelGrid {
+  if (npcId === 'elevator') return makeElevatorSprite(frame);
   const layout = npcLayout(npcId, bodyVariant);
   const g = empty(32, layout.tall ? 58 : 54, 'transparent');
   // Idle bob even when standing — crowds/NPCs feel alive.

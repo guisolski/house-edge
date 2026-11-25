@@ -259,11 +259,20 @@ const NPCS: readonly WorldNpc[] = [
     id: 'pit-dealer',
     name: 'Pit Dealer',
     districtId: 'torre-casa',
-    x: 20,
-    y: 11,
+    x: 16,
+    y: 12,
     beatId: 'torre-pit',
     jobBetId: 'torre-pit',
     color: '#d946ef',
+  },
+  {
+    id: 'elevator',
+    name: 'Elevator',
+    districtId: 'torre-casa',
+    x: 24,
+    y: 10,
+    beatId: 'torre-elevator',
+    color: '#c8d0d8',
   },
   {
     id: 'vip-host',
@@ -280,7 +289,7 @@ const NPCS: readonly WorldNpc[] = [
     name: 'Augusto Casa',
     districtId: 'torre-casa',
     x: 22,
-    y: 13,
+    y: 14,
     beatId: 'torre-final',
     color: '#ff3b5c',
   },
@@ -407,8 +416,8 @@ function pickNearest(
   return best;
 }
 
-/** Adjacent (Chebyshev ≤ 1) counts — players aim at the visible pad/sign, not a 1px hotspot. */
-export const EXIT_STAND_RANGE = 1.05;
+/** Doorway + sign margin — whole exit approach triggers Travel / walk-in. */
+export const EXIT_STAND_RANGE = 2.6;
 
 export type NearestExitQuery = {
   exits: readonly DistrictExit[];

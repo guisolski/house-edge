@@ -50,12 +50,12 @@ describe('session v1.5 recovery and upgrades', () => {
     const session = new GameSession(5);
     session.startNew();
     session.world.unlock('feira-central');
-    // Adjacent (Chebyshev ≤ 1) counts; two tiles away does not.
-    session.player.setPosition(34, 16);
+    // Generous doorway margin (~2.6); three tiles away does not.
+    session.player.setPosition(33, 16);
     expect(session.nearbyExit()).toBeNull();
     session.player.setPosition(36, 16);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
-    session.player.setPosition(37, 16);
+    session.player.setPosition(34, 16);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
     session.player.setPosition(39, 16);
     expect(session.nearbyExit()).toBeNull();

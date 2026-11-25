@@ -144,9 +144,16 @@ function houseBlock(spec: HouseSpec): void {
   });
 }
 
-/** Single-tile exit — must match DistrictExit coords and the door sprite. */
+/**
+ * Doorway cluster (plus-shape) centered on DistrictExit coords.
+ * Generous walk-on area so players don't need a one-tile hotspot.
+ */
 function paintExitPad(tiles: TileKind[], w: number, x: number, y: number): void {
   set(tiles, w, x, y, 'exit');
+  set(tiles, w, x - 1, y, 'exit');
+  set(tiles, w, x + 1, y, 'exit');
+  set(tiles, w, x, y - 1, 'exit');
+  set(tiles, w, x, y + 1, 'exit');
 }
 
 function morroHouseSpots(): {
@@ -289,7 +296,7 @@ function buildMorro(): MapDef {
       { x: 7, y: 12, label: 'RAMP', color: '#b8ff2b' },
       { x: 32, y: 12, label: 'RAMP', color: '#b8ff2b' },
       // Inset from east wall so full destination text stays visible.
-      { x: 34, y: 15, label: 'EXIT > FAIR', color: '#2bfff2' },
+      { x: 33, y: 15, label: '> Central Fair', color: '#2bfff2' },
     ],
     props,
     landmark: { x: 22, y: 2, kind: 'led-tower' },
@@ -389,8 +396,8 @@ function buildFeira(): MapDef {
     signs: [
       { x: 15, y: 10, label: 'FEIRA', color: '#ffdf00' },
       { x: 28, y: 10, label: 'ODDS 24h', color: '#ff2bd6' },
-      { x: 5, y: 11, label: 'EXIT > MORRO', color: '#2bfff2' },
-      { x: 36, y: 12, label: 'EXIT > ODDS AVE', color: '#2bfff2' },
+      { x: 5, y: 11, label: '> Morro Neon', color: '#2bfff2' },
+      { x: 35, y: 12, label: '> Odds Avenue', color: '#2bfff2' },
     ],
     props,
     landmark: { x: 20, y: 6, kind: 'calcadao' },
@@ -448,8 +455,9 @@ function buildAvenida(): MapDef {
     signs: [
       { x: 16, y: 8, label: 'ODDS 24h', color: '#ff2bd6' },
       { x: 28, y: 8, label: 'CASA SUPREMA', color: '#ff2bd6' },
-      { x: 5, y: 10, label: 'EXIT > FAIR', color: '#2bfff2' },
-      { x: 38, y: 11, label: 'EXIT > CASA TOWER', color: '#2bfff2' },
+      { x: 5, y: 10, label: '> Central Fair', color: '#2bfff2' },
+      // Keep within ~3 tiles of exit pad (40,12) so doorway + label read as one hotspot.
+      { x: 38, y: 11, label: '> Casa Tower', color: '#2bfff2' },
     ],
     props,
     landmark: { x: 22, y: 3, kind: 'glass-corp' },
@@ -508,7 +516,8 @@ function buildTorre(): MapDef {
       { x: 16, y: 5, label: 'CASA SUPREMA', color: '#ffdf00' },
       { x: 26, y: 11, label: 'VIP TABLE', color: '#ffdf00' },
       { x: 12, y: 9, label: 'PIT FLOOR', color: '#ff2bd6' },
-      { x: 5, y: 10, label: 'EXIT > ODDS AVE', color: '#2bfff2' },
+      { x: 22, y: 8, label: 'ELEVATOR', color: '#c8d0d8' },
+      { x: 5, y: 10, label: '> Odds Avenue', color: '#2bfff2' },
     ],
     props,
     landmark: { x: 18, y: 8, kind: 'casa-tower' },

@@ -591,7 +591,9 @@ function paintStairSides(ctx: CanvasRenderingContext2D, map: MapDef): void {
 /** Crisp pixel sign: 5×7 bitmap font at integer scale (never downscaled AI art). */
 function bakeSignWithText(label: string, color: string): HTMLCanvasElement {
   const pad = 3;
-  const up = 3;
+  // Longer destination names use scale 2 so full text fits on-map.
+  const up =
+    label.length > 12 || label.includes('Avenue') || label.includes('Central') ? 2 : 3;
   const { w: textW, h: textH } = measurePixelText(label);
   const tw = Math.max(40, textW + pad * 2);
   const th = textH + pad * 2;

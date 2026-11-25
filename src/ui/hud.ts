@@ -394,7 +394,8 @@ function paintPrompt(prompt: HTMLElement, session: GameSession): void {
     return;
   }
   if (npc) {
-    prompt.textContent = `E  (${npc.name})`;
+    const verb = npc.id === 'elevator' ? 'E — Use' : 'E';
+    prompt.textContent = `${verb} (${npc.name})`;
     setVisible(prompt, true);
     return;
   }
