@@ -35,6 +35,10 @@ Independent playtest #25 of live v1.20.2: completed to credits, keyboard only (~
 - Enter gate: prod e2e Close + 4× Enter @80ms → no dialog
 - FPS: e2e 4× throttle walk + Odds dialog open ≥50 avg
 
+## CI
+
+- GitHub `CI` + `GitHub Pages` green on `915e2fd` (v1.21.0).
+
 ## Gaps
 
 - Human confirm of tag stacking under live Odds crowd density.
