@@ -49,6 +49,10 @@ export function paintDialogue(
     offerBet?: boolean;
     onAcceptBet?: () => void;
     onChoice?: (setsFlag?: string, reply?: string) => void;
+    /** Ignore Enter/activate on choices until this timestamp (ms). */
+    choiceArmAt?: number;
+    /** Block Close / skip until this timestamp (ms) — closing-line hold. */
+    holdCloseUntil?: number;
   },
 ): void {
   clearNode(panel);
@@ -60,10 +64,26 @@ export function paintDialogue(
   }
   const actions = el('div', 'panel-actions');
   if (pendingChoices?.length && opts.onChoice) {
+    const armAt = opts.choiceArmAt ?? 0;
     // Mandatory choices: no Close — Enter/focus lands on the first option.
     for (const c of pendingChoices) {
-      const btn = button(c.label, () => opts.onChoice?.(c.setsFlag, c.reply));
+      const btn = button(c.label, () => {
+        if (Date.now() < armAt) return;
+        opts.onChoice?.(c.setsFlag, c.reply);
+      });
       btn.classList.add('dialogue-choice');
+      // Swallow early Enter/Space so spam can't pick before arm.
+      btn.addEventListener(
+        'keydown',
+        (e) => {
+          if (Date.now() >= armAt) return;
+          if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        },
+        true,
+      );
       actions.appendChild(btn);
     }
   } else if (opts.offerBet && opts.onAcceptBet) {
@@ -72,7 +92,19 @@ export function paintDialogue(
       button(UI.walkAway, opts.onClose),
     );
   } else {
-    actions.appendChild(button(UI.close, opts.onClose));
+    const holdUntil = opts.holdCloseUntil ?? 0;
+    const close = button(UI.close, () => {
+      if (Date.now() < holdUntil) return;
+      opts.onClose();
+    });
+    if (Date.now() < holdUntil) {
+      close.disabled = true;
+      const left = Math.max(0, holdUntil - Date.now());
+      window.setTimeout(() => {
+        close.disabled = false;
+      }, left);
+    }
+    actions.appendChild(close);
   }
   panel.append(body, actions);
   focusFirst(panel);
@@ -189,6 +221,10 @@ function paintTimingSkill(
       `Green zone ${Math.round(zone.lo * 100)}–${Math.round(zone.hi * 100)}% · stop on the needle`,
     ),
   );
+  const misses = session.getSkillProgress()?.misses ?? 0;
+  if (misses > 0) {
+    body.appendChild(el('p', 'skill-clue skill-miss-hint', UI.needleMissHint));
+  }
   let t = 0;
   const speed = phase.needleSpeed ?? 0.8;
   const step = Math.max(0.015, 0.028 * speed);
@@ -245,6 +281,53 @@ function paintChoiceSkill(
   }
 }
 
+type LockpickState = {
+  heights: number[];
+  revealed: Set<number>;
+  hidden: number | undefined;
+  labels: HTMLButtonElement[];
+  expired: boolean;
+  settled: boolean;
+};
+
+function refreshLockpick(state: LockpickState): void {
+  state.labels.forEach((btn, i) => {
+    if (state.hidden === i && !state.revealed.has(i)) {
+      btn.textContent = `Pin ${i + 1}: ???`;
+      return;
+    }
+    const h = state.heights[i] ?? 0;
+    btn.textContent = `Pin ${i + 1}: ${'▮'.repeat(h + 1)}${'▯'.repeat(LOCK_PIN_LEVELS - 1 - h)}`;
+  });
+}
+
+function bindLockpickTimer(
+  body: HTMLElement,
+  phase: SkillPhase,
+  target: number[],
+  state: LockpickState,
+  ctx: { cleanup: () => void; session: GameSession; after: () => void },
+): void {
+  if (!phase.timerMs) return;
+  const timerEl = el('p', 'skill-seq', '');
+  body.appendChild(timerEl);
+  const started = Date.now();
+  const ms = phase.timerMs;
+  const tick = window.setInterval(() => {
+    const left = Math.max(0, ms - (Date.now() - started));
+    timerEl.textContent =
+      left > 0 ? `Timer ${Math.ceil(left / 1000)}s` : 'Timer expired — pick snaps';
+    if (left > 0) return;
+    window.clearInterval(tick);
+    state.expired = true;
+    if (state.settled) return;
+    state.settled = true;
+    ctx.cleanup();
+    ctx.session.submitSkill(encodePins(target.map((p) => (p + 1) % LOCK_PIN_LEVELS)));
+    ctx.after();
+  }, 200);
+}
+
 function paintLockpickSkill(
   body: HTMLElement,
   actions: HTMLElement,
@@ -254,65 +337,55 @@ function paintLockpickSkill(
   pickLeft?: number,
 ): void {
   const target = phasePins(phase);
-  const heights = target.map(() => 0);
-  const revealed = new Set<number>();
-  const hidden = phase.hiddenPin;
-  const row = el('div', 'lockpick-row');
-  const labels: HTMLButtonElement[] = [];
-  const timerEl = el('p', 'skill-seq', '');
-  let expired = false;
-  let settled = false;
-  const refresh = (): void => {
-    labels.forEach((btn, i) => {
-      if (hidden === i && !revealed.has(i)) {
-        btn.textContent = `Pin ${i + 1}: ???`;
-        return;
-      }
-      const h = heights[i] ?? 0;
-      btn.textContent = `Pin ${i + 1}: ${'▮'.repeat(h + 1)}${'▯'.repeat(LOCK_PIN_LEVELS - 1 - h)}`;
-    });
+  const state: LockpickState = {
+    heights: target.map(() => 0),
+    revealed: new Set(),
+    hidden: phase.hiddenPin,
+    labels: [],
+    expired: false,
+    settled: false,
   };
+  const row = el('div', 'lockpick-row');
+  const submit = (): void => {
+    if (state.settled || state.expired) return;
+    state.settled = true;
+    cleanup();
+    session.submitSkill(encodePins(state.heights));
+    after();
+  };
+  const onTab = (e: KeyboardEvent): void => {
+    if (e.key !== 'Tab' || state.settled || state.expired || !body.isConnected) return;
+    e.preventDefault();
+    e.stopPropagation();
+    submit();
+  };
+  const cleanup = (): void => {
+    body.ownerDocument?.removeEventListener('keydown', onTab, true);
+  };
+  body.ownerDocument?.addEventListener('keydown', onTab, true);
   target.forEach((_, i) => {
     const btn = button(`Pin ${i + 1}`, () => {
-      if (expired || settled) return;
-      if (hidden === i) revealed.add(i);
-      heights[i] = ((heights[i] ?? 0) + 1) % LOCK_PIN_LEVELS;
-      refresh();
+      if (state.expired || state.settled) return;
+      if (state.hidden === i) state.revealed.add(i);
+      state.heights[i] = ((state.heights[i] ?? 0) + 1) % LOCK_PIN_LEVELS;
+      refreshLockpick(state);
     });
     btn.classList.add('lockpick-pin');
-    labels.push(btn);
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.code === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        submit();
+      }
+    });
+    state.labels.push(btn);
     row.appendChild(btn);
   });
   body.appendChild(row);
   void pickLeft;
-  if (phase.timerMs) {
-    body.appendChild(timerEl);
-    const started = Date.now();
-    const ms = phase.timerMs;
-    const tick = window.setInterval(() => {
-      const left = Math.max(0, ms - (Date.now() - started));
-      timerEl.textContent =
-        left > 0 ? `Timer ${Math.ceil(left / 1000)}s` : 'Timer expired — pick snaps';
-      if (left <= 0) {
-        window.clearInterval(tick);
-        expired = true;
-        if (!settled) {
-          settled = true;
-          session.submitSkill(encodePins(target.map((p) => (p + 1) % LOCK_PIN_LEVELS)));
-          after();
-        }
-      }
-    }, 200);
-  }
-  refresh();
-  actions.appendChild(
-    button('Submit lock', () => {
-      if (settled || expired) return;
-      settled = true;
-      session.submitSkill(encodePins(heights));
-      after();
-    }),
-  );
+  bindLockpickTimer(body, phase, target, state, { cleanup, session, after });
+  refreshLockpick(state);
+  actions.appendChild(button('Submit lock', submit));
 }
 
 function bindSequenceTimer(

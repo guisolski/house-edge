@@ -494,49 +494,50 @@ function buildAvenida(): MapDef {
   const buildings: MapDef['buildings'] = [];
   const props: MapDef['props'] = [];
   seal(tiles, w, h);
+  // Only the asphalt corridor (y 9–14) is a free east–west run for Neon Snap.
   rect({ tiles, w, x0: 1, y0: 9, x1: w - 2, y1: 14, kind: 'asphalt' });
-  hStrip(tiles, w, 8, 1, w - 2, 'plaza');
-  hStrip(tiles, w, 15, 1, w - 2, 'plaza');
-  // Full south construction wall (visible blocked strip) — no Shift-run bypass
-  // along the plaza/sidewalk under the Neon Snap corridor.
-  rect({ tiles, w, x0: 11, y0: 15, x1: 36, y1: 18, kind: 'blocked' });
-  // North glass lip — continuous wall so the roof line isn't a free bypass.
-  rect({ tiles, w, x0: 11, y0: 7, x1: 36, y1: 8, kind: 'blocked' });
+  // FULL-WIDTH solid walls — edge lanes were the Shift-run bypass.
+  rect({ tiles, w, x0: 1, y0: 5, x1: w - 2, y1: 8, kind: 'blocked' });
+  rect({ tiles, w, x0: 1, y0: 15, x1: w - 2, y1: 19, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: 1, x1: w - 2, y1: 1, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: h - 2, x1: w - 2, y1: h - 2, kind: 'blocked' });
-  paintExitPad(tiles, w, 5, 12);
-  paintExitPad(tiles, w, 40, 12);
-
-  const towers: { x: number; y: number; style: number; bw: number; bh: number }[] = [
-    { x: 8, y: 2, style: 0, bw: 4, bh: 3 },
-    { x: 14, y: 1, style: 1, bw: 5, bh: 4 },
-    { x: 21, y: 2, style: 2, bw: 4, bh: 3 },
-    { x: 27, y: 1, style: 3, bw: 5, bh: 3 },
-    { x: 34, y: 2, style: 4, bw: 4, bh: 4 },
-    { x: 8, y: 16, style: 6, bw: 4, bh: 3 },
-    { x: 16, y: 16, style: 7, bw: 5, bh: 3 },
-    { x: 25, y: 17, style: 0, bw: 4, bh: 3 },
-    { x: 32, y: 16, style: 2, bw: 5, bh: 3 },
-  ];
-  for (const t of towers) {
+  // Physical wall buildings on the south strip (collision already blocked).
+  for (let x = 2; x <= 42; x += 4) {
     houseBlock({
       tiles,
       w,
       buildings,
-      x: t.x,
-      y: t.y,
-      style: t.style,
+      x,
+      y: 15,
+      style: Math.floor(x / 4) % 8,
       kind: 'avenida',
-      bw: t.bw,
-      bh: t.bh,
+      bw: 3,
+      bh: 3,
     });
   }
-  for (let x = 6; x < 42; x += 5) props.push({ x, y: 8, kind: 'lamp' });
-  props.push({ x: 20, y: 13, kind: 'moto' }, { x: 14, y: 11, kind: 'crate' });
-  // Visible south wall clutter so the barricade reads in-play (not just collision).
-  for (let x = 12; x <= 34; x += 4) {
-    props.push({ x, y: 15, kind: 'crate' });
+  // North glass bulk.
+  for (let x = 4; x <= 40; x += 5) {
+    houseBlock({
+      tiles,
+      w,
+      buildings,
+      x,
+      y: 5,
+      style: Math.floor(x / 5) % 5,
+      kind: 'avenida',
+      bw: 4,
+      bh: 3,
+    });
   }
+  // Re-seal walls after houseBlock so footprints can't open edge lanes.
+  rect({ tiles, w, x0: 1, y0: 5, x1: w - 2, y1: 8, kind: 'blocked' });
+  rect({ tiles, w, x0: 1, y0: 15, x1: w - 2, y1: 19, kind: 'blocked' });
+  // Exit pads on the far asphalt edges — clear of Mensageiro / NPC routes.
+  paintExitPad(tiles, w, 2, 12);
+  paintExitPad(tiles, w, 43, 12);
+  for (let x = 4; x < 42; x += 6) props.push({ x, y: 10, kind: 'lamp' });
+  props.push({ x: 20, y: 13, kind: 'moto' }, { x: 14, y: 11, kind: 'crate' });
+  for (let x = 3; x <= 42; x += 3) props.push({ x, y: 15, kind: 'crate' });
 
   return {
     districtId: 'avenida-odds',
@@ -545,18 +546,16 @@ function buildAvenida(): MapDef {
     tiles,
     buildings,
     signs: [
-      // High on glass towers — clear of boulevard NPC tags.
-      { x: 16, y: 5, label: 'ODDS 24h', color: '#ff2bd6' },
-      { x: 28, y: 5, label: 'CASA SUPREMA', color: '#ff2bd6' },
-      { x: 5, y: 10, label: '> Central Fair', color: '#2bfff2' },
-      // Keep within ~3 tiles of exit pad (40,12) so doorway + label read as one hotspot.
-      { x: 38, y: 11, label: '> Casa Tower', color: '#2bfff2' },
-      // On the wall row, clear of boulevard NPC sprites (y≈14).
-      { x: 18, y: 17, label: 'BARRICADE', color: '#ff8a3d' },
-      { x: 28, y: 17, label: 'NO PASS', color: '#ff8a3d' },
+      { x: 16, y: 3, label: 'ODDS 24h', color: '#ff2bd6' },
+      { x: 28, y: 3, label: 'CASA SUPREMA', color: '#ff2bd6' },
+      { x: 2, y: 10, label: '> Central Fair', color: '#2bfff2' },
+      { x: 41, y: 10, label: '> Casa Tower', color: '#2bfff2' },
+      { x: 12, y: 16, label: 'BARRICADE', color: '#ff8a3d' },
+      { x: 24, y: 16, label: 'NO PASS', color: '#ff8a3d' },
+      { x: 36, y: 16, label: 'WALL', color: '#ff8a3d' },
     ],
     props,
-    landmark: { x: 22, y: 3, kind: 'glass-corp' },
+    landmark: { x: 22, y: 2, kind: 'glass-corp' },
   };
 }
 

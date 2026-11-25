@@ -206,9 +206,10 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
   'torre-negotiate': {
     kind: 'negotiate',
     prompt: 'VIP Host offers three exits — pick before the smile hardens.',
-    target: 1,
+    // Any offer wins — consistent with dialogue “Deal’s sealed” on hush/mirror/smile.
+    target: 0,
     options: ['Take the hush chip', 'Demand the pit mirror', 'Walk out smiling'],
-    clue: 'Hosts fear paper more than silence — and a smile without receipts is just a photo.',
+    clue: 'The clock on their face is the real stake — seal any door before the smile hardens.',
     timerMs: 12_000,
   },
   'side-morro-copper': {
@@ -238,12 +239,15 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     kind: 'lockpick',
     prompt: 'Pick the Casa lockbox under the forró stage.',
     target: 0,
-    // Pins: mid / raised / sunk — clue via shoulder + stage + soft seat, not height words.
+    // Pins: mid / raised / sunk — left=shoulder mid, center=riser high, right=soft sunk.
     pins: [1, 2, 0],
     hiddenPin: 1,
     timerMs: 28_000,
     pickDurability: 3,
-    clue: 'Scratched plate favors the left shoulder — the red sticker is a lie. Center tumbler rides the stage riser; the right seat sinks soft.',
+    clue:
+      'Left scratch stops halfway up the shoulder plate (not flush, not topped). ' +
+      'The middle tumbler is the only one that kisses the stage riser’s top edge. ' +
+      'Right seat drops all the way soft — treat it as sunk. Red sticker on two is a decoy.',
   },
   'avenida-server': {
     kind: 'lockpick',

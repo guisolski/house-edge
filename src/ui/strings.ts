@@ -49,7 +49,8 @@ export const UI = {
   promptTalk: 'E — Talk',
   promptExit: 'E — Travel',
   promptBet: 'F / B — Bet',
-  lockpickHintKeyboard: '←→ cycle pins · Enter / click raise · Tab Submit · Esc cancel',
+  lockpickHintKeyboard: '←→ cycle pins · click raise · Enter / Tab Submit · Esc cancel',
   lockpickHintGamepad: 'D-pad cycle pins · A raise · Y Submit · B cancel',
   lockpickHintTouch: 'Tap a pin to raise · Submit lock · Cancel',
+  needleMissHint: 'Miss — stop inside the green zone. Zone widened for the retry.',
 } as const;

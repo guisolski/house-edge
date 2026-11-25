@@ -393,10 +393,12 @@ describe('objective routing', () => {
       flags: (f) => f === 'casa_quebrada' || f === 'free_roam',
       districtId: 'torre-casa',
       npcs,
+      allNpcs: npcs,
       exits,
       unlocked: () => true,
     });
-    expect(free.text).toMatch(/Free roam/);
+    expect(free.text).toMatch(/Dona Nair|Exit|Morro|Free roam/);
+    expect(free.targetX).toBeTypeOf('number');
     const onHill = currentObjective({
       beats: STORY_BEATS,
       completed: ['torre-final'],

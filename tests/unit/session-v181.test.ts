@@ -219,7 +219,7 @@ describe('v1.18.1 Neon Snap collision + run latch + clues', () => {
 
   it('south barricade tiles are blocked on the real avenida collision map', () => {
     const map = buildDistrictMap('avenida-odds');
-    for (let x = 12; x <= 34; x += 1) {
+    for (let x = 2; x <= 43; x += 1) {
       expect(isWalkable(map, x, 15), `south wall ${x},15`).toBe(false);
       expect(isWalkable(map, x, 16), `south wall ${x},16`).toBe(false);
     }

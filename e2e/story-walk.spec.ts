@@ -370,7 +370,9 @@ test(
         failures,
         completed: he.session.story.getCompleted().length,
         log,
-        freeroamHud: /Free roam|Story complete|epilogue/i.test(postObj),
+        freeroamHud: /Free roam|Story complete|epilogue|Dona Nair|Exit →|Morro/i.test(
+          postObj,
+        ),
       };
     });
 
@@ -381,6 +383,8 @@ test(
     expect(result.ending, JSON.stringify(result)).toBe(true);
     expect(result.freeRoam, JSON.stringify(result)).toBe(true);
     expect(result.freeroamHud, `post-ending HUD: ${result.objective}`).toBe(true);
-    expect(result.objective).toMatch(/Free roam|Story complete|epilogue/i);
+    expect(result.objective).toMatch(
+      /Free roam|Story complete|epilogue|Dona Nair|Exit →|Morro/i,
+    );
   },
 );

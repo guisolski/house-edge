@@ -298,6 +298,12 @@ export function judgePhase(phase: SkillPhase, value: number): boolean {
     const pins = phasePins(phase);
     return Math.round(value) === encodePins(pins);
   }
+  // Negotiate: any listed offer seals the deal (dialogue already framed the choice).
+  if (phase.kind === 'negotiate') {
+    const n = phase.options?.length ?? 0;
+    const i = Math.round(value);
+    return i >= 0 && i < n;
+  }
   return Math.round(value) === phase.target;
 }
 

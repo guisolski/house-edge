@@ -5,6 +5,27 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.0] — 2026-11-25
+
+### Fixed
+
+- **Neon Snap (3rd round)**: full-width solid south/north tile walls + wall buildings (integer styles); free-path uses real collision; e2e Shift-run asserts stop; ATM Hacker relocated onto asphalt.
+- Fair→Morro objective arrow follows a walkable path waypoint (not straight through buildings).
+- Odds `> Central Fair` pad moved to the west edge; Mensageiro cleared off the pad route.
+- Lockpick: Enter on a pin or Tab submits; hint text matches; e2e.
+- Feira lockbox clue rewritten + audit.
+- Epilogue: 500ms Enter-ignore on choices; closing line Close held ≥2s.
+- Free roam after duel points at Dona Nair (or the hop toward her).
+- Negotiate: any of the three offers wins (hush chip no longer a false miss).
+- E-prompt sits under the player (no tag cover); nearest NPC when closer than objective; NPC tags clamped below HUD.
+- Timing miss shows an on-panel hint.
+- Stealth drone cones cheaper (fewer wedges, every other frame) for Odds Avenue FPS.
+
+### Tests
+
+- Unit: full-width walls + slideStep, path waypoints, free-roam pointer, negotiate any-offer, lockbox clue.
+- E2e: `neon-snap-wall` Shift-run south stop + barricade screenshot.
+
 ## [1.18.1] — 2026-11-25
 
 ### Fixed

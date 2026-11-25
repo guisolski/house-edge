@@ -310,7 +310,7 @@ export class GameSession {
     return elev;
   }
 
-  /** Objective NPC first when in range; otherwise nearest preferred story NPC. */
+  /** Nearest in-range NPC; objective wins only when it is the closest (or tied). */
   nearbyNpc(): WorldNpc | null {
     const elev = this.nearbyElevatorPad();
     if (elev) return elev;
@@ -318,6 +318,15 @@ export class GameSession {
     const face = this.player.getFacing();
     const pool = this.floorNpcs();
     const available = new Set(this.story.availableBeats(s.districtId).map((b) => b.id));
+    const near = nearestNpc({
+      npcs: pool,
+      districtId: s.districtId,
+      x: s.x,
+      y: s.y,
+      faceDx: face.dx,
+      faceDy: face.dy,
+      prefer: (npc) => npcStoryBeatIds(npc).some((id) => available.has(id)),
+    });
     const obj = this.objective();
     const objectiveNpc =
       obj.targetName && obj.districtId === s.districtId
@@ -328,16 +337,11 @@ export class GameSession {
               Math.hypot(n.x - s.x, n.y - s.y) <= 3.5,
           )
         : undefined;
-    if (objectiveNpc) return objectiveNpc;
-    return nearestNpc({
-      npcs: pool,
-      districtId: s.districtId,
-      x: s.x,
-      y: s.y,
-      faceDx: face.dx,
-      faceDy: face.dy,
-      prefer: (npc) => npcStoryBeatIds(npc).some((id) => available.has(id)),
-    });
+    if (!objectiveNpc) return near;
+    if (!near) return objectiveNpc;
+    const dObj = Math.hypot(objectiveNpc.x - s.x, objectiveNpc.y - s.y);
+    const dNear = Math.hypot(near.x - s.x, near.y - s.y);
+    return dObj <= dNear + 0.35 ? objectiveNpc : near;
   }
 
   /** Secondary nearby NPC when objective already claimed the primary prompt. */

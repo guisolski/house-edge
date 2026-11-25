@@ -185,8 +185,16 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
     showDialogue: (lines) => {
       only(p, 'dialogue');
       const offerBet = session.hasPendingStoryBet();
+      const epi = session.getPendingStoryBeat() === 'epilogue-laje';
+      const hasChoice = lines.some((l) => Boolean(l.choices?.length));
+      // Epilogue: deliberate choice (ignore Enter ~500ms); closing line hold ≥2s.
+      const choiceArmAt = epi && hasChoice ? Date.now() + 500 : undefined;
+      const holdCloseUntil =
+        epi && !hasChoice && !offerBet ? Date.now() + 2000 : undefined;
       paintDialogue(p.dialogue, lines, {
         offerBet,
+        choiceArmAt,
+        holdCloseUntil,
         onAcceptBet: () => {
           session.acceptStoryBet();
           h.syncScreen();
@@ -561,18 +569,19 @@ function promptLabel(
   return null;
 }
 
-/** Anchor the E-prompt just above the on-screen player when we know the pixel. */
+/** Anchor the E-prompt below the player so it never covers floating name tags. */
 function placePrompt(prompt: HTMLElement, session: GameSession): void {
   const a = session.promptAnchor;
   if (a) {
     prompt.style.left = `${Math.round(a.x)}px`;
-    prompt.style.top = `${Math.round(a.y - 36)}px`;
+    // Sit under the sprite feet (anchor is top-of-sprite); keep clear of tags above.
+    prompt.style.top = `${Math.round(a.y + 28)}px`;
     prompt.style.bottom = 'auto';
     prompt.style.transform = 'translateX(-50%)';
   } else {
     prompt.style.left = '50%';
     prompt.style.top = 'auto';
-    prompt.style.bottom = '28%';
+    prompt.style.bottom = '18%';
     prompt.style.transform = 'translateX(-50%)';
   }
   setVisible(prompt, true);

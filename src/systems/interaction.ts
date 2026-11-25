@@ -263,9 +263,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'atm-hacker',
     name: 'ATM Hacker',
     districtId: 'avenida-odds',
-    // Spatially separate from story boulevard NPCs so side rematch doesn't steal E.
-    x: 38,
-    y: 17,
+    // Asphalt corridor — south wall y15–19 is solid Neon Snap barricade.
+    x: 40,
+    y: 11,
     beatId: 'avenida-atm',
     jobBetId: 'avenida-atm',
     color: '#ff3b5c',
@@ -296,8 +296,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'mensageiro-avenida',
     name: 'Mensageiro',
     districtId: 'avenida-odds',
-    // Boulevard asphalt — clear of west exit pad (5,12) and south barricade.
-    x: 9,
+    // Mid-boulevard — west Fair pad sits on the edge (2,12).
+    x: 16,
     y: 13,
     beatId: 'avenida-radar',
     safeJobId: 'safe-avenida-odds',
@@ -438,7 +438,7 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'avenida-to-feira',
     districtId: 'avenida-odds',
-    x: 5,
+    x: 2,
     y: 12,
     toDistrict: 'feira-central',
     label: 'Exit → Central Fair',
@@ -446,7 +446,7 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'avenida-to-torre',
     districtId: 'avenida-odds',
-    x: 40,
+    x: 43,
     y: 12,
     toDistrict: 'torre-casa',
     label: 'Exit → Casa Tower',

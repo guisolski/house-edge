@@ -10,6 +10,7 @@ import {
   type MapDef,
   type TileKind,
 } from '../world/maps';
+import { nextPathWaypoint } from '../world/path';
 import { bakeSprite, blitImage } from './bake';
 import { FpsMeter, type FpsSample } from './fps';
 import { labelOffsetForSigns, layoutMarkerLabel } from './label-layout';
@@ -285,7 +286,7 @@ function paintPlayHud(
   if (!state.session.ui.is('play')) return;
   // Signs hide under modals so dialogue doesn't cover CASA SUPREMA / EXIT text.
   drawLiveSigns(ctx, state, map, camX, camY, frame);
-  drawStealthDrones(ctx, state, camX, camY);
+  drawStealthDrones(ctx, state, camX, camY, frame);
   drawNearbyNpcNames(ctx, state, map, camX, camY);
   drawMarker(ctx, state, camX, camY, frame);
   drawSideMarkers(ctx, state, camX, camY);
@@ -330,30 +331,29 @@ function drawStealthDrones(
   state: ViewState,
   camX: number,
   camY: number,
+  frame: number,
 ): void {
   const stealth = state.session.getStealthProgress();
   if (!stealth || stealth.done) return;
+  // Cheaper cones (fewer wedges, fill-only) — Odds Avenue FPS dip under drone draw.
   for (const d of stealth.drones) {
     const cx = d.x * TILE_PX + 16 - camX;
     const cy = d.y * TILE_PX + 16 - camY;
-    // Sight cone (filled wedge).
-    ctx.fillStyle = '#ff3b5c33';
-    ctx.strokeStyle = '#ff3b5caa';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    const steps = 10;
-    for (let i = 0; i <= steps; i += 1) {
-      const a = d.facing - d.halfAngle + (2 * d.halfAngle * i) / steps;
-      ctx.lineTo(
-        cx + Math.cos(a) * d.range * TILE_PX,
-        cy + Math.sin(a) * d.range * TILE_PX,
-      );
+    if ((frame & 1) === 0) {
+      ctx.fillStyle = '#ff3b5c33';
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      const steps = 6;
+      for (let i = 0; i <= steps; i += 1) {
+        const a = d.facing - d.halfAngle + (2 * d.halfAngle * i) / steps;
+        ctx.lineTo(
+          cx + Math.cos(a) * d.range * TILE_PX,
+          cy + Math.sin(a) * d.range * TILE_PX,
+        );
+      }
+      ctx.closePath();
+      ctx.fill();
     }
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    // Drone body.
     ctx.fillStyle = Palette.neonCyan;
     ctx.fillRect(cx - 6, cy - 6, 12, 12);
     ctx.fillStyle = '#ff2bd6';
@@ -933,10 +933,11 @@ function pushPlayerSort(
 function drawBuildingSprite(
   ctx: CanvasRenderingContext2D,
   b: MapDef['buildings'][number],
-  spr: HTMLCanvasElement,
+  spr: HTMLCanvasElement | undefined,
   camX: number,
   camY: number,
 ): void {
+  if (!spr) return;
   const x = b.x * TILE_PX - camX;
   const y = b.y * TILE_PX - spr.height + TILE_PX - camY;
   if ((b.x + b.style) % 2 === 1) {
@@ -1124,6 +1125,25 @@ function refreshMarkerCache(state: ViewState, frame: number): void {
     state.marker = null;
     return;
   }
+  // Bend the marker along a walkable path (Fair→Morro etc.) instead of through walls.
+  const me = state.session.player.getStats();
+  if (obj.districtId === me.districtId) {
+    const map = state.session.getMap();
+    const wp = nextPathWaypoint(
+      map,
+      { x: me.x, y: me.y },
+      { x: obj.targetX, y: obj.targetY },
+      5,
+    );
+    // Keep final name; only advance the arrow along the corridor.
+    state.marker = {
+      x: wp.x,
+      y: wp.y,
+      districtId: obj.districtId ?? '',
+      name: obj.targetName ?? '',
+    };
+    return;
+  }
   state.marker = {
     x: obj.targetX,
     y: obj.targetY,
@@ -1260,6 +1280,8 @@ function paintMarkerLabel(
 ): void {
   ctx.font = 'bold 14px monospace';
   ctx.textAlign = 'center';
+  // Keep tags below the HUD band so Antena Tech etc. aren't clipped at the top.
+  const safePy = Math.max(py, 102);
   const box = layoutMarkerLabel({
     text,
     anchorX: px,
@@ -1267,11 +1289,11 @@ function paintMarkerLabel(
     measure: (t) => ctx.measureText(t).width,
   });
   ctx.fillStyle = '#000000dd';
-  ctx.fillRect(box.left, py - 14, box.width, 20);
+  ctx.fillRect(box.left, safePy - 14, box.width, 20);
   ctx.strokeStyle = Palette.brasilYellow;
-  ctx.strokeRect(box.left, py - 14, box.width, 20);
+  ctx.strokeRect(box.left, safePy - 14, box.width, 20);
   ctx.fillStyle = Palette.brasilYellow;
-  ctx.fillText(box.text, box.cx, py);
+  ctx.fillText(box.text, box.cx, safePy);
 }
 
 function clamp(v: number, lo: number, hi: number): number {

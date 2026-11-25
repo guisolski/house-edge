@@ -14,10 +14,13 @@ describe('objective district labels + free-roam epilogue', () => {
       flags: (f) => f === 'casa_quebrada' || f === 'free_roam',
       districtId: 'avenida-odds',
       npcs,
+      allNpcs: npcs,
       exits,
       unlocked: () => true,
     });
-    expect(away.detail ?? away.text).toMatch(/Epilogue|hill|Nair|Free roam/i);
+    expect(away.detail ?? away.text).toMatch(/Epilogue|hill|Nair|Morro|Exit/i);
+    expect(away.targetX).toBeTypeOf('number');
+    expect(away.targetName).toBeTruthy();
   });
 
   it('travel objectives resolve for every district hop', () => {

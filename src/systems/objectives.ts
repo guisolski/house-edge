@@ -41,12 +41,15 @@ export function currentObjective(ctx: ObjectiveCtx): Objective {
   return npcObjective(ctx, next);
 }
 
-function freeRoamObjective(ctx: ObjectiveCtx): Objective {
-  if (ctx.flags('epilogue_done')) {
-    return { text: 'Story complete — grind side jobs or explore.' };
-  }
-  const epi = ctx.npcs.find((n) => n.extraBeatIds?.includes('epilogue-laje'));
-  if (epi && epi.districtId === ctx.districtId) {
+function epilogueNpc(ctx: ObjectiveCtx): WorldNpc | undefined {
+  return (
+    ctx.npcs.find((n) => n.extraBeatIds?.includes('epilogue-laje')) ??
+    ctx.allNpcs?.find((n) => n.extraBeatIds?.includes('epilogue-laje'))
+  );
+}
+
+function freeRoamTowardNair(ctx: ObjectiveCtx, epi: WorldNpc): Objective {
+  if (epi.districtId === ctx.districtId) {
     return {
       text: `Talk to ${epi.name} (${districtName(ctx.districtId)})`,
       detail: 'Optional laje epilogue — or keep grinding.',
@@ -56,6 +59,30 @@ function freeRoamObjective(ctx: ObjectiveCtx): Objective {
       districtId: ctx.districtId,
     };
   }
+  const hop = firstHopExit(ctx, epi.districtId);
+  if (hop) {
+    return {
+      text: `Exit → ${districtName(hop.toDistrict)} — find ${epi.name}`,
+      detail: 'Epilogue waits on the hill with Dona Nair.',
+      targetName: districtShortName(hop.toDistrict),
+      targetX: hop.x,
+      targetY: hop.y,
+      districtId: ctx.districtId,
+    };
+  }
+  return {
+    text: `Travel menu → ${districtName(epi.districtId)} — find ${epi.name}`,
+    detail: 'Epilogue waits on the hill with Dona Nair.',
+    districtId: epi.districtId,
+  };
+}
+
+function freeRoamObjective(ctx: ObjectiveCtx): Objective {
+  if (ctx.flags('epilogue_done')) {
+    return { text: 'Story complete — grind side jobs or explore.' };
+  }
+  const epi = epilogueNpc(ctx);
+  if (epi) return freeRoamTowardNair(ctx, epi);
   return {
     text: 'Free roam — grind side jobs or explore',
     detail: 'Epilogue waits on the hill with Dona Nair.',
