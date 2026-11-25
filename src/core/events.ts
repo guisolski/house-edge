@@ -14,6 +14,11 @@ export type GameEvents = {
     payout: number;
     stake: number;
   };
+  'skill:started': { betId: string; kind: string };
+  'skill:resolved': { betId: string; won: boolean; phase: number };
+  'fx:flash': { kind: 'win' | 'lose' | 'interact' | 'travel' };
+  'fx:credits': { delta: number; x?: number; y?: number };
+  'world:transition': { kind: 'fade' | 'elevator'; from?: string; to?: string };
   'story:flag-set': { flag: string; value: boolean };
   'story:beat-started': { beatId: string };
   'story:beat-completed': { beatId: string };

@@ -4,6 +4,9 @@ export type ResourceId = 'credits' | 'reputation' | 'agua' | 'fichas';
 
 export type BetKind = 'dialogue' | 'purchase' | 'race' | 'draw' | 'job' | 'story';
 
+/** Skill encounter kind — story gates prefer this over pure RNG. */
+export type SkillKind = 'timing' | 'choice' | 'puzzle' | 'chase' | 'hack' | 'duel';
+
 export type Odds = {
   numerator: number;
   denominator: number;
@@ -22,6 +25,8 @@ export type BetDefinition = {
   houseEdge: number;
   /** If omitted, derived from odds + houseEdge at resolve time. */
   winChance?: number;
+  /** When set, story resolution uses a skill mini-game instead of RNG. */
+  skill?: SkillKind;
   requiredFlag?: string;
   unlocksFlag?: string;
   unlocksDistrict?: DistrictId;
@@ -57,9 +62,19 @@ export type StoryBeat = {
   skipIfFlag?: string;
 };
 
+export type DialogueChoice = {
+  label: string;
+  /** Optional flag set when this choice is picked. */
+  setsFlag?: string;
+  /** Reply line spoken after the choice. */
+  reply?: string;
+};
+
 export type DialogueLine = {
   speaker: string;
   text: string;
+  /** Player picks one; advances with optional flag side-effects. */
+  choices?: DialogueChoice[];
 };
 
 export type DistrictDef = {

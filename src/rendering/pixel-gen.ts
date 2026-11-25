@@ -170,6 +170,16 @@ function paintNpcBody(p: BodyPaint): void {
       Palette.neonMagenta,
     );
   }
+  // Accessories: hat / bag / scarf so NPCs read as distinct silhouettes.
+  if (p.variant === 1) {
+    fillRect(p.g, { x: 10, y: p.layout.headY - 1 + p.y0, w: 12, h: 3 }, '#2a1810');
+  }
+  if (p.variant === 2) {
+    fillRect(p.g, { x: 22, y: p.layout.bodyY + 6 + p.y0, w: 6, h: 8 }, '#3a2818');
+  }
+  if (p.npcId === 'ceo') {
+    fillRect(p.g, { x: 11, y: p.layout.headY + p.y0, w: 10, h: 2 }, Palette.gold);
+  }
 }
 
 /** Visible elevator booth — interactable story target (not a person recolor). */
@@ -556,6 +566,12 @@ function favelaHouse(style: number): PixelGrid {
   paintFavelaShell(g, wall, roof, fw, fh, w);
   paintFavelaWindows(g, style, storeys, wide);
   paintFavelaRoofProps(g, style, w, h);
+  // Layered neighbour block for depth (less flat banding on Morro terraces).
+  if (style % 2 === 0) {
+    fillRect(g, { x: w - 12, y: 28, w: 10, h: h - 36 }, '#00000055');
+    fillRect(g, { x: w - 11, y: 30, w: 3, h: 3 }, Palette.neonCyan);
+    fillRect(g, { x: w - 11, y: 38, w: 3, h: 3 }, Palette.neonMagenta);
+  }
   return g;
 }
 
@@ -693,16 +709,24 @@ function corpBlock(style: number): PixelGrid {
 
 function casinoTable(style: number): PixelGrid {
   const w = 56 + (style % 3) * 4;
-  const h = 40;
+  const h = 44;
   const g = empty(w, h, 'transparent');
-  fillRect(g, { x: 8, y: 22, w: w - 16, h: 14 }, '#00000088');
-  fillRect(g, { x: 6, y: 14, w: w - 12, h: 18 }, '#0e3a22');
+  fillRect(g, { x: 8, y: 24, w: w - 16, h: 14 }, '#00000088');
+  fillRect(g, { x: 6, y: 14, w: w - 12, h: 20 }, '#0e3a22');
   fillRect(g, { x: 4, y: 12, w: w - 8, h: 4 }, Palette.gold);
-  fillRect(g, { x: 4, y: 28, w: w - 8, h: 3 }, Palette.gold);
-  fillRect(g, { x: 10, y: 16, w: w - 20, h: 10 }, '#124828');
+  fillRect(g, { x: 4, y: 30, w: w - 8, h: 3 }, Palette.gold);
+  fillRect(g, { x: 10, y: 16, w: w - 20, h: 12 }, '#124828');
   fillRect(g, { x: 14, y: 18, w: 4, h: 4 }, '#ffdf00');
   fillRect(g, { x: w - 22, y: 18, w: 4, h: 4 }, Palette.neonMagenta);
   fillRect(g, { x: Math.floor(w / 2) - 3, y: 19, w: 6, h: 6 }, '#f4f1ff');
+  // Crowd chairs + chip trays for a fuller Casa pit.
+  fillRect(g, { x: 2, y: 28, w: 6, h: 10 }, '#1a1020');
+  fillRect(g, { x: w - 8, y: 28, w: 6, h: 10 }, '#1a1020');
+  fillRect(g, { x: 18, y: 34, w: 8, h: 3 }, Palette.gold);
+  fillRect(g, { x: w - 28, y: 34, w: 8, h: 3 }, Palette.neonCyan);
+  if (style % 2 === 0) {
+    fillRect(g, { x: Math.floor(w / 2) - 8, y: 8, w: 16, h: 4 }, '#2a2038');
+  }
   return g;
 }
 

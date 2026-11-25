@@ -473,3 +473,130 @@ canvas.excalibur-game {
   letter-spacing: 0.12em;
   color: var(--cyan);
 }
+
+/* —— v1.13 skill + FX —— */
+.skill-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(420px, 92vw);
+  max-height: 80vh;
+  overflow: auto;
+  background: #0c0c14f2;
+  border: 2px solid var(--cyan);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  z-index: 40;
+  box-shadow: 0 0 28px #00277688;
+}
+
+.skill-meter {
+  position: relative;
+  height: 28px;
+  margin: 0.75rem 0 1rem;
+  background: #1a1a28;
+  border: 1px solid #2bfff266;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.skill-zone {
+  position: absolute;
+  left: 38%;
+  width: 24%;
+  top: 0;
+  bottom: 0;
+  background: #009c3b88;
+}
+
+.skill-needle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  left: 0;
+  background: var(--yellow);
+  box-shadow: 0 0 8px var(--yellow);
+}
+
+.skill-phase,
+.skill-seq {
+  color: var(--cyan);
+  font-weight: 700;
+}
+
+.fx-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  opacity: 0.45;
+}
+
+.fx-win {
+  background: radial-gradient(circle, #ffdf0088, transparent 70%);
+}
+.fx-lose {
+  background: radial-gradient(circle, #ff3b5c66, transparent 70%);
+}
+.fx-interact {
+  background: radial-gradient(circle, #2bfff233, transparent 65%);
+}
+.fx-travel {
+  background: #000000cc;
+}
+
+.fx-credits {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  font-size: 1.4rem;
+  font-weight: 900;
+  z-index: 61;
+  pointer-events: none;
+  text-shadow: 0 2px 0 #000;
+  animation: credit-pop 0.9s ease-out forwards;
+}
+
+.fx-credits-up {
+  color: var(--yellow);
+}
+.fx-credits-down {
+  color: #ff6b8a;
+}
+
+@keyframes credit-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -8px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -36px);
+  }
+}
+
+.fx-transition {
+  position: absolute;
+  inset: 0;
+  background: #050508ee;
+  color: var(--cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  z-index: 70;
+  pointer-events: none;
+}
+
+.fx-elevator {
+  background: linear-gradient(180deg, #050508 0%, #1a2040 50%, #050508 100%);
+}

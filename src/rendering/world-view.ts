@@ -721,17 +721,22 @@ function pushNpcSorts(
   anim: number,
   view: SortView,
 ): void {
+  const me = session.player.getStats();
   for (const npc of session.npcs) {
     if (npc.districtId !== districtId) continue;
     const img = npcSprite(baked, npc, anim);
+    // Soft step-aside when Rita walks through — visual only (NPCs stay non-blocking).
+    const near = Math.hypot(npc.x - me.x, npc.y - me.y) < 1.35;
+    const asideX = near ? (npc.x >= me.x ? 0.35 : -0.35) : 0;
+    const drawX = npc.x + asideX;
     items.push({
       y: npc.y,
-      x: npc.x,
+      x: drawX,
       draw: () =>
         blitSortedSprite({
           ctx: view.ctx,
           img,
-          tx: npc.x,
+          tx: drawX,
           ty: npc.y,
           camX: view.camX,
           camY: view.camY,
@@ -1015,14 +1020,15 @@ function paintObjectiveMarker(m: ObjectiveMark): void {
     rawX >= margin && rawX <= m.viewW - margin && rawY >= 120 && rawY <= m.viewH - margin;
   if (onScreen) {
     paintBigArrow(m.ctx, rawX, rawY, Palette.brasilYellow);
-    if (m.label) paintMarkerLabel(m.ctx, rawX, rawY - 22, m.label);
+    if (m.label) paintMarkerLabel(m.ctx, rawX, rawY - 22, m.label, m.viewW);
     return;
   }
   const px = clamp(rawX, margin, m.viewW - margin);
   const py = clamp(rawY, 120, m.viewH - margin);
   paintBigArrow(m.ctx, px, py, Palette.brasilYellow);
-  const label = m.label ? `${m.label} · ${m.distTiles}m` : `${m.distTiles}m`;
-  paintMarkerLabel(m.ctx, px, py - 22, label);
+  const short = shortenLabel(m.label, 14);
+  const label = short ? `${short} · ${m.distTiles}m` : `${m.distTiles}m`;
+  paintMarkerLabel(m.ctx, px, py - 22, label, m.viewW);
 }
 
 function paintBigArrow(
@@ -1052,16 +1058,29 @@ function paintMarkerLabel(
   px: number,
   py: number,
   text: string,
+  viewW = 960,
 ): void {
   ctx.font = 'bold 14px monospace';
   ctx.textAlign = 'center';
-  const w = Math.min(200, ctx.measureText(text).width + 14);
+  const pad = 10;
+  const w = Math.min(220, ctx.measureText(text).width + 14);
+  // Keep the full label box on-screen (flip/clamp instead of clipping).
+  let left = px - w / 2;
+  if (left < pad) left = pad;
+  if (left + w > viewW - pad) left = Math.max(pad, viewW - pad - w);
+  const cx = left + w / 2;
   ctx.fillStyle = '#000000dd';
-  ctx.fillRect(px - w / 2, py - 14, w, 20);
+  ctx.fillRect(left, py - 14, w, 20);
   ctx.strokeStyle = Palette.brasilYellow;
-  ctx.strokeRect(px - w / 2, py - 14, w, 20);
+  ctx.strokeRect(left, py - 14, w, 20);
   ctx.fillStyle = Palette.brasilYellow;
-  ctx.fillText(text, px, py);
+  ctx.fillText(text, cx, py);
+}
+
+function shortenLabel(label: string, max: number): string {
+  if (!label) return '';
+  if (label.length <= max) return label;
+  return `${label.slice(0, Math.max(1, max - 1))}…`;
 }
 
 function clamp(v: number, lo: number, hi: number): number {

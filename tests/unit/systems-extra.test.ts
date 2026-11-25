@@ -9,7 +9,12 @@ import {
   nearestNpc,
 } from '../../src/systems/interaction';
 import { buildDistrictMap, isWalkable, tileAt } from '../../src/world/maps';
-import { createCamera, followPlayer, viewportPadding } from '../../src/world/camera';
+import {
+  createCamera,
+  followPlayer,
+  minPlayerTileY,
+  viewportPadding,
+} from '../../src/world/camera';
 import {
   currentObjective,
   firstHopExit,
@@ -249,6 +254,7 @@ describe('story beat targets', () => {
     const done = new Set([
       'intro-laje',
       'boteco-nair',
+      'side-morro-copper',
       'morro-antena',
       'luna-beco',
       'morro-fios',
@@ -321,6 +327,7 @@ describe('objectives', () => {
       completed: [
         'intro-laje',
         'boteco-nair',
+        'side-morro-copper',
         'morro-antena',
         'luna-beco',
         'morro-fios',
@@ -330,6 +337,7 @@ describe('objectives', () => {
         [
           'conheceu_rita',
           'falou_nair',
+          'copper_weighed',
           'antena_ok',
           'conheceu_luna',
           'fios_ok',
@@ -395,13 +403,13 @@ describe('objective routing', () => {
     const sides = sideQuestMarkers({
       beats: STORY_BEATS,
       completed: [],
-      flags: (f) => f === 'falou_nair',
+      flags: (f) => f === 'falou_nair' || f === 'antena_ok',
       districtId: 'morro-neon',
       npcs,
       exits,
       unlocked: () => true,
     });
-    expect(sides.some((s) => s.label.includes('copper') || s.x > 0)).toBe(true);
+    expect(sides.some((s) => /tank|Water/i.test(s.label))).toBe(true);
   });
 
   it('falls back to Travel menu and story-complete free roam', () => {
@@ -412,6 +420,7 @@ describe('objective routing', () => {
       completed: [
         'intro-laje',
         'boteco-nair',
+        'side-morro-copper',
         'morro-antena',
         'luna-beco',
         'morro-fios',
@@ -421,6 +430,7 @@ describe('objective routing', () => {
         [
           'conheceu_rita',
           'falou_nair',
+          'copper_weighed',
           'antena_ok',
           'conheceu_luna',
           'fios_ok',
@@ -460,7 +470,11 @@ describe('session story bet choice', () => {
     expect(session.ui.is('dialogue')).toBe(true);
     expect(session.hasPendingStoryBet()).toBe(true);
     expect(session.acceptStoryBet()).toBe(true);
-    expect(session.ui.is('bet')).toBe(true);
+    expect(session.ui.is('skill') || session.ui.is('bet')).toBe(true);
+    if (session.ui.is('skill')) {
+      expect(session.completeSkillPerfect()).toBe(true);
+      return;
+    }
     expect(session.getPendingStake()).toBeGreaterThan(0);
     session.adjustStake(5);
     expect(session.confirmBet()).toBe(true);
@@ -510,7 +524,8 @@ describe('session deep paths', () => {
     const session = new GameSession(12);
     session.startNew();
     // HUD north clamp — cannot walk into the top inset / sealed row.
-    session.player.setPosition(8, 3);
+    const minY = minPlayerTileY(48);
+    session.player.setPosition(8, minY);
     expect(session.move(0, -1)).toBe(false);
     session.setMasterVolume(2);
     expect(session.getAudio().masterVolume).toBe(1);

@@ -86,6 +86,7 @@ describe('coverage edge branches', () => {
       completed: [
         'intro-laje',
         'boteco-nair',
+        'side-morro-copper',
         'morro-antena',
         'luna-beco',
         'morro-fios',

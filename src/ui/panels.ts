@@ -31,24 +31,135 @@ export function paintDialogue(
     onClose: () => void;
     offerBet?: boolean;
     onAcceptBet?: () => void;
+    onChoice?: (setsFlag?: string, reply?: string) => void;
   },
 ): void {
   clearNode(panel);
   const body = el('div', 'panel-body');
+  let pendingChoices: DialogueLine['choices'] | undefined;
   for (const line of lines) {
     body.appendChild(el('p', 'line', `${line.speaker}: ${line.text}`));
+    if (line.choices?.length) pendingChoices = line.choices;
   }
   const actions = el('div', 'panel-actions');
+  if (pendingChoices?.length && opts.onChoice) {
+    for (const c of pendingChoices) {
+      actions.appendChild(button(c.label, () => opts.onChoice?.(c.setsFlag, c.reply)));
+    }
+  }
   if (opts.offerBet && opts.onAcceptBet) {
     actions.append(
       button(UI.takeBet, opts.onAcceptBet),
       button(UI.walkAway, opts.onClose),
     );
+  } else if (!pendingChoices?.length) {
+    actions.appendChild(button(UI.close, opts.onClose));
   } else {
     actions.appendChild(button(UI.close, opts.onClose));
   }
   panel.append(body, actions);
   focusFirst(panel);
+}
+
+export function paintSkill(
+  panel: HTMLElement,
+  session: GameSession,
+  after: () => void,
+): void {
+  clearNode(panel);
+  const progress = session.getSkillProgress();
+  const bet = session.getPendingBet();
+  if (!progress || !bet) return;
+  const phase = progress.def.phases[progress.phaseIndex];
+  const body = el('div', 'panel-body skill-body');
+  body.append(
+    el('h2', '', progress.def.title),
+    el('p', 'bet-desc', progress.def.blurb),
+    el('p', 'stake-line', `Stake at risk: ${session.getPendingStake()} credits`),
+    el(
+      'p',
+      'skill-phase',
+      `Phase ${progress.phaseIndex + 1}/${progress.def.phases.length}: ${phase?.prompt ?? ''}`,
+    ),
+  );
+  const actions = el('div', 'panel-actions skill-actions');
+  if (phase?.kind === 'timing') {
+    paintTimingSkill(body, actions, session, after);
+  } else if (phase?.kind === 'choice' || phase?.kind === 'puzzle') {
+    paintChoiceSkill(actions, phase.options ?? ['A', 'B', 'C'], session, after);
+  } else {
+    paintSequenceSkill(actions, phase?.steps ?? 3, session, after);
+  }
+  actions.appendChild(
+    button(UI.cancel, () => {
+      session.cancelBet();
+      after();
+    }),
+  );
+  panel.append(body, actions);
+  focusFirst(panel);
+}
+
+function paintTimingSkill(
+  body: HTMLElement,
+  actions: HTMLElement,
+  session: GameSession,
+  after: () => void,
+): void {
+  const meter = el('div', 'skill-meter');
+  const needle = el('div', 'skill-needle');
+  const zone = el('div', 'skill-zone');
+  meter.append(zone, needle);
+  body.appendChild(meter);
+  let t = 0;
+  const tick = window.setInterval(() => {
+    t = (t + 0.04) % 1;
+    needle.style.left = `${t * 100}%`;
+  }, 32);
+  actions.appendChild(
+    button('Stop!', () => {
+      window.clearInterval(tick);
+      session.submitSkill(t);
+      after();
+    }),
+  );
+}
+
+function paintChoiceSkill(
+  actions: HTMLElement,
+  options: string[],
+  session: GameSession,
+  after: () => void,
+): void {
+  options.forEach((label, i) => {
+    actions.appendChild(
+      button(label, () => {
+        session.submitSkill(i);
+        after();
+      }),
+    );
+  });
+}
+
+function paintSequenceSkill(
+  actions: HTMLElement,
+  steps: number,
+  session: GameSession,
+  after: () => void,
+): void {
+  let hit = 0;
+  const status = el('p', 'skill-seq', `0 / ${steps}`);
+  actions.appendChild(status);
+  actions.appendChild(
+    button('Tap sequence', () => {
+      hit += 1;
+      status.textContent = `${hit} / ${steps}`;
+      if (hit >= steps) {
+        session.submitSkill(hit);
+        after();
+      }
+    }),
+  );
 }
 
 export function paintBet(

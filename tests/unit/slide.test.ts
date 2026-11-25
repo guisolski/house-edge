@@ -18,26 +18,28 @@ describe('slideStep', () => {
   });
 
   it('axis-falls-back when diagonal is blocked', () => {
-    // From (2,4) toward NE (3,3) blocked → slide east to (3,4).
-    expect(slideStep(toy, 2, 4, 1, -1)).toEqual({ x: 3, y: 4 });
-    // Block the east axis so fallback uses the north/south axis instead.
-    const tight = toySlideMap();
-    tight.tiles[4 * tight.width + 3] = 'blocked';
-    expect(slideStep(tight, 2, 4, 1, -1)).toEqual({ x: 2, y: 3 });
+    // Clear default (3,5) block; block only NE cell (3,4).
+    const neo = toySlideMap();
+    neo.tiles[5 * neo.width + 3] = 'asphalt';
+    neo.tiles[4 * neo.width + 3] = 'blocked';
+    expect(slideStep(neo, 2, 5, 1, -1)).toEqual({ x: 3, y: 5 });
+    // Also block east so fallback uses the north axis.
+    neo.tiles[5 * neo.width + 3] = 'blocked';
+    expect(slideStep(neo, 2, 5, 1, -1)).toEqual({ x: 2, y: 4 });
     // Both axes blocked → null.
-    tight.tiles[3 * tight.width + 2] = 'blocked';
-    expect(slideStep(tight, 2, 4, 1, -1)).toBeNull();
+    neo.tiles[4 * neo.width + 2] = 'blocked';
+    expect(slideStep(neo, 2, 5, 1, -1)).toBeNull();
   });
 
   it('corner-slips east around a blocked cell', () => {
-    const step = slideStep(toy, 2, 3, 1, 0);
-    expect(step).toEqual({ x: 3, y: 2 });
+    // Default toy blocks (3,5); east from (2,5) slips to (3,4) or (3,6).
+    const step = slideStep(toy, 2, 5, 1, 0);
+    expect(step).toEqual({ x: 3, y: 4 });
   });
 
   it('corner-slips south around a blocked cell', () => {
-    const step = slideStep(toy, 2, 3, 0, 1);
-    // (2,4) is open directly — takes direct.
-    expect(step).toEqual({ x: 2, y: 4 });
+    const step = slideStep(toy, 2, 5, 0, 1);
+    expect(step).toEqual({ x: 2, y: 6 });
   });
 
   it('returns null when every slip is blocked', () => {

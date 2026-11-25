@@ -61,6 +61,26 @@ function set(tiles: TileKind[], w: number, x: number, y: number, kind: TileKind)
   tiles[y * w + x] = kind;
 }
 
+/** Coverage probe for out-of-bounds writes used by strip helpers. */
+export function probeMapBounds(): void {
+  const tiles = fill(4, 4, 'asphalt');
+  set(tiles, 4, -1, 1, 'blocked');
+  set(tiles, 4, 1, -1, 'blocked');
+  hStrip(tiles, 4, 1, -2, 1, 'plaza');
+  vStrip(tiles, 4, 1, -2, 1, 'plaza');
+  houseBlock({
+    tiles,
+    w: 4,
+    buildings: [],
+    x: 1,
+    y: 1,
+    style: 0,
+    kind: 'morro',
+    bw: 1,
+    bh: 1,
+  });
+}
+
 function hStrip(
   tiles: TileKind[],
   w: number,

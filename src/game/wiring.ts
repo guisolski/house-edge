@@ -61,12 +61,19 @@ function wireUi(session: GameSession, hud: HudHandles, audio: AudioEngine): void
   session.bus.on('ui:dialogue', () => {
     hud.showDialogue(session.getDialogue());
   });
-  session.bus.on('bet:offered', () => hud.showBet());
+  session.bus.on('bet:offered', () => {
+    if (session.ui.is('skill')) hud.showSkill();
+    else hud.showBet();
+  });
+  session.bus.on('skill:started', () => hud.showSkill());
   session.bus.on('bet:resolved', () => {
     hud.updateStats();
     // Ending beats already switched UI — don't clobber the ending panel.
-    if (!session.ui.is('ending')) hud.showHud();
+    if (!session.ui.is('ending') && !session.ui.is('transition')) hud.showHud();
   });
+  session.bus.on('fx:flash', (p) => hud.flash(p.kind));
+  session.bus.on('fx:credits', (p) => hud.creditPopup(p.delta));
+  session.bus.on('world:transition', (p) => hud.playTransition(p.kind));
   session.bus.on('story:ended', () => {
     /* showEnding also wired above; keep play HUD from racing it */
   });

@@ -1,7 +1,7 @@
 import { EventBus } from '../core/event-bus';
 import { createRng, type Rng } from '../core/rng';
 import type { BetDefinition, GameSave, DistrictId } from '../core/types';
-import { canAfford, clampStake, defaultStake, resolveBet } from './betting';
+import { canAfford, clampStake, defaultStake, payoutForWin, resolveBet } from './betting';
 import { PlayerSystem } from './player';
 import { StorySystem } from './story';
 import { WorldSystem } from './world';
@@ -25,6 +25,13 @@ import {
 import { buildDistrictMap, tileAt, type MapDef } from '../world/maps';
 import { slideStep } from '../world/slide';
 import { currentObjective, sideQuestMarkers, type Objective } from './objectives';
+import {
+  attemptSkill,
+  perfectAttempt,
+  skillForBet,
+  startSkill,
+  type SkillProgress,
+} from './minigame';
 
 const SAFE_JOB_COOLDOWN_MS = 10_000;
 const SAFE_JOB_CAP = 6;
@@ -52,6 +59,8 @@ export class GameSession {
   private lossesByBet = new Map<string, number>();
   private safeJobUses = 0;
   private lastSafeJobMs = 0;
+  private skillProgress: SkillProgress | null = null;
+  private elevating = false;
 
   constructor(seed = 42, bus = new EventBus()) {
     this.bus = bus;
@@ -115,17 +124,33 @@ export class GameSession {
     if (!this.world.isUnlocked(districtId)) return false;
     const district = this.world.get(districtId);
     if (!district) return false;
+    const from = this.player.getStats().districtId;
+    this.bus.emit('world:transition', { kind: 'fade', from, to: districtId });
+    this.bus.emit('fx:flash', { kind: 'travel' });
+    this.bus.emit('audio:play-sfx', { id: 'travel' });
     this.player.setDistrict(districtId);
     this.player.setPosition(district.spawn.x, district.spawn.y);
     this.ui.go('play');
+    this.bus.emit('district:entered', { districtId });
     return true;
   }
 
+  /** Objective NPC first when in range; otherwise nearest preferred story NPC. */
   nearbyNpc(): WorldNpc | null {
     const s = this.player.getStats();
     const face = this.player.getFacing();
     const available = new Set(this.story.availableBeats(s.districtId).map((b) => b.id));
-    // Prefer story NPCs with an active beat so side-job rematches don't steal E.
+    const obj = this.objective();
+    const objectiveNpc =
+      obj.targetName && obj.districtId === s.districtId
+        ? this.npcs.find(
+            (n) =>
+              n.districtId === s.districtId &&
+              n.name === obj.targetName &&
+              Math.hypot(n.x - s.x, n.y - s.y) <= 3.5,
+          )
+        : undefined;
+    if (objectiveNpc) return objectiveNpc;
     return nearestNpc({
       npcs: this.npcs,
       districtId: s.districtId,
@@ -135,6 +160,24 @@ export class GameSession {
       faceDy: face.dy,
       prefer: (npc) => npcStoryBeatIds(npc).some((id) => available.has(id)),
     });
+  }
+
+  /** Secondary nearby NPC when objective already claimed the primary prompt. */
+  nearbyAltNpc(): WorldNpc | null {
+    const primary = this.nearbyNpc();
+    const s = this.player.getStats();
+    const face = this.player.getFacing();
+    const available = new Set(this.story.availableBeats(s.districtId).map((b) => b.id));
+    const alt = nearestNpc({
+      npcs: this.npcs.filter((n) => n.id !== primary?.id),
+      districtId: s.districtId,
+      x: s.x,
+      y: s.y,
+      faceDx: face.dx,
+      faceDy: face.dy,
+      prefer: (npc) => npcStoryBeatIds(npc).some((id) => available.has(id)),
+    });
+    return alt && alt.id !== primary?.id ? alt : null;
   }
 
   nearbyExit(): DistrictExit | null {
@@ -231,6 +274,12 @@ export class GameSession {
 
   interact(): boolean {
     if (!this.ui.is('play')) return false;
+    const npc = this.nearbyNpc();
+    const obj = this.objective();
+    // Objective target in range wins over exit travel.
+    if (npc && obj.targetName && npc.name === obj.targetName) {
+      return this.interactNpc(npc);
+    }
     const exit = this.nearbyExit();
     if (exit) return this.travelTo(exit.toDistrict);
     const locked = this.nearbyLockedExit();
@@ -241,7 +290,6 @@ export class GameSession {
       });
       return false;
     }
-    const npc = this.nearbyNpc();
     if (!npc) {
       this.bus.emit('ui:toast', { message: 'Nobody in range.', kind: 'info' });
       return false;
@@ -264,7 +312,78 @@ export class GameSession {
     this.pendingBetId = betId;
     this.pendingStake = stake;
     this.bus.emit('bet:offered', { betId, title: bet.title });
+    // Story skill encounters skip the coin-flip panel.
+    if (bet.skill && this.pendingStoryBeat) {
+      const def = skillForBet(bet.id, bet.skill);
+      if (def) {
+        this.skillProgress = startSkill(def);
+        this.bus.emit('skill:started', { betId, kind: bet.skill });
+        this.bus.emit('audio:play-sfx', { id: 'bet' });
+        return this.ui.go('skill');
+      }
+    }
     return this.ui.go('bet');
+  }
+
+  getSkillProgress(): SkillProgress | null {
+    return this.skillProgress;
+  }
+
+  /** Player attempt on the current skill phase. */
+  submitSkill(value: number): boolean {
+    if (!this.skillProgress || !this.pendingBetId) return false;
+    const next = attemptSkill(this.skillProgress, {
+      phaseIndex: this.skillProgress.phaseIndex,
+      value,
+    });
+    this.skillProgress = next;
+    if (!next.done) {
+      this.bus.emit('audio:play-sfx', { id: 'interact' });
+      return true;
+    }
+    return this.finishSkill(next.won);
+  }
+
+  /** Harness / e2e: auto-clear remaining skill phases with perfect play. */
+  completeSkillPerfect(): boolean {
+    if (!this.skillProgress) return false;
+    let p = this.skillProgress;
+    while (!p.done) p = attemptSkill(p, perfectAttempt(p));
+    this.skillProgress = p;
+    return this.finishSkill(p.won);
+  }
+
+  private finishSkill(won: boolean): boolean {
+    const betId = this.pendingBetId;
+    if (!betId) return false;
+    const bet = getBet(betId);
+    if (!bet) return false;
+    const stake = clampStake(
+      bet,
+      this.pendingStake || bet.stake,
+      this.player.getStats().credits,
+    );
+    this.player.addCredits(-stake);
+    const payout = won ? payoutForWin(stake, bet.odds) : 0;
+    this.player.addCredits(payout);
+    const rep =
+      (won ? bet.reputationDeltaWin : bet.reputationDeltaLose) +
+      (won ? this.upgrades.fameBonus() : 0);
+    this.player.addReputation(rep);
+    const phase = this.skillProgress?.cleared ?? 0;
+    this.bus.emit('skill:resolved', { betId, won, phase });
+    this.bus.emit('fx:flash', { kind: won ? 'win' : 'lose' });
+    this.bus.emit('fx:credits', { delta: won ? payout - stake : -stake });
+    this.afterBetResolved(bet, won);
+    this.bus.emit('bet:resolved', { betId: bet.id, won, payout, stake });
+    if (!this.ui.is('ending') && !this.elevating) {
+      this.toastBet(won, payout, this.lossesByBet.get(bet.id) ?? 0);
+      this.ui.go('play');
+    }
+    this.pendingBetId = null;
+    this.pendingStake = 0;
+    this.skillProgress = null;
+    return true;
   }
 
   /** Guaranteed credits — cooldown + daily cap so it can't be farmed forever. */
@@ -352,7 +471,18 @@ export class GameSession {
     this.pendingStake = 0;
     this.pendingStoryBeat = null;
     this.pendingBetAfterDialogue = null;
+    this.skillProgress = null;
     this.ui.go('play');
+  }
+
+  /** Apply a dialogue choice flag mid-beat. */
+  pickDialogueChoice(setsFlag?: string, reply?: string): void {
+    if (setsFlag) this.story.setFlag(setsFlag, true);
+    if (reply) {
+      this.lastDialogue = [...this.lastDialogue, { speaker: 'Rita Odds', text: reply }];
+      this.bus.emit('ui:dialogue', { speaker: 'Rita Odds', text: reply });
+    }
+    this.bus.emit('audio:play-sfx', { id: 'ui' });
   }
 
   getPendingBet(): BetDefinition | null {
@@ -512,6 +642,8 @@ export class GameSession {
 
   private interactNpc(npc: WorldNpc): boolean {
     this.bus.emit('npc:interacted', { npcId: npc.id });
+    this.bus.emit('fx:flash', { kind: 'interact' });
+    this.bus.emit('audio:play-sfx', { id: 'interact' });
     if (this.tryNpcStory(npc)) return true;
     if (this.npcStoryBlocksRematch(npc)) {
       this.toastNpcBusy(npc);
@@ -622,8 +754,31 @@ export class GameSession {
   private finishBeat(beatId: string): void {
     const done = this.story.completeBeat(beatId);
     if (done?.unlocksDistrict) this.world.unlock(done.unlocksDistrict);
+    if (beatId === 'torre-elevator') this.runElevatorRide();
     if (done?.isEnding) this.ui.go('ending');
     this.persist();
+  }
+
+  /** Visible elevator ride: fade + relocate Rita to the VIP floor. */
+  private runElevatorRide(): void {
+    this.elevating = true;
+    this.bus.emit('world:transition', {
+      kind: 'elevator',
+      from: 'torre-casa',
+      to: 'torre-casa',
+    });
+    this.bus.emit('fx:flash', { kind: 'travel' });
+    this.bus.emit('audio:play-sfx', { id: 'travel' });
+    this.ui.go('transition');
+    // VIP floor stand near the host (north terrace of the tower map).
+    this.player.setPosition(30, 8);
+    this.player.setFacing(0, 1);
+    this.elevating = false;
+    this.ui.go('play');
+    this.bus.emit('ui:toast', {
+      message: 'Elevator doors open on the VIP floor.',
+      kind: 'success',
+    });
   }
 
   private applySave(save: GameSave): void {

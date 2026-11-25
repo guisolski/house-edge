@@ -37,6 +37,8 @@ test('main story reaches ending via walk + E on objective markers only', async (
             move: (dx: number, dy: number) => boolean;
             acceptStoryBet: () => boolean;
             confirmBet: () => boolean;
+            completeSkillPerfect: () => boolean;
+            pickDialogueChoice: (flag?: string, reply?: string) => void;
             closeModal: () => void;
             continueExploring: () => boolean;
             doSafeJob: (id: string) => boolean;
@@ -155,15 +157,28 @@ test('main story reaches ending via walk + E on objective markers only', async (
 
     const handleModal = async (): Promise<void> => {
       if (he.session.ui.is('dialogue')) {
+        // Optional dialogue choice — pick first style without blocking.
+        he.session.pickDialogueChoice?.('rita_loud', 'Loud it is.');
         if (he.session.acceptStoryBet()) {
           await sleep(20);
           grindIfBroke();
+          if (he.session.ui.is('skill')) {
+            he.session.completeSkillPerfect();
+            await sleep(20);
+            return;
+          }
           he.session.confirmBet();
           await sleep(20);
           return;
         }
         he.session.closeModal();
         await sleep(10);
+        return;
+      }
+      if (he.session.ui.is('skill')) {
+        grindIfBroke();
+        he.session.completeSkillPerfect();
+        await sleep(20);
         return;
       }
       if (he.session.ui.is('bet')) {

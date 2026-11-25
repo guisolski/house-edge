@@ -1,56 +1,60 @@
-# Playtest REPORT — House Edge v1.12.2
+# Playtest REPORT — House Edge v1.13.0
 
-Fresh-player Morro follow-up after v1.12.1: lost at step 3 (Luna / cyan arrows), camera north clip, F3 dead, ramp wedge, Esc, stale E, fake climb, harsh first bet.
+Fresh-player follow-up after v1.12.2 PASS. Goal: replace coin-flip story loop with skill/choice encounters, stretch story toward ~20 min, elevator feedback, prompt/art polish.
 
 ## Verdict
 
-**PASS** for ship gates. Large yellow objective marker + name on the current target only; HUD `Talk to Name (District)` + flavour detail; north HUD clamp; F3 DOM FPS; wall-slide; Esc toggles menu; stale E cleared; antena reworded; first bet ~72% (pity no longer caps friendly bases down). Desktop e2e 15/15.
+**PASS** for ship gates. Story gates are skill encounters (timing/choice/puzzle/chase/hack; Augusto duel = 3 phases). Woven copper + dancer + courier/stealth beats added. Elevator fades to VIP floor. Desktop e2e story-walk + F3 + 4× FPS ≥50. Coverage branches **90.3%**.
 
-## Fixes vs findings
+## Measured story time
 
-| #   | Issue                                  | Result                                                            |
-| --- | -------------------------------------- | ----------------------------------------------------------------- |
-| 1   | Cyan arrows on many NPCs; Luna unclear | Big yellow arrow + name on objective only; side quests = dim dots |
-| 2   | “Pixo alley” read as a place           | Primary: `Talk to Luna Pixel (Morro Neon)`; detail: `Pixo alley`  |
-| 3   | North ridge player under HUD           | Camera HUD inset + min walkable Y                                 |
-| 4   | F3 FPS missing                         | DOM `.fps-meter`; e2e toggle                                      |
-| 5   | Ramp corner wedge                      | `slideStep` wall-slide / corner-slip                              |
-| 6   | Esc doesn’t close menu                 | Esc toggles menu → play; submenus return to menu                  |
-| 7   | Stale `E (Antena Tech)`                | Prompt refreshes on every `player:moved`                          |
-| 8   | “Climb the LED antenna” with no climb  | Reworded to **Jack the LED antenna**                              |
-| 9   | First bet lost 3× / ~46–62%            | `agua-gelada` ~72%; pity never pulls base below itself            |
+| Method                                                               | Result                    |
+| -------------------------------------------------------------------- | ------------------------- |
+| Content estimate (31 main beats, 110 lines, 28 skills, human pacing) | **~19–21 min**            |
+| Scripted walk+E with short sleeps (auto perfect skills)              | ~4 min (not a human read) |
+| Prior v1.12.2 human playtest                                         | 13–14 min                 |
+
+Target ~20 min via meaningful beats/skills/choices — not padding loops.
 
 ## Browser playtest (computer-use, fresh player)
 
-| Check                        | Result                                 |
-| ---------------------------- | -------------------------------------- |
-| Unique yellow marker + label | **PASS** (enlarged after first pass)   |
-| HUD name (district) + detail | **PASS**                               |
-| F3 FPS toggle                | **PASS**                               |
-| First bet ~72%               | **PASS** (`Win chance 72% · Odds 1:3`) |
-| North ridge below HUD        | **PASS**                               |
-| Esc closes menu              | **PASS**                               |
-| Stale E clears               | **PASS** (~200 ms)                     |
-| Console errors               | **None**                               |
+| Check                            | Result                         |
+| -------------------------------- | ------------------------------ |
+| Skill UI (not coin-flip) on Nair | **PASS** — timing meter, Stop! |
+| Dialogue choices                 | **PASS** — loud/quiet          |
+| Unique Catador marker after Nair | **PASS**                       |
+| F3 FPS ~60                       | **PASS**                       |
+| Esc open/close                   | **PASS**                       |
+| North ridge head below HUD       | **PASS** (clamp at y=4)        |
+| Elevator fade → VIP (30,8)       | **PASS**                       |
+| Console errors                   | **None**                       |
 
-Artifacts: `v122-*.png`, `v122-morro-ux.webm` under `/opt/cursor/artifacts/` (copied into `artifacts/playtest/` when present).
+Artifacts: `v130-*.png`, `v130-walkthrough.webm`.
 
-## Timed scripted run
+## Fixes vs ask
 
-| Run                                    | Result           |
-| -------------------------------------- | ---------------- |
-| `e2e/story-walk.spec.ts` (walk+E only) | **PASS** (~3.4s) |
-| `e2e/fps-overlay.spec.ts`              | **PASS**         |
-| Desktop Chromium e2e                   | **15/15**        |
-| 4× throttle FPS                        | **≥50**          |
+| #   | Ask                                       | Result                                                              |
+| --- | ----------------------------------------- | ------------------------------------------------------------------- |
+| 1   | Skill/choice mini-games; duel multi-phase | Story bets open skill UI; losses cost stake, retry is skill not RNG |
+| 2   | ~20 min meaningful story                  | +copper weave, dancer, courier, stealth; dialogue choices           |
+| 3   | Elevator move + FX/SFX                    | Fade + VIP relocate; flash/credits/SFX on interact/resolve          |
+| 4   | E prioritizes objective                   | Objective NPC wins over exit/nearest; alt name shown                |
+| 5   | Edge pointer label clip                   | Shorten + clamp label box on-screen                                 |
+| 6   | NPCs block paths                          | Off-lane Fair/Odds placements + visual step-aside                   |
+| 7   | Camera north head clip                    | HUD inset 140px + min tile Y headroom                               |
+| 8   | Art                                       | Accessories/variants, Morro depth layers, Casa tables/crowd         |
 
 ## Automated
 
-- `npm test` — pass (coverage ≥90% branches)
-- `npm run lint` / `typecheck` / `make check` — pass
+- `npm test` — pass (branches ≥90%)
+- `npm run lint` / `typecheck` — pass
+- `e2e/story-walk` — PASS (unique marker + skill perfect)
+- `e2e/fps-overlay` — PASS
+- `e2e/perf-throttle` — PASS (≥50 FPS @ 4×)
 
 ## Gaps (honest)
 
-- Objective arrow is large but still procedural (not a sprite sheet).
-- North ridge can draw the player over building windows (y-sort / footprint).
-- Hint line can be hard to read over bright neon signs.
+- Skill UIs are functional DOM panels (not full arcade sprites).
+- Credit feedback is primarily the toast (fx flash is brief).
+- Off-screen marker label can still crowd the FPS strip.
+- Grind-side jobs remain RNG (intentional).

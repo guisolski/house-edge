@@ -5,8 +5,8 @@ export type Camera = {
   y: number;
 };
 
-/** Keep the player sprite fully below the HTML play-HUD band. */
-export const HUD_TOP_INSET_PX = 110;
+/** Keep the player sprite fully below the HTML play-HUD band (head clearance). */
+export const HUD_TOP_INSET_PX = 140;
 /** Keep a little air above the touch / FPS strip. */
 export const HUD_BOTTOM_INSET_PX = 24;
 
@@ -74,7 +74,8 @@ export function viewportPadding(args: ViewportPadArgs): { padX: number; padY: nu
  * camera is clamped to the north edge of the map.
  */
 export function minPlayerTileY(tilePx: number, topInsetPx = HUD_TOP_INSET_PX): number {
-  return Math.max(1, Math.ceil((topInsetPx + 8) / tilePx));
+  // Extra tile of headroom so Morro ramp tops never kiss the screen edge.
+  return Math.max(2, Math.ceil((topInsetPx + 24) / tilePx));
 }
 
 function clamp(v: number, min: number, max: number): number {

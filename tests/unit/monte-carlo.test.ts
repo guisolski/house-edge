@@ -68,7 +68,9 @@ function simulatePlaythrough(seed: number): {
       // Broke: grind then retry next loop.
       continue;
     }
-    session.confirmBet();
+    // Story gates use skill encounters; grind-only RNG bets still use confirmBet.
+    if (session.ui.is('skill')) session.completeSkillPerfect();
+    else session.confirmBet();
     storyBets += 1;
   }
   return {

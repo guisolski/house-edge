@@ -33,15 +33,49 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Rita Odds',
-        text: 'What a country. Hit me with the ice-water odd.',
+        text: 'What a country. Hit me with the ice-water odd — I’ll time the pour myself.',
+        choices: [
+          {
+            label: 'Play it loud — rally the hill',
+            setsFlag: 'rita_loud',
+            reply: 'Loud it is. If Casa wants a show, the laje can shout.',
+          },
+          {
+            label: 'Play it quiet — ghost the meters',
+            setsFlag: 'rita_quiet',
+            reply: 'Quiet. Slip through the neon and cut their meters where it hurts.',
+          },
+        ],
       },
       {
         speaker: 'Dona Nair',
-        text: 'Luna’s been sniffing around the LED antenna. Pirate signal nonsense. Find Antena Tech on the mid terrace — they already climbed it.',
+        text: 'Luna’s been sniffing around the LED antenna. Pirate signal nonsense. First, Catador needs spare copper weighed — he won’t move until you do.',
       },
       {
         speaker: 'Dona Nair',
-        text: 'And drink slow. Casa bills the ice cubes now. Take the stairs up the spine — one wide climb, whole hill.',
+        text: 'Then find Antena Tech on the mid terrace. Drink slow. Casa bills the ice cubes now.',
+      },
+    ],
+  },
+  {
+    id: 'side-morro-copper',
+    title: 'Spare copper odd',
+    districtId: 'morro-neon',
+    requiredFlags: ['falou_nair'],
+    setsFlags: ['side_morro_ok', 'copper_weighed'],
+    betId: 'side-morro-copper',
+    dialogue: [
+      {
+        speaker: 'Catador do Morro',
+        text: 'Nair said you’d come. Spare wire on the lower laje — weigh the bright bag, not the rust.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Skill check, not a coin flip. Point me at the bags.',
+      },
+      {
+        speaker: 'Catador do Morro',
+        text: 'Win and Antena Tech will talk. Lose and you still owe the stake — try again with clearer eyes.',
       },
     ],
   },
@@ -49,13 +83,13 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     id: 'morro-antena',
     title: 'Jack the LED antenna',
     districtId: 'morro-neon',
-    requiredFlags: ['falou_nair'],
+    requiredFlags: ['falou_nair', 'copper_weighed'],
     setsFlags: ['antena_ok'],
     betId: 'antena-sinal',
     dialogue: [
       {
         speaker: 'Antena Tech',
-        text: 'Casa chopped the hill’s Wi‑Fi and sold it back drip by drip. I already climbed the LED tower — you bet the pirate jack from down here.',
+        text: 'Copper’s in. Casa chopped the hill’s Wi‑Fi and sold it back drip by drip. Match my splice tones — no dice.',
       },
       {
         speaker: 'Rita Odds',
@@ -63,7 +97,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Antena Tech',
-        text: 'Signal’s clean, you catch Luna on the beco. Wipe the bet and I kill the feed — not you.',
+        text: 'Signal’s clean, you catch Luna on the beco. Wipe the sequence and I kill the feed — not you.',
       },
       {
         speaker: 'Rita Odds',
@@ -196,15 +230,49 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     dialogue: [
       {
         speaker: 'Bia Forró',
-        text: 'If the bass doesn’t shake the laje, the revolution won’t stick. Bet on samba against the corp jingle.',
+        text: 'If the bass doesn’t shake the laje, the revolution won’t stick. Time the samba against the corp jingle — no dice.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'Bet. Tonight the floor is ours.',
+        text: 'Needle on the downbeat. Tonight the floor is ours.',
+        choices: [
+          {
+            label: 'Dance with the crowd',
+            setsFlag: 'rita_danced',
+            reply: 'I move with them. If Casa wants a meter, they’ll count feet.',
+          },
+          {
+            label: 'Watch from the rail',
+            setsFlag: 'rita_watched',
+            reply: 'I’ll read the floor from the rail. Someone has to clock the militia.',
+          },
+        ],
       },
       {
         speaker: 'Bia Forró',
-        text: 'After the set, find the DJ. He reads the crowd better than any Casa sensor.',
+        text: 'After the set, catch Dancer Sol’s cue — then the DJ. He reads the crowd better than any Casa sensor.',
+      },
+    ],
+  },
+  {
+    id: 'feira-dancer',
+    title: 'Dancer’s cue',
+    districtId: 'feira-central',
+    requiredFlags: ['festa_rolando'],
+    setsFlags: ['dancer_ok'],
+    betId: 'dancer-tip',
+    dialogue: [
+      {
+        speaker: 'Dancer Sol',
+        text: 'Bia warmed the square. Catch my cue beat before the corp playlist hijacks the speakers.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Timing, not luck. Show me the window.',
+      },
+      {
+        speaker: 'Dancer Sol',
+        text: 'Green zone mid-spin. Miss and you tip the stake — try again. Then hit the DJ.',
       },
     ],
   },
@@ -212,7 +280,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     id: 'feira-forro',
     title: 'Crowd surge on the calçadão',
     districtId: 'feira-central',
-    requiredFlags: ['festa_rolando'],
+    requiredFlags: ['dancer_ok'],
     setsFlags: ['forro_ok'],
     betId: 'forro-crowd',
     dialogue: [
@@ -383,16 +451,38 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     ],
   },
   {
+    id: 'avenida-courier',
+    title: 'Courier shadow',
+    districtId: 'avenida-odds',
+    requiredFlags: ['passou_checkpoint'],
+    setsFlags: ['courier_shadow_ok'],
+    betId: 'courier-tip',
+    dialogue: [
+      {
+        speaker: 'Casa Courier',
+        text: 'Capita waved you through. Shadow me through the alleys — I drop VIP chip routes if you keep up.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Chase, not coin flip. Lead.',
+      },
+      {
+        speaker: 'Casa Courier',
+        text: 'Four alleys. Miss a turn and you tip the stake — then the influencer still waits east.',
+      },
+    ],
+  },
+  {
     id: 'avenida-influencer',
     title: 'Influencer duel',
     districtId: 'avenida-odds',
-    requiredFlags: ['passou_checkpoint'],
+    requiredFlags: ['courier_shadow_ok'],
     setsFlags: ['influencer_ok'],
     betId: 'influencer-duelo',
     dialogue: [
       {
         speaker: 'Odds Influencer',
-        text: 'Live from Odds Avenue! Casa pays me per view. Bet whether street pixo beats my sponsored glow.',
+        text: 'Live from Odds Avenue! Casa pays me per view. Call the fake engagement — skill read, not a roll.',
       },
       {
         speaker: 'Rita Odds',
@@ -448,17 +538,39 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     ],
   },
   {
+    id: 'avenida-stealth',
+    title: 'Lobby cam slip',
+    districtId: 'avenida-odds',
+    requiredFlags: ['atm_ok'],
+    setsFlags: ['stealth_ok'],
+    betId: 'avenida-stealth',
+    dialogue: [
+      {
+        speaker: 'Lobby Cam Tech',
+        text: 'ATM glitch woke the lobby cams. Slip the routes before Margin’s hearing — five quiet steps.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Stealth chase. No dice. Walk me through.',
+      },
+      {
+        speaker: 'Lobby Cam Tech',
+        text: 'Miss a step and you tip the stake. Then coffee with Margin — bring the scandal, not the footage.',
+      },
+    ],
+  },
+  {
     id: 'lobby-margin',
     title: 'Coffee with Dr. Margin',
     districtId: 'avenida-odds',
-    requiredFlags: ['atm_ok'],
+    requiredFlags: ['stealth_ok'],
     setsFlags: ['escandalo_aberto', 'unlocked_torre'],
     betId: 'audiencia-publica',
     unlocksDistrict: 'torre-casa',
     dialogue: [
       {
         speaker: 'Dr. Margin',
-        text: 'Regulation is just another table. Want a public hearing? Wager. Win, and the scandal trends.',
+        text: 'Regulation is just another table. Want a public hearing? Pick the testimony that sticks — skill read.',
       },
       {
         speaker: 'Rita Odds',
@@ -586,7 +698,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
   },
   {
     id: 'torre-elevator',
-    title: 'Elevator odds',
+    title: 'Elevator call',
     districtId: 'torre-casa',
     requiredFlags: ['pit_ok'],
     setsFlags: ['elevator_ok'],
@@ -594,7 +706,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     dialogue: [
       {
         speaker: 'Elevator',
-        text: 'VIP’s upstairs. Coin flip — express car or security stop. Bet the shaft.',
+        text: 'VIP’s upstairs. Time the express call — green zone — then I carry you up. No coin flip.',
       },
       {
         speaker: 'Rita Odds',
@@ -602,11 +714,11 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Elevator',
-        text: 'Win and the doors open on chrome. Lose and you ride with the busboys. Place it.',
+        text: 'Nail the timing and the doors open on chrome with a fade. Miss and you tip the stake — try again.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'Chrome or freight — I’m going up either way. Deal.',
+        text: 'Chrome or retry — I’m going up. Call it.',
       },
     ],
   },
@@ -656,15 +768,15 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Rita Odds',
-        text: 'A chip? I’m the hill, the fair, the calçadão, and the pixo. Roll the dice.',
+        text: 'A chip? I’m the hill, the fair, the calçadão, and the pixo. Three phases — needle, read, terminal.',
       },
       {
         speaker: 'Augusto Casa',
-        text: 'One last odd, then. High stakes. No appeals.',
+        text: 'Skill won’t save you from the house. High stakes. No appeals. Fail a phase and the stake is mine.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'Good. I’m done playing by your meter. Deal the city.',
+        text: 'Good. I’m done rolling your dice. Deal the city.',
       },
     ],
   },
@@ -695,25 +807,6 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     ],
   },
   // —— Optional side quests (small rewards, never gate the main path) ——
-  {
-    id: 'side-morro-copper',
-    title: 'Spare copper odd',
-    districtId: 'morro-neon',
-    requiredFlags: ['falou_nair'],
-    setsFlags: ['side_morro_ok'],
-    betId: 'side-morro-copper',
-    optional: true,
-    dialogue: [
-      {
-        speaker: 'Catador do Morro',
-        text: 'Spare wire on the lower laje. Bet the haul weight — small credits, no corp meter.',
-      },
-      {
-        speaker: 'Rita Odds',
-        text: 'I’ll take a quiet odd. Keep the bag light.',
-      },
-    ],
-  },
   {
     id: 'side-morro-tank',
     title: 'Water tank odd',

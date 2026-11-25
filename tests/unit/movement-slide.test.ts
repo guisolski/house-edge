@@ -52,18 +52,22 @@ describe('movement slide + camera HUD inset', () => {
       viewW: 960,
       viewH: 540,
       tilePx: 48,
-      topInsetPx: 110,
+      topInsetPx: 140,
     });
     expect(cam.y).toBeGreaterThanOrEqual(0);
     const screenY = 8 * 48 + 24 - cam.y;
-    expect(screenY).toBeGreaterThanOrEqual(100);
+    expect(screenY).toBeGreaterThanOrEqual(120);
   });
 
   it('luna objective is uniquely named with detail', () => {
     const obj = currentObjective({
       beats: STORY_BEATS,
-      completed: ['intro-laje', 'boteco-nair', 'morro-antena'],
-      flags: (f) => f === 'conheceu_rita' || f === 'falou_nair' || f === 'antena_ok',
+      completed: ['intro-laje', 'boteco-nair', 'side-morro-copper', 'morro-antena'],
+      flags: (f) =>
+        f === 'conheceu_rita' ||
+        f === 'falou_nair' ||
+        f === 'copper_weighed' ||
+        f === 'antena_ok',
       districtId: 'morro-neon',
       npcs: districtNpcs(),
       exits: districtExits(),
@@ -80,6 +84,7 @@ describe('movement slide + camera HUD inset', () => {
     const done = [
       'intro-laje',
       'boteco-nair',
+      'side-morro-copper',
       'morro-antena',
       'luna-beco',
       'morro-fios',
@@ -89,6 +94,7 @@ describe('movement slide + camera HUD inset', () => {
       [
         'conheceu_rita',
         'falou_nair',
+        'copper_weighed',
         'antena_ok',
         'conheceu_luna',
         'fios_ok',

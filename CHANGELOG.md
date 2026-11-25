@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] — 2026-11-25
+
+### Added
+
+- Skill mini-games replace story coin-flips: timing, choice, puzzle, chase, hack; final duel is a 3-phase skill encounter.
+- Story length: woven copper weigh-in, fair dancer cue, Odds courier shadow + lobby stealth; dialogue choices on key beats.
+- Elevator fade/ride relocates Rita to the VIP floor with transition FX.
+- Visual/audio feedback: screen flash, credit popups, travel/elevator SFX.
+- NPC accessories + walk bob variants; deeper Morro house layers; fuller Casa pit tables/crowd.
+
+### Fixed
+
+- E prompt prioritizes the objective NPC (shows alt if nearby); edge pointer labels stay fully on-screen.
+- Fair/Odds NPCs sit off main lanes and step aside visually; camera north inset raised so heads clear the HUD.
+
 ## [1.12.2] — 2026-11-25
 
 ### Fixed

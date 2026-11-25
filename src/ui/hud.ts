@@ -10,6 +10,7 @@ import {
   paintBet,
   paintDialogue,
   paintJobs,
+  paintSkill,
   paintTravel,
   paintUpgrades,
 } from './panels';
@@ -26,6 +27,7 @@ export type HudHandles = {
   showToast: (message: string, kind: string) => void;
   showMenu: (open: boolean) => void;
   showBet: () => void;
+  showSkill: () => void;
   showTravel: () => void;
   showJobs: () => void;
   showUpgrades: () => void;
@@ -35,6 +37,9 @@ export type HudHandles = {
   setFps: (sample: FpsSample | null) => void;
   syncScreen: () => void;
   gamepadNav: (dir: 'up' | 'down' | 'confirm' | 'back') => void;
+  flash: (kind: string) => void;
+  creditPopup: (delta: number) => void;
+  playTransition: (kind: string) => void;
 };
 
 type Parts = {
@@ -44,6 +49,7 @@ type Parts = {
   menu: HTMLElement;
   dialogue: HTMLElement;
   bet: HTMLElement;
+  skill: HTMLElement;
   travel: HTMLElement;
   jobs: HTMLElement;
   upgrades: HTMLElement;
@@ -55,6 +61,9 @@ type Parts = {
   objectiveDetail: HTMLElement;
   fps: HTMLElement;
   stats: HTMLElement;
+  flash: HTMLElement;
+  creditsFx: HTMLElement;
+  transition: HTMLElement;
 };
 
 export function createHud(session: GameSession, mount: HTMLElement): HudHandles {
@@ -75,6 +84,7 @@ function emptyParts(): Parts {
     menu: el('section', 'menu-panel'),
     dialogue: el('div', 'dialogue-panel'),
     bet: el('div', 'bet-panel'),
+    skill: el('div', 'skill-panel'),
     travel: el('div', 'travel-panel'),
     jobs: el('div', 'jobs-panel'),
     upgrades: el('div', 'upgrades-panel'),
@@ -86,12 +96,18 @@ function emptyParts(): Parts {
     objectiveDetail: el('div', 'objective-detail', ''),
     fps: el('div', 'fps-meter', ''),
     stats: el('div', 'stats', ''),
+    flash: el('div', 'fx-flash'),
+    creditsFx: el('div', 'fx-credits'),
+    transition: el('div', 'fx-transition'),
   };
 }
 
 function wireDom(session: GameSession, p: Parts, h: HudHandles): void {
   p.play.append(p.stats, p.objective, p.objectiveDetail, p.hints);
   setVisible(p.fps, false);
+  setVisible(p.flash, false);
+  setVisible(p.creditsFx, false);
+  setVisible(p.transition, false);
   p.root.appendChild(p.fps);
   fillTitle(p.title, session);
   fillMenu(p.menu, session, h);
@@ -101,6 +117,7 @@ function wireDom(session: GameSession, p: Parts, h: HudHandles): void {
     p.menu,
     p.dialogue,
     p.bet,
+    p.skill,
     p.travel,
     p.jobs,
     p.upgrades,
@@ -116,12 +133,16 @@ function appendAll(p: Parts): void {
     p.menu,
     p.dialogue,
     p.bet,
+    p.skill,
     p.travel,
     p.jobs,
     p.upgrades,
     p.toast,
     p.ending,
     p.prompt,
+    p.flash,
+    p.creditsFx,
+    p.transition,
   );
 }
 
@@ -151,6 +172,9 @@ function baseShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudHa
     setFps: (sample) => paintFps(p.fps, sample),
     syncScreen: () => syncFromUi(h, p, session),
     gamepadNav: (dir) => navModal(h, p, session, dir),
+    flash: (kind) => runFlash(p.flash, kind),
+    creditPopup: (delta) => runCreditPopup(p.creditsFx, delta),
+    playTransition: (kind) => runTransition(p.transition, kind),
   };
 }
 
@@ -165,6 +189,10 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
           session.acceptStoryBet();
           h.syncScreen();
         },
+        onChoice: (setsFlag, reply) => {
+          session.pickDialogueChoice(setsFlag, reply);
+          h.showDialogue(session.getDialogue());
+        },
         onClose: () => {
           session.closeModal();
           h.syncScreen();
@@ -176,6 +204,11 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
       only(p, 'bet');
       paintBet(p.bet, session, () => h.syncScreen());
       focusFirst(p.bet);
+    },
+    showSkill: () => {
+      only(p, 'skill');
+      paintSkill(p.skill, session, () => h.syncScreen());
+      focusFirst(p.skill);
     },
     showTravel: () => {
       only(p, 'travel');
@@ -284,6 +317,7 @@ function syncFromUi(h: HudHandles, p: Parts, session: GameSession): void {
   if (screen === 'jobs') h.showJobs();
   if (screen === 'upgrades') h.showUpgrades();
   if (screen === 'bet') h.showBet();
+  if (screen === 'skill') h.showSkill();
   if (screen === 'dialogue') h.showDialogue(session.getDialogue());
   refresh(p, session);
   paintPrompt(p.prompt, session);
@@ -296,6 +330,7 @@ function only(p: Parts, which: string): void {
     menu: p.menu,
     dialogue: p.dialogue,
     bet: p.bet,
+    skill: p.skill,
     travel: p.travel,
     jobs: p.jobs,
     upgrades: p.upgrades,
@@ -404,6 +439,17 @@ function paintPrompt(prompt: HTMLElement, session: GameSession): void {
   const exit = session.nearbyExit();
   const locked = session.nearbyLockedExit();
   const npc = session.nearbyNpc();
+  const alt = session.nearbyAltNpc();
+  const obj = session.objective();
+  // Objective NPC in range beats a nearby exit for the primary E line.
+  const objNpc = npc && obj.targetName && npc.name === obj.targetName ? npc : null;
+  if (objNpc) {
+    const verb = objNpc.id === 'elevator' ? 'E — Use' : 'E';
+    const extra = alt ? ` · also ${alt.name}` : '';
+    prompt.textContent = `${verb} (${objNpc.name})${extra}`;
+    setVisible(prompt, true);
+    return;
+  }
   if (exit) {
     const dest =
       session.world.get(exit.toDistrict)?.name ?? exit.label.replace(/^Exit → /, '');
@@ -418,11 +464,33 @@ function paintPrompt(prompt: HTMLElement, session: GameSession): void {
   }
   if (npc) {
     const verb = npc.id === 'elevator' ? 'E — Use' : 'E';
-    prompt.textContent = `${verb} (${npc.name})`;
+    const extra = alt ? ` · also ${alt.name}` : '';
+    prompt.textContent = `${verb} (${npc.name})${extra}`;
     setVisible(prompt, true);
     return;
   }
   setVisible(prompt, false);
+}
+
+function runFlash(node: HTMLElement, kind: string): void {
+  node.className = `fx-flash fx-${kind}`;
+  setVisible(node, true);
+  window.setTimeout(() => setVisible(node, false), 280);
+}
+
+function runCreditPopup(node: HTMLElement, delta: number): void {
+  const sign = delta >= 0 ? '+' : '';
+  node.className = delta >= 0 ? 'fx-credits fx-credits-up' : 'fx-credits fx-credits-down';
+  node.textContent = `${sign}${delta} cr`;
+  setVisible(node, true);
+  window.setTimeout(() => setVisible(node, false), 900);
+}
+
+function runTransition(node: HTMLElement, kind: string): void {
+  node.className = `fx-transition fx-${kind}`;
+  node.textContent = kind === 'elevator' ? '▲ Elevator' : '';
+  setVisible(node, true);
+  window.setTimeout(() => setVisible(node, false), 520);
 }
 
 function paintToast(toast: HTMLElement, message: string, kind: string): void {
@@ -476,6 +544,7 @@ function activePanel(p: Parts, session: GameSession): HTMLElement | null {
   const s = session.ui.get();
   if (s === 'menu') return p.menu;
   if (s === 'bet') return p.bet;
+  if (s === 'skill') return p.skill;
   if (s === 'travel') return p.travel;
   if (s === 'jobs') return p.jobs;
   if (s === 'dialogue') return p.dialogue;

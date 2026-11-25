@@ -78,6 +78,8 @@ function sfxFreq(id: string): { hz: number; dur: number; type: OscKind } {
     move: { hz: 220, dur: 0.04, type: 'triangle' },
     interact: { hz: 392, dur: 0.08, type: 'square' },
     bet: { hz: 330, dur: 0.1, type: 'square' },
+    travel: { hz: 180, dur: 0.22, type: 'triangle' },
+    skill: { hz: 440, dur: 0.09, type: 'square' },
     ui: { hz: 660, dur: 0.05, type: 'sine' },
   };
   return table[id] ?? table.ui!;

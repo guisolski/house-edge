@@ -65,10 +65,10 @@ function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
 }
 
-/** Tiny map for unit tests of corner slips. */
+/** Tiny map for unit tests of corner slips (rows ≥ HUD minY). */
 export function toySlideMap(): MapDef {
   const w = 5;
-  const h = 6;
+  const h = 8;
   const tiles = Array.from({ length: w * h }, () => 'asphalt' as TileKind);
   // Seal edges.
   for (let x = 0; x < w; x += 1) {
@@ -79,8 +79,8 @@ export function toySlideMap(): MapDef {
     tiles[y * w] = 'blocked';
     tiles[y * w + (w - 1)] = 'blocked';
   }
-  // Block (3,3) so east from (2,3) needs a corner slip to (3,2) or (3,4).
-  tiles[3 * w + 3] = 'blocked';
+  // Block (3,5) so east from (2,5) needs a corner slip to (3,4) or (3,6).
+  tiles[5 * w + 3] = 'blocked';
   return {
     districtId: 'morro-neon',
     width: w,
@@ -89,6 +89,6 @@ export function toySlideMap(): MapDef {
     buildings: [],
     signs: [],
     props: [],
-    landmark: { x: 2, y: 2, kind: 'led-tower' },
+    landmark: { x: 2, y: 4, kind: 'led-tower' },
   };
 }

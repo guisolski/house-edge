@@ -5,21 +5,29 @@ export type UiScreen =
   | 'play'
   | 'dialogue'
   | 'bet'
+  | 'skill'
   | 'menu'
   | 'travel'
   | 'jobs'
   | 'upgrades'
-  | 'ending';
+  | 'ending'
+  | 'transition';
 
 /** Extra edges beyond play→anything and →play/title/ending. */
 const EXTRA = new Set<string>([
   'dialogue>bet',
+  'dialogue>skill',
+  'bet>skill',
+  'skill>bet',
   'menu>jobs',
   'menu>travel',
   'menu>upgrades',
   'jobs>menu',
   'travel>menu',
   'upgrades>menu',
+  'play>transition',
+  'skill>transition',
+  'transition>play',
 ]);
 
 export class UiStateMachine {
