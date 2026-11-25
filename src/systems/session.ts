@@ -138,6 +138,10 @@ export class GameSession {
   /** Modal confirm (dialogue/skill): ignore Interact held at open until key-up. */
   private modalConfirmNeedsRelease = false;
   private modalConfirmArmUntil = 0;
+  /** Enter/E was down during the arm — release must start a quiet period. */
+  private modalHeldThroughArm = false;
+  /** Key-up arrived during the arm — apply when the arm expires. */
+  private modalReleasePending = false;
   /** New Game onboarding + first-time minigame tips. */
   private tutorial: TutorialState = createTutorialState();
 
@@ -589,8 +593,9 @@ export class GameSession {
     this.story.setFlag('free_roam', true);
     this.persist();
     if (!this.ui.go('play')) return false;
-    // Playtest #30: always arm after credits — Enter spam must not reopen Nair.
-    this.armInteractLock(true, 300);
+    // Playtest #31: Enter must never reopen Nair — only KeyE (same as rematch).
+    this.rematchNeedsKeyE = true;
+    this.armInteractLock(true, 500);
     this.bus.emit('game:started', { newGame: false });
     this.bus.emit('ui:toast', {
       message: afterCredits ? t('ui.toast.continueCredits') : t('ui.toast.continueFree'),
@@ -614,7 +619,8 @@ export class GameSession {
     // VIP floor: always mark the descend pad (no district travel exits up here).
     if (this.vipFloor) {
       const elev = this.floorNpcs().find((n) => n.id === 'elevator-vip');
-      if (elev) marks.push({ x: elev.x, y: elev.y, label: 'Elevator ↓' });
+      if (elev)
+        marks.push({ x: elev.x, y: elev.y, label: t('ui.elevatorCard.downMark') });
     }
     return marks;
   }
@@ -687,39 +693,104 @@ export class GameSession {
   noteInteractPressed(code?: string): void {
     this.interactKeyDown = true;
     this.lastInteractCode = code ?? null;
+    // Mash during the modal arm → require post-arm release + quiet period.
+    if (Date.now() < this.modalConfirmArmUntil) {
+      this.modalConfirmNeedsRelease = true;
+      this.modalHeldThroughArm = true;
+    }
   }
 
   /**
-   * Modal confirm gate: when a dialog/skill opens with Interact held, ignore
-   * confirm until key-up. Fresh presses after the arm window are allowed.
+   * Modal confirm gate: arm ≥400ms, and if Enter was mashed/held during the arm
+   * require a post-arm key-up plus a quiet period (playtest #31).
    */
   allowModalConfirm(): boolean {
-    if (this.modalConfirmNeedsRelease) return false;
+    this.flushModalReleasePending();
     if (Date.now() < this.modalConfirmArmUntil) return false;
+    if (this.modalConfirmNeedsRelease) return false;
     return true;
+  }
+
+  /** True while Interact/Enter is physically held (HUD arm helpers). */
+  isInteractHeld(): boolean {
+    return this.interactKeyDown;
   }
 
   /** Call when dialogue/skill/bet opens. `interactHeld` = Interact down at open. */
   noteModalOpened(interactHeld: boolean): void {
-    // Playtest #28/#30: 400ms + key-up so buffered Enter cannot auto-pick.
+    // Playtest #28/#31: 400ms arm; key-up only required if held/mashed during arm.
     this.modalConfirmArmUntil = Date.now() + 400;
     this.modalConfirmNeedsRelease = interactHeld || this.interactKeyDown;
+    this.modalHeldThroughArm = this.modalConfirmNeedsRelease;
+    this.modalReleasePending = false;
+  }
+
+  /** Mash during arm / blocked confirm: reset arm so 60ms bursts never clear. */
+  bumpModalConfirmArm(): void {
+    this.modalConfirmArmUntil = Date.now() + 400;
+    this.modalConfirmNeedsRelease = true;
+    this.modalHeldThroughArm = true;
+    this.modalReleasePending = false;
+  }
+
+  private flushModalReleasePending(): void {
+    if (!this.modalReleasePending) return;
+    if (Date.now() < this.modalConfirmArmUntil) return;
+    if (this.interactKeyDown) return;
+    this.modalReleasePending = false;
+    this.modalConfirmNeedsRelease = false;
+    // Release-during-arm: quiet starts at arm expiry (not at this flush),
+    // so a late first Enter after a slow open can't auto-pick.
+    if (this.modalHeldThroughArm) {
+      const quietEnd = this.modalConfirmArmUntil + 400;
+      this.modalHeldThroughArm = false;
+      if (Date.now() < quietEnd) this.modalConfirmArmUntil = quietEnd;
+    }
   }
 
   /**
    * @param fromInput — when true (keyboard/gamepad), also require Interact key release
    * after a dialog closes. Programmatic callers (story-walk / tests) omit this.
    */
+  /** Playtest #31: Enter/Space never starts dialogue — only KeyE. */
+  private talkBlockedByEnter(fromInput: boolean): boolean {
+    if (!fromInput) return false;
+    return this.lastInteractCode === 'Enter' || this.lastInteractCode === 'Space';
+  }
+
+  private talkToNpc(npc: WorldNpc): boolean {
+    this.noteTutorialProgress('interacted');
+    return this.interactNpc(npc);
+  }
+
+  private dispatchInteract(
+    kind: ReturnType<typeof resolveInteractPriority>,
+    npc: WorldNpc | null,
+    exit: ReturnType<GameSession['nearbyExit']>,
+    blockTalk: boolean,
+  ): boolean {
+    if ((kind === 'objective' || kind === 'npc') && npc) {
+      return blockTalk ? false : this.talkToNpc(npc);
+    }
+    if (kind === 'travel' && exit) {
+      this.noteTutorialProgress('interacted');
+      return this.travelTo(exit.toDistrict);
+    }
+    if (kind === 'locked') {
+      this.bus.emit('ui:toast', { message: t('ui.toast.pathLocked'), kind: 'info' });
+      return false;
+    }
+    this.bus.emit('ui:toast', { message: t('ui.toast.nobodyInRange'), kind: 'info' });
+    return false;
+  }
+
   interact(fromInput = false): boolean {
     if (!this.ui.is('play')) return false;
     if (fromInput && !this.allowInteractInput()) return false;
     if (!fromInput && Date.now() < this.interactLockUntil) return false;
     // Standing on an elevator pad always uses the car before other NPCs.
     const elev = this.nearbyElevatorPad();
-    if (elev) {
-      this.noteTutorialProgress('interacted');
-      return this.interactNpc(elev);
-    }
+    if (elev) return this.talkToNpc(elev);
     const npc = this.nearbyNpc();
     const objNpc = this.objectiveNpcInRange();
     const objHit = Boolean(objNpc && npc && npc.id === objNpc.id);
@@ -731,27 +802,7 @@ export class GameSession {
       lockedExitInRange: Boolean(locked),
       otherNpcInRange: Boolean(npc) && !objHit,
     });
-    if (kind === 'objective' && npc) {
-      this.noteTutorialProgress('interacted');
-      return this.interactNpc(npc);
-    }
-    if (kind === 'travel' && exit) {
-      this.noteTutorialProgress('interacted');
-      return this.travelTo(exit.toDistrict);
-    }
-    if (kind === 'locked') {
-      this.bus.emit('ui:toast', {
-        message: t('ui.toast.pathLocked'),
-        kind: 'info',
-      });
-      return false;
-    }
-    if (kind === 'npc' && npc) {
-      this.noteTutorialProgress('interacted');
-      return this.interactNpc(npc);
-    }
-    this.bus.emit('ui:toast', { message: t('ui.toast.nobodyInRange'), kind: 'info' });
-    return false;
+    return this.dispatchInteract(kind, npc, exit, this.talkBlockedByEnter(fromInput));
   }
 
   offerBet(betId: string): boolean {
@@ -1259,9 +1310,18 @@ export class GameSession {
   /** Call on Interact key-up so a held Enter can't chain rematch dialogs. */
   noteInteractRelease(): void {
     this.interactKeyDown = false;
-    this.modalConfirmNeedsRelease = false;
-    // Key-up during the time lock only counts once the arm expires —
-    // still require a *post-arm* release so Enter spam @80ms can't rematch.
+    // Key-up during the modal arm — apply once the arm expires (flush on allow).
+    if (Date.now() < this.modalConfirmArmUntil) {
+      this.modalReleasePending = true;
+    } else if (this.modalConfirmNeedsRelease) {
+      this.modalConfirmNeedsRelease = false;
+      // Hold-through-arm / mash: quiet period so the next keydown can't auto-pick.
+      if (this.modalHeldThroughArm) {
+        this.modalConfirmArmUntil = Date.now() + 400;
+        this.modalHeldThroughArm = false;
+      }
+    }
+    // Key-up during the rematch time lock only counts once the arm expires.
     if (Date.now() < this.interactLockUntil) {
       this.interactReleasePending = true;
       return;
@@ -1405,7 +1465,7 @@ export class GameSession {
       kind: 'elevator',
       from: 'torre-casa',
       to: 'torre-casa',
-      label: '▼ Elevator\nPit Foyer · Floor 1',
+      label: t('ui.elevatorCard.foyer'),
     });
     this.ui.go('transition');
     this.vipFloor = false;
@@ -1548,7 +1608,7 @@ export class GameSession {
       kind: 'elevator',
       from: 'torre-casa',
       to: 'torre-casa',
-      label: '▲ Elevator\nVIP Salon · Floor 42',
+      label: t('ui.elevatorCard.vip'),
     });
     this.bus.emit('fx:flash', { kind: 'travel' });
     this.bus.emit('audio:play-sfx', { id: 'travel' });

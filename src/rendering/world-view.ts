@@ -369,13 +369,15 @@ function collectTagRows(state: ViewState): TagRow[] {
     if (isObj) {
       seen.add(npc.name);
       near.push({ npc, d, force: true });
-    } else if (d <= 2.8) {
+    } else if (d <= 2.2) {
+      // Playtest #31: tighter radius so clustered tags don't stack in threes.
       seen.add(npc.name);
       near.push({ npc, d, force: false });
     }
   }
   near.sort((a, b) => Number(b.force) - Number(a.force) || a.d - b.d);
-  return near.filter((r, i) => r.force || i < 3).slice(0, 3);
+  // Objective always; at most one other nearest tag fully shown.
+  return near.filter((r, i) => r.force || i < 2).slice(0, 2);
 }
 
 /**
@@ -1041,7 +1043,8 @@ function pushNpcSorts(o: {
     const d = Math.hypot(npc.x - me.x, npc.y - me.y);
     // Modal open: only draw nearby NPCs — biggest FPS win on Odds/VIP.
     if (!o.playing && d > 8) continue;
-    const img = npcAnimSprite(o.baked, npc, timeS);
+    // Playtest #31: freeze idle bake under skill/dialogue — Augusto P3 FPS.
+    const img = npcAnimSprite(o.baked, npc, o.playing ? timeS : 0);
     const near = o.playing && d < 1.35;
     // Step aside + sort behind Rita so a green NPC never sits under her sprite.
     const asideX = near ? (npc.x >= me.x ? 0.55 : -0.55) : 0;

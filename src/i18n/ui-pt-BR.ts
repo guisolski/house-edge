@@ -94,7 +94,7 @@ export const uiPtBR = {
   'ui.minigameTip.hack':
     'Combine os glifos da transmissão antes do tempo. Toques errados disparam o alarme.',
   'ui.minigameTip.negotiate':
-    'Leia o outro lado. Aperte quando hesitar; recue quando endurecer.',
+    'Leia o Anfitrião. Aperte quando ele hesitar; recue quando o sorriso endurecer.',
   'ui.minigameTip.duel':
     'Vença cada fase: agulha, escolha e o hack. Fique calma sob as luzes.',
   'ui.findNairToast': 'Ache a Dona Nair no boteco (siga o marcador).',
@@ -148,7 +148,13 @@ export const uiPtBR = {
   'ui.skill.escSeqHint': 'Esc cancela · setas só na sequência',
   'ui.skill.pinHidden': 'Pino {n}: ???',
   'ui.skill.pinBtn': 'Pino {n}',
+  'ui.skill.pinClick': 'Pino {n}: clique',
+  'ui.skill.pinLow': 'Pino {n}: baixo',
+  'ui.skill.pinHigh': 'Pino {n}: alto',
   'ui.skill.submitLock': 'Enviar fechadura',
+  'ui.elevatorCard.foyer': '▼ Elevador / Foyer do pit',
+  'ui.elevatorCard.vip': '▲ Elevador / Salão VIP · Andar 42',
+  'ui.elevatorCard.downMark': '▼ Elevador',
   'ui.sideHustle.title': 'Bico: gelo na hora',
   'ui.sideHustle.descSkill': 'Grind pós-créditos repetível — para a agulha no frio.',
   'ui.sideHustle.descBet':
@@ -237,12 +243,11 @@ export const uiPtBR = {
   'ui.toast.missHint.duelo-casa':
     'Augusto: agulha, leitura, transmissão — uma fase de cada vez.',
   'ui.toast.missHint.torre-negotiate':
-    'Anfitrião: qualquer porta vale — escolhe antes do sorriso gelar.',
+    'Anfitrião: a gaveta quieta — silêncio antes do sorriso gelar.',
   'ui.toast.cleared': 'Passou — {payout} créditos.',
   'ui.toast.missedPour':
     'Errou o gelo — fala com a Nair de novo. O objetivo continua no lugar.',
-  'ui.toast.missedStory':
-    'Errou — a cena continua aberta. Fala de novo. Sem cobrar aposta.',
+  'ui.toast.missedStory': 'Ainda dá pra tentar — fala de novo. Sem cobrar aposta.',
   'ui.toast.oddJobsCap': 'Bicos esgotados — tenta uma aposta de verdade ou cena.',
   'ui.toast.oddJobsCooldown': 'Respira — bicos precisam de um cooldown curto.',
   'ui.toast.oddJobsEarned': 'Ganhou {pay} créditos (bicos seguros · {uses}/{cap}).',
@@ -287,7 +292,7 @@ export const uiPtBR = {
   'ui.credits.line.1': 'Dona Nair — gelo honesto, laje aberta',
   'ui.credits.line.2': 'Capitã & Fio — antena + perseguição nas lajes',
   'ui.credits.line.3': 'Luna — livro do salão na transmissão',
-  'ui.credits.line.4': 'Contato Vira-Casaca — o reviravolta que cortou',
+  'ui.credits.line.4': 'Contato Vira-Casaca — a reviravolta que cortou',
   'ui.credits.line.5': 'Turma do cofre — palco da Feira + gaiola',
   'ui.credits.line.6': 'Augusto Casa — a casa que caiu',
   'ui.credits.line.7': 'Morro · Feira · Avenida · Torre',

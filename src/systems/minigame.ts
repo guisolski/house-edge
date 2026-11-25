@@ -303,11 +303,9 @@ export function judgePhase(phase: SkillPhase, value: number): boolean {
     const pins = phasePins(phase);
     return Math.round(value) === encodePins(pins);
   }
-  // Negotiate: any listed offer seals the deal (dialogue already framed the choice).
+  // Playtest #31: negotiate judges like choice — only the target index wins.
   if (phase.kind === 'negotiate') {
-    const n = phase.options?.length ?? 0;
-    const i = Math.round(value);
-    return i >= 0 && i < n;
+    return Math.round(value) === phase.target;
   }
   return Math.round(value) === phase.target;
 }
@@ -488,8 +486,9 @@ function duelSkill(betId: string): SkillDef {
         kind: 'choice',
         prompt: 'Phase 2 — call Augusto’s bluff.',
         target: 1,
-        options: ['All-in smile', 'Ledger shake', 'Crowd roar'],
-        clue: 'Watch the cuff — theater fills the room, but the tremor tells.',
+        options: ['All-in grin', 'Ledger twitch', 'Crowd roar'],
+        // Playtest #31: no tremor/shake/paper giveaway — cuff betrays nerves.
+        clue: 'Augusto fills the room with theater. Watch the cuff when the volume climbs — ink jitters, grins don’t.',
       },
       {
         kind: 'hack',
@@ -497,6 +496,7 @@ function duelSkill(betId: string): SkillDef {
         target: 0,
         steps: 4,
         sequence: ['R', '↑', 'B', '↓'],
+        maxMisses: 4,
       },
     ],
   };

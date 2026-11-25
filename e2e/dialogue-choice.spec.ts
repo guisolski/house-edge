@@ -29,11 +29,12 @@ test('dialogue choices: keyboard selects option 2', async ({ page }) => {
   await expect(choices).toHaveCount(2);
   await expect(choices.nth(0)).toBeFocused();
 
-  // Playtest #28: choice arm ≥400ms — wait before keyboard confirm.
-  await page.waitForTimeout(450);
+  // Playtest #28/#31: choice arm ≥400ms + post-arm key-up if mashed.
+  await page.waitForTimeout(500);
   // Arrow / S moves highlight to option 2; Enter activates it.
   await page.keyboard.press('ArrowDown');
   await expect(choices.nth(1)).toBeFocused();
+  await page.waitForTimeout(50);
   await page.keyboard.press('Enter');
 
   await expect(panel.locator('button.dialogue-choice')).toHaveCount(0);

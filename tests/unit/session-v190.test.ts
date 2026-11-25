@@ -114,11 +114,11 @@ describe('v1.19.0 lockpick / negotiate / lockbox clue', () => {
     expect(lockpickClueDeducible(SKILL_PHASE_TABLE['feira-lockbox']!)).toBe(true);
   });
 
-  it('negotiate accepts hush chip (any offer wins)', () => {
+  it('negotiate accepts only the hush chip (target-only)', () => {
     const phase = skillForBet('torre-negotiate', 'negotiate')!.phases[0]!;
     expect(judgePhase(phase, 0)).toBe(true);
-    expect(judgePhase(phase, 1)).toBe(true);
-    expect(judgePhase(phase, 2)).toBe(true);
+    expect(judgePhase(phase, 1)).toBe(false);
+    expect(judgePhase(phase, 2)).toBe(false);
     expect(choiceClueIndirect(phase)).toBe(true);
     let p = startSkill(skillForBet('torre-negotiate', 'negotiate')!);
     p = attemptSkill(p, { phaseIndex: 0, value: 0 });

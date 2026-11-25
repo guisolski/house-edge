@@ -311,7 +311,7 @@ export const BETS: readonly BetDefinition[] = [
     unlocksFlag: 'casa_quebrada',
     skill: 'duel',
     reputationDeltaWin: 15,
-    reputationDeltaLose: -2,
+    reputationDeltaLose: -1,
   }),
   bet({
     id: 'feira-tipster',
@@ -376,7 +376,7 @@ export const BETS: readonly BetDefinition[] = [
     houseEdge: 0.12,
     skill: 'timing',
     reputationDeltaWin: 4,
-    reputationDeltaLose: -2,
+    reputationDeltaLose: -1,
   }),
   bet({
     id: 'avenida-atm',

@@ -2,13 +2,13 @@
 export const storyPtBR: Record<string, string> = {
   'story.avenida-atm.0.speaker': 'Hacker do Caixa',
   'story.avenida-atm.0.text':
-    'Enlace da gaiola tá no ar. Os multibancos da Casa arredondam pro centavo e guardam a sobra. Dispara o travada antes do bloqueio.',
+    'Enlace da gaiola tá no ar. Os multibancos da Casa arredondam pro centavo e guardam a sobra. Dispara a trava antes do bloqueio.',
   'story.avenida-atm.1.speaker': 'Rita Odds',
   'story.avenida-atm.1.text': 'Cada moeda lascada compra tempo. Roda o brecha.',
   'story.avenida-atm.2.speaker': 'Hacker do Caixa',
   'story.avenida-atm.2.text':
-    'A máquina fica ao sul da faixa de vidro — longe do café do Margin. Não mistura meu travada com o ouvido dele.',
-  'story.avenida-atm.title': 'Caçada ao travada do ATM',
+    'A máquina fica ao sul da faixa de vidro — longe do café do Margin. Não mistura minha trava com o ouvido dele.',
+  'story.avenida-atm.title': 'Caçada à trava do ATM',
   'story.avenida-betrayal.0.speaker': 'Contato Vira-Casaca',
   'story.avenida-betrayal.0.text':
     'Para. O "vazamento" nunca foi só da Luna — vendi um pedaço de volta pra Casa numa saída limpa. Os bytes do morro têm cicatriz de dedo-duro.',
@@ -91,7 +91,7 @@ export const storyPtBR: Record<string, string> = {
     'As vans da milícia sumiram. Tem gaiola de servidor da Casa fora da faixa de vidro — quatro pinos, um minuto de silêncio.',
   'story.avenida-server.1.speaker': 'Rita Odds',
   'story.avenida-server.1.text':
-    'Infiltração, não cara ou coroa. Se eu abrir, o travada do ATM ganha enlace limpo.',
+    'Infiltração, não cara ou coroa. Se eu abrir, a trava do ATM ganha enlace limpo.',
   'story.avenida-server.2.choice.0.label': 'Puxar os espelhos do salão',
   'story.avenida-server.2.choice.0.reply':
     'Levo o espelho do salão. As mesas privadas com comissão do Augusto vêm comigo.',
@@ -107,7 +107,7 @@ export const storyPtBR: Record<string, string> = {
   'story.avenida-server.title': 'Infiltração na gaiola de servidor',
   'story.avenida-stealth.0.speaker': 'Tech das Câmeras',
   'story.avenida-stealth.0.text':
-    'O travada do ATM acordou as câmeras do lobby. Desliza pelas rotas antes da audiência do Margin — cinco passos quietos.',
+    'A trava do ATM acordou as câmeras do lobby. Desliza pelas rotas antes da audiência do Margin — cinco passos quietos.',
   'story.avenida-stealth.1.speaker': 'Rita Odds',
   'story.avenida-stealth.1.text': 'Perseguição furtiva. Sem dado. Me guia.',
   'story.avenida-stealth.2.speaker': 'Tech das Câmeras',

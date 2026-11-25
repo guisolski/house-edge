@@ -106,13 +106,16 @@ export class PlayerSystem {
   }
 
   addReputation(delta: number): number {
+    // Playtest #31: never go negative — retries shouldn't tank the hill.
+    const next = Math.max(0, this.stats.reputation + delta);
+    const applied = next - this.stats.reputation;
     this.stats = {
       ...this.stats,
-      reputation: this.stats.reputation + delta,
+      reputation: next,
     };
     this.bus.emit('player:reputation-changed', {
       reputation: this.stats.reputation,
-      delta,
+      delta: applied,
     });
     return this.stats.reputation;
   }

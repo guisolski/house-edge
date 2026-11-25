@@ -199,46 +199,69 @@ function baseShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudHa
   };
 }
 
+function focusCanvasAfterClose(): void {
+  blurActive();
+  const canvas = document.querySelector(
+    'canvas.world-canvas, canvas.engine-canvas',
+  ) as HTMLCanvasElement | null;
+  canvas?.focus({ preventScroll: true });
+}
+
+function showDialoguePanel(
+  session: GameSession,
+  p: Parts,
+  h: HudHandles,
+  lines: DialogueLine[],
+): void {
+  only(p, 'dialogue');
+  const offerBet = session.hasPendingStoryBet();
+  const epi = session.getPendingStoryBeat() === 'epilogue-laje';
+  const hasChoice = lines.some((l) => Boolean(l.choices?.length));
+  const closingOnly =
+    epi &&
+    !hasChoice &&
+    !offerBet &&
+    lines.length > 0 &&
+    lines.every((l) => /Saúde/i.test(l.text));
+  // Playtest #30/#31: arm + key-up only when Interact is held at paint.
+  // (Mash during the arm still sets needsRelease via noteInteractPressed.)
+  session.noteModalOpened(session.isInteractHeld());
+  // Playtest #28/#31: arm ≥400ms so held/rapid Enter can't auto-pick.
+  const choiceArmAt = Date.now() + (epi && hasChoice ? 600 : 400);
+  const holdCloseUntil = closingOnly ? Date.now() + 3000 : undefined;
+  paintDialogue(p.dialogue, lines, {
+    offerBet,
+    choiceArmAt,
+    allowChoice: () => session.allowModalConfirm(),
+    holdCloseUntil,
+    closingLine: closingOnly,
+    onAcceptBet: () => {
+      // Mouse/touch click always accepts — Enter confirm stays gated in wiring.
+      session.acceptStoryBet();
+      h.syncScreen();
+    },
+    onChoice: (setsFlag, reply) => {
+      session.pickDialogueChoice(setsFlag, reply);
+      h.showDialogue(session.getDialogue());
+    },
+    onClose: () => {
+      if (holdCloseUntil && Date.now() < holdCloseUntil) return;
+      session.closeModal();
+      focusCanvasAfterClose();
+      // Epilogue Close → credits: do not showHud (wipes the roll).
+      if (session.ui.is('ending')) {
+        h.syncScreen();
+        return;
+      }
+      h.syncScreen();
+      h.showHud();
+    },
+  });
+}
+
 function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudHandles> {
   return {
-    showDialogue: (lines) => {
-      only(p, 'dialogue');
-      // Playtest #30: re-arm after every dialogue paint (incl. post-choice panels).
-      // Pass false — noteModalOpened still gates if Interact is physically held.
-      session.noteModalOpened(false);
-      const offerBet = session.hasPendingStoryBet();
-      const epi = session.getPendingStoryBeat() === 'epilogue-laje';
-      const hasChoice = lines.some((l) => Boolean(l.choices?.length));
-      const closingOnly =
-        epi &&
-        !hasChoice &&
-        !offerBet &&
-        lines.length > 0 &&
-        lines.every((l) => /Saúde/i.test(l.text));
-      // Playtest #28: arm choice dialogs ≥400ms so Enter-after-E can't auto-pick.
-      // Epilogue stays longer (600ms) for the deliberate closing beat.
-      const choiceArmAt = hasChoice ? Date.now() + (epi ? 600 : 400) : undefined;
-      const holdCloseUntil = closingOnly ? Date.now() + 3000 : undefined;
-      paintDialogue(p.dialogue, lines, {
-        offerBet,
-        choiceArmAt,
-        holdCloseUntil,
-        closingLine: closingOnly,
-        onAcceptBet: () => {
-          session.acceptStoryBet();
-          h.syncScreen();
-        },
-        onChoice: (setsFlag, reply) => {
-          session.pickDialogueChoice(setsFlag, reply);
-          // pickDialogueChoice emits ui:dialogue → showDialogue with Saúde-only lines.
-          h.showDialogue(session.getDialogue());
-        },
-        onClose: () => {
-          session.closeModal();
-          h.syncScreen();
-        },
-      });
-    },
+    showDialogue: (lines) => showDialoguePanel(session, p, h, lines),
     showMenu: (open) => toggleMenu(p, open, session, h),
     showBet: () => {
       only(p, 'bet');
@@ -247,12 +270,12 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
       const confirm = p.bet.querySelector('.btn-confirm-bet') as HTMLElement | null;
       if (confirm) confirm.focus();
       else focusFirst(p.bet);
-      session.noteModalOpened(false);
+      // Playtest #31: arm so Enter mash can't Confirm the stake mid-open.
+      session.noteModalOpened(session.isInteractHeld());
     },
     showSkill: () => {
       only(p, 'skill');
       paintSkill(p.skill, session, () => h.syncScreen());
-      // Sequence skills already focus Cancel inside paintSkill — don't steal to first pad.
       if (!session.isSequenceSkillActive()) focusFirst(p.skill);
     },
     showTravel: () => {
@@ -342,7 +365,6 @@ function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
   const leaveCredits = (): void => {
     blurActive();
     session.continueExploring();
-    // Canvas focus so WASD/Enter go through ActionState, not leftover Skip button.
     const canvas = document.querySelector(
       'canvas.world-canvas, canvas.engine-canvas',
     ) as HTMLCanvasElement | null;
@@ -350,13 +372,23 @@ function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
     h.syncScreen();
     h.showHud();
   };
-  const skip = (): void => {
-    // Jump the roll, then dismiss into free roam (Enter/E/Space/click all work).
+  // Playtest #31: credits need a deliberate Skip after arm — rapid Enter must not skip.
+  const skipArmUntil = Date.now() + 900;
+  const skipBtn = button(UI.skipCredits, () => {
+    if (Date.now() < skipArmUntil) return;
     roll.classList.add('credits-skipped');
     leaveCredits();
-  };
+  });
+  skipBtn.disabled = true;
+  window.setTimeout(
+    () => {
+      skipBtn.disabled = false;
+      skipBtn.focus();
+    },
+    Math.max(0, skipArmUntil - Date.now()),
+  );
   actions.append(
-    button(UI.skipCredits, skip),
+    skipBtn,
     button(UI.continueExploring, leaveCredits),
     button(UI.playAgain, () => {
       blurActive();
@@ -364,7 +396,7 @@ function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
     }),
   );
   p.ending.append(actions);
-  focusFirst(p.ending);
+  // Don't focus Skip while armed — Enter spam can't dismiss the roll.
 }
 
 function paintEnding(
@@ -426,6 +458,10 @@ function syncFromUi(h: HudHandles, p: Parts, session: GameSession): void {
   if (screen === 'bet') h.showBet();
   if (screen === 'skill') h.showSkill();
   if (screen === 'dialogue') h.showDialogue(session.getDialogue());
+  if (screen === 'ending') {
+    if (session.showingCreditsRoll()) h.showCreditsRoll();
+    else h.showEnding(UI.wonEnding);
+  }
   refresh(p, session);
   paintPrompt(p.prompt, session);
 }
@@ -754,8 +790,7 @@ function runCreditPopup(node: HTMLElement, delta: number): void {
 
 function runTransition(node: HTMLElement, kind: string, label?: string): void {
   node.className = `fx-transition fx-${kind}`;
-  node.textContent =
-    kind === 'elevator' ? (label ?? '▲ Elevator\nVIP Salon · Floor 42') : '';
+  node.textContent = kind === 'elevator' ? (label ?? t('ui.elevatorCard.vip')) : '';
   setVisible(node, true);
   // ~1.2s visible ride with floor indicator (matches session hold).
   const ms = kind === 'elevator' ? 1200 : 720;
@@ -802,7 +837,10 @@ function navModal(
   if (!panel) return;
   if (dir === 'up') focusPrev(panel);
   if (dir === 'down') focusNext(panel);
-  if (dir === 'confirm') activateFocused(panel);
+  if (dir === 'confirm') {
+    if (!session.allowModalConfirm()) return;
+    activateFocused(panel);
+  }
   if (dir === 'back') {
     session.closeModal();
     h.syncScreen();

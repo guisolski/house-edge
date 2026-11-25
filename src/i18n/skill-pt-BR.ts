@@ -15,23 +15,23 @@ export const skillPtBR = {
   'skill.corrida-moto.title': 'Portão da moto na laje',
   'skill.corrida-moto.blurb': 'Racha do Seu Zé — limpa o portão, não o fio do Fio.',
   'skill.audiencia-publica.clue':
-    'Doutor Margin pesa o que a quebrada já assinou — brilho de assessoria e ameaça vazia escorregam.',
+    'Margin não compra discurso de kit de imprensa. Quer a página que alguém já arriscou carimbar — não ameaça que não cobra.',
   'skill.audiencia-publica.option.0': 'Assessoria da corp',
-  'skill.audiencia-publica.option.1': 'Livro do morro',
+  'skill.audiencia-publica.option.1': 'Caderno carimbado',
   'skill.audiencia-publica.option.2': 'Ameaça vazia',
   'skill.audiencia-publica.prompt': 'Qual depoimento prende?',
   'skill.avenida-atm.prompt': 'Bug no arredondamento do caixa — repete 4 dígitos.',
   'skill.avenida-betrayal.clue':
-    'Alguém ainda atende a Casa num linha barata. O arquivo tá limpo; a audiência é teatro.',
+    'A Luna ainda luta em aberto. O Margin discute no papel. Quem vendeu os bytes ainda atende quando a Casa liga num descartável.',
   'skill.avenida-betrayal.option.0': 'Culpar a Luna',
-  'skill.avenida-betrayal.option.1': 'Culpar o contato',
+  'skill.avenida-betrayal.option.1': 'Culpar quem atende o burner',
   'skill.avenida-betrayal.option.2': 'Culpar o Margin',
   'skill.avenida-betrayal.prompt': 'Quem vendeu os bytes do morro?',
   'skill.avenida-drone.clue':
     'Cones varrem o centro do asfalto — cola na sombra do vidro e corta quando a luz piscar.',
   'skill.avenida-drone.prompt': 'Desvia dos cones do drone — passa pelo ponto cego.',
   'skill.avenida-server.clue':
-    'O Corredor diz: graxa lembra a dobradiça em que ele confia e poeira marca o assento que ele pula. Postes iguais rimam; adesivo nunca. Sente a mordida, não conta carimbo.',
+    'Corredor: poste de fora com graxa marca a dobradiça em que ele confia. Por dentro, o assento macio fica mais baixo; o próximo sobe um ponto. Adesivo mente. Escuta o clique depois de cada alavanca.',
   'skill.avenida-server.prompt':
     'Quebra os pinos da gaiola do servidor antes da varredura.',
   'skill.avenida-stealth.prompt':
@@ -42,9 +42,9 @@ export const skillPtBR = {
   'skill.duelo-casa.blurb': 'Confronto em fases — agulha, leitura e hack.',
   'skill.duelo-casa.phase.0.prompt': 'Fase 1 — para a agulha da casa.',
   'skill.duelo-casa.phase.1.clue':
-    'Olha o punho — o teatro enche a sala, mas o tremor entrega.',
+    'O Augusto enche a sala de teatro. Olha o punho quando o volume sobe — tinta treme, sorriso não.',
   'skill.duelo-casa.phase.1.option.0': 'Sorriso na mesa',
-  'skill.duelo-casa.phase.1.option.1': 'Sacode o livro',
+  'skill.duelo-casa.phase.1.option.1': 'Livro nervoso',
   'skill.duelo-casa.phase.1.option.2': 'Rugido da galera',
   'skill.duelo-casa.phase.1.prompt': 'Fase 2 — lê o blefe do Augusto.',
   'skill.duelo-casa.phase.2.prompt': 'Fase 3 — quebra a transmissão da torre.',
@@ -104,21 +104,21 @@ export const skillPtBR = {
   'skill.side-morro-copper.prompt': 'Pesa o cobre sobrando — qual saco é leve?',
   'skill.torre-elevator.prompt': 'Chama o elevador expresso — para no verde.',
   'skill.torre-foyer.clue':
-    'O guarda do foyer carimba plástico sem olhar — só trava quando o boato já mandou na sala.',
+    'O guarda do foyer deixa plástico passar como chuva. Só trava quando acha que o lobby inteiro já sabe o que você sabe.',
   'skill.torre-foyer.option.0': 'Passe turista',
   'skill.torre-foyer.option.1': 'QR da equipe',
-  'skill.torre-foyer.option.2': 'Vazamento do escândalo',
+  'skill.torre-foyer.option.2': 'Segredo aberto',
   'skill.torre-foyer.prompt': 'Blefa no leitor de crachá.',
   'skill.torre-negotiate.clue':
-    'Nomeia qualquer porta antes do sorriso gelar — a casa carimba do mesmo jeito a saída que você escolher.',
-  'skill.torre-negotiate.option.0': 'Pega o chip do silêncio',
-  'skill.torre-negotiate.option.1': 'Exige o espelho do pit',
+    'O Anfitrião olha a gaveta quieta perto do punho — câmera ama sorriso, livro ama espelho, mas ele só amolece quando a sala fica muda.',
+  'skill.torre-negotiate.option.0': 'Pegar a ficha do silêncio',
+  'skill.torre-negotiate.option.1': 'Exigir o espelho do salão',
   'skill.torre-negotiate.option.2': 'Sai sorrindo',
   'skill.torre-negotiate.prompt':
-    'O host VIP oferece três saídas — escolhe antes do sorriso endurecer.',
+    'O Anfitrião VIP oferece três saídas — escolhe antes do sorriso endurecer.',
   'skill.torre-pit.clue':
-    'O baralho da casa parece cansado; folha brilhante e plástico lacrado são pra turista.',
-  'skill.torre-pit.option.0': 'Orelha de cachorro',
+    'Os dedos do dealer voltam pro que parece usado. Trilho de turista ganha o plástico brilhante.',
+  'skill.torre-pit.option.0': 'Cantos moles',
   'skill.torre-pit.option.1': 'Folha dourada',
   'skill.torre-pit.option.2': 'Plástico lacrado',
   'skill.torre-pit.prompt': 'Acha o baralho de verdade.',

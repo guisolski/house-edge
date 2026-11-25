@@ -217,8 +217,14 @@ function onTick(deps: TickDeps, delta: number): void {
 
 function maybeMove(deps: TickDeps): void {
   deps.session.setRunHeld(deps.state.run);
+  const playing = deps.session.ui.is('play');
+  // Playtest #31: don't bank cooldown while a panel is open — first WASD after
+  // close must step immediately (held or fresh press).
+  if (!playing) {
+    deps.cooldown.ms = 0;
+    return;
+  }
   if (deps.cooldown.ms > 0) return;
-  if (!deps.session.ui.is('play')) return;
   const { dx, dy } = movementDelta(deps.state);
   if (!dx && !dy) return;
   deps.session.move(dx, dy);

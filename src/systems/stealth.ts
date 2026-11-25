@@ -66,8 +66,8 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
   goal: { x: 34, y: 12 },
   goalRadius: 1.1,
   targetMs: 90_000,
-  // Playtest #30: was ~9 tries — ease toward 3–6 (wider cover, slower/narrower cones).
-  coverRadius: 0.58,
+  // Playtest #31: column gate + tighter cover — straight sprint dies; hug cover ~3–6 tries.
+  coverRadius: 0.5,
   cover: [
     { x: 15, y: 12 },
     { x: 20, y: 11 },
@@ -82,9 +82,9 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
         { x: 17, y: 16 },
         { x: 17, y: 8 },
       ],
-      speed: 0.82,
-      halfAngle: Math.PI / 7.2,
-      range: 2.85,
+      speed: 0.92,
+      halfAngle: Math.PI / 6.4,
+      range: 3.0,
     },
     {
       id: 'drone-b',
@@ -93,9 +93,9 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
         { x: 23, y: 8 },
         { x: 23, y: 16 },
       ],
-      speed: 0.86,
-      halfAngle: Math.PI / 7.2,
-      range: 2.85,
+      speed: 0.96,
+      halfAngle: Math.PI / 6.4,
+      range: 3.0,
     },
     {
       id: 'drone-c',
@@ -104,9 +104,9 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
         { x: 29, y: 16 },
         { x: 29, y: 8 },
       ],
-      speed: 0.8,
-      halfAngle: Math.PI / 7.6,
-      range: 2.7,
+      speed: 0.9,
+      halfAngle: Math.PI / 6.8,
+      range: 2.85,
     },
   ],
 };
@@ -171,15 +171,23 @@ export function inCover(def: StealthDef, player: Vec2): boolean {
 
 export function anyDroneSpots(progress: StealthProgress, player: Vec2): boolean {
   if (inCover(progress.def, player)) return false;
-  return progress.drones.some((d) =>
-    pointInCone({
-      origin: { x: d.x, y: d.y },
-      facing: d.facing,
-      halfAngle: d.halfAngle,
-      range: d.range,
-      point: player,
-    }),
-  );
+  return progress.drones.some((d) => {
+    if (
+      pointInCone({
+        origin: { x: d.x, y: d.y },
+        facing: d.facing,
+        halfAngle: d.halfAngle,
+        range: d.range,
+        point: player,
+      })
+    ) {
+      return true;
+    }
+    // Playtest #31: column gate — straight east sprint across a patrol line is spotted.
+    const dx = Math.abs(player.x - d.x);
+    const dy = Math.abs(player.y - d.y);
+    return dx < 0.7 && dy < Math.min(1.35, d.range * 0.5);
+  });
 }
 
 export function reachedGoal(progress: StealthProgress, player: Vec2): boolean {

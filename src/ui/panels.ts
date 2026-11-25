@@ -51,9 +51,89 @@ type DialogueOpts = {
   onAcceptBet?: () => void;
   onChoice?: (setsFlag?: string, reply?: string) => void;
   choiceArmAt?: number;
+  /** Playtest #31: also require key-up + modal arm (held Enter must not auto-pick). */
+  allowChoice?: () => boolean;
   holdCloseUntil?: number;
   closingLine?: boolean;
 };
+
+function choiceArmReady(opts: DialogueOpts): boolean {
+  return Date.now() >= (opts.choiceArmAt ?? 0);
+}
+
+function choiceKeyReady(opts: DialogueOpts): boolean {
+  if (!choiceArmReady(opts)) return false;
+  if (opts.allowChoice && !opts.allowChoice()) return false;
+  return true;
+}
+
+/**
+ * Swallow native Enter/Space activation; invoke `onKey` when ready.
+ * Do NOT stopPropagation — the window ActionState handler must still see
+ * the key so blocked confirms can bumpModalConfirmArm (playtest #31).
+ */
+function bindEnterGate(btn: HTMLButtonElement, onKey: () => void): void {
+  btn.addEventListener(
+    'keydown',
+    (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ' && e.code !== 'Space') return;
+      e.preventDefault();
+      if (e.repeat) return;
+      onKey();
+    },
+    true,
+  );
+}
+
+function appendChoiceButtons(
+  actions: HTMLElement,
+  choices: NonNullable<DialogueLine['choices']>,
+  opts: DialogueOpts,
+): void {
+  for (const c of choices) {
+    const pickMouse = (): void => {
+      if (!choiceArmReady(opts)) return;
+      opts.onChoice?.(c.setsFlag, c.reply);
+    };
+    const pickKey = (): void => {
+      if (!choiceKeyReady(opts)) return;
+      opts.onChoice?.(c.setsFlag, c.reply);
+    };
+    const btn = button(c.label, () => {
+      /* pointerup / key handlers */
+    });
+    btn.classList.add('dialogue-choice');
+    btn.addEventListener('pointerup', (e) => {
+      if (e.button === 0) pickMouse();
+    });
+    btn.addEventListener('click', (e) => {
+      if (e.detail === 0) pickKey();
+    });
+    bindEnterGate(btn, pickKey);
+    actions.appendChild(btn);
+  }
+}
+
+function appendTakeBet(actions: HTMLElement, opts: DialogueOpts): void {
+  const take = button(UI.takeBet, () => {
+    /* pointerup / key handlers */
+  });
+  take.classList.add('btn-primary', 'btn-take-bet');
+  // Mouse/touch: accept immediately (Enter/keyboard stays gated).
+  take.addEventListener('pointerup', (e) => {
+    if (e.button === 0) opts.onAcceptBet?.();
+  });
+  take.addEventListener('click', (e) => {
+    if (e.detail !== 0) return;
+    if (!choiceKeyReady(opts)) return;
+    opts.onAcceptBet?.();
+  });
+  bindEnterGate(take, () => {
+    if (!choiceKeyReady(opts)) return;
+    opts.onAcceptBet?.();
+  });
+  actions.append(take, button(UI.walkAway, opts.onClose));
+}
 
 function fillDialogueActions(
   actions: HTMLElement,
@@ -61,32 +141,11 @@ function fillDialogueActions(
   opts: DialogueOpts,
 ): void {
   if (choices?.length && opts.onChoice) {
-    const armAt = opts.choiceArmAt ?? 0;
-    for (const c of choices) {
-      const btn = button(c.label, () => {
-        if (Date.now() < armAt) return;
-        opts.onChoice?.(c.setsFlag, c.reply);
-      });
-      btn.classList.add('dialogue-choice');
-      btn.addEventListener(
-        'keydown',
-        (e) => {
-          if (Date.now() >= armAt) return;
-          if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        },
-        true,
-      );
-      actions.appendChild(btn);
-    }
+    appendChoiceButtons(actions, choices, opts);
     return;
   }
   if (opts.offerBet && opts.onAcceptBet) {
-    const take = button(UI.takeBet, opts.onAcceptBet);
-    take.classList.add('btn-primary', 'btn-take-bet');
-    actions.append(take, button(UI.walkAway, opts.onClose));
+    appendTakeBet(actions, opts);
     return;
   }
   const holdUntil = opts.holdCloseUntil ?? 0;
@@ -425,6 +484,53 @@ function bindLockpickTimer(
   }, 200);
 }
 
+function paintPinFeedback(
+  state: LockpickState,
+  target: number[],
+  feedback: HTMLElement,
+): void {
+  const bits: string[] = [];
+  state.labels.forEach((btn, i) => {
+    const h = state.heights[i] ?? 0;
+    const want = target[i] ?? 0;
+    const ok = h === want;
+    btn.classList.toggle('lockpick-pin-ok', ok);
+    btn.classList.toggle('lockpick-pin-bad', !ok);
+    if (ok) bits.push(tf('ui.skill.pinClick', { n: String(i + 1) }));
+    else if (h < want) bits.push(tf('ui.skill.pinLow', { n: String(i + 1) }));
+    else bits.push(tf('ui.skill.pinHigh', { n: String(i + 1) }));
+  });
+  feedback.textContent = bits.join(' · ');
+}
+
+function bindLockpickPin(
+  state: LockpickState,
+  i: number,
+  submit: () => void,
+): HTMLButtonElement {
+  const btn = button(tf('ui.skill.pinBtn', { n: String(i + 1) }), () => {
+    if (state.expired || state.settled) return;
+    if (state.hidden === i) state.revealed.add(i);
+    state.heights[i] = ((state.heights[i] ?? 0) + 1) % LOCK_PIN_LEVELS;
+    refreshLockpick(state);
+  });
+  btn.classList.add('lockpick-pin');
+  btn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.code === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+      submit();
+      return;
+    }
+    if (e.key === ' ' || e.code === 'Space') {
+      e.preventDefault();
+      e.stopPropagation();
+      btn.click();
+    }
+  });
+  return btn;
+}
+
 function paintLockpickSkill(
   body: HTMLElement,
   actions: HTMLElement,
@@ -443,12 +549,24 @@ function paintLockpickSkill(
     settled: false,
   };
   const row = el('div', 'lockpick-row');
+  const feedback = el('p', 'skill-clue skill-lockpick-feedback', '');
+  body.appendChild(feedback);
   const submit = (): void => {
     if (state.settled || state.expired) return;
+    paintPinFeedback(state, target, feedback);
+    const allOk = state.heights.every((h, i) => h === (target[i] ?? 0));
     state.settled = true;
     cleanup();
-    session.submitSkill(encodePins(state.heights));
-    after();
+    if (allOk) {
+      session.submitSkill(encodePins(state.heights));
+      after();
+      return;
+    }
+    // Playtest #31: linger so per-pin click/alto/baixo is readable (~2–4 tries).
+    window.setTimeout(() => {
+      session.submitSkill(encodePins(state.heights));
+      after();
+    }, 750);
   };
   const onTab = (e: KeyboardEvent): void => {
     if (e.key !== 'Tab' || state.settled || state.expired || !body.isConnected) return;
@@ -461,27 +579,7 @@ function paintLockpickSkill(
   };
   body.ownerDocument?.addEventListener('keydown', onTab, true);
   target.forEach((_, i) => {
-    const btn = button(tf('ui.skill.pinBtn', { n: String(i + 1) }), () => {
-      if (state.expired || state.settled) return;
-      if (state.hidden === i) state.revealed.add(i);
-      state.heights[i] = ((state.heights[i] ?? 0) + 1) % LOCK_PIN_LEVELS;
-      refreshLockpick(state);
-    });
-    btn.classList.add('lockpick-pin');
-    btn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.code === 'Enter') {
-        e.preventDefault();
-        e.stopPropagation();
-        submit();
-        return;
-      }
-      // Space raises the focused pin (matches on-screen hint).
-      if (e.key === ' ' || e.code === 'Space') {
-        e.preventDefault();
-        e.stopPropagation();
-        btn.click();
-      }
-    });
+    const btn = bindLockpickPin(state, i, submit);
     state.labels.push(btn);
     row.appendChild(btn);
   });
@@ -521,10 +619,64 @@ function bindSequenceTimer(
   }, 200);
 }
 
-function seqProgressLabel(seq: SeqKey[], index: number): string {
+/** Mastermind: reveal matched glyphs; · for remaining. */
+function seqRevealLabel(seq: SeqKey[], index: number): string {
   return tf('ui.skill.sequenceLabel', {
-    seq: seq.map((_, i) => (i < index ? '✓' : '·')).join('  '),
+    seq: seq.map((k, i) => (i < index ? k : '·')).join('  '),
   });
+}
+
+type SeqUi = {
+  body: HTMLElement;
+  pattern: HTMLElement;
+  status: HTMLElement;
+  seq: SeqKey[];
+  missCap: number | undefined;
+  settled: { v: boolean };
+  armed: { v: boolean };
+  session: GameSession;
+  after: () => void;
+};
+
+function flashSequence(ui: SeqUi, index: number, ms: number): void {
+  ui.armed.v = false;
+  ui.pattern.classList.add('skill-seq-flash');
+  ui.pattern.textContent = tf('ui.skill.sequenceLabel', { seq: ui.seq.join('  ') });
+  window.setTimeout(() => {
+    if (!ui.body.isConnected || ui.settled.v) return;
+    ui.armed.v = true;
+    ui.pattern.classList.remove('skill-seq-flash');
+    ui.pattern.textContent = seqRevealLabel(ui.seq, index);
+  }, ms);
+}
+
+function onSequenceKey(ui: SeqUi, keyIndex: number): void {
+  if (ui.settled.v || !ui.armed.v) return;
+  const beforePhase = ui.session.getSkillProgress()?.phaseIndex;
+  const beforeMiss = ui.session.getSkillProgress()?.misses ?? 0;
+  ui.session.submitSkill(keyIndex);
+  const next = ui.session.getSkillProgress();
+  if (!next || next.done || next.phaseIndex !== beforePhase) {
+    ui.settled.v = true;
+    ui.after();
+    return;
+  }
+  const left = ui.missCap
+    ? tf('ui.skill.missesProgress', {
+        current: String(next.misses),
+        max: String(ui.missCap),
+      })
+    : '';
+  ui.status.textContent =
+    tf('ui.skill.matchNext', {
+      current: String(next.seqIndex + 1),
+      total: String(ui.seq.length),
+    }) + left;
+  if (next.misses > beforeMiss) {
+    flashSequence(ui, next.seqIndex, Math.min(2200, 1500 + next.misses * 350));
+    return;
+  }
+  ui.pattern.textContent = seqRevealLabel(ui.seq, next.seqIndex);
 }
 
 function paintSequenceSkill(
@@ -538,6 +690,8 @@ function paintSequenceSkill(
   if (!progress || !phase) return;
   const seq = phaseSequence(phase);
   const missCap = phase.maxMisses;
+  // Playtest #31: memory flash — longer after each miss (1.5s → 2.2s).
+  const flashMs = Math.min(2200, 1500 + progress.misses * 350);
   const status = el(
     'p',
     'skill-seq',
@@ -546,37 +700,29 @@ function paintSequenceSkill(
       total: String(seq.length),
     }) + (missCap ? tf('ui.skill.missesFail', { n: String(missCap) }) : ''),
   );
-  // Playtest #30: never print the full sequence — only progress (2–3 tries).
-  const pattern = el('p', 'skill-pattern', seqProgressLabel(seq, progress.seqIndex));
+  const pattern = el(
+    'p',
+    'skill-pattern skill-seq-flash',
+    tf('ui.skill.sequenceLabel', { seq: seq.join('  ') }),
+  );
   body.append(pattern, status);
-  const settled = { v: false };
+  const ui: SeqUi = {
+    body,
+    pattern,
+    status,
+    seq,
+    missCap,
+    settled: { v: false },
+    armed: { v: false },
+    session,
+    after,
+  };
+  flashSequence(ui, progress.seqIndex, flashMs);
   if (phase.timerMs && phase.timerMs > 0) {
-    bindSequenceTimer(body, session, seq, phase.timerMs, settled, after);
+    bindSequenceTimer(body, session, seq, phase.timerMs + flashMs, ui.settled, after);
   }
   const used = sequencePadKeys(seq);
-  const buffer = createSequenceKeyBuffer((keyIndex) => {
-    if (settled.v) return;
-    const beforePhase = session.getSkillProgress()?.phaseIndex;
-    session.submitSkill(keyIndex);
-    const next = session.getSkillProgress();
-    if (!next || next.done || next.phaseIndex !== beforePhase) {
-      settled.v = true;
-      after();
-      return;
-    }
-    const left = missCap
-      ? tf('ui.skill.missesProgress', {
-          current: String(next.misses),
-          max: String(missCap),
-        })
-      : '';
-    status.textContent =
-      tf('ui.skill.matchNext', {
-        current: String(next.seqIndex + 1),
-        total: String(seq.length),
-      }) + left;
-    pattern.textContent = seqProgressLabel(seq, next.seqIndex);
-  });
+  const buffer = createSequenceKeyBuffer((keyIndex) => onSequenceKey(ui, keyIndex));
   const onKey = (keyIndex: number): void => buffer.push(keyIndex);
   const pad = el('div', 'skill-seq-pad');
   for (const key of used) {
@@ -585,7 +731,7 @@ function paintSequenceSkill(
   actions.appendChild(pad);
   actions.appendChild(el('p', 'skill-seq', t('ui.skill.escSeqHint')));
   panelKeyHook(actions, (ev) => {
-    if (ev.repeat) return;
+    if (ev.repeat || !ui.armed.v) return;
     const sym = SEQ_KEY_CODES[ev.code];
     if (!sym || !used.includes(sym)) return;
     ev.preventDefault();

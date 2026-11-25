@@ -160,8 +160,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Which testimony sticks?',
     target: 1,
     options: ['Corp PR', 'Hill ledger', 'Empty threat'],
-    // Playtest #30: no hill/ledger/community/PR giveaway tokens.
-    clue: 'Dr. Margin weighs what the quebrada already signed — glossy spin and empty threats slide off.',
+    // Playtest #31: personality clue — Margin trusts ink the street already paid for.
+    clue: 'Margin never buys a speech that smells like a press kit. He wants the page someone already risked a stamp for — not a threat you can’t cash.',
   },
   'morro-return-nair': {
     kind: 'timing',
@@ -183,17 +183,17 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     kind: 'choice',
     prompt: 'Bluff the badge reader.',
     target: 2,
-    options: ['Tourist pass', 'Staff QR', 'Scandal leak'],
-    // Playtest #30: no “gossip / every screen” giveaway.
-    clue: 'Foyer Guard stamps plastic without looking — he only freezes when the rumor already owns the room.',
+    options: ['Tourist pass', 'Staff QR', 'Open secret'],
+    // Playtest #31: no option-token echo — Guard fears what’s already public.
+    clue: 'Foyer Guard waves plastic past like weather. He only locks when he thinks the whole lobby already knows what you know.',
   },
   'torre-pit': {
     kind: 'puzzle',
     prompt: 'Spot the real deck.',
     target: 0,
-    options: ['Dog-eared', 'Gold foil', 'Shrink-wrap'],
-    // Playtest #30: softer hint — still 2–3 tries, no cuff/soft-corner giveaway.
-    clue: 'Dealer’s house pack looks tired; foil and plastic are for the tourist rail.',
+    options: ['Soft corners', 'Gold foil', 'Shrink-wrap'],
+    // Playtest #31: no dog-ear / pack echo — feel vs shine.
+    clue: 'Dealer’s fingers keep drifting back to the one that feels used. Tourist rails get the shiny wrap.',
   },
   'torre-elevator': {
     kind: 'timing',
@@ -213,11 +213,10 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
   'torre-negotiate': {
     kind: 'negotiate',
     prompt: 'VIP Host offers three exits — pick before the smile hardens.',
-    // Any offer wins — consistent with dialogue “Deal’s sealed” on hush/mirror/smile.
+    // Playtest #31: hush chip is the quiet exit the Host prefers (not any door).
     target: 0,
     options: ['Take the hush chip', 'Demand the pit mirror', 'Walk out smiling'],
-    // Any exit wins — avoid naming hush/chip/take (answer tokens).
-    clue: 'Name any door before the smile freezes — the house stamps every exit you pick the same way.',
+    clue: 'Host keeps glancing at the quiet drawer by his cuff — cameras love a smile, books love a mirror, but he only softens when the room goes silent.',
     timerMs: 12_000,
   },
   'side-morro-copper': {
@@ -264,22 +263,22 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     kind: 'lockpick',
     prompt: 'Crack the server-cage tumblers before the sweep.',
     target: 0,
-    // Pins: high / flush / mid / high — positional grease hooks, no height labels.
+    // Pins: high / flush / mid / high — outer posts match; middle two step down then mid.
     pins: [2, 0, 1, 2],
     hiddenPin: 2,
     timerMs: 34_000,
-    pickDurability: 4,
-    // Playtest #30: no left/right/third pin map — grease/hinge/seat/sticker hooks.
+    pickDurability: 5,
+    // Playtest #31: ≥3 lockpick hooks (outer/grease/hinge/soft/seat/click) — no digit map.
     clue:
-      'Cage Runner says grease remembers the hinge he trusts and dust marks the seat he skips. ' +
-      'Matching posts rhyme; a sticker never does. Feel the bite, don’t count the stamps.',
+      'Cage Runner: outer post grease marks the hinge he trusts. Inside, the soft seat sits lowest, ' +
+      'then the next tumbler climbs one notch. A sticker lies. Listen for the click after each raise.',
   },
   'avenida-betrayal': {
     kind: 'choice',
     prompt: 'Who sold the hill’s bytes?',
     target: 1,
-    options: ['Blame Luna', 'Blame the mole', 'Blame Margin'],
-    // Playtest #30: no “burner / mole” giveaway in the clue.
-    clue: 'Someone still answers Casa on a cheap line. The archive is clean; the hearing is theater.',
+    options: ['Blame Luna', 'Blame the burner pickup', 'Blame Margin'],
+    // Playtest #31: no “contact/mole/informante” token — motive via dialogue vibe.
+    clue: 'Luna still fights in the open. Margin argues on paper. Whoever sold the bytes still picks up when Casa rings a disposable line.',
   },
 };

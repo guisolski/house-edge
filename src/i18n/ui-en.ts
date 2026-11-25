@@ -147,7 +147,13 @@ export const uiEn = {
   'ui.skill.escSeqHint': 'Esc cancels · arrows are sequence only',
   'ui.skill.pinHidden': 'Pin {n}: ???',
   'ui.skill.pinBtn': 'Pin {n}',
+  'ui.skill.pinClick': 'Pin {n}: click',
+  'ui.skill.pinLow': 'Pin {n}: low',
+  'ui.skill.pinHigh': 'Pin {n}: high',
   'ui.skill.submitLock': 'Submit lock',
+  'ui.elevatorCard.foyer': '▼ Elevator / Pit Foyer · Floor 1',
+  'ui.elevatorCard.vip': '▲ Elevator / VIP Salon · Floor 42',
+  'ui.elevatorCard.downMark': 'Elevator ▼',
   'ui.sideHustle.title': 'Side hustle: ice pour',
   'ui.sideHustle.descSkill': 'Repeatable post-credits grind — stop the needle on cold.',
   'ui.sideHustle.descBet':
@@ -236,12 +242,11 @@ export const uiEn = {
   'ui.toast.missHint.courier-tip': 'Courier: four alleys — don’t invent a shortcut.',
   'ui.toast.missHint.duelo-casa': 'Augusto: needle, read, feed — one phase at a time.',
   'ui.toast.missHint.torre-negotiate':
-    'Host: any door works — pick before the smile freezes.',
+    'Host: quiet drawer — hush before the smile freezes.',
   'ui.toast.cleared': 'Cleared — {payout} credits.',
   'ui.toast.missedPour':
     'Missed the pour — talk to Nair again to retry. Objective stays put.',
-  'ui.toast.missedStory':
-    'Miss — story beat still open. Talk again to retry. No stake taken.',
+  'ui.toast.missedStory': 'Still open — talk again to retry. No stake taken.',
   'ui.toast.oddJobsCap': 'Odd jobs are tapped out — try a real bet or story beat.',
   'ui.toast.oddJobsCooldown': 'Catch your breath — odd jobs need a short cooldown.',
   'ui.toast.oddJobsEarned': 'Earned {pay} credits (safe odd jobs · {uses}/{cap}).',

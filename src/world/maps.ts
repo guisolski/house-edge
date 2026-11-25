@@ -607,8 +607,11 @@ function sealAvenidaLane(tiles: TileKind[], w: number, h: number): void {
   rect({ tiles, w, x0: 1, y0: h - 2, x1: w - 2, y1: h - 2, kind: 'blocked' });
   rect({ tiles, w, x0: 12, y0: 9, x1: 34, y1: 10, kind: 'blocked' });
   rect({ tiles, w, x0: 12, y0: 13, x1: 34, y1: 14, kind: 'blocked' });
-  // Playtest #29: side escapes between sealed columns (12/20/28/34 stay blocked).
-  for (const x of [14, 16, 18, 22, 24, 26, 30, 32]) {
+  // Playtest #29/#31: continuous shoulders between sealed columns (12/20/28/34).
+  // Single-tile gaps felt like softlocks when walking west below the corridor.
+  for (const x of [
+    13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 29, 30, 31, 32, 33,
+  ]) {
     set(tiles, w, x, 10, 'asphalt');
     set(tiles, w, x, 13, 'asphalt');
   }

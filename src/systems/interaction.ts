@@ -257,9 +257,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'mole-contact',
     name: englishNpcName('mole-contact'),
     districtId: 'avenida-odds',
-    // North shoulder of west plaza — clear of Fair pad (2,12) lane.
+    // Playtest #31: pad-clear (≥INTERACT_RANGE), 4-way, tag spacing.
     x: 9,
-    y: 10,
+    y: 13,
     wanderRadius: 0,
     beatId: 'avenida-twist',
     extraBeatIds: ['avenida-betrayal'],
@@ -271,8 +271,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'capita',
     name: englishNpcName('capita'),
     districtId: 'avenida-odds',
-    // West plaza mid-lane — 4-way escape, clear of Fair pad (2,12).
-    x: 6,
+    // Clear of Fair sign (2,10) sprite box + Fair pad interact.
+    x: 8,
     y: 11,
     wanderRadius: 0,
     beatId: 'avenida-checkpoint',
@@ -284,8 +284,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'courier-odds',
     name: englishNpcName('courier-odds'),
     districtId: 'avenida-odds',
-    // West plaza — clear of Fair pad + Capita / Neon Snap.
-    x: 8,
+    x: 10,
     y: 10,
     wanderRadius: 0,
     beatId: 'avenida-courier',
@@ -296,9 +295,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'influencer',
     name: englishNpcName('influencer'),
     districtId: 'avenida-odds',
-    // Playtest #30: east plaza 4-way, clear of Torre pad (43,12) interact.
-    x: 39,
-    y: 10,
+    x: 37,
+    y: 11,
     beatId: 'avenida-influencer',
     jobBetId: 'influencer-duelo',
     color: '#ff2bd6',
@@ -308,9 +306,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'atm-hacker',
     name: englishNpcName('atm-hacker'),
     districtId: 'avenida-odds',
-    // East approach — clear of torre pad (43,12) by > INTERACT_RANGE.
-    x: 38,
-    y: 11,
+    x: 39,
+    y: 13,
     beatId: 'avenida-atm',
     jobBetId: 'avenida-atm',
     color: '#ff3b5c',
@@ -320,7 +317,6 @@ const NPCS: readonly WorldNpc[] = [
     id: 'stealth-cam',
     name: englishNpcName('stealth-cam'),
     districtId: 'avenida-odds',
-    // SW of influencer cluster — tags ≥3 tiles apart.
     x: 36,
     y: 13,
     beatId: 'avenida-stealth',
@@ -331,9 +327,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'margin',
     name: englishNpcName('margin'),
     districtId: 'avenida-odds',
-    // East plaza — clear of lane / ATM / torre pad.
     x: 39,
-    y: 12,
+    y: 10,
     beatId: 'lobby-margin',
     color: '#4a6cff',
     bodyVariant: 0,
@@ -342,7 +337,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'mensageiro-avenida',
     name: englishNpcName('mensageiro-avenida'),
     districtId: 'avenida-odds',
-    x: 37,
+    x: 36,
     y: 10,
     beatId: 'avenida-radar',
     safeJobId: 'safe-avenida-odds',
@@ -352,8 +347,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'cage-runner',
     name: englishNpcName('cage-runner'),
     districtId: 'avenida-odds',
-    // Playtest #30: clear of Fair arrival (9,12) + Fair pad (2,12) interact.
-    x: 7,
+    // Clear of Fair pad (2,12) interact.
+    x: 6,
     y: 13,
     wanderRadius: 0,
     beatId: 'avenida-server',
@@ -365,7 +360,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'neon-snap',
     name: englishNpcName('neon-snap'),
     districtId: 'avenida-odds',
-    // Playtest #30: off arrival east lane (10–11,12); 4-way at (11,11).
+    // Playtest #30/#31: off arrival east lane (10–11,12); 4-way near stealth start.
     x: 11,
     y: 11,
     wanderRadius: 0,
@@ -378,8 +373,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'foyer-guard',
     name: englishNpcName('foyer-guard'),
     districtId: 'torre-casa',
-    // Open plaza south of VIP tables — reachable, in front of furniture.
-    x: 12,
+    // Playtest #31: west of dealer — tags don’t stack.
+    x: 10,
     y: 14,
     wanderRadius: 0,
     beatId: 'torre-foyer',
@@ -391,7 +386,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'pit-dealer',
     name: englishNpcName('pit-dealer'),
     districtId: 'torre-casa',
-    x: 14,
+    x: 16,
     y: 14,
     beatId: 'torre-pit',
     jobBetId: 'torre-pit',

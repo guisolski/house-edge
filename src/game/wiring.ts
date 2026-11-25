@@ -62,7 +62,13 @@ function routeInputAction(
     return;
   }
   if (action === 'interact' && pressed) session.noteInteractPressed(code);
-  if (action === 'interact' && pressed && !gateInteract(session)) return;
+  if (action === 'interact' && pressed && !gateInteract(session)) {
+    // 60ms bursts / held Enter: each blocked confirm re-arms the quiet period.
+    if (!session.ui.is('play') && !session.ui.is('title')) {
+      session.bumpModalConfirmArm();
+    }
+    return;
+  }
   if (!pressed) return;
   const before = session.ui.get();
   handleAction(session, hud, action);
@@ -227,6 +233,12 @@ function handleModalNav(session: GameSession, hud: HudHandles, action: string): 
     hud.showHud();
     return true;
   }
+  // Playtest #31: dialogue choices — arrows move focus; Enter/confirm gated.
+  if (session.ui.is('dialogue') && action === 'interact') {
+    if (!session.allowModalConfirm()) return true;
+    hud.gamepadNav('confirm');
+    return true;
+  }
   if (action === 'up' || action === 'left') {
     hud.gamepadNav('up');
     return true;
@@ -236,6 +248,7 @@ function handleModalNav(session: GameSession, hud: HudHandles, action: string): 
     return true;
   }
   if (action === 'interact') {
+    if (!session.allowModalConfirm()) return true;
     hud.gamepadNav('confirm');
     return true;
   }

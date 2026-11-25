@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.22.5] — 2026-11-25
+
+### Fixed
+
+- **Minigame fairness (P0)**: sequence games flash the pattern (~1.5s, longer on retry) and reveal matched glyphs; Cage lockpick per-pin click/alto/baixo + solvable clue; Neon Snap column gate blocks straight east sprint; choice clues no longer keyword-match answers; Anfitrião negotiate is target-only; reputation clamped at 0 with softer lose (−1).
+- **Enter (P0)**: Enter/Space never starts dialogue (KeyE only); choice/credits/epilogue require arm + key-up; credits Skip armed ~900ms; e2e covers 60ms bursts, held Enter, and key-repeat.
+- **pt-BR (P1)**: elevator card localized; `a reviravolta`; `trava do ATM`; negotiate tip; distinct miss line; catalog lint for English leftovers + gender bugs.
+- **World (P1)**: Odds NPC spacing + nearest-only tags; continuous Avenida shoulders; first WASD after panel; Esc still closes panel before menu; freeze NPC idle bake under skill (Augusto P3 FPS).
+
+### Tests
+
+- `session-v1225`, expanded `enter-leaks` e2e, `ptbr-catalog-scan` English/gender lint.
+
+## [1.22.4] — 2026-11-25
+
+### Fixed
+
+- Fair→Odds arrival east lane, Enter swallow after panels/credits, bet Enter confirms only, rebalanced clues/Neon Snap, pt-BR accents in pixel font, elevator-first Torre objective, heap-safe panel listeners.
+
 ## [1.22.2] — 2026-11-25
 
 ### Fixed
