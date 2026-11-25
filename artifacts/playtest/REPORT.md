@@ -40,6 +40,10 @@ Neon Snap readable + walk-solvable; spawn E-prompt is Dona Nair; Enter rematch g
 | Art | hold          | hold                |
 | Fun | blocked       | restore (Neon Snap) |
 
+## CI
+
+- GitHub `CI` + `GitHub Pages` green on `0d17ba8` (v1.20.2).
+
 ## Gaps
 
 - Human playtest of v1.20.2 still needed to confirm cone readability + tag spacing under real walking FPS.
