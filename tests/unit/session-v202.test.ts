@@ -180,7 +180,7 @@ describe('v1.20.2 interact input gate', () => {
     vi.spyOn(Date, 'now').mockReturnValue(now + 500);
     // Release during lock was pending — clears once the timer expires.
     expect(session.allowInteractInput()).toBe(true);
-    // Fresh close without a pending release — still blocked until release.
+    // Fresh close — blocked until release even after the arm.
     session.closeModal();
     expect(session.allowInteractInput()).toBe(false);
     vi.spyOn(Date, 'now').mockReturnValue(now + 1200);

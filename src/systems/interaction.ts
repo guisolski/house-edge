@@ -6,6 +6,11 @@ export type WorldNpc = {
   districtId: DistrictId;
   x: number;
   y: number;
+  /** Anchor for wander leash (defaults to spawn x/y). */
+  homeX?: number;
+  homeY?: number;
+  /** Max tile drift from home. Quest NPCs stay ≤0.35; ambient ≤1.25. */
+  wanderRadius?: number;
   beatId?: string;
   /** Extra story beats this NPC can start (return arcs, side quests). */
   extraBeatIds?: string[];
@@ -17,6 +22,27 @@ export type WorldNpc = {
   /** Casa tower floor — VIP map only shows vip NPCs. */
   floor?: 'foyer' | 'vip';
 };
+
+/** Odds Avenue Neon Snap corridor — NPCs must never stand here. */
+export function inNeonSnapLane(x: number, y: number): boolean {
+  return x >= 12 && x <= 34 && (y === 11 || y === 12);
+}
+
+/** Quest / objective NPCs stay planted — ambient crowd may drift. */
+const QUEST_NPC_IDS = new Set([
+  'dona-nair',
+  'kiko',
+  'neon-snap',
+  'foyer-guard',
+  'mole-contact',
+  'luna',
+  'luna-feira',
+  'ceo',
+  'vip-host',
+  'seu-ze',
+  'fio-ladrao',
+  'bia',
+]);
 
 export function npcStoryBeatIds(npc: WorldNpc): string[] {
   return [npc.beatId, ...(npc.extraBeatIds ?? [])].filter((id): id is string =>
@@ -44,6 +70,7 @@ const NPCS: readonly WorldNpc[] = [
     // Forward plaza — clear of BOTECO NAIR sign (8,11) and tenement footprints.
     x: 14,
     y: 16,
+    wanderRadius: 0,
     beatId: 'boteco-nair',
     extraBeatIds: ['morro-return-nair', 'epilogue-laje'],
     jobBetId: 'agua-gelada',
@@ -110,6 +137,7 @@ const NPCS: readonly WorldNpc[] = [
     districtId: 'feira-central',
     x: 10,
     y: 12,
+    wanderRadius: 0,
     beatId: 'feira-kiko',
     extraBeatIds: ['side-feira-ice'],
     jobBetId: 'pastel-surpresa',
@@ -222,9 +250,10 @@ const NPCS: readonly WorldNpc[] = [
     id: 'mole-contact',
     name: 'Mole Contact',
     districtId: 'avenida-odds',
-    // Center lane west approach — leash clear of barrier strip (x12–34 y13–14).
-    x: 10,
+    // West plaza — outside Neon Snap lane (x12–34 y11–12).
+    x: 9,
     y: 12,
+    wanderRadius: 0,
     beatId: 'avenida-twist',
     extraBeatIds: ['avenida-betrayal'],
     jobBetId: 'twist-vazamento',
@@ -235,7 +264,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'capita',
     name: 'Captain Vespera',
     districtId: 'avenida-odds',
-    x: 8,
+    x: 6,
     y: 11,
     beatId: 'avenida-checkpoint',
     jobBetId: 'pixo-challenge',
@@ -246,9 +275,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'courier-odds',
     name: 'Casa Courier',
     districtId: 'avenida-odds',
-    // West of Mensageiro — distinct interact bubble on the cone lane.
-    x: 18,
-    y: 11,
+    // West approach — never inside the drone lane.
+    x: 7,
+    y: 12,
     beatId: 'avenida-courier',
     color: '#c9b037',
     bodyVariant: 0,
@@ -257,7 +286,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'influencer',
     name: 'Odds Influencer',
     districtId: 'avenida-odds',
-    x: 34,
+    // East of goal — outside lane (x > 34).
+    x: 35,
     y: 11,
     beatId: 'avenida-influencer',
     jobBetId: 'influencer-duelo',
@@ -268,7 +298,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'atm-hacker',
     name: 'ATM Hacker',
     districtId: 'avenida-odds',
-    // East approach — clear of torre pad (43,12) and Lobby Cam bubble.
+    // East approach — clear of torre pad (43,12) by > INTERACT_RANGE.
     x: 38,
     y: 11,
     beatId: 'avenida-atm',
@@ -280,8 +310,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'stealth-cam',
     name: 'Lobby Cam Tech',
     districtId: 'avenida-odds',
-    // West of ATM — tags/prompts must not stack on the same tile.
-    x: 32,
+    x: 36,
     y: 12,
     beatId: 'avenida-stealth',
     color: '#6ec8e8',
@@ -291,8 +320,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'margin',
     name: 'Dr. Margin',
     districtId: 'avenida-odds',
-    // East of mid — clear of Mole Contact (10,12) approach bubble.
-    x: 27,
+    // East plaza — clear of lane / ATM / torre pad.
+    x: 39,
     y: 12,
     beatId: 'lobby-margin',
     color: '#4a6cff',
@@ -302,8 +331,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'mensageiro-avenida',
     name: 'Mensageiro',
     districtId: 'avenida-odds',
-    // Mid-east corridor — clear of Cage Runner + Courier bubbles.
-    x: 26,
+    x: 37,
     y: 12,
     beatId: 'avenida-radar',
     safeJobId: 'safe-avenida-odds',
@@ -313,7 +341,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'cage-runner',
     name: 'Cage Runner',
     districtId: 'avenida-odds',
-    x: 10,
+    x: 8,
     y: 11,
     beatId: 'avenida-server',
     jobBetId: 'avenida-server',
@@ -324,9 +352,10 @@ const NPCS: readonly WorldNpc[] = [
     id: 'neon-snap',
     name: 'Neon Snap',
     districtId: 'avenida-odds',
-    // Center corridor start — only y11–12 crosses the sealed strip.
-    x: 30,
+    // West gate of the corridor — starts the run, never stands in cones.
+    x: 11,
     y: 12,
+    wanderRadius: 0,
     beatId: 'avenida-drone',
     extraBeatIds: ['side-avenida-neon'],
     jobBetId: 'avenida-drone',
@@ -339,6 +368,7 @@ const NPCS: readonly WorldNpc[] = [
     // Open plaza south of VIP tables — reachable, in front of furniture.
     x: 12,
     y: 14,
+    wanderRadius: 0,
     beatId: 'torre-foyer',
     color: '#6ec8e8',
     bodyVariant: 1,
@@ -593,10 +623,61 @@ export function inRange(a: {
 }
 
 export function districtNpcs(): WorldNpc[] {
-  return NPCS.map((n) => ({
-    ...n,
-    bodyVariant: n.bodyVariant ?? npcBodyVariant(n.id),
-  }));
+  return NPCS.map((n) => {
+    const homeX = n.homeX ?? n.x;
+    const homeY = n.homeY ?? n.y;
+    // Any story/side-beat NPC stays planted so objective markers don't drift.
+    const isQuest = QUEST_NPC_IDS.has(n.id) || Boolean(n.beatId);
+    const wanderRadius = n.wanderRadius ?? (isQuest ? 0 : 1.1);
+    return {
+      ...n,
+      homeX,
+      homeY,
+      wanderRadius,
+      bodyVariant: n.bodyVariant ?? npcBodyVariant(n.id),
+    };
+  });
+}
+
+/** Tiny ambient drift, leashed to home; never into the Neon Snap lane. */
+export function tickNpcWander(npc: WorldNpc, dt: number, phase: number): void {
+  const homeX = npc.homeX ?? npc.x;
+  const homeY = npc.homeY ?? npc.y;
+  const radius = npc.wanderRadius ?? 0;
+  if (radius <= 0.01) {
+    npc.x = homeX;
+    npc.y = homeY;
+    return;
+  }
+  const { x, y } = leashWanderPoint({ homeX, homeY, radius, dt, phase });
+  if (npc.districtId === 'avenida-odds' && inNeonSnapLane(x, y)) {
+    npc.x = homeX;
+    npc.y = homeY;
+    return;
+  }
+  npc.x = x;
+  npc.y = y;
+}
+
+function leashWanderPoint(o: {
+  homeX: number;
+  homeY: number;
+  radius: number;
+  dt: number;
+  phase: number;
+}): { x: number; y: number } {
+  const ox = Math.sin(o.phase * 0.7 + o.homeX) * o.radius * 0.55;
+  const oy = Math.cos(o.phase * 0.55 + o.homeY) * o.radius * 0.45;
+  let nx = o.homeX + ox * Math.min(1, o.dt * 2);
+  let ny = o.homeY + oy * Math.min(1, o.dt * 2);
+  const dx = nx - o.homeX;
+  const dy = ny - o.homeY;
+  const d = Math.hypot(dx, dy);
+  if (d > o.radius) {
+    nx = o.homeX + (dx / d) * o.radius;
+    ny = o.homeY + (dy / d) * o.radius;
+  }
+  return { x: nx, y: ny };
 }
 
 export function districtExits(): DistrictExit[] {

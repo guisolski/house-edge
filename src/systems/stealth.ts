@@ -56,7 +56,7 @@ export type StealthProgress = {
 /**
  * Odds Avenue Neon Snap — alternating vertical patrols (no lane-wide sweepers).
  * Barriers already seal north/south bypass; cones stay readable with steady fill.
- * Cover crates give ≥1.2s safe dwell windows at walk speed.
+ * Cover crates + slower patrols → ≥1.4s safe dwell (first-timer ~3–6 attempts).
  */
 export const AVENIDA_DRONE_STEALTH: StealthDef = {
   id: 'avenida-drone',
@@ -66,7 +66,7 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
   goal: { x: 34, y: 12 },
   goalRadius: 1.2,
   targetMs: 90_000,
-  coverRadius: 0.65,
+  coverRadius: 0.75,
   cover: [
     { x: 15, y: 12 },
     { x: 20, y: 11 },
@@ -82,9 +82,9 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
         { x: 17, y: 16 },
         { x: 17, y: 8 },
       ],
-      speed: 1.05,
-      halfAngle: Math.PI / 6.5,
-      range: 3.1,
+      speed: 0.88,
+      halfAngle: Math.PI / 7,
+      range: 2.9,
     },
     {
       // Mid — opposite phase (starts south) so gaps alternate with A.
@@ -94,9 +94,9 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
         { x: 23, y: 8 },
         { x: 23, y: 16 },
       ],
-      speed: 1.05,
-      halfAngle: Math.PI / 6.5,
-      range: 3.1,
+      speed: 0.88,
+      halfAngle: Math.PI / 7,
+      range: 2.9,
     },
     {
       // East gate — slightly slower / narrower.
@@ -106,9 +106,9 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
         { x: 29, y: 16 },
         { x: 29, y: 8 },
       ],
-      speed: 0.95,
-      halfAngle: Math.PI / 7,
-      range: 2.9,
+      speed: 0.8,
+      halfAngle: Math.PI / 7.5,
+      range: 2.7,
     },
   ],
 };

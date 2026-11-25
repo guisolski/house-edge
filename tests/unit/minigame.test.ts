@@ -43,7 +43,7 @@ describe('minigame skill system', () => {
     expect(judgePhase(phase, 0.7)).toBe(false);
   });
 
-  it('assistAfterMiss widens timing and is a no-op for choice phases', () => {
+  it('assistAfterMiss widens timing only after 2+ misses; no-op for choice', () => {
     const def = skillForBet('duelo-casa', 'duel')!;
     let p = startSkill(def);
     p = attemptSkill(p, { phaseIndex: 0, value: 0 });
@@ -51,6 +51,9 @@ describe('minigame skill system', () => {
     const before = p.def.phases[0]!.window ?? 0;
     p = assistAfterMiss(p);
     expect(p.justMissed).toBe(false);
+    expect(p.def.phases[0]!.window).toBe(before);
+    p = attemptSkill(p, { phaseIndex: 0, value: 0 });
+    p = assistAfterMiss(p);
     expect(p.def.phases[0]!.window).toBeGreaterThan(before);
     p = attemptSkill(p, perfectAttempt(p));
     p = attemptSkill(p, { phaseIndex: 1, value: 0 });

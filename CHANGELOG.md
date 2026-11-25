@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.21.0] — 2026-11-25
+
+### Fixed
+
+- **Name tags (P1)**: anchored to sprite blit (aside+bob) every frame; objective always shown; non-objective tags stack/hide; elevator tagged on the car; quest/beat NPCs planted (no marker drift); ambient leash ≤1.1 and never into Neon Snap lane.
+- **Neon Snap (P1)**: after `drone_ok`, NPC gives a completed line — never re-offers stealth; Odds NPCs relocated off the cone lane; slower patrols / bigger cover for longer safe dwell (~3–6 first-timer attempts).
+- **Dropped Enter (P1)**: modal confirm ignores Interact held at open until key-up + 150ms; Close rematch gate stays 400ms + release; OS key-repeat ignored.
+- **Casa/Augusto needles (P2)**: tighter late-game windows; `assistAfterMiss` widens only after 2+ misses.
+- **Foyer arrow (P2)**: fixed Foyer Guard target on Casa (no path-waypoint wander onto the elevator).
+- **FPS (P2)**: under dialogs/minigames freeze bob and cull far NPCs; e2e asserts ≥50 avg under 4× throttle with Odds dialog open.
+
+### Tests
+
+- Unit: `session-v210` (done line, lane clear, gate, needles, foyer, wander).
+- Prod e2e: `neon-snap-done-prod`; clear/prompt/debounce retained.
+
 ## [1.20.2] — 2026-11-25
 
 ### Fixed

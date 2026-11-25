@@ -48,11 +48,33 @@ function wireLifecycle(
       session.noteInteractRelease();
       return;
     }
-    // After any dialog closes: ignore Interact on play until release + 400ms.
+    // After Close: ignore Interact on play until release + short arm.
     if (p.action === 'interact' && p.pressed && session.ui.is('play')) {
       if (!session.allowInteractInput()) return;
     }
-    if (p.pressed) handleAction(session, hud, p.action);
+    // Modal confirm: ignore Interact held from before the panel opened.
+    if (
+      p.action === 'interact' &&
+      p.pressed &&
+      !session.ui.is('play') &&
+      !session.ui.is('title')
+    ) {
+      if (!session.allowModalConfirm()) return;
+    }
+    if (p.pressed) {
+      const before = session.ui.get();
+      handleAction(session, hud, p.action);
+      const after = session.ui.get();
+      // Opening a modal with Interact held — require key-up before confirm.
+      if (
+        p.action === 'interact' &&
+        before !== after &&
+        after !== 'play' &&
+        after !== 'title'
+      ) {
+        session.noteModalOpened(true);
+      }
+    }
   });
 }
 

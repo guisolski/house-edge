@@ -18,6 +18,7 @@ import {
   nearestExit,
   nearestNpc,
   npcStoryBeatIds,
+  tickNpcWander,
   EXIT_CLEAR_RANGE,
   EXIT_COOLDOWN_MS,
   EXIT_STAND_RANGE,
@@ -101,12 +102,15 @@ export class GameSession {
   private vipMap: MapDef = buildTorreVip();
   /** Ending panel shows the credits roll after the laje epilogue. */
   private creditsRoll = false;
-  /** Ignore Extra Enter after a dialog closes (rematch chain). */
+  /** Rematch anti-spam after Close — short arm; held keys need release. */
   private interactLockUntil = 0;
-  /** After a dialog closes, require Interact key release before re-arming. */
+  /** After a dialog closes/opens, require Interact key release if it was held. */
   private interactNeedsRelease = false;
   /** Key-up arrived during the time lock — apply after lock expires. */
   private interactReleasePending = false;
+  /** Modal confirm (dialogue/skill): ignore Interact held at open until key-up. */
+  private modalConfirmNeedsRelease = false;
+  private modalConfirmArmUntil = 0;
 
   constructor(seed = 42, bus = new EventBus()) {
     this.bus = bus;
@@ -121,6 +125,11 @@ export class GameSession {
 
   isVipFloor(): boolean {
     return this.vipFloor;
+  }
+
+  /** Ambient NPC leash — tiny drift, never into Neon Snap lane. */
+  tickWorldNpcs(dt: number, phase: number): void {
+    for (const npc of this.npcs) tickNpcWander(npc, dt, phase);
   }
 
   showingCreditsRoll(): boolean {
@@ -520,18 +529,34 @@ export class GameSession {
   }
 
   /**
-   * Input-layer gate: after any dialog closes, ignore Interact until the key is
-   * released AND 400ms have passed. Call from wiring before handleAction.
+   * Input-layer gate after Close: ignore Interact held from before close (need
+   * key-up). Fresh presses are allowed once ~150ms have passed.
    */
   allowInteractInput(): boolean {
     const now = Date.now();
-    if (now < this.interactLockUntil) return false;
-    if (this.interactReleasePending) {
+    if (this.interactReleasePending && now >= this.interactLockUntil) {
       this.interactNeedsRelease = false;
       this.interactReleasePending = false;
     }
     if (this.interactNeedsRelease) return false;
+    if (now < this.interactLockUntil) return false;
     return true;
+  }
+
+  /**
+   * Modal confirm gate: when a dialog/skill opens with Interact held, ignore
+   * confirm until key-up. Fresh presses after ~150ms are allowed.
+   */
+  allowModalConfirm(): boolean {
+    if (this.modalConfirmNeedsRelease) return false;
+    if (Date.now() < this.modalConfirmArmUntil) return false;
+    return true;
+  }
+
+  /** Call when dialogue/skill/bet opens. `interactHeld` = Interact down at open. */
+  noteModalOpened(interactHeld: boolean): void {
+    this.modalConfirmArmUntil = Date.now() + 150;
+    this.modalConfirmNeedsRelease = interactHeld;
   }
 
   /**
@@ -573,6 +598,14 @@ export class GameSession {
   offerBet(betId: string): boolean {
     const bet = getBet(betId);
     if (!bet) return false;
+    // Neon Snap: once cleared, never restart stealth / rematch the story bet.
+    if (betId === 'avenida-drone' && this.story.getFlag('drone_ok')) {
+      this.bus.emit('ui:toast', {
+        message: 'Neon Snap: Already got your shot — cones stay lit without you.',
+        kind: 'info',
+      });
+      return false;
+    }
     // Story skills: top up before afford check so a broke player is never locked out.
     if (this.pendingStoryBeat && bet.skill) this.ensureStoryCredits(bet.stake);
     const credits = this.player.getStats().credits;
@@ -649,7 +682,7 @@ export class GameSession {
           ? ` Pick left: ${this.skillProgress.pickLeft}.`
           : '';
       const widened =
-        phase?.kind === 'timing'
+        phase?.kind === 'timing' && this.skillProgress.misses >= 2
           ? ' Zone widened / needle slowed — try this phase again.'
           : ` Retry this phase.${left}`;
       this.bus.emit('ui:toast', {
@@ -995,15 +1028,19 @@ export class GameSession {
     this.armInteractLock();
   }
 
-  /** Brief lock so Enter-spam after Close can't open a rematch bet. */
-  private armInteractLock(): void {
+  /**
+   * After Close: 400ms rematch arm + require key release (4× Enter @80ms stays safe).
+   * Modal-open dropped Enter is handled separately via noteModalOpened / allowModalConfirm.
+   */
+  private armInteractLock(interactHeld = true): void {
     this.interactLockUntil = Date.now() + 400;
-    this.interactNeedsRelease = true;
+    this.interactNeedsRelease = interactHeld;
     this.interactReleasePending = false;
   }
 
   /** Call on Interact key-up so a held Enter can't chain rematch dialogs. */
   noteInteractRelease(): void {
+    this.modalConfirmNeedsRelease = false;
     if (Date.now() < this.interactLockUntil) {
       this.interactReleasePending = true;
       return;
@@ -1081,6 +1118,13 @@ export class GameSession {
       this.runElevatorRide();
       return true;
     }
+    // Neon Snap after clear: completed line only — never rematch stealth / side bet.
+    if (npc.id === 'neon-snap' && this.story.getFlag('drone_ok')) {
+      return this.showNpcDoneLine(
+        npc,
+        'Already cleared those cones. Street neon owed you that shot — keep walking.',
+      );
+    }
     if (this.tryNpcStory(npc)) return true;
     if (this.npcStoryBlocksRematch(npc)) {
       this.toastNpcBusy(npc);
@@ -1090,6 +1134,16 @@ export class GameSession {
     if (npc.safeJobId) return this.doSafeJob(npc.safeJobId);
     this.toastNpcBusy(npc);
     return false;
+  }
+
+  /** One-shot thank-you dialogue with no bet attached. */
+  private showNpcDoneLine(npc: WorldNpc, text: string): boolean {
+    this.pendingStoryBeat = null;
+    this.pendingBetAfterDialogue = null;
+    this.lastDialogue = [{ speaker: npc.name, text }];
+    this.ui.go('dialogue');
+    this.bus.emit('ui:dialogue', { speaker: npc.name, text });
+    return true;
   }
 
   /** True when the live objective NPC is on the VIP salon (player is in foyer). */

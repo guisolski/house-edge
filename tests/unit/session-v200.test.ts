@@ -74,10 +74,10 @@ describe('v1.20.0 Neon Snap sealed strips', () => {
     expect(new Set(seq).size).toBe(4);
   });
 
-  it('elevator timing is slower/wider on first try', () => {
+  it('elevator timing is late-game tight (widen only after 2+ misses)', () => {
     const phase = SKILL_PHASE_TABLE['torre-elevator']!;
-    expect(phase.window ?? 0).toBeGreaterThanOrEqual(0.2);
-    expect(phase.needleSpeed ?? 1).toBeLessThanOrEqual(0.62);
+    expect(phase.window ?? 1).toBeLessThanOrEqual(0.12);
+    expect(phase.needleSpeed ?? 0).toBeGreaterThanOrEqual(0.9);
   });
 
   it('objective NPCs sit on walkable plaza tiles', () => {

@@ -299,56 +299,98 @@ function paintPlayHud(
   // Signs hide under modals so dialogue doesn't cover CASA SUPREMA / EXIT text.
   drawLiveSigns(ctx, state, map, camX, camY, frame);
   drawStealthDrones(ctx, state, camX, camY, frame);
-  drawNearbyNpcNames(ctx, state, map, camX, camY);
+  drawNearbyNpcNames(ctx, state, map, camX, camY, frame);
   drawMarker(ctx, state, camX, camY, frame);
   drawSideMarkers(ctx, state, camX, camY);
 }
 
-/** Name tags: nearest 2 within ~1.6 tiles, stacked with screen-space gap. */
+type TagRow = {
+  npc: ViewState['session']['npcs'][number];
+  d: number;
+  force: boolean;
+};
+
+/** Collect objective + nearest tags (elevator only in pad range). */
+function collectTagRows(state: ViewState): TagRow[] {
+  const me = state.session.player.getStats();
+  const obj = state.session.objective();
+  const objNpc = state.session.objectiveNpcInRange();
+  const near: TagRow[] = [];
+  for (const npc of state.session.floorNpcs()) {
+    if (npc.districtId !== me.districtId || !npc.name) continue;
+    const d = Math.hypot(npc.x - me.x, npc.y - me.y);
+    const isObj =
+      Boolean(objNpc && npc.id === objNpc.id) ||
+      (obj.targetName != null && npc.name === obj.targetName);
+    if (npc.id.startsWith('elevator')) {
+      if (d <= 1.6) near.push({ npc, d, force: true });
+      continue;
+    }
+    if (isObj) near.push({ npc, d, force: true });
+    else if (d <= 1.5) near.push({ npc, d, force: false });
+  }
+  near.sort((a, b) => Number(b.force) - Number(a.force) || a.d - b.d);
+  return near.filter((r, i) => r.force || i < 3).slice(0, 3);
+}
+
+/**
+ * Name tags: always show the objective; otherwise nearest 2 non-objective.
+ * Anchored to the same sprite blit position every frame (aside + bob).
+ */
 function drawNearbyNpcNames(
   ctx: CanvasRenderingContext2D,
   state: ViewState,
   map: MapDef,
   camX: number,
   camY: number,
+  frame: number,
 ): void {
   const me = state.session.player.getStats();
-  const objName = state.marker?.name;
-  const near: { npc: (typeof state.session.npcs)[number]; d: number }[] = [];
-  for (const npc of state.session.floorNpcs()) {
-    if (npc.districtId !== me.districtId) continue;
-    if (npc.id.startsWith('elevator') || !npc.name) continue;
-    const d = Math.hypot(npc.x - me.x, npc.y - me.y);
-    if (d > 1.6) continue;
-    if (objName && npc.name === objName) continue;
-    near.push({ npc, d });
-  }
-  near.sort((a, b) => a.d - b.d);
+  const bob = Math.sin(frame / 10) * 2;
   const placed: { x: number; y: number }[] = [];
-  near.slice(0, 2).forEach((row, i) => {
-    const avoid = labelOffsetForSigns({
-      tileX: row.npc.x,
-      tileY: row.npc.y,
-      signs: map.signs,
-      tagText: row.npc.name,
-      camX,
-      camY,
-    });
-    if (avoid.hideLabel) return;
-    const px = row.npc.x * TILE_PX + 16 - camX;
-    // Stack second tag well above the first (Bia / Catador / ATM clusters).
-    let stack = i * -36;
-    let py = row.npc.y * TILE_PX - 28 - camY + avoid.dy + stack;
-    // Nudge further if still colliding with another tag in screen space.
-    for (const p of placed) {
-      if (Math.hypot(px - p.x, py - p.y) < 28) {
-        stack -= 36;
-        py = row.npc.y * TILE_PX - 28 - camY + avoid.dy + stack;
-      }
-    }
-    placed.push({ x: px, y: py });
-    paintMarkerLabel(ctx, px, py, row.npc.name, ctx.canvas.width);
+  collectTagRows(state).forEach((row, i) => {
+    paintOneNpcTag({ ctx, map, camX, camY, me, bob, row, i, placed });
   });
+}
+
+function paintOneNpcTag(o: {
+  ctx: CanvasRenderingContext2D;
+  map: MapDef;
+  camX: number;
+  camY: number;
+  me: { x: number; y: number };
+  bob: number;
+  row: TagRow;
+  i: number;
+  placed: { x: number; y: number }[];
+}): void {
+  const avoid = labelOffsetForSigns({
+    tileX: o.row.npc.x,
+    tileY: o.row.npc.y,
+    signs: o.map.signs,
+    tagText: o.row.npc.name,
+    camX: o.camX,
+    camY: o.camY,
+  });
+  if (avoid.hideLabel && !o.row.force) return;
+  const aside =
+    Math.hypot(o.row.npc.x - o.me.x, o.row.npc.y - o.me.y) < 1.35
+      ? o.row.npc.x >= o.me.x
+        ? 0.35
+        : -0.35
+      : 0;
+  const px = (o.row.npc.x + aside) * TILE_PX + 16 - o.camX;
+  let stack = o.i * -40;
+  let py = o.row.npc.y * TILE_PX - 28 - o.camY + avoid.dy + o.bob + stack;
+  for (const p of o.placed) {
+    if (Math.hypot(px - p.x, py - p.y) < 32) {
+      stack -= 40;
+      py = o.row.npc.y * TILE_PX - 28 - o.camY + avoid.dy + o.bob + stack;
+    }
+  }
+  if (!o.row.force && o.placed.some((p) => Math.hypot(px - p.x, py - p.y) < 28)) return;
+  o.placed.push({ x: px, y: py });
+  paintMarkerLabel(o.ctx, px, py, o.row.npc.name, o.ctx.canvas.width);
 }
 
 /** Steady translucent sight cone — always drawn (brightness may pulse). */
@@ -875,12 +917,21 @@ function drawSortedActors(
 ): void {
   const { session, baked } = state;
   const stats = session.player.getStats();
-  // 4-phase walk/idle: even frames = plant, odd = stride (baked as 0/1).
-  const anim = Math.floor(frame / 8) % 2;
-  const bob = Math.sin(frame / 10) * 2;
+  const playing = session.ui.is('play');
+  // Under dialogs/minigames: freeze bob/aside and skip far NPCs (FPS on Odds/VIP).
+  const anim = playing ? Math.floor(frame / 8) % 2 : 0;
+  const bob = playing ? Math.sin(frame / 10) * 2 : 0;
   const view = { ctx, camX, camY, bob, vw: ctx.canvas.width, vh: ctx.canvas.height };
   const items: SortBlit[] = [];
-  pushNpcSorts(items, session, baked, stats.districtId, anim, view);
+  pushNpcSorts({
+    items,
+    session,
+    baked,
+    districtId: stats.districtId,
+    anim,
+    view,
+    playing,
+  });
   pushPlayerSort(items, baked, stats, anim, view);
   items.sort((a, b) => a.y - b.y || a.x - b.x);
   for (const it of items) it.draw();
@@ -895,36 +946,39 @@ type SortView = {
   vh: number;
 };
 
-function pushNpcSorts(
-  items: SortBlit[],
-  session: ViewState['session'],
-  baked: Baked,
-  districtId: string,
-  anim: number,
-  view: SortView,
-): void {
-  const me = session.player.getStats();
-  for (const npc of session.floorNpcs()) {
-    if (npc.districtId !== districtId) continue;
-    const img = npcSprite(baked, npc, anim);
-    // Soft step-aside when Rita walks through — visual only (NPCs stay non-blocking).
-    const near = Math.hypot(npc.x - me.x, npc.y - me.y) < 1.35;
+function pushNpcSorts(o: {
+  items: SortBlit[];
+  session: ViewState['session'];
+  baked: Baked;
+  districtId: string;
+  anim: number;
+  view: SortView;
+  playing: boolean;
+}): void {
+  const me = o.session.player.getStats();
+  for (const npc of o.session.floorNpcs()) {
+    if (npc.districtId !== o.districtId) continue;
+    const d = Math.hypot(npc.x - me.x, npc.y - me.y);
+    // Modal open: only draw nearby NPCs — biggest FPS win on Odds/VIP.
+    if (!o.playing && d > 8) continue;
+    const img = npcSprite(o.baked, npc, o.anim);
+    const near = o.playing && d < 1.35;
     const asideX = near ? (npc.x >= me.x ? 0.35 : -0.35) : 0;
     const drawX = npc.x + asideX;
-    items.push({
+    o.items.push({
       y: npc.y,
       x: drawX,
       draw: () =>
         blitSortedSprite({
-          ctx: view.ctx,
+          ctx: o.view.ctx,
           img,
           tx: drawX,
           ty: npc.y,
-          camX: view.camX,
-          camY: view.camY,
-          bob: view.bob,
-          vw: view.vw,
-          vh: view.vh,
+          camX: o.view.camX,
+          camY: o.view.camY,
+          bob: o.view.bob,
+          vw: o.view.vw,
+          vh: o.view.vh,
         }),
     });
   }
@@ -1161,9 +1215,20 @@ function refreshMarkerCache(state: ViewState, frame: number): void {
     state.marker = null;
     return;
   }
-  // Bend the marker along a walkable path (Fair→Morro etc.) instead of through walls.
   const me = state.session.player.getStats();
   if (obj.districtId === me.districtId) {
+    const dist = Math.hypot(obj.targetX - me.x, obj.targetY - me.y);
+    // Same-room NPC / short hop: pin arrow on the fixed target (no path wander).
+    // Fixes Casa foyer pointing at the elevator pad while Guard is adjacent.
+    if (dist <= 10 || me.districtId === 'torre-casa') {
+      state.marker = {
+        x: obj.targetX,
+        y: obj.targetY,
+        districtId: obj.districtId ?? '',
+        name: obj.targetName ?? '',
+      };
+      return;
+    }
     const map = state.session.getMap();
     const wp = nextPathWaypoint(
       map,
@@ -1171,7 +1236,6 @@ function refreshMarkerCache(state: ViewState, frame: number): void {
       { x: obj.targetX, y: obj.targetY },
       5,
     );
-    // Keep final name; only advance the arrow along the corridor.
     state.marker = {
       x: wp.x,
       y: wp.y,

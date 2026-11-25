@@ -1,49 +1,37 @@
-# Playtest REPORT — House Edge v1.20.2
+# Playtest REPORT — House Edge v1.21.0
 
-Independent playtest #24 of v1.20.1 (live tab title confirmed): **REGRESSION** — Neon Snap unbeatable (cone flicker/bursts, no readable safe window; never reached Casa/epilogue). PASS on #24: Fio=pad, needle Enter, Take-bet focus, checkpoint idle 15s, Odds FPS 56–61. Ship **v1.20.2**.
+Independent playtest #25 of live v1.20.2: completed to credits, keyboard only (~67 min inflated by automation lag; Neon Snap ~9 min / 16–17 resets). PASS: E-prompt names, 4× Enter gate, Neon Snap beatable + steady cones, Casa pad label, epilogue closing, Augusto 3 phases. Ship **v1.21.0**.
 
 ## Verdict: PASS (fixes landed)
 
-Neon Snap readable + walk-solvable; spawn E-prompt is Dona Nair; Enter rematch gated; crowded tags de-overlapped. Prod e2e clears Neon Snap with real keys.
-
 ## Bugs fixed
 
-| #   | Issue                                       | Result                                                                  |
-| --- | ------------------------------------------- | ----------------------------------------------------------------------- |
-| 1   | Neon Snap unbeatable (flicker + lane sweep) | PASS — steady cones, alternating patrols + cover, ≥1.2s walk windows    |
-| 2   | E-prompt Antena/DJ/Margin steals objective  | PASS — spawn beside Nair; NPCs spaced; live `nearbyNpc` objective-first |
-| 3   | Enter spam rematch after Close              | PASS — input-layer release + 400ms gate                                 |
-| 4   | Crowded tags overlap (Bia/Catador)          | PASS — nearest-2, larger stack, screen nudge                            |
+| #   | Issue                                            | Result                                                                  |
+| --- | ------------------------------------------------ | ----------------------------------------------------------------------- |
+| 1   | Name tags overlap / trail; E-prompt naming wrong | PASS — sprite-anchored tags, objective always shown, quest NPCs planted |
+| 2   | Neon Snap rematch after clear; NPCs in lane      | PASS — completed line; lane empty; longer safe dwell                    |
+| 3   | First Enter after dialog open dropped            | PASS — modal held-key gate + 150ms; close rematch still 400ms           |
+| 4   | Casa/Augusto needles too generous                | PASS — tighter windows; assist only after 2+ misses                     |
+| 5   | Foyer objective arrow wanders to elevator        | PASS — fixed Guard target on Casa floor                                 |
+| 6   | FPS ~30 with dialogs on Odds/VIP                 | PASS — freeze/cull actors under modals; e2e ≥50 @4× with dialog open    |
 
 ## Measured
 
-| Metric                      | Value                                                         |
-| --------------------------- | ------------------------------------------------------------- |
-| Story-walk e2e (desktop)    | ~18.1s wall (objective walk + E only)                         |
-| Paced scripted beats (prod) | ~21.4s / 0.36 min (`v202-timing.json`)                        |
-| Neon Snap prod clear        | ~5.0s real KeyD adaptive walk; `drone_ok`                     |
-| E2e                         | desktop+mobile + prod (`neon-snap-clear` / prompt / debounce) |
-| Unit coverage branches      | 90.16% (1008/1118)                                            |
+| Metric     | Value                                     |
+| ---------- | ----------------------------------------- |
+| Unit       | 253 tests; branches ≥90%                  |
+| E2e        | desktop+mobile full suite                 |
+| E2e:prod   | neon clear/done, prompt spawn, enter gate |
+| Story-walk | ~18s wall                                 |
 
-## Artifacts
+## Verification (real input)
 
-- `v202-neon-snap-cleared-prod.png` — corridor cleared on prod build (real inputs)
-- `v202-epilogue-closing-line-prod.png` — Saúde closing line on prod
-- `v202-credits-prod.png` — credits after Close
-- `v202-timing.json` — paced beat stamps on prod preview
-- `v202-01-title-play.png` / `v202-neon-snap-start.png`
-
-## Scores (playtest #24 baseline → this build)
-
-|     | #24 (v1.20.1) | v1.20.2 target      |
-| --- | ------------- | ------------------- |
-| Art | hold          | hold                |
-| Fun | blocked       | restore (Neon Snap) |
-
-## CI
-
-- GitHub `CI` + `GitHub Pages` green on `0d17ba8` (v1.20.2).
+- Neon Snap clear: prod e2e KeyD adaptive walk (no `completeSkillPerfect`)
+- Neon Snap done: prod e2e talks after `drone_ok` → completed line, no stealth
+- Spawn prompt: prod e2e text contains `Dona Nair`
+- Enter gate: prod e2e Close + 4× Enter @80ms → no dialog
+- FPS: e2e 4× throttle walk + Odds dialog open ≥50 avg
 
 ## Gaps
 
-- Human playtest of v1.20.2 still needed to confirm cone readability + tag spacing under real walking FPS.
+- Human confirm of tag stacking under live Odds crowd density.

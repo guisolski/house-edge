@@ -194,16 +194,16 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     kind: 'timing',
     prompt: 'Call the express car — stop on green.',
     target: 0.52,
-    // Playtest #22: slightly slower / wider first try.
-    window: 0.2,
-    needleSpeed: 0.62,
+    // Playtest #25: late-game tighter — assist only after 2+ misses.
+    window: 0.1,
+    needleSpeed: 0.95,
   },
   'torre-vip': {
     kind: 'timing',
     prompt: 'Skim the rake on the sweep.',
     target: 0.72,
-    window: 0.1,
-    needleSpeed: 1.12,
+    window: 0.08,
+    needleSpeed: 1.25,
   },
   'torre-negotiate': {
     kind: 'negotiate',

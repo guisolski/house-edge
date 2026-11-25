@@ -51,6 +51,8 @@ function makeHandler(
   pressed: boolean,
 ): (e: KeyboardEvent) => void {
   return (e: KeyboardEvent): void => {
+    // Ignore OS key-repeat — held Enter/E must not spam interact/confirm.
+    if (pressed && e.repeat) return;
     const action = applyKey(state, e.code, pressed);
     if (!action) return;
     if (pressed) e.preventDefault();

@@ -168,6 +168,9 @@ function onTick(deps: TickDeps, delta: number): void {
   pollPads(deps);
   deps.cooldown.ms = Math.max(0, deps.cooldown.ms - delta);
   maybeMove(deps);
+  if (deps.session.ui.is('play')) {
+    deps.session.tickWorldNpcs(delta / 1000, deps.frame.n / 60);
+  }
   if (deps.session.isStealthActive()) {
     deps.session.tickStealthFrame(delta / 1000);
   }

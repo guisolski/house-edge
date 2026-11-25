@@ -197,14 +197,18 @@ function phaseMiss(progress: SkillProgress): SkillProgress {
   };
 }
 
-/** After a miss, widen/slow the current timing phase so retries stay fair. */
+/**
+ * After a miss, optionally widen/slow the current timing phase.
+ * Playtest #25: late-game stays tight — widen only after 2+ misses on the phase.
+ */
 export function assistAfterMiss(progress: SkillProgress): SkillProgress {
   const phases = progress.def.phases.map((p, i) => {
     if (i !== progress.phaseIndex || p.kind !== 'timing') return p;
+    if (progress.misses < 2) return p;
     return {
       ...p,
-      window: Math.min(0.3, (p.window ?? 0.12) + 0.04),
-      needleSpeed: Math.max(0.4, (p.needleSpeed ?? 0.8) * 0.82),
+      window: Math.min(0.22, (p.window ?? 0.12) + 0.03),
+      needleSpeed: Math.max(0.5, (p.needleSpeed ?? 0.8) * 0.88),
     };
   });
   return {
@@ -491,10 +495,11 @@ function duelSkill(betId: string): SkillDef {
     phases: [
       {
         kind: 'timing',
+        // Late-game: tight zone, fast needle — widen only after 2+ misses.
         prompt: 'Phase 1 — stop the house needle.',
         target: 0.5,
-        window: 0.1,
-        needleSpeed: 1.15,
+        window: 0.07,
+        needleSpeed: 1.35,
       },
       {
         kind: 'choice',

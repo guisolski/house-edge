@@ -115,9 +115,12 @@ describe('session v1.14.1 needle / economy / epilogue', () => {
     session.runStoryBeat('torre-final');
     expect(session.acceptStoryBet()).toBe(true);
     expect(session.submitSkill(0)).toBe(true);
+    // First miss: no widen yet (assist after 2+).
+    expect(session.getSkillProgress()?.def.phases[0]?.window).toBeLessThanOrEqual(0.08);
+    expect(session.submitSkill(0)).toBe(true);
     const mid = session.getSkillProgress();
-    expect(mid?.misses).toBeGreaterThan(0);
-    expect(mid?.def.phases[0]?.window).toBeGreaterThan(0.1);
+    expect(mid?.misses).toBeGreaterThanOrEqual(2);
+    expect(mid?.def.phases[0]?.window).toBeGreaterThan(0.07);
     expect(session.submitSkill(mid!.def.phases[0]!.target)).toBe(true);
     expect(session.submitSkill(0)).toBe(true);
     expect(session.getSkillProgress()?.phaseIndex).toBe(1);
