@@ -55,7 +55,8 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
   id: 'avenida-drone',
   districtId: 'avenida-odds',
   start: { x: 12, y: 12 },
-  checkpoint: { x: 14, y: 12 },
+  // West of the first patrol — must stay outside every cone over a cycle.
+  checkpoint: { x: 12, y: 11 },
   goal: { x: 34, y: 12 },
   goalRadius: 1.2,
   targetMs: 75_000,

@@ -5,6 +5,27 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.20.1] — 2026-11-25
+
+### Fixed
+
+- **Epilogue**: closing Saúde line is its own panel (≥3s hold), auto-scrolled into view; credits require Close (no auto-open). E2e asserts `.dialogue-closing-line` in viewport.
+- **E-prompt**: objective NPC always wins when in interact range (unit test with clustered NPCs); crowded tags show only the nearest 2, stacked.
+- **Enter debounce**: 400ms lock + require Interact key release after any dialog/skill close.
+- **Needle Stop**: sample at keydown time; Enter / Space / gamepad A stop the elevator (and other timing) needles.
+- **Take the bet**: primary button focused by default (not Walk away).
+- **Fio chase**: sequence text matches pad (`↑ → ↓ ←`).
+- **Casa Tower**: Odds exit moved to (5,18) off the elevator west path; Odds→Casa prompt reads `Enter Casa Tower →`.
+- **Odds Avenue**: floor tile lookups; re-assert y11–12 asphalt corridor (smooth mid-lane collision).
+- **Neon Snap**: checkpoint `(12,11)` stays outside all cones over a patrol cycle.
+- **Dona Nair**: forward plaza (14,16), clear of Boteco sign / tenements; Antena / Fair / Odds NPCs spaced to reduce prompt fights.
+- **FPS**: cheaper drone cones (every other frame, fewer wedges); tag draw capped at 2.
+
+### Tests
+
+- Unit: objective cluster preference, checkpoint cone-free, corridor walkability, Fio sequence, torre exit.
+- E2e: `epilogue-closing` viewport assert + screenshot.
+
 ## [1.20.0] — 2026-11-25
 
 ### Fixed

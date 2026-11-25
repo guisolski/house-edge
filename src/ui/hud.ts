@@ -187,29 +187,28 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
       const offerBet = session.hasPendingStoryBet();
       const epi = session.getPendingStoryBeat() === 'epilogue-laje';
       const hasChoice = lines.some((l) => Boolean(l.choices?.length));
-      // Epilogue: deliberate choice (ignore Enter ~500ms); closing line hold ≥3s.
+      const closingOnly =
+        epi &&
+        !hasChoice &&
+        !offerBet &&
+        lines.length > 0 &&
+        lines.every((l) => /Saúde/i.test(l.text));
+      // Epilogue: deliberate choice (ignore Enter ~500ms); closing = own panel ≥3s.
       const choiceArmAt = epi && hasChoice ? Date.now() + 500 : undefined;
-      const holdCloseUntil =
-        epi && !hasChoice && !offerBet ? Date.now() + 3000 : undefined;
+      const holdCloseUntil = closingOnly ? Date.now() + 3000 : undefined;
       paintDialogue(p.dialogue, lines, {
         offerBet,
         choiceArmAt,
         holdCloseUntil,
+        closingLine: closingOnly,
         onAcceptBet: () => {
           session.acceptStoryBet();
           h.syncScreen();
         },
         onChoice: (setsFlag, reply) => {
           session.pickDialogueChoice(setsFlag, reply);
+          // pickDialogueChoice emits ui:dialogue → showDialogue with Saúde-only lines.
           h.showDialogue(session.getDialogue());
-          // Epilogue: show Nair's Saúde closing line, then credits without another Close.
-          if (session.getPendingStoryBeat() === 'epilogue-laje') {
-            window.setTimeout(() => {
-              if (session.getPendingStoryBeat() !== 'epilogue-laje') return;
-              session.closeModal();
-              h.syncScreen();
-            }, 3500);
-          }
         },
         onClose: () => {
           session.closeModal();
@@ -522,8 +521,8 @@ function paintPrompt(prompt: HTMLElement, session: GameSession): void {
   const locked = session.nearbyLockedExit();
   const npc = session.nearbyNpc();
   const alt = session.nearbyAltNpc();
-  const obj = session.objective();
-  const objHit = Boolean(npc && obj.targetName && npc.name === obj.targetName);
+  const objNpc = session.objectiveNpcInRange();
+  const objHit = Boolean(objNpc && npc && npc.id === objNpc.id);
   const kind = resolveInteractPriority({
     objectiveNpcInRange: objHit,
     unlockedExitInRange: Boolean(exit),
@@ -560,6 +559,7 @@ function promptLabel(
     return `${promptVerb(npc)}${npc.name ? ` (${npc.name})` : ''}`;
   }
   if (kind === 'travel' && exit) {
+    if (exit.id === 'avenida-to-torre') return 'E — Enter Casa Tower →';
     const dest =
       session.world.get(exit.toDistrict)?.name ?? exit.label.replace(/^Exit → /, '');
     return `E — Travel to ${dest}`;

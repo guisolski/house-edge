@@ -304,7 +304,7 @@ function paintPlayHud(
   drawSideMarkers(ctx, state, camX, camY);
 }
 
-/** Name tags only within ~1.8 tiles; offset/hide when they would cover a sign. */
+/** Name tags: nearest 2 within ~1.8 tiles, stacked so crowded Fair/Odds don't overlap. */
 function drawNearbyNpcNames(
   ctx: CanvasRenderingContext2D,
   state: ViewState,
@@ -314,27 +314,32 @@ function drawNearbyNpcNames(
 ): void {
   const me = state.session.player.getStats();
   const objName = state.marker?.name;
+  const near: { npc: (typeof state.session.npcs)[number]; d: number }[] = [];
   for (const npc of state.session.floorNpcs()) {
     if (npc.districtId !== me.districtId) continue;
-    // Neon already names elevator cars — no duplicate floating tag.
     if (npc.id.startsWith('elevator') || !npc.name) continue;
     const d = Math.hypot(npc.x - me.x, npc.y - me.y);
     if (d > 1.8) continue;
-    // Objective marker already labels the quest target.
     if (objName && npc.name === objName) continue;
+    near.push({ npc, d });
+  }
+  near.sort((a, b) => a.d - b.d);
+  near.slice(0, 2).forEach((row, i) => {
     const avoid = labelOffsetForSigns({
-      tileX: npc.x,
-      tileY: npc.y,
+      tileX: row.npc.x,
+      tileY: row.npc.y,
       signs: map.signs,
-      tagText: npc.name,
+      tagText: row.npc.name,
       camX,
       camY,
     });
-    if (avoid.hideLabel) continue;
-    const px = npc.x * TILE_PX + 16 - camX;
-    const py = npc.y * TILE_PX - 28 - camY + avoid.dy;
-    paintMarkerLabel(ctx, px, py, npc.name, ctx.canvas.width);
-  }
+    if (avoid.hideLabel) return;
+    const px = row.npc.x * TILE_PX + 16 - camX;
+    // Stack second tag above the first so ATM/Luna clusters stay readable.
+    const stack = i * -22;
+    const py = row.npc.y * TILE_PX - 28 - camY + avoid.dy + stack;
+    paintMarkerLabel(ctx, px, py, row.npc.name, ctx.canvas.width);
+  });
 }
 
 /** Readable translucent sight cone (fill + outline) for one drone. */
@@ -343,11 +348,13 @@ function paintDroneCone(
   d: { x: number; y: number; facing: number; halfAngle: number; range: number },
   camX: number,
   camY: number,
+  detail: boolean,
 ): void {
   const cx = d.x * TILE_PX + 16 - camX;
   const cy = d.y * TILE_PX + 16 - camY;
   const reach = d.range * TILE_PX;
-  const steps = 18;
+  // Cheaper wedge on Odds Avenue FPS path; still readable fill + outline.
+  const steps = detail ? 14 : 8;
   ctx.beginPath();
   ctx.moveTo(cx, cy);
   for (let i = 0; i <= steps; i += 1) {
@@ -355,18 +362,15 @@ function paintDroneCone(
     ctx.lineTo(cx + Math.cos(a) * reach, cy + Math.sin(a) * reach);
   }
   ctx.closePath();
-  ctx.fillStyle = '#2bfff255';
+  ctx.fillStyle = '#2bfff248';
   ctx.fill();
-  ctx.strokeStyle = '#ffdf00ee';
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-  ctx.strokeStyle = '#2bfff2aa';
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = '#ffdf00cc';
+  ctx.lineWidth = 2;
   ctx.stroke();
   ctx.fillStyle = Palette.neonCyan;
-  ctx.fillRect(cx - 8, cy - 8, 16, 16);
+  ctx.fillRect(cx - 7, cy - 7, 14, 14);
   ctx.fillStyle = '#ff2bd6';
-  ctx.fillRect(cx - 5, cy - 5, 10, 10);
+  ctx.fillRect(cx - 4, cy - 4, 8, 8);
 }
 
 /** Patrolling drones + sight cones during Neon Snap stealth. */
@@ -379,8 +383,9 @@ function drawStealthDrones(
 ): void {
   const stealth = state.session.getStealthProgress();
   if (!stealth || stealth.done) return;
-  void frame;
-  for (const d of stealth.drones) paintDroneCone(ctx, d, camX, camY);
+  // Every other frame keeps Odds Avenue near the 50 FPS budget.
+  if ((frame & 1) === 1) return;
+  for (const d of stealth.drones) paintDroneCone(ctx, d, camX, camY, false);
   // Goal beacon + EXIT label + player→exit arrow.
   const g = stealth.def.goal;
   const gx = g.x * TILE_PX + 16 - camX;

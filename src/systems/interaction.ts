@@ -41,8 +41,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'dona-nair',
     name: 'Dona Nair',
     districtId: 'morro-neon',
-    x: 13,
-    y: 14,
+    // Forward plaza — clear of BOTECO NAIR sign (8,11) and tenement footprints.
+    x: 14,
+    y: 16,
     beatId: 'boteco-nair',
     extraBeatIds: ['morro-return-nair', 'epilogue-laje'],
     jobBetId: 'agua-gelada',
@@ -52,8 +53,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'antena-tech',
     name: 'Antena Tech',
     districtId: 'morro-neon',
-    // Mid terrace plaza — tag stays below HUD; clear of RAMP neon.
-    x: 10,
+    // Mid terrace west — clear of Nair (14,16) and Catador (4,16).
+    x: 8,
     y: 15,
     beatId: 'morro-antena',
     extraBeatIds: ['side-morro-tank'],
@@ -119,8 +120,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'catador-feira',
     name: 'Catador da Feira',
     districtId: 'feira-central',
-    // South aisle — clear of FEIRA neon (15,8).
-    x: 20,
+    // South aisle — clear of Barraca Tia + FEIRA neon.
+    x: 26,
     y: 15,
     beatId: 'feira-catador',
     jobBetId: 'feira-garrafa',
@@ -132,7 +133,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'bia',
     name: 'Bia Forró',
     districtId: 'feira-central',
-    x: 24,
+    x: 22,
     y: 11,
     beatId: 'bia-set',
     color: '#ff6eb4',
@@ -143,7 +144,7 @@ const NPCS: readonly WorldNpc[] = [
     name: 'Dancer Sol',
     districtId: 'feira-central',
     x: 28,
-    y: 11,
+    y: 14,
     beatId: 'feira-dancer',
     color: '#ff9f1c',
     bodyVariant: 1,
@@ -152,7 +153,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'forro-dj',
     name: 'DJ Forró',
     districtId: 'feira-central',
-    x: 32,
+    // East stage — clear of Bia interact radius.
+    x: 34,
     y: 12,
     beatId: 'feira-forro',
     jobBetId: 'forro-crowd',
@@ -174,8 +176,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'luna-feira',
     name: 'Luna Pixel',
     districtId: 'feira-central',
-    // Clear of east exit pad (38,13) — interact radius must not cover Travel.
-    x: 32,
+    // Clear of east exit pad (38,13) and the south aisle cluster.
+    x: 34,
     y: 16,
     beatId: 'prova-luna',
     color: '#2bfff2',
@@ -242,8 +244,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'courier-odds',
     name: 'Casa Courier',
     districtId: 'avenida-odds',
-    // Center corridor — north strip (y9–10) is sealed for Neon Snap.
-    x: 22,
+    // West of Mensageiro — distinct interact bubble on the cone lane.
+    x: 18,
     y: 11,
     beatId: 'avenida-courier',
     color: '#c9b037',
@@ -264,7 +266,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'atm-hacker',
     name: 'ATM Hacker',
     districtId: 'avenida-odds',
-    // East approach — clear of torre pad (43,12) and barrier seal (x≤34).
+    // East approach — clear of torre pad (43,12) and Lobby Cam bubble.
     x: 38,
     y: 11,
     beatId: 'avenida-atm',
@@ -276,7 +278,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'stealth-cam',
     name: 'Lobby Cam Tech',
     districtId: 'avenida-odds',
-    x: 36,
+    // West of ATM — tags/prompts must not stack on the same tile.
+    x: 32,
     y: 12,
     beatId: 'avenida-stealth',
     color: '#6ec8e8',
@@ -296,8 +299,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'mensageiro-avenida',
     name: 'Mensageiro',
     districtId: 'avenida-odds',
-    // Mid center lane — west Fair pad at (2,12).
-    x: 16,
+    // Mid-east corridor — clear of Cage Runner + Courier bubbles.
+    x: 26,
     y: 12,
     beatId: 'avenida-radar',
     safeJobId: 'safe-avenida-odds',
@@ -307,7 +310,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'cage-runner',
     name: 'Cage Runner',
     districtId: 'avenida-odds',
-    x: 14,
+    x: 10,
     y: 11,
     beatId: 'avenida-server',
     jobBetId: 'avenida-server',
@@ -456,7 +459,7 @@ const EXITS: readonly DistrictExit[] = [
     id: 'torre-to-avenida',
     districtId: 'torre-casa',
     x: 5,
-    y: 12,
+    y: 18,
     toDistrict: 'avenida-odds',
     label: 'Exit → Odds Avenue',
   },

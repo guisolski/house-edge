@@ -103,6 +103,8 @@ export class GameSession {
   private creditsRoll = false;
   /** Ignore Extra Enter after a dialog closes (rematch chain). */
   private interactLockUntil = 0;
+  /** After a dialog closes, require Interact key release before re-arming. */
+  private interactNeedsRelease = false;
 
   constructor(seed = 42, bus = new EventBus()) {
     this.bus = bus;
@@ -321,17 +323,8 @@ export class GameSession {
     const face = this.player.getFacing();
     const pool = this.floorNpcs();
     const available = new Set(this.story.availableBeats(s.districtId).map((b) => b.id));
-    const obj = this.objective();
-    const objectiveNpc =
-      obj.targetName && obj.districtId === s.districtId
-        ? pool.find(
-            (n) =>
-              n.districtId === s.districtId &&
-              n.name === obj.targetName &&
-              Math.hypot(n.x - s.x, n.y - s.y) <= INTERACT_RANGE,
-          )
-        : undefined;
-    // Playtest #22: objective wins whenever it is in interact range.
+    const objectiveNpc = this.objectiveNpcInRange(pool);
+    // Playtest #23: objective wins whenever it is in interact range.
     if (objectiveNpc) return objectiveNpc;
     return nearestNpc({
       npcs: pool,
@@ -342,6 +335,26 @@ export class GameSession {
       faceDy: face.dy,
       prefer: (npc) => npcStoryBeatIds(npc).some((id) => available.has(id)),
     });
+  }
+
+  /** Objective target NPC if standing inside INTERACT_RANGE (name or marker coords). */
+  objectiveNpcInRange(pool = this.floorNpcs()): WorldNpc | null {
+    const s = this.player.getStats();
+    const obj = this.objective();
+    if (obj.districtId !== s.districtId) return null;
+    const inRange = (n: WorldNpc): boolean =>
+      n.districtId === s.districtId && Math.hypot(n.x - s.x, n.y - s.y) <= INTERACT_RANGE;
+    if (obj.targetName) {
+      const byName = pool.find((n) => n.name === obj.targetName && inRange(n));
+      if (byName) return byName;
+    }
+    if (obj.targetX != null && obj.targetY != null) {
+      const byPos = pool.find(
+        (n) => inRange(n) && Math.hypot(n.x - obj.targetX!, n.y - obj.targetY!) < 0.6,
+      );
+      if (byPos) return byPos;
+    }
+    return null;
   }
 
   /** Secondary nearby NPC when objective already claimed the primary prompt. */
@@ -497,15 +510,20 @@ export class GameSession {
       : `Broke — find ${giver.name} (${giver.districtId}) for safe odd jobs.`;
   }
 
-  interact(): boolean {
+  /**
+   * @param fromInput — when true (keyboard/gamepad), also require Interact key release
+   * after a dialog closes. Programmatic callers (story-walk / tests) omit this.
+   */
+  interact(fromInput = false): boolean {
     if (!this.ui.is('play')) return false;
     if (Date.now() < this.interactLockUntil) return false;
+    if (fromInput && this.interactNeedsRelease) return false;
     // Standing on an elevator pad always uses the car before other NPCs.
     const elev = this.nearbyElevatorPad();
     if (elev) return this.interactNpc(elev);
     const npc = this.nearbyNpc();
-    const obj = this.objective();
-    const objHit = Boolean(npc && obj.targetName && npc.name === obj.targetName);
+    const objNpc = this.objectiveNpcInRange();
+    const objHit = Boolean(objNpc && npc && npc.id === objNpc.id);
     const exit = this.nearbyExit();
     const locked = this.nearbyLockedExit();
     const kind = resolveInteractPriority({
@@ -693,6 +711,7 @@ export class GameSession {
     if (!this.ui.is('ending') && !this.elevating) {
       this.toastSkill(won, payout);
       this.ui.go('play');
+      this.armInteractLock();
     }
     this.pendingBetId = null;
     this.pendingStake = 0;
@@ -806,6 +825,7 @@ export class GameSession {
     this.skillProgress = null;
     this.stealthProgress = null;
     this.ui.go('play');
+    this.armInteractLock();
   }
 
   /** Apply a dialogue choice flag mid-beat. Choices are stripped so they don't loop. */
@@ -815,25 +835,22 @@ export class GameSession {
       line.choices ? { speaker: line.speaker, text: line.text } : line,
     );
     if (setsFlag) this.story.setFlag(setsFlag, true);
-    if (reply) {
-      this.lastDialogue = [...this.lastDialogue, { speaker: 'Rita Odds', text: reply }];
-      this.bus.emit('ui:dialogue', { speaker: 'Rita Odds', text: reply });
-    }
-    // Epilogue: after the choice strip, ensure Nair's Saúde line is the closing beat
-    // (already in dialogue — re-emit so HUD paints it before the credits timeout).
+    // Epilogue: skip the reply transcript — show ONLY Saúde as its own panel.
     if (this.pendingStoryBeat === 'epilogue-laje') {
       const beat = getBeat('epilogue-laje');
       const saude = beat?.dialogue.find(
         (l) => /Saúde/i.test(l.text) && !l.choices?.length,
       );
       if (saude) {
-        // Move Saúde to the end (after reply) so paint shows it last.
-        this.lastDialogue = [
-          ...this.lastDialogue.filter((l) => !/Saúde/i.test(l.text)),
-          saude,
-        ];
+        this.lastDialogue = [saude];
         this.bus.emit('ui:dialogue', { speaker: saude.speaker, text: saude.text });
+        this.bus.emit('audio:play-sfx', { id: 'ui' });
+        return;
       }
+    }
+    if (reply) {
+      this.lastDialogue = [...this.lastDialogue, { speaker: 'Rita Odds', text: reply }];
+      this.bus.emit('ui:dialogue', { speaker: 'Rita Odds', text: reply });
     }
     this.bus.emit('audio:play-sfx', { id: 'ui' });
   }
@@ -956,7 +973,13 @@ export class GameSession {
 
   /** Brief lock so Enter-spam after Close can't open a rematch bet. */
   private armInteractLock(): void {
-    this.interactLockUntil = Date.now() + 450;
+    this.interactLockUntil = Date.now() + 400;
+    this.interactNeedsRelease = true;
+  }
+
+  /** Call on Interact key-up so a held Enter can't chain rematch dialogs. */
+  noteInteractRelease(): void {
+    this.interactNeedsRelease = false;
   }
 
   /** Side Jobs / Travel / Upgrades Close → main pause menu (not straight to play). */

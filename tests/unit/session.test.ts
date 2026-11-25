@@ -62,7 +62,7 @@ describe('GameSession basics', () => {
     const session = new GameSession(7);
     session.startNew();
     expect(session.interact()).toBe(false);
-    session.player.setPosition(13, 14);
+    session.player.setPosition(14, 16);
     expect(session.nearbyNpc()?.id).toBe('dona-nair');
     expect(session.interact()).toBe(true);
   });
@@ -125,7 +125,7 @@ describe('GameSession persistence', () => {
     expect(session.interact()).toBe(false);
     // Prefer story NPC over nearby rematch giver when both in range.
     session.story.setFlag('conheceu_rita', true);
-    session.player.setPosition(13, 14);
+    session.player.setPosition(14, 16);
     expect(session.nearbyNpc()?.id).toBe('dona-nair');
   });
 });

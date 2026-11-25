@@ -32,7 +32,7 @@ describe('session skill encounters', () => {
   it('opens skill UI for story gates and perfect-clears', () => {
     const session = new GameSession(42);
     session.startNew();
-    session.player.setPosition(13, 14);
+    session.player.setPosition(14, 16);
     expect(session.interact()).toBe(true);
     session.pickDialogueChoice('rita_loud', 'Loud it is.');
     expect(session.acceptStoryBet()).toBe(true);
@@ -80,7 +80,7 @@ describe('session skill encounters', () => {
     session.player.setPosition(38, 22);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
     // Place player on Nair so objective NPC wins.
-    session.player.setPosition(13, 14);
+    session.player.setPosition(14, 16);
     const npc = session.nearbyNpc();
     expect(npc?.name).toBe('Dona Nair');
     expect(session.interact()).toBe(true);
@@ -203,6 +203,8 @@ describe('session skill encounters', () => {
     session.player.setPosition(20, 7);
     const elev = session.floorNpcs().find((n) => n.id === 'elevator-vip');
     expect(elev).toBeTruthy();
+    session.noteInteractRelease();
+    (session as unknown as { interactLockUntil: number }).interactLockUntil = 0;
     expect(session.interact()).toBe(true);
     expect(session.isVipFloor()).toBe(false);
   });
@@ -210,7 +212,7 @@ describe('session skill encounters', () => {
   it('nearbyAltNpc returns a different NPC when crowded', () => {
     const session = new GameSession(5);
     session.startNew();
-    session.player.setPosition(13, 14);
+    session.player.setPosition(14, 16);
     const primary = session.nearbyNpc();
     expect(primary).toBeTruthy();
     const alt = session.nearbyAltNpc();

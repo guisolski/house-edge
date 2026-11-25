@@ -44,6 +44,10 @@ function wireLifecycle(
     hud.showCreditsRoll();
   });
   session.bus.on('input:action', (p) => {
+    if (p.action === 'interact' && !p.pressed) {
+      session.noteInteractRelease();
+      return;
+    }
     if (p.pressed) handleAction(session, hud, p.action);
   });
 }
@@ -173,8 +177,16 @@ function handleAction(session: GameSession, hud: HudHandles, action: string): vo
 }
 
 function onInteract(session: GameSession, hud: HudHandles): void {
+  // Gamepad A / Enter while the needle is live — same as clicking Stop.
+  if (session.ui.is('skill')) {
+    const stop = document.querySelector('.btn-needle-stop') as HTMLButtonElement | null;
+    if (stop) {
+      stop.click();
+      return;
+    }
+  }
   if (!session.ui.is('play')) return;
-  session.interact();
+  session.interact(true);
   hud.syncScreen();
   hud.updatePrompt();
 }

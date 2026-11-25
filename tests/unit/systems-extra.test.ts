@@ -147,8 +147,8 @@ describe('map queries', () => {
       nearestNpc({
         npcs,
         districtId: 'morro-neon',
-        x: 13,
-        y: 14,
+        x: 14,
+        y: 16,
         prefer: (n) => n.id === 'catador-morro',
       })?.id,
     ).toBe('dona-nair');
@@ -191,7 +191,7 @@ describe('exit pads', () => {
     for (let x = 8; x <= 20; x += 1) {
       expect(tileAt(torre, x, 12)).not.toBe('exit');
     }
-    expect(tileAt(torre, 5, 12)).toBe('exit');
+    expect(tileAt(torre, 5, 18)).toBe('exit');
   });
 
   it('camera follows player within map bounds', () => {
@@ -328,7 +328,7 @@ describe('objectives', () => {
       unlocked: () => false,
     });
     expect(obj.text).toContain('Dona Nair');
-    expect(obj.targetX).toBe(13);
+    expect(obj.targetX).toBe(14);
     const travel = currentObjective({
       beats: STORY_BEATS,
       completed: [
@@ -474,7 +474,7 @@ describe('session story bet choice', () => {
   it('completes dialogue into bet and confirms', () => {
     const session = new GameSession(9);
     session.startNew();
-    session.player.setPosition(13, 14);
+    session.player.setPosition(14, 16);
     expect(session.interact()).toBe(true);
     expect(session.ui.is('dialogue')).toBe(true);
     expect(session.hasPendingStoryBet()).toBe(true);
@@ -519,14 +519,18 @@ describe('session deep paths', () => {
   });
 
   it('cancels bet and offers job from npc without beat', () => {
+    vi.useFakeTimers();
     const session = new GameSession(11);
     session.startNew();
     session.offerBet('agua-gelada');
     session.cancelBet();
     expect(session.ui.is('play')).toBe(true);
     session.story.completeBeat('boteco-nair');
-    session.player.setPosition(13, 14);
+    session.player.setPosition(14, 16);
+    session.noteInteractRelease();
+    vi.advanceTimersByTime(450);
     expect(session.interact()).toBe(true);
+    vi.useRealTimers();
   });
 
   it('blocks move into walls and mute volume', () => {

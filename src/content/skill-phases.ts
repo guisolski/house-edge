@@ -31,7 +31,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Chase Fio across the lajes — match his tile path.',
     target: 0,
     steps: 4,
-    sequence: ['↑', '→', '↑', '←'],
+    // Must match the on-screen pad (↑ → ↓ ←).
+    sequence: ['↑', '→', '↓', '←'],
     timerMs: 16_000,
     maxMisses: 2,
   },

@@ -41,38 +41,29 @@ export function dialogueVisibleLines(lines: DialogueLine[]): DialogueLine[] {
   return lines.slice(0, cut + 1);
 }
 
-export function paintDialogue(
-  panel: HTMLElement,
-  lines: DialogueLine[],
-  opts: {
-    onClose: () => void;
-    offerBet?: boolean;
-    onAcceptBet?: () => void;
-    onChoice?: (setsFlag?: string, reply?: string) => void;
-    /** Ignore Enter/activate on choices until this timestamp (ms). */
-    choiceArmAt?: number;
-    /** Block Close / skip until this timestamp (ms) — closing-line hold. */
-    holdCloseUntil?: number;
-  },
+type DialogueOpts = {
+  onClose: () => void;
+  offerBet?: boolean;
+  onAcceptBet?: () => void;
+  onChoice?: (setsFlag?: string, reply?: string) => void;
+  choiceArmAt?: number;
+  holdCloseUntil?: number;
+  closingLine?: boolean;
+};
+
+function fillDialogueActions(
+  actions: HTMLElement,
+  choices: DialogueLine['choices'] | undefined,
+  opts: DialogueOpts,
 ): void {
-  clearNode(panel);
-  const body = el('div', 'panel-body dialogue-body');
-  let pendingChoices: DialogueLine['choices'] | undefined;
-  for (const line of dialogueVisibleLines(lines)) {
-    body.appendChild(el('p', 'line', `${line.speaker}: ${line.text}`));
-    if (line.choices?.length) pendingChoices = line.choices;
-  }
-  const actions = el('div', 'panel-actions');
-  if (pendingChoices?.length && opts.onChoice) {
+  if (choices?.length && opts.onChoice) {
     const armAt = opts.choiceArmAt ?? 0;
-    // Mandatory choices: no Close — Enter/focus lands on the first option.
-    for (const c of pendingChoices) {
+    for (const c of choices) {
       const btn = button(c.label, () => {
         if (Date.now() < armAt) return;
         opts.onChoice?.(c.setsFlag, c.reply);
       });
       btn.classList.add('dialogue-choice');
-      // Swallow early Enter/Space so spam can't pick before arm.
       btn.addEventListener(
         'keydown',
         (e) => {
@@ -86,28 +77,64 @@ export function paintDialogue(
       );
       actions.appendChild(btn);
     }
-  } else if (opts.offerBet && opts.onAcceptBet) {
-    actions.append(
-      button(UI.takeBet, opts.onAcceptBet),
-      button(UI.walkAway, opts.onClose),
-    );
-  } else {
-    const holdUntil = opts.holdCloseUntil ?? 0;
-    const close = button(UI.close, () => {
-      if (Date.now() < holdUntil) return;
-      opts.onClose();
-    });
-    if (Date.now() < holdUntil) {
-      close.disabled = true;
-      const left = Math.max(0, holdUntil - Date.now());
-      window.setTimeout(() => {
-        close.disabled = false;
-      }, left);
-    }
-    actions.appendChild(close);
+    return;
   }
+  if (opts.offerBet && opts.onAcceptBet) {
+    const take = button(UI.takeBet, opts.onAcceptBet);
+    take.classList.add('btn-primary', 'btn-take-bet');
+    actions.append(take, button(UI.walkAway, opts.onClose));
+    return;
+  }
+  const holdUntil = opts.holdCloseUntil ?? 0;
+  const close = button(UI.close, () => {
+    if (Date.now() < holdUntil) return;
+    opts.onClose();
+  });
+  if (opts.closingLine) close.classList.add('btn-closing-continue');
+  if (Date.now() < holdUntil) {
+    close.disabled = true;
+    window.setTimeout(
+      () => {
+        close.disabled = false;
+        close.focus();
+      },
+      Math.max(0, holdUntil - Date.now()),
+    );
+  }
+  actions.appendChild(close);
+}
+
+export function paintDialogue(
+  panel: HTMLElement,
+  lines: DialogueLine[],
+  opts: DialogueOpts,
+): void {
+  clearNode(panel);
+  panel.classList.toggle('dialogue-closing', Boolean(opts.closingLine));
+  const body = el('div', 'panel-body dialogue-body');
+  let pendingChoices: DialogueLine['choices'] | undefined;
+  let lastLine: HTMLElement | null = null;
+  const visible = opts.closingLine ? lines : dialogueVisibleLines(lines);
+  for (const line of visible) {
+    const node = el(
+      'p',
+      opts.closingLine ? 'line dialogue-closing-line' : 'line',
+      `${line.speaker}: ${line.text}`,
+    );
+    body.appendChild(node);
+    lastLine = node;
+    if (line.choices?.length) pendingChoices = line.choices;
+  }
+  const actions = el('div', 'panel-actions');
+  fillDialogueActions(actions, pendingChoices, opts);
   panel.append(body, actions);
-  focusFirst(panel);
+  const primary = panel.querySelector('.btn-take-bet') as HTMLElement | null;
+  if (primary) primary.focus();
+  else focusFirst(panel);
+  requestAnimationFrame(() => {
+    body.scrollTop = body.scrollHeight;
+    lastLine?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  });
 }
 
 function lockpickControlHint(panel: HTMLElement): string {
@@ -226,24 +253,44 @@ function paintTimingSkill(
     body.appendChild(el('p', 'skill-clue skill-miss-hint', UI.needleMissHint));
   }
   let t = 0;
+  let settled = false;
   const speed = phase.needleSpeed ?? 0.8;
   const step = Math.max(0.015, 0.028 * speed);
   const tick = window.setInterval(() => {
     t = (t + step) % 1;
     needle.style.left = `${t * 100}%`;
   }, 32);
-  // Harness / e2e can freeze the needle before Stop without a frame race.
   meter.dataset.needleTick = String(tick);
-  actions.appendChild(
-    button('Stop!', () => {
-      window.clearInterval(tick);
-      // Capture the needle position at input time (no extra animation frame).
-      const raw = needle.style.left;
-      const pos = raw.endsWith('%') ? parseFloat(raw) / 100 : t;
-      session.submitSkill(Number.isFinite(pos) ? pos : t);
-      after();
-    }),
-  );
+  const stopAt = (pos: number): void => {
+    if (settled) return;
+    settled = true;
+    window.clearInterval(tick);
+    window.removeEventListener('keydown', onKey, true);
+    session.submitSkill(pos);
+    after();
+  };
+  const sampleNeedle = (): number => {
+    // Prefer the live style (e2e freezes the needle via left%) at input time.
+    const raw = needle.style.left;
+    if (raw.endsWith('%')) {
+      const v = parseFloat(raw) / 100;
+      if (Number.isFinite(v)) return v;
+    }
+    return t;
+  };
+  const onKey = (e: KeyboardEvent): void => {
+    if (e.repeat) return;
+    const stopKey =
+      e.key === 'Enter' || e.code === 'Enter' || e.key === ' ' || e.code === 'Space';
+    if (!stopKey) return;
+    e.preventDefault();
+    e.stopPropagation();
+    stopAt(sampleNeedle());
+  };
+  window.addEventListener('keydown', onKey, true);
+  const stopBtn = button('Stop!', () => stopAt(sampleNeedle()));
+  stopBtn.classList.add('btn-needle-stop');
+  actions.appendChild(stopBtn);
 }
 
 function paintChoiceSkill(

@@ -45,7 +45,7 @@ export const DISTRICTS: readonly DistrictDef[] = [
     unlockFlag: 'unlocked_torre',
     width: 40,
     height: 24,
-    // Clear of west Odds Avenue exit pad (5,12).
+    // Clear of west Odds Avenue exit pad (5,18).
     spawn: { x: 14, y: 14 },
     color: Palette.neonMagenta,
     accent: Palette.brasilYellow,

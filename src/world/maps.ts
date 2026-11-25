@@ -46,8 +46,10 @@ export type MapDef = {
 };
 
 export function tileAt(map: MapDef, x: number, y: number): TileKind {
-  if (x < 0 || y < 0 || x >= map.width || y >= map.height) return 'blocked';
-  return map.tiles[y * map.width + x] ?? 'blocked';
+  const tx = Math.floor(x);
+  const ty = Math.floor(y);
+  if (tx < 0 || ty < 0 || tx >= map.width || ty >= map.height) return 'blocked';
+  return map.tiles[ty * map.width + tx] ?? 'blocked';
 }
 
 export function isWalkable(map: MapDef, x: number, y: number): boolean {
@@ -544,10 +546,13 @@ function buildAvenida(): MapDef {
   rect({ tiles, w, x0: 1, y0: 15, x1: w - 2, y1: 19, kind: 'blocked' });
   rect({ tiles, w, x0: 12, y0: 9, x1: 34, y1: 10, kind: 'blocked' });
   rect({ tiles, w, x0: 12, y0: 13, x1: 34, y1: 14, kind: 'blocked' });
+  // Re-assert the cone corridor — never leave a mid-lane block at ~x9–11+.
+  rect({ tiles, w, x0: 1, y0: 11, x1: w - 2, y1: 12, kind: 'asphalt' });
   paintExitPad(tiles, w, 2, 12);
   paintExitPad(tiles, w, 43, 12);
   for (let x = 4; x < 42; x += 6) props.push({ x, y: 11, kind: 'lamp' });
-  props.push({ x: 20, y: 12, kind: 'moto' }, { x: 14, y: 11, kind: 'crate' });
+  // Props off the center walk row so the corridor stays clear.
+  props.push({ x: 20, y: 12, kind: 'moto' }, { x: 8, y: 11, kind: 'crate' });
   // Solid-looking police barriers / shipping containers on sealed strips.
   for (let x = 12; x <= 34; x += 2) {
     props.push({ x, y: 9, kind: 'barrier' }, { x, y: 14, kind: 'barrier' });
@@ -586,8 +591,8 @@ function buildTorre(): MapDef {
   seal(tiles, w, h);
   rect({ tiles, w, x0: 2, y0: 2, x1: w - 3, y1: h - 3, kind: 'interior' });
   rect({ tiles, w, x0: 4, y0: 10, x1: 35, y1: 14, kind: 'plaza' });
-  // Single door inset from the west wall — readable EXIT sign + destination.
-  paintExitPad(tiles, w, 5, 12);
+  // South-west exit — clear of elevator (24,11) so west walks don't dump to Odds.
+  paintExitPad(tiles, w, 5, 18);
   const tables: { x: number; y: number; style: number; bw: number; bh: number }[] = [
     { x: 8, y: 3, style: 0, bw: 3, bh: 2 },
     { x: 14, y: 3, style: 1, bw: 4, bh: 2 },
@@ -628,7 +633,7 @@ function buildTorre(): MapDef {
       { x: 12, y: 9, label: 'PIT FLOOR', color: '#ff2bd6' },
       // Above the car (24,11) — tagless elevator NPC stands on the pad.
       { x: 24, y: 7, label: 'ELEVATOR ↑', color: '#c8d0d8' },
-      { x: 5, y: 10, label: '> Odds Avenue', color: '#2bfff2' },
+      { x: 5, y: 16, label: '> Odds Avenue', color: '#2bfff2' },
     ],
     props,
     landmark: { x: 18, y: 8, kind: 'casa-tower' },
