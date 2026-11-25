@@ -35,7 +35,11 @@ export function currentObjective(ctx: ObjectiveCtx): Objective {
 /** Public helper so NPCs can redirect the player to the live objective. */
 export function nextBeat(ctx: ObjectiveCtx): StoryBeat | undefined {
   return ctx.beats.find(
-    (b) => !ctx.completed.includes(b.id) && b.requiredFlags.every((f) => ctx.flags(f)),
+    (b) =>
+      !b.optional &&
+      !ctx.completed.includes(b.id) &&
+      !(b.skipIfFlag && ctx.flags(b.skipIfFlag)) &&
+      b.requiredFlags.every((f) => ctx.flags(f)),
   );
 }
 
@@ -44,7 +48,7 @@ function districtName(id: string): string {
 }
 
 function beatNpc(ctx: ObjectiveCtx, beat: StoryBeat): WorldNpc | undefined {
-  return ctx.npcs.find((n) => n.beatId === beat.id);
+  return ctx.npcs.find((n) => n.beatId === beat.id || n.extraBeatIds?.includes(beat.id));
 }
 
 function travelExit(ctx: ObjectiveCtx, next: StoryBeat): DistrictExit | undefined {
@@ -77,7 +81,9 @@ function travelObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
 
 function npcObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
   const npc = ctx.npcs.find(
-    (n) => n.beatId === next.id && n.districtId === ctx.districtId,
+    (n) =>
+      n.districtId === ctx.districtId &&
+      (n.beatId === next.id || n.extraBeatIds?.includes(next.id)),
   );
   if (npc) {
     return {

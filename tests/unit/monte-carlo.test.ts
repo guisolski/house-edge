@@ -36,7 +36,9 @@ function simulatePlaythrough(seed: number): {
     }
     const next = STORY_BEATS.find(
       (b) =>
+        !b.optional &&
         !session.story.getCompleted().includes(b.id) &&
+        !(b.skipIfFlag && session.story.getFlag(b.skipIfFlag)) &&
         b.requiredFlags.every((f) => session.story.getFlag(f)),
     );
     if (!next) break;
@@ -103,8 +105,8 @@ describe('Monte Carlo story completion', () => {
     expect(completed.length / runs).toBeGreaterThanOrEqual(0.95);
     const bets = completed.map((r) => r.storyBets).sort((a, b) => a - b);
     const median = bets[Math.floor(bets.length / 2)] ?? Infinity;
-    // 17 story bets if always win; pity + retries should keep median reasonable.
-    expect(median).toBeLessThanOrEqual(42);
+    // ~19 story bets if always win (incl. twist + Morro return); pity keeps median reasonable.
+    expect(median).toBeLessThanOrEqual(48);
   });
 
   it('zero-credit negative-rep state still has a safe job', () => {

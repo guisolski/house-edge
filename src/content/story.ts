@@ -231,15 +231,41 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     ],
   },
   {
+    id: 'feira-radio',
+    title: 'Pirate radio odds',
+    districtId: 'feira-central',
+    requiredFlags: ['forro_ok'],
+    setsFlags: ['radio_ok'],
+    betId: 'feira-radio',
+    dialogue: [
+      {
+        speaker: 'Radio Pirate',
+        text: 'Forró’s shaking the meters. My pirate stack needs one more odd — bet the next track jumps the Casa noise filter.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'If the filter trips, militia hears static instead of Luna’s handoff. I’m in.',
+      },
+      {
+        speaker: 'Radio Pirate',
+        text: 'Win and the calçadão stays loud for ten quiet minutes. Lose and we sweat the sniffer vans.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Ten minutes is enough. Roll it.',
+      },
+    ],
+  },
+  {
     id: 'feira-courier',
     title: 'Calçadão courier tip',
     districtId: 'feira-central',
-    requiredFlags: ['forro_ok'],
+    requiredFlags: ['radio_ok'],
     setsFlags: ['courier_ok'],
     dialogue: [
       {
         speaker: 'Lavador da Feira',
-        text: 'Party’s loud enough. Luna’s waiting with the pendrive — but militia sniffs USB heat.',
+        text: 'Radio’s covering the square. Luna’s waiting with the pendrive — but militia still sniffs USB heat.',
       },
       {
         speaker: 'Rita Odds',
@@ -247,7 +273,11 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Lavador da Feira',
-        text: 'Stay on the asphalt strip. Stalls block the side alleys. She’s east of the FEIRA sign.',
+        text: 'Stay on the asphalt strip. Stalls block the side alleys. She’s east of the FEIRA sign — past the mango crates.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Asphalt to Luna. Got it.',
       },
     ],
   },
@@ -292,7 +322,11 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Rita Odds',
-        text: 'If it’s bait, I still walk the boulevard. Truth or trap — Capita’s checkpoint is next.',
+        text: 'If it’s bait, I still walk the boulevard. Truth or trap — I need eyes on Capita’s checkpoint next.',
+      },
+      {
+        speaker: 'Mole Contact',
+        text: 'Whatever you decide, don’t tell the influencer. Their glow’s on Casa payroll.',
       },
     ],
   },
@@ -310,7 +344,11 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Rita Odds',
-        text: 'I’ll take pixo over a stamp. Send the odd.',
+        text: 'I’ll take pixo over a stamp. The boulevard already chose a side.',
+      },
+      {
+        speaker: 'Captain Vespera',
+        text: 'Then wager the spray. Win and the militia looks the other way — for a block.',
       },
     ],
   },
@@ -402,7 +440,57 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Rita Odds',
-        text: 'Then I buy the mic back with scandal. Tower elevator opens when this trends.',
+        text: 'Then I buy the mic back with scandal. But first I go home — the hill needs to hear this before the tower.',
+      },
+    ],
+  },
+  {
+    id: 'morro-return-nair',
+    title: 'Return: trust the hill',
+    districtId: 'morro-neon',
+    requiredFlags: ['unlocked_torre', 'escandalo_aberto'],
+    setsFlags: ['morro_return_ok', 'trusted_hill'],
+    skipIfFlag: 'morro_return_ok',
+    betId: 'morro-return-nair',
+    dialogue: [
+      {
+        speaker: 'Dona Nair',
+        text: 'Scandal’s trending and you’re back for water. Good. The hill decides who walks into that tower.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Luna’s file, Fio’s wires, your ice — all of it. I need the hill behind me.',
+      },
+      {
+        speaker: 'Dona Nair',
+        text: 'Bet that the lajes hold. Win and we back you. Or talk to Fio if you’d rather cut your own deal.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'I’m not cutting the hill out. Place it.',
+      },
+    ],
+  },
+  {
+    id: 'morro-return-fio',
+    title: 'Return: cut a private wire',
+    districtId: 'morro-neon',
+    requiredFlags: ['unlocked_torre', 'escandalo_aberto'],
+    setsFlags: ['morro_return_ok', 'cut_private'],
+    skipIfFlag: 'morro_return_ok',
+    betId: 'morro-return-fio',
+    dialogue: [
+      {
+        speaker: 'Fio Ladrão',
+        text: 'Tower’s open and you’re sniffing copper again. I can ghost you a private line past security — for a price.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'A private line means fewer people know. Safer — or lonelier.',
+      },
+      {
+        speaker: 'Fio Ladrão',
+        text: 'Bet the splice. Win and you climb alone. Nair’s path is the loud one if you prefer company.',
       },
     ],
   },
@@ -410,7 +498,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     id: 'torre-vip',
     title: 'VIP floor',
     districtId: 'torre-casa',
-    requiredFlags: ['unlocked_torre', 'escandalo_aberto'],
+    requiredFlags: ['unlocked_torre', 'escandalo_aberto', 'morro_return_ok'],
     setsFlags: ['vip_ok'],
     betId: 'torre-vip',
     dialogue: [
@@ -421,6 +509,10 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       {
         speaker: 'Rita Odds',
         text: 'One quiet hand at the top, then I face Augusto himself.',
+      },
+      {
+        speaker: 'VIP Host',
+        text: 'Whatever you decided on the hill — trust or silence — the rake doesn’t care. Place it.',
       },
     ],
   },
@@ -445,6 +537,146 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       {
         speaker: 'Augusto Casa',
         text: 'One last odd, then. High stakes. No appeals.',
+      },
+    ],
+  },
+  {
+    id: 'epilogue-laje',
+    title: 'Epilogue on the laje',
+    districtId: 'morro-neon',
+    requiredFlags: ['casa_quebrada'],
+    setsFlags: ['epilogue_done'],
+    dialogue: [
+      {
+        speaker: 'Dona Nair',
+        text: 'Tower’s quiet. Fair’s loud. Avenue’s confused. Sit. Water’s on the house — for once.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'For once. The hill still has debts, but they’re ours to name.',
+      },
+      {
+        speaker: 'Luna Pixel',
+        text: 'Feed’s still pirate. Side jobs stay open if you want another odd. The city doesn’t clock out.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Neither do I. But tonight the laje belongs to us.',
+      },
+    ],
+  },
+  // —— Optional side quests (small rewards, never gate the main path) ——
+  {
+    id: 'side-morro-copper',
+    title: 'Spare copper odd',
+    districtId: 'morro-neon',
+    requiredFlags: ['falou_nair'],
+    setsFlags: ['side_morro_ok'],
+    betId: 'side-morro-copper',
+    optional: true,
+    dialogue: [
+      {
+        speaker: 'Catador do Morro',
+        text: 'Spare wire on the lower laje. Bet the haul weight — small credits, no corp meter.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'I’ll take a quiet odd. Keep the bag light.',
+      },
+    ],
+  },
+  {
+    id: 'side-morro-tank',
+    title: 'Water tank odd',
+    districtId: 'morro-neon',
+    requiredFlags: ['antena_ok'],
+    setsFlags: ['side_morro_tank'],
+    betId: 'side-morro-tank',
+    optional: true,
+    dialogue: [
+      {
+        speaker: 'Antena Tech',
+        text: 'Tank’s half empty again. Bet whether tonight’s refill arrives before the hill wakes thirsty.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Water shouldn’t be a wager. Tonight it is — place it.',
+      },
+    ],
+  },
+  {
+    id: 'side-feira-mango',
+    title: 'Mango stall odd',
+    districtId: 'feira-central',
+    requiredFlags: ['falou_kiko'],
+    setsFlags: ['side_feira_ok'],
+    betId: 'side-feira-mango',
+    optional: true,
+    dialogue: [
+      {
+        speaker: 'Barraca Tia',
+        text: 'Mangoes or moths — tonight’s crate is a gamble. Small stake, sweet payout.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'If it’s ripe, I’m buying. If not, I’m learning.',
+      },
+    ],
+  },
+  {
+    id: 'side-feira-ice',
+    title: 'Ice cart odd',
+    districtId: 'feira-central',
+    requiredFlags: ['festa_rolando'],
+    setsFlags: ['side_feira_ice'],
+    betId: 'side-feira-ice',
+    optional: true,
+    dialogue: [
+      {
+        speaker: 'Kiko',
+        text: 'Ice cart’s late and the pastel oil’s hot. Bet whether the blocks show before the fryer dies.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Hot oil, cold wager. Fine.',
+      },
+    ],
+  },
+  {
+    id: 'side-avenida-neon',
+    title: 'Neon photo odd',
+    districtId: 'avenida-odds',
+    requiredFlags: ['passou_checkpoint'],
+    setsFlags: ['side_avenida_ok'],
+    betId: 'side-avenida-neon',
+    optional: true,
+    dialogue: [
+      {
+        speaker: 'Neon Snap',
+        text: 'Corp billboards pay per fake smile. Bet whether street neon outshines their LED.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Street light never needed a sponsor. Roll it.',
+      },
+    ],
+  },
+  {
+    id: 'side-torre-tip',
+    title: 'Dealer tip odd',
+    districtId: 'torre-casa',
+    requiredFlags: ['vip_ok'],
+    setsFlags: ['side_torre_ok'],
+    betId: 'side-torre-tip',
+    optional: true,
+    dialogue: [
+      {
+        speaker: 'Busboy',
+        text: 'High rollers tip in chips that “fall.” Bet you can pocket one before cameras blink.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Quiet hand, quiet exit. Let’s see.',
       },
     ],
   },

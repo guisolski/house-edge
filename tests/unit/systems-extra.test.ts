@@ -79,7 +79,21 @@ describe('ui state machine', () => {
   });
 });
 
-describe('maps and interaction', () => {
+function countExitPadsNear(
+  map: ReturnType<typeof buildDistrictMap>,
+  x: number,
+  y: number,
+): number {
+  let n = 0;
+  for (let dy = -2; dy <= 2; dy += 1) {
+    for (let dx = -2; dx <= 2; dx += 1) {
+      if (tileAt(map, x + dx, y + dy) === 'exit') n += 1;
+    }
+  }
+  return n;
+}
+
+describe('city maps', () => {
   it('builds walkable city maps with exits and npcs', () => {
     const map = buildDistrictMap('morro-neon');
     expect(buildDistrictMap('feira-central').props.length).toBeGreaterThan(0);
@@ -97,12 +111,17 @@ describe('maps and interaction', () => {
     expect(tileAt(torre, 0, 0)).toBe('blocked');
     expect(tileAt(torre, 0, 13)).toBe('blocked');
     expect(tileAt(torre, 8, 13)).not.toBe('blocked');
-    expect(tileAt(map, 38, 15)).toBe('exit');
+    expect(tileAt(map, 38, 16)).toBe('exit');
     expect(map.buildings.length).toBeGreaterThan(8);
     expect(map.props.length).toBeGreaterThan(5);
     expect(map.signs.every((s) => s.label.length > 2)).toBe(true);
     expect(map.terraceEdges?.length ?? 0).toBeGreaterThan(0);
-    // Stair spine is 6 tiles wide and walkable through cliff rows.
+  });
+});
+
+describe('map queries', () => {
+  it('keeps Morro stairs walkable and NPC/exit queries tight', () => {
+    const map = buildDistrictMap('morro-neon');
     for (let x = 18; x <= 23; x += 1) {
       expect(tileAt(map, x, 5)).toBe('stairs');
       expect(isWalkable(map, x, 5)).toBe(true);
@@ -133,9 +152,33 @@ describe('maps and interaction', () => {
         prefer: (n) => n.id === 'catador-morro',
       })?.id,
     ).toBe('catador-morro');
-    expect(nearestExit(exits, 'morro-neon', 38, 15)?.toDistrict).toBe('feira-central');
+    expect(nearestExit(exits, 'morro-neon', 38, 16)?.toDistrict).toBe('feira-central');
     expect(nearestExit(exits, 'morro-neon', 0, 0)).toBeNull();
     expect(inRange({ x: 0, y: 0, tx: 1, ty: 0 })).toBe(true);
+  });
+});
+
+describe('exit pads', () => {
+  it('every exit zone is a single tile overlapping a visible EXIT sign', () => {
+    const exits = districtExits();
+    expect(exits.length).toBeGreaterThanOrEqual(6);
+    for (const exit of exits) {
+      const map = buildDistrictMap(exit.districtId);
+      expect(tileAt(map, exit.x, exit.y)).toBe('exit');
+      expect(countExitPadsNear(map, exit.x, exit.y)).toBe(1);
+      const sign = map.signs.find(
+        (s) =>
+          s.label.startsWith('EXIT') && Math.hypot(s.x - exit.x, s.y - exit.y) <= 2.5,
+      );
+      expect(sign, `${exit.id} needs EXIT sign on/near pad`).toBeTruthy();
+    }
+    const torre = buildDistrictMap('torre-casa');
+    for (let x = 4; x <= 20; x += 1) {
+      expect(tileAt(torre, x, 12)).not.toBe('exit');
+      expect(tileAt(torre, x, 11)).not.toBe('exit');
+      expect(tileAt(torre, x, 13)).not.toBe('exit');
+    }
+    expect(tileAt(torre, 2, 12)).toBe('exit');
   });
 
   it('camera follows player within map bounds', () => {
@@ -266,7 +309,7 @@ describe('session deep paths', () => {
     const session = new GameSession(10);
     session.startNew();
     session.world.unlock('feira-central');
-    session.player.setPosition(38, 15);
+    session.player.setPosition(38, 16);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
     expect(session.interact()).toBe(true);
     expect(session.player.getStats().districtId).toBe('feira-central');

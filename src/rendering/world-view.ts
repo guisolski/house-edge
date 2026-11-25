@@ -13,6 +13,7 @@ import {
   makeBlocked,
   makeBuilding,
   makeCrate,
+  makeCrowd,
   makeExitPad,
   makeGrass,
   makeInterior,
@@ -58,7 +59,10 @@ type Baked = {
   exit: HTMLCanvasElement;
   landmark: Map<string, HTMLCanvasElement>;
   sign: Map<string, HTMLCanvasElement>;
-  props: Record<'moto' | 'kiosk' | 'wire' | 'tank' | 'lamp' | 'crate', HTMLCanvasElement>;
+  props: Record<
+    'moto' | 'kiosk' | 'wire' | 'tank' | 'lamp' | 'crate' | 'crowd',
+    HTMLCanvasElement
+  >;
   glow: Map<string, HTMLCanvasElement>;
 };
 
@@ -238,6 +242,7 @@ function bakeAll(): Baked {
       tank: bakeSprite(makeWaterTank(), SCALE),
       lamp: bakeSprite(makeStreetLamp(), SCALE),
       crate: bakeSprite(makeCrate(), SCALE),
+      crowd: bakeSprite(makeCrowd(), SCALE),
     },
     glow: new Map(),
   };
@@ -276,7 +281,8 @@ function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCa
   paintBackdrop(ctx, canvas.width, canvas.height, stats.districtId);
   const layer = state.mapCache?.layer;
   if (layer) ctx.drawImage(layer, -viewCamX, -viewCamY);
-  drawActors(ctx, state, frame, viewCamX, viewCamY);
+  // Buildings, props, landmark, and characters share one y-sort pass.
+  drawSortedScene(ctx, state, frame, viewCamX, viewCamY);
   paintPlayOverlays({
     ctx,
     state,
@@ -379,14 +385,11 @@ function bakeMapLayer(map: MapDef, baked: Baked): HTMLCanvasElement {
   paintStairSides(ctx, map);
   paintMapEdges(ctx, map);
   paintTerraceEdges(ctx, map);
-  paintBuildings(ctx, map, baked);
-  // Signs painted each frame on top — keep cache key warm in bakeAll.
+  // Tall props/buildings are drawn per-frame with actors (shared y-sort).
   for (const s of map.signs) {
     const key = `${s.label}|${s.color}`;
     if (!baked.sign.has(key)) baked.sign.set(key, bakeSignWithText(s.label, s.color));
   }
-  paintProps(ctx, map, baked);
-  paintLandmark(ctx, map, baked);
   ctx.fillStyle = '#2bfff210';
   ctx.fillRect(0, 0, layer.width, layer.height);
   return layer;
@@ -460,25 +463,6 @@ function paintStairSides(ctx: CanvasRenderingContext2D, map: MapDef): void {
   }
 }
 
-function paintBuildings(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): void {
-  for (const b of map.buildings) {
-    const set = baked.building[b.kind] ?? baked.building.morro!;
-    const spr = set[b.style % set.length]!;
-    const x = b.x * TILE_PX;
-    const y = b.y * TILE_PX - spr.height + TILE_PX;
-    // Flip every other facade to break left/right repetition.
-    if ((b.x + b.style) % 2 === 1) {
-      ctx.save();
-      ctx.translate(x + spr.width, y);
-      ctx.scale(-1, 1);
-      ctx.drawImage(spr, 0, 0);
-      ctx.restore();
-    } else {
-      blitImage(ctx, spr, x, y);
-    }
-  }
-}
-
 function paintSignsScreen(
   ctx: CanvasRenderingContext2D,
   map: MapDef,
@@ -495,22 +479,6 @@ function paintSignsScreen(
     }
     blitImage(ctx, img, s.x * TILE_PX - camX, s.y * TILE_PX - 28 - camY);
   }
-}
-
-function paintProps(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): void {
-  for (const p of map.props) {
-    blitImage(ctx, baked.props[p.kind], p.x * TILE_PX, p.y * TILE_PX - 8);
-  }
-}
-
-function paintLandmark(ctx: CanvasRenderingContext2D, map: MapDef, baked: Baked): void {
-  const lm = baked.landmark.get(map.landmark.kind) ?? baked.landmark.get('led-tower')!;
-  blitImage(
-    ctx,
-    lm,
-    map.landmark.x * TILE_PX,
-    map.landmark.y * TILE_PX - lm.height + TILE_PX,
-  );
 }
 
 /** Crisp pixel sign: 5×7 bitmap font at integer scale (never downscaled AI art). */
@@ -602,14 +570,14 @@ function drawPlayerMarker(o: {
   o.ctx.fill();
 }
 
-type ActorBlit = {
+type SortBlit = {
   y: number;
   x: number;
-  img: HTMLCanvasElement;
-  player?: boolean;
+  draw: () => void;
 };
 
-function drawActors(
+/** Buildings, props, landmark, NPCs, player — one foot-y sort. */
+function drawSortedScene(
   ctx: CanvasRenderingContext2D,
   state: ViewState,
   frame: number,
@@ -617,50 +585,198 @@ function drawActors(
   camY: number,
 ): void {
   const { session, baked } = state;
+  const map = session.getMap();
   const stats = session.player.getStats();
   const anim = Math.floor(frame / 10) % 2;
-  const actors: ActorBlit[] = [];
-  for (const npc of session.npcs) {
-    if (npc.districtId !== stats.districtId) continue;
-    actors.push({ y: npc.y, x: npc.x, img: npcSprite(baked, npc, anim) });
-  }
-  const playerImg = baked.player[anim]!;
-  actors.push({ y: stats.y, x: stats.x, img: playerImg, player: true });
-  // Lower on screen (higher tile y) draws in front when sprites overlap.
-  actors.sort((a, b) => a.y - b.y || a.x - b.x);
-  const vw = ctx.canvas.width;
-  const vh = ctx.canvas.height;
   const bob = Math.sin(frame / 12) * 1.5;
-  for (const it of actors) {
-    blitActor({ ctx, it, camX, camY, bob, vw, vh });
+  const view = { ctx, camX, camY, bob, vw: ctx.canvas.width, vh: ctx.canvas.height };
+  const items: SortBlit[] = [];
+  pushBuildingSorts(items, map, baked, ctx, camX, camY);
+  pushPropSorts(items, map, baked, ctx, camX, camY);
+  pushLandmarkSort(items, map, baked, ctx, camX, camY);
+  pushNpcSorts(items, session, baked, stats.districtId, anim, view);
+  pushPlayerSort(items, baked, stats, anim, view);
+  items.sort((a, b) => a.y - b.y || a.x - b.x);
+  for (const it of items) it.draw();
+}
+
+type SortView = {
+  ctx: CanvasRenderingContext2D;
+  camX: number;
+  camY: number;
+  bob: number;
+  vw: number;
+  vh: number;
+};
+
+function pushNpcSorts(
+  items: SortBlit[],
+  session: ViewState['session'],
+  baked: Baked,
+  districtId: string,
+  anim: number,
+  view: SortView,
+): void {
+  for (const npc of session.npcs) {
+    if (npc.districtId !== districtId) continue;
+    const img = npcSprite(baked, npc, anim);
+    items.push({
+      y: npc.y,
+      x: npc.x,
+      draw: () =>
+        blitSortedSprite({
+          ctx: view.ctx,
+          img,
+          tx: npc.x,
+          ty: npc.y,
+          camX: view.camX,
+          camY: view.camY,
+          bob: view.bob,
+          vw: view.vw,
+          vh: view.vh,
+        }),
+    });
   }
 }
 
-function blitActor(o: {
+function pushPlayerSort(
+  items: SortBlit[],
+  baked: Baked,
+  stats: { x: number; y: number },
+  anim: number,
+  view: SortView,
+): void {
+  const playerImg = baked.player[anim]!;
+  items.push({
+    y: stats.y,
+    x: stats.x,
+    draw: () => {
+      drawPlayerMarker({
+        ctx: view.ctx,
+        x: stats.x,
+        y: stats.y,
+        img: playerImg,
+        camX: view.camX,
+        camY: view.camY,
+        bob: view.bob,
+      });
+      blitSortedSprite({
+        ctx: view.ctx,
+        img: playerImg,
+        tx: stats.x,
+        ty: stats.y,
+        camX: view.camX,
+        camY: view.camY,
+        bob: view.bob,
+        vw: view.vw,
+        vh: view.vh,
+      });
+    },
+  });
+}
+
+function pushBuildingSorts(
+  items: SortBlit[],
+  map: MapDef,
+  baked: Baked,
+  ctx: CanvasRenderingContext2D,
+  camX: number,
+  camY: number,
+): void {
+  for (const b of map.buildings) {
+    const set = baked.building[b.kind] ?? baked.building.morro!;
+    const spr = set[b.style % set.length]!;
+    const footY = b.y + b.h - 1;
+    items.push({
+      y: footY,
+      x: b.x,
+      draw: () => drawBuildingSprite(ctx, b, spr, camX, camY),
+    });
+  }
+}
+
+function drawBuildingSprite(
+  ctx: CanvasRenderingContext2D,
+  b: MapDef['buildings'][number],
+  spr: HTMLCanvasElement,
+  camX: number,
+  camY: number,
+): void {
+  const x = b.x * TILE_PX - camX;
+  const y = b.y * TILE_PX - spr.height + TILE_PX - camY;
+  if ((b.x + b.style) % 2 === 1) {
+    ctx.save();
+    ctx.translate(x + spr.width, y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(spr, 0, 0);
+    ctx.restore();
+    return;
+  }
+  blitImage(ctx, spr, x, y);
+}
+
+function pushPropSorts(
+  items: SortBlit[],
+  map: MapDef,
+  baked: Baked,
+  ctx: CanvasRenderingContext2D,
+  camX: number,
+  camY: number,
+): void {
+  for (const p of map.props) {
+    const img = baked.props[p.kind];
+    // Same foot-y anchor as buildings / actors (tall lamps, crowds, kiosks).
+    items.push({
+      y: p.y,
+      x: p.x,
+      draw: () =>
+        blitImage(
+          ctx,
+          img,
+          p.x * TILE_PX - camX,
+          p.y * TILE_PX - img.height + TILE_PX - camY,
+        ),
+    });
+  }
+}
+
+function pushLandmarkSort(
+  items: SortBlit[],
+  map: MapDef,
+  baked: Baked,
+  ctx: CanvasRenderingContext2D,
+  camX: number,
+  camY: number,
+): void {
+  const lm = baked.landmark.get(map.landmark.kind) ?? baked.landmark.get('led-tower')!;
+  items.push({
+    y: map.landmark.y,
+    x: map.landmark.x,
+    draw: () =>
+      blitImage(
+        ctx,
+        lm,
+        map.landmark.x * TILE_PX - camX,
+        map.landmark.y * TILE_PX - lm.height + TILE_PX - camY,
+      ),
+  });
+}
+
+function blitSortedSprite(p: {
   ctx: CanvasRenderingContext2D;
-  it: ActorBlit;
+  img: HTMLCanvasElement;
+  tx: number;
+  ty: number;
   camX: number;
   camY: number;
   bob: number;
   vw: number;
   vh: number;
 }): void {
-  const ox = o.it.x * TILE_PX - o.camX;
-  const oy = o.it.y * TILE_PX - o.camY - (o.it.img.height - TILE_PX) + o.bob;
-  if (ox + o.it.img.width < 0 || oy + o.it.img.height < 0) return;
-  if (ox > o.vw || oy > o.vh) return;
-  if (o.it.player) {
-    drawPlayerMarker({
-      ctx: o.ctx,
-      x: o.it.x,
-      y: o.it.y,
-      img: o.it.img,
-      camX: o.camX,
-      camY: o.camY,
-      bob: o.bob,
-    });
-  }
-  blitImage(o.ctx, o.it.img, ox, oy);
+  const ox = p.tx * TILE_PX - p.camX;
+  const oy = p.ty * TILE_PX - p.camY - (p.img.height - TILE_PX) + p.bob;
+  if (ox + p.img.width < 0 || oy + p.img.height < 0 || ox > p.vw || oy > p.vh) return;
+  blitImage(p.ctx, p.img, ox, oy);
 }
 
 type GlowBlit = {

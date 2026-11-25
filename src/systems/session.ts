@@ -7,7 +7,7 @@ import { StorySystem } from './story';
 import { WorldSystem } from './world';
 import { UpgradeSystem } from './upgrade';
 import { DISTRICTS } from '../content/districts';
-import { STORY_BEATS } from '../content/story';
+import { STORY_BEATS, getBeat } from '../content/story';
 import { getBet } from '../content/bets';
 import { getJob } from './grind';
 import { createDefaultSave, loadFromStorage, saveToStorage } from './save';
@@ -17,6 +17,7 @@ import {
   districtNpcs,
   nearestExit,
   nearestNpc,
+  npcStoryBeatIds,
   type DistrictExit,
   type WorldNpc,
 } from './interaction';
@@ -127,7 +128,7 @@ export class GameSession {
       districtId: s.districtId,
       x: s.x,
       y: s.y,
-      prefer: (npc) => Boolean(npc.beatId && available.has(npc.beatId)),
+      prefer: (npc) => npcStoryBeatIds(npc).some((id) => available.has(id)),
     });
   }
 
@@ -458,29 +459,35 @@ export class GameSession {
 
   private interactNpc(npc: WorldNpc): boolean {
     this.bus.emit('npc:interacted', { npcId: npc.id });
-    if (npc.beatId) {
-      const available = this.story.availableBeats(npc.districtId);
-      if (available.some((b) => b.id === npc.beatId)) {
-        return this.beginStoryBeat(npc.beatId);
-      }
-      // Incomplete beat that isn't ready yet — don't fall through to side-job bet.
-      if (!this.story.getCompleted().includes(npc.beatId)) {
-        const tip = this.objective().text;
-        this.bus.emit('ui:toast', {
-          message: `${npc.name}: Not now — ${tip}`,
-          kind: 'info',
-        });
-        return false;
-      }
+    if (this.tryNpcStory(npc)) return true;
+    if (this.npcStoryBlocksRematch(npc)) {
+      this.toastNpcBusy(npc);
+      return false;
     }
     if (npc.jobBetId) return this.offerBet(npc.jobBetId);
     if (npc.safeJobId) return this.doSafeJob(npc.safeJobId);
-    const tip = this.objective().text;
+    this.toastNpcBusy(npc);
+    return false;
+  }
+
+  private tryNpcStory(npc: WorldNpc): boolean {
+    const available = this.story.availableBeats(npc.districtId);
+    const ready = npcStoryBeatIds(npc).find((id) => available.some((b) => b.id === id));
+    return ready ? this.beginStoryBeat(ready) : false;
+  }
+
+  private npcStoryBlocksRematch(npc: WorldNpc): boolean {
+    const primary = npc.beatId ? getBeat(npc.beatId) : undefined;
+    return Boolean(
+      primary && !primary.optional && !this.story.getCompleted().includes(primary.id),
+    );
+  }
+
+  private toastNpcBusy(npc: WorldNpc): void {
     this.bus.emit('ui:toast', {
-      message: `${npc.name}: Not now — ${tip}`,
+      message: `${npc.name}: Not now — ${this.objective().text}`,
       kind: 'info',
     });
-    return false;
   }
 
   private beginStoryBeat(beatId: string): boolean {

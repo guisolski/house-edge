@@ -34,13 +34,29 @@ describe('StorySystem', () => {
     bus.on('story:ended', ended);
     const story = new StorySystem(bus, STORY_BEATS);
     story.hydrate(
-      { unlocked_torre: true, escandalo_aberto: true, vip_ok: true },
+      {
+        unlocked_torre: true,
+        escandalo_aberto: true,
+        vip_ok: true,
+        morro_return_ok: true,
+      },
       STORY_BEATS.filter((b) => b.id !== 'torre-final').map((b) => b.id),
     );
     const beat = story.startBeat('torre-final');
     expect(beat).not.toBeNull();
     story.completeBeat('torre-final');
     expect(ended).toHaveBeenCalledWith({ endingId: 'povo-no-controle' });
+  });
+
+  it('hides sibling Morro return branch via skipIfFlag', () => {
+    const story = new StorySystem(new EventBus(), STORY_BEATS);
+    story.hydrate(
+      { unlocked_torre: true, escandalo_aberto: true, morro_return_ok: true },
+      ['morro-return-nair'],
+    );
+    const ids = story.availableBeats('morro-neon').map((b) => b.id);
+    expect(ids).not.toContain('morro-return-nair');
+    expect(ids).not.toContain('morro-return-fio');
   });
 });
 

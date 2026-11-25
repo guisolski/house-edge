@@ -7,10 +7,18 @@ export type WorldNpc = {
   x: number;
   y: number;
   beatId?: string;
+  /** Extra story beats this NPC can start (return arcs, side quests). */
+  extraBeatIds?: string[];
   jobBetId?: string;
   safeJobId?: string;
   color: string;
 };
+
+export function npcStoryBeatIds(npc: WorldNpc): string[] {
+  return [npc.beatId, ...(npc.extraBeatIds ?? [])].filter((id): id is string =>
+    Boolean(id),
+  );
+}
 
 export type DistrictExit = {
   id: string;
@@ -32,6 +40,7 @@ const NPCS: readonly WorldNpc[] = [
     x: 13,
     y: 14,
     beatId: 'boteco-nair',
+    extraBeatIds: ['morro-return-nair', 'epilogue-laje'],
     jobBetId: 'agua-gelada',
     color: '#1faa5a',
   },
@@ -42,6 +51,7 @@ const NPCS: readonly WorldNpc[] = [
     x: 10,
     y: 10,
     beatId: 'morro-antena',
+    extraBeatIds: ['side-morro-tank'],
     jobBetId: 'antena-sinal',
     color: '#b8ff2b',
   },
@@ -61,6 +71,7 @@ const NPCS: readonly WorldNpc[] = [
     x: 18,
     y: 10,
     beatId: 'morro-fios',
+    extraBeatIds: ['morro-return-fio'],
     jobBetId: 'fio-corrida',
     color: '#ff8c42',
   },
@@ -80,6 +91,7 @@ const NPCS: readonly WorldNpc[] = [
     districtId: 'morro-neon',
     x: 4,
     y: 16,
+    extraBeatIds: ['side-morro-copper'],
     safeJobId: 'safe-morro-neon',
     color: '#a0a0a0',
   },
@@ -90,6 +102,7 @@ const NPCS: readonly WorldNpc[] = [
     x: 12,
     y: 14,
     beatId: 'feira-kiko',
+    extraBeatIds: ['side-feira-ice'],
     jobBetId: 'pastel-surpresa',
     color: '#f5c518',
   },
@@ -141,6 +154,25 @@ const NPCS: readonly WorldNpc[] = [
     beatId: 'feira-courier',
     safeJobId: 'safe-feira-central',
     color: '#6ec8e8',
+  },
+  {
+    id: 'radio-pirate',
+    name: 'Radio Pirate',
+    districtId: 'feira-central',
+    x: 26,
+    y: 15,
+    beatId: 'feira-radio',
+    jobBetId: 'feira-radio',
+    color: '#7bc96f',
+  },
+  {
+    id: 'barraca-tia',
+    name: 'Barraca Tia',
+    districtId: 'feira-central',
+    x: 8,
+    y: 12,
+    beatId: 'side-feira-mango',
+    color: '#ff8c42',
   },
   {
     id: 'mole-contact',
@@ -203,6 +235,15 @@ const NPCS: readonly WorldNpc[] = [
     color: '#c9b037',
   },
   {
+    id: 'neon-snap',
+    name: 'Neon Snap',
+    districtId: 'avenida-odds',
+    x: 32,
+    y: 17,
+    beatId: 'side-avenida-neon',
+    color: '#2bfff2',
+  },
+  {
     id: 'vip-host',
     name: 'VIP Host',
     districtId: 'torre-casa',
@@ -227,40 +268,42 @@ const NPCS: readonly WorldNpc[] = [
     districtId: 'torre-casa',
     x: 24,
     y: 16,
+    extraBeatIds: ['side-torre-tip'],
     safeJobId: 'safe-torre-casa',
     color: '#9aa0a6',
   },
 ];
 
+/** Exit coords must be the single exit tile (see paintExitPad in maps.ts). */
 const EXITS: readonly DistrictExit[] = [
   {
     id: 'morro-to-feira',
     districtId: 'morro-neon',
     x: 38,
-    y: 15,
+    y: 16,
     toDistrict: 'feira-central',
     label: 'Exit → Central Fair',
   },
   {
     id: 'feira-to-morro',
     districtId: 'feira-central',
-    x: 1,
-    y: 14,
+    x: 2,
+    y: 13,
     toDistrict: 'morro-neon',
     label: 'Exit → Morro Neon',
   },
   {
     id: 'feira-to-avenida',
     districtId: 'feira-central',
-    x: 40,
-    y: 14,
+    x: 41,
+    y: 13,
     toDistrict: 'avenida-odds',
     label: 'Exit → Odds Avenue',
   },
   {
     id: 'avenida-to-feira',
     districtId: 'avenida-odds',
-    x: 1,
+    x: 2,
     y: 12,
     toDistrict: 'feira-central',
     label: 'Exit → Central Fair',
@@ -268,7 +311,7 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'avenida-to-torre',
     districtId: 'avenida-odds',
-    x: 42,
+    x: 43,
     y: 12,
     toDistrict: 'torre-casa',
     label: 'Exit → Casa Tower',
@@ -276,8 +319,8 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'torre-to-avenida',
     districtId: 'torre-casa',
-    x: 1,
-    y: 13,
+    x: 2,
+    y: 12,
     toDistrict: 'avenida-odds',
     label: 'Exit → Odds Avenue',
   },

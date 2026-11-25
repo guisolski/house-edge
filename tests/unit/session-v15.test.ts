@@ -50,12 +50,12 @@ describe('session v1.5 recovery and upgrades', () => {
     const session = new GameSession(5);
     session.startNew();
     session.world.unlock('feira-central');
-    session.player.setPosition(37, 15);
+    session.player.setPosition(37, 16);
     expect(session.nearbyExit()).toBeNull();
-    session.player.setPosition(38, 15);
+    session.player.setPosition(38, 16);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
     session.player.setPosition(39, 16);
-    expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
+    expect(session.nearbyExit()).toBeNull();
 
     session.ui.go('ending');
     const credits = session.player.getStats().credits;
@@ -104,7 +104,7 @@ describe('session v1.5 recovery and upgrades', () => {
     const session = new GameSession(8);
     session.startNew();
     session.world.unlock('feira-central');
-    session.player.setPosition(37, 15);
+    session.player.setPosition(37, 16);
     expect(session.move(1, 0)).toBe(true);
     expect(session.player.getStats().districtId).toBe('feira-central');
     expect(session.offerBet('no-such-bet')).toBe(false);

@@ -14,7 +14,7 @@ export type TileKind =
 
 export type BuildingStyle = 'morro' | 'feira' | 'avenida' | 'torre';
 
-export type PropKind = 'moto' | 'kiosk' | 'wire' | 'tank' | 'lamp' | 'crate';
+export type PropKind = 'moto' | 'kiosk' | 'wire' | 'tank' | 'lamp' | 'crate' | 'crowd';
 
 export type MapDef = {
   districtId: DistrictId;
@@ -144,11 +144,9 @@ function houseBlock(spec: HouseSpec): void {
   });
 }
 
+/** Single-tile exit — must match DistrictExit coords and the door sprite. */
 function paintExitPad(tiles: TileKind[], w: number, x: number, y: number): void {
   set(tiles, w, x, y, 'exit');
-  set(tiles, w, x + 1, y, 'exit');
-  set(tiles, w, x, y + 1, 'exit');
-  set(tiles, w, x + 1, y + 1, 'exit');
 }
 
 function morroHouseSpots(): {
@@ -239,7 +237,7 @@ function layoutMorroTerraces(tiles: TileKind[], w: number, h: number): void {
     vStrip(tiles, w, x, 3, 20, 'stairs');
   }
   rect({ tiles, w, x0: 10, y0: 14, x1: 17, y1: 17, kind: 'plaza' });
-  paintExitPad(tiles, w, 38, 15);
+  paintExitPad(tiles, w, 38, 16);
 }
 
 function buildMorro(): MapDef {
@@ -274,12 +272,55 @@ function buildMorro(): MapDef {
       { x: 12, y: 14, label: 'BOTECO NAIR', color: '#ffdf00' },
       { x: 7, y: 20, label: 'LAJE BET', color: '#ffdf00' },
       { x: 29, y: 14, label: 'ODDS 24h', color: '#ff2bd6' },
+      { x: 36, y: 16, label: 'EXIT > FAIR', color: '#2bfff2' },
     ],
     props,
     landmark: { x: 22, y: 2, kind: 'led-tower' },
     // Lips sit on the top row of each blocked cliff face.
     terraceEdges: [4, 11, 18],
   };
+}
+
+function fillFeiraProps(props: MapDef['props']): void {
+  for (let x = 5; x < 40; x += 4) {
+    props.push({ x, y: 12, kind: 'crate' });
+    props.push({ x: x + 1, y: 9, kind: 'lamp' });
+  }
+  for (const [x, y] of [
+    [4, 7],
+    [9, 7],
+    [15, 7],
+    [20, 7],
+    [25, 7],
+    [31, 7],
+    [36, 7],
+    [5, 17],
+    [11, 17],
+    [18, 17],
+    [24, 17],
+    [30, 17],
+    [36, 17],
+  ] as const) {
+    props.push({ x, y, kind: 'crate' });
+  }
+  props.push({ x: 16, y: 13, kind: 'kiosk' }, { x: 22, y: 14, kind: 'moto' });
+  props.push({ x: 12, y: 14, kind: 'kiosk' }, { x: 28, y: 14, kind: 'kiosk' });
+  for (const [x, y] of [
+    [7, 8],
+    [10, 11],
+    [14, 8],
+    [18, 12],
+    [22, 8],
+    [26, 11],
+    [30, 8],
+    [32, 13],
+    [14, 16],
+    [20, 15],
+    [28, 16],
+    [34, 15],
+  ] as const) {
+    props.push({ x, y, kind: 'crowd' });
+  }
 }
 
 function buildFeira(): MapDef {
@@ -303,8 +344,8 @@ function buildFeira(): MapDef {
   ] as const) {
     rect({ tiles, w, x0: x, y0: y, x1: x + 2, y1: y + 1, kind: 'asphalt' });
   }
-  paintExitPad(tiles, w, 1, 13);
-  paintExitPad(tiles, w, 40, 13);
+  paintExitPad(tiles, w, 2, 13);
+  paintExitPad(tiles, w, 41, 13);
 
   const stalls: { x: number; y: number; style: number; bw: number }[] = [
     { x: 3, y: 4, style: 0, bw: 3 },
@@ -334,11 +375,7 @@ function buildFeira(): MapDef {
       bh: 2,
     });
   }
-  for (let x = 5; x < 40; x += 4) {
-    props.push({ x, y: 12, kind: 'crate' });
-    props.push({ x: x + 1, y: 9, kind: 'lamp' });
-  }
-  props.push({ x: 16, y: 13, kind: 'kiosk' }, { x: 22, y: 14, kind: 'moto' });
+  fillFeiraProps(props);
 
   return {
     districtId: 'feira-central',
@@ -349,6 +386,8 @@ function buildFeira(): MapDef {
     signs: [
       { x: 15, y: 10, label: 'FEIRA', color: '#ffdf00' },
       { x: 28, y: 10, label: 'ODDS 24h', color: '#ff2bd6' },
+      { x: 2, y: 12, label: 'EXIT > MORRO', color: '#2bfff2' },
+      { x: 41, y: 12, label: 'EXIT > AVE', color: '#2bfff2' },
     ],
     props,
     landmark: { x: 20, y: 6, kind: 'calcadao' },
@@ -367,8 +406,8 @@ function buildAvenida(): MapDef {
   hStrip(tiles, w, 15, 1, w - 2, 'plaza');
   rect({ tiles, w, x0: 1, y0: 1, x1: w - 2, y1: 1, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: h - 2, x1: w - 2, y1: h - 2, kind: 'blocked' });
-  paintExitPad(tiles, w, 1, 11);
-  paintExitPad(tiles, w, 42, 11);
+  paintExitPad(tiles, w, 2, 12);
+  paintExitPad(tiles, w, 43, 12);
 
   const towers: { x: number; y: number; style: number; bw: number; bh: number }[] = [
     { x: 3, y: 2, style: 0, bw: 4, bh: 3 },
@@ -407,6 +446,8 @@ function buildAvenida(): MapDef {
     signs: [
       { x: 16, y: 8, label: 'ODDS 24h', color: '#ff2bd6' },
       { x: 30, y: 8, label: 'CASA SUPREMA', color: '#ff2bd6' },
+      { x: 2, y: 11, label: 'EXIT > FAIR', color: '#2bfff2' },
+      { x: 43, y: 11, label: 'EXIT > TOWER', color: '#2bfff2' },
     ],
     props,
     landmark: { x: 22, y: 3, kind: 'glass-corp' },
@@ -423,7 +464,8 @@ function buildTorre(): MapDef {
   seal(tiles, w, h);
   rect({ tiles, w, x0: 2, y0: 2, x1: w - 3, y1: h - 3, kind: 'interior' });
   rect({ tiles, w, x0: 4, y0: 10, x1: 35, y1: 14, kind: 'plaza' });
-  paintExitPad(tiles, w, 1, 12);
+  // Single door on the west aisle — not a 2×2 strip that snags westbound walks.
+  paintExitPad(tiles, w, 2, 12);
   // Tables / VIP booths (torre sprites = casino furniture, not towers).
   const tables: { x: number; y: number; style: number; bw: number; bh: number }[] = [
     { x: 5, y: 4, style: 0, bw: 3, bh: 2 },
@@ -459,6 +501,7 @@ function buildTorre(): MapDef {
     signs: [
       { x: 14, y: 9, label: 'CASA SUPREMA', color: '#ffdf00' },
       { x: 24, y: 12, label: 'VIP TABLE', color: '#ffdf00' },
+      { x: 2, y: 11, label: 'EXIT > AVE', color: '#2bfff2' },
     ],
     props,
     landmark: { x: 18, y: 8, kind: 'casa-tower' },

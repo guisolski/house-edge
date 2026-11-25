@@ -63,6 +63,7 @@ export class StorySystem {
   private isAvailable(beat: StoryBeat, districtId: string): boolean {
     if (beat.districtId !== districtId) return false;
     if (this.completed.has(beat.id)) return false;
+    if (beat.skipIfFlag && this.getFlag(beat.skipIfFlag)) return false;
     return this.flagsReady(beat);
   }
 

@@ -51,6 +51,10 @@ export type StoryBeat = {
   unlocksDistrict?: DistrictId;
   isEnding?: boolean;
   endingId?: string;
+  /** Side quest — available when flags ready, never gates the main path. */
+  optional?: boolean;
+  /** Hide this beat once the flag is set (sibling branch already taken). */
+  skipIfFlag?: string;
 };
 
 export type DialogueLine = {

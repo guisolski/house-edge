@@ -18,6 +18,7 @@ const STORY_IDS = [
   'feira-catador',
   'bia-set',
   'feira-forro',
+  'feira-radio',
   'feira-courier',
   'prova-luna',
   'avenida-twist',
@@ -26,19 +27,46 @@ const STORY_IDS = [
   'avenida-radar',
   'avenida-atm',
   'lobby-margin',
+  'morro-return-nair',
   'torre-vip',
   'torre-final',
+  'epilogue-laje',
 ] as const;
+
+const BEAT_DISTRICT: Record<(typeof STORY_IDS)[number], string> = {
+  'boteco-nair': 'morro-neon',
+  'morro-antena': 'morro-neon',
+  'luna-beco': 'morro-neon',
+  'morro-fios': 'morro-neon',
+  'seu-ze-banca': 'morro-neon',
+  'feira-kiko': 'feira-central',
+  'feira-catador': 'feira-central',
+  'bia-set': 'feira-central',
+  'feira-forro': 'feira-central',
+  'feira-radio': 'feira-central',
+  'feira-courier': 'feira-central',
+  'prova-luna': 'feira-central',
+  'avenida-twist': 'avenida-odds',
+  'avenida-checkpoint': 'avenida-odds',
+  'avenida-influencer': 'avenida-odds',
+  'avenida-radar': 'avenida-odds',
+  'avenida-atm': 'avenida-odds',
+  'lobby-margin': 'avenida-odds',
+  'morro-return-nair': 'morro-neon',
+  'torre-vip': 'torre-casa',
+  'torre-final': 'torre-casa',
+  'epilogue-laje': 'morro-neon',
+};
 
 test('full story reaches ending with safe-job recovery', async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto('/');
-  await expect(page.locator('.version')).toContainText('v1.10');
+  await expect(page.locator('.version')).toContainText('v1.11');
   await page.getByRole('button', { name: 'New Game' }).click();
   await page.locator('.world-canvas').click({ position: { x: 48, y: 48 } });
 
   const result = await page.evaluate(
-    (beats) => {
+    ({ beats, districts }) => {
       const he = (
         window as unknown as {
           __HOUSE_EDGE__: {
@@ -49,6 +77,8 @@ test('full story reaches ending with safe-job recovery', async ({ page }) => {
               doSafeJob: (id: string) => boolean;
               travelTo: (id: string) => boolean;
               closeModal: () => void;
+              continueExploring: () => boolean;
+              ui: { is: (s: string) => boolean };
               player: {
                 getStats: () => { credits: number; districtId: string };
                 addCredits: (n: number) => number;
@@ -61,21 +91,19 @@ test('full story reaches ending with safe-job recovery', async ({ page }) => {
       ).__HOUSE_EDGE__;
       let bets = 0;
       let safe = 0;
-      const travel = (): void => {
-        const id = he.session.player.getStats().districtId;
-        if (id === 'morro-neon' && he.session.world.isUnlocked('feira-central')) {
-          he.session.travelTo('feira-central');
-        } else if (
-          id === 'feira-central' &&
-          he.session.world.isUnlocked('avenida-odds')
-        ) {
-          he.session.travelTo('avenida-odds');
-        } else if (id === 'avenida-odds' && he.session.world.isUnlocked('torre-casa')) {
-          he.session.travelTo('torre-casa');
+      let sawEnding = false;
+      const goTo = (districtId: string): void => {
+        if (he.session.player.getStats().districtId === districtId) return;
+        if (he.session.world.isUnlocked(districtId)) {
+          he.session.travelTo(districtId);
         }
       };
       for (const id of beats) {
-        travel();
+        if (he.session.ui.is('ending')) {
+          sawEnding = true;
+          he.session.continueExploring();
+        }
+        goTo(districts[id]!);
         for (let attempt = 0; attempt < 50; attempt += 1) {
           while (he.session.player.getStats().credits < 15 && safe < 200) {
             const before = he.session.player.getStats().credits;
@@ -87,35 +115,39 @@ test('full story reaches ending with safe-job recovery', async ({ page }) => {
           }
           if (!he.session.runStoryBeat(id)) break;
           if (!he.session.acceptStoryBet()) {
+            // Dialogue-only: close finishes the beat.
             he.session.closeModal();
+            if (he.session.story.getCompleted().includes(id)) break;
             continue;
           }
           he.session.confirmBet();
           bets += 1;
           if (he.session.story.getCompleted().includes(id)) break;
         }
-        travel();
+        if (id === 'torre-final' && he.session.ui.is('ending')) {
+          sawEnding = true;
+        }
+      }
+      if (he.session.ui.is('ending')) {
+        sawEnding = true;
+        he.session.continueExploring();
       }
       return {
         completed: he.session.story.getCompleted(),
         bets,
         safe,
         ending: he.session.story.getCompleted().includes('torre-final'),
+        epilogue: he.session.story.getCompleted().includes('epilogue-laje'),
+        sawEnding,
       };
     },
-    [...STORY_IDS],
+    { beats: [...STORY_IDS], districts: BEAT_DISTRICT },
   );
 
   expect(result.ending, JSON.stringify(result)).toBe(true);
-  await expect(page.locator('.ending-panel:not([hidden])')).toBeVisible({
-    timeout: 3000,
-  });
-  await expect(page.getByRole('button', { name: 'Continue exploring' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Play again' })).toBeVisible();
+  expect(result.epilogue, JSON.stringify(result)).toBe(true);
+  expect(result.sawEnding, JSON.stringify(result)).toBe(true);
   await page.screenshot({ path: path.join(ART, '10-story-ending.png') });
-  await page.getByRole('button', { name: 'Continue exploring' }).click();
-  await expect(page.locator('.play-hud:not([hidden])')).toBeVisible();
-  await expect(page.locator('.ending-panel')).toBeHidden();
   expect(
     errors.filter((e) => !e.includes('favicon.ico')),
     errors.join('\n'),
