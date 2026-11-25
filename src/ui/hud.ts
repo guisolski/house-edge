@@ -187,10 +187,10 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
       const offerBet = session.hasPendingStoryBet();
       const epi = session.getPendingStoryBeat() === 'epilogue-laje';
       const hasChoice = lines.some((l) => Boolean(l.choices?.length));
-      // Epilogue: deliberate choice (ignore Enter ~500ms); closing line hold ≥2s.
+      // Epilogue: deliberate choice (ignore Enter ~500ms); closing line hold ≥3s.
       const choiceArmAt = epi && hasChoice ? Date.now() + 500 : undefined;
       const holdCloseUntil =
-        epi && !hasChoice && !offerBet ? Date.now() + 2000 : undefined;
+        epi && !hasChoice && !offerBet ? Date.now() + 3000 : undefined;
       paintDialogue(p.dialogue, lines, {
         offerBet,
         choiceArmAt,
@@ -569,13 +569,20 @@ function promptLabel(
   return null;
 }
 
-/** Anchor the E-prompt below the player so it never covers floating name tags. */
+/** Anchor the E-prompt below the player; clamp inside the safe HUD inset. */
 function placePrompt(prompt: HTMLElement, session: GameSession): void {
   const a = session.promptAnchor;
+  const host = prompt.ownerDocument?.defaultView;
+  const vw = host?.innerWidth ?? 960;
+  const vh = host?.innerHeight ?? 540;
+  const padX = 72;
+  const padTop = 110;
+  const padBot = 96;
   if (a) {
-    prompt.style.left = `${Math.round(a.x)}px`;
-    // Sit under the sprite feet (anchor is top-of-sprite); keep clear of tags above.
-    prompt.style.top = `${Math.round(a.y + 28)}px`;
+    const x = Math.min(vw - padX, Math.max(padX, Math.round(a.x)));
+    const y = Math.min(vh - padBot, Math.max(padTop, Math.round(a.y + 28)));
+    prompt.style.left = `${x}px`;
+    prompt.style.top = `${y}px`;
     prompt.style.bottom = 'auto';
     prompt.style.transform = 'translateX(-50%)';
   } else {

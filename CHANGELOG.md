@@ -5,6 +5,27 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.20.0] — 2026-11-25
+
+### Fixed
+
+- **Neon Snap (4th)**: seal north (y9–10) and south (y13–14) asphalt strips x12–34 with solid tiles + police barrier / shipping-container props; center lane y11–12 remains the cone path. Prod-build Playwright (`e2e:prod`) holds Shift+Right 4s from the real start approach and asserts x stays left of the wall / segment not cleared (north + south).
+- Drone sight cones: translucent cyan fill + yellow outline every frame (readable at a glance).
+- Objective NPCs (Foyer Guard, Mole Contact, Luna Pixel) leashed to open plaza tiles in front of buildings; depth-sorted with the player.
+- E-prompt prefers the objective NPC whenever it is in range; name tags + E-prompt clamped inside the safe HUD inset.
+- Epilogue closing line Close held ≥3s (auto-credits after Saúde).
+- Enter-spam after dialog Close: 450ms interact lock blocks rematch bet chain.
+- Courier chase: four distinct arrows so the pad shows 4 buttons for “match 4”.
+- Morro Fair pad moved to (38,22) clear of Seu Zé; Fair Morro arrival pad at (3,12) clear of spawn.
+- Lockpick hint: Space raises a pin (keyboard handler on focused pin).
+- Casa elevator needle: wider window / slower first try.
+- Pause menu / controls hint lists **F3** for the FPS overlay.
+
+### Tests
+
+- Unit: sealed strips + slideStep stop, barrier props, pad/NPC clearance, courier 4 keys, elevator timing.
+- E2e: `neon-snap-wall` east Shift-run stop; `neon-snap-prod` against vite preview of `dist`.
+
 ## [1.19.1] — 2026-11-25
 
 ### Fixed

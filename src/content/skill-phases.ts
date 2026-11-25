@@ -193,8 +193,9 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     kind: 'timing',
     prompt: 'Call the express car — stop on green.',
     target: 0.52,
-    window: 0.16,
-    needleSpeed: 0.75,
+    // Playtest #22: slightly slower / wider first try.
+    window: 0.2,
+    needleSpeed: 0.62,
   },
   'torre-vip': {
     kind: 'timing',
@@ -224,7 +225,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Shadow the courier — match 4 alleys.',
     target: 0,
     steps: 4,
-    sequence: ['→', '↓', '→', '↑'],
+    // Four distinct arrows so the pad shows 4 buttons (not 3 unique).
+    sequence: ['→', '↓', '←', '↑'],
     timerMs: 14_000,
     maxMisses: 2,
   },

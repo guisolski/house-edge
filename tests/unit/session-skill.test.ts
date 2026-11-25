@@ -77,7 +77,7 @@ describe('session skill encounters', () => {
     session.startNew();
     session.world.unlock('feira-central');
     // Stand on Fair exit while objective is still Nair elsewhere — exit wins if no NPC.
-    session.player.setPosition(36, 16);
+    session.player.setPosition(38, 22);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
     // Place player on Nair so objective NPC wins.
     session.player.setPosition(13, 14);

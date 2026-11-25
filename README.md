@@ -1,6 +1,6 @@
 # House Edge
 
-Top-down cyberpunk bets in a Brazilian megacity. Story gates are skill encounters (timing, choice, chase, hack, lockpick, negotiate) plus an in-world **drone stealth** corridor on Odds Avenue. Play Rita Odds from Morro Neon to Casa Suprema Tower (~23 min walking playthrough, v1.19.0).
+Top-down cyberpunk bets in a Brazilian megacity. Story gates are skill encounters (timing, choice, chase, hack, lockpick, negotiate) plus an in-world **drone stealth** corridor on Odds Avenue. Play Rita Odds from Morro Neon to Casa Suprema Tower (~22 min walking playthrough, v1.20.0).
 
 ## Quick start
 
@@ -13,18 +13,19 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123).
 
 ## Commands
 
-| Target          | Purpose                                               |
-| --------------- | ----------------------------------------------------- |
-| `make install`  | npm ci + Playwright Chromium                          |
-| `make dev`      | Vite dev server (port 43123)                          |
-| `make test`     | Unit tests + coverage gates                           |
-| `make e2e`      | Playwright flows                                      |
-| `make playtest` | Golden-path playtest + FPS budgets (desktop + 4× CPU) |
-| `make mutation` | Stryker mutation tests                                |
-| `make lint`     | ESLint + Prettier + markdownlint                      |
-| `make build`    | Production static build (`BASE_PATH` aware)           |
-| `make deploy`   | Build + print GitHub Pages instructions               |
-| `make docker`   | Optional nginx image from `dist/`                     |
+| Target             | Purpose                                               |
+| ------------------ | ----------------------------------------------------- |
+| `make install`     | npm ci + Playwright Chromium                          |
+| `make dev`         | Vite dev server (port 43123)                          |
+| `make test`        | Unit tests + coverage gates                           |
+| `make e2e`         | Playwright flows                                      |
+| `npm run e2e:prod` | Playwright vs vite preview of `dist/` (Neon Snap)     |
+| `make playtest`    | Golden-path playtest + FPS budgets (desktop + 4× CPU) |
+| `make mutation`    | Stryker mutation tests                                |
+| `make lint`        | ESLint + Prettier + markdownlint                      |
+| `make build`       | Production static build (`BASE_PATH` aware)           |
+| `make deploy`      | Build + print GitHub Pages instructions               |
+| `make docker`      | Optional nginx image from `dist/`                     |
 
 ## GitHub Pages
 

@@ -18,8 +18,10 @@ import { drawPixelText, measurePixelText } from './pixel-font';
 import {
   makeAlley,
   makeAsphalt,
+  makeBarrier,
   makeBlocked,
   makeBuilding,
+  makeContainer,
   makeCrate,
   makeCrowd,
   makeExitPad,
@@ -68,7 +70,15 @@ type Baked = {
   landmark: Map<string, HTMLCanvasElement>;
   sign: Map<string, HTMLCanvasElement>;
   props: Record<
-    'moto' | 'kiosk' | 'wire' | 'tank' | 'lamp' | 'crate' | 'crowd',
+    | 'moto'
+    | 'kiosk'
+    | 'wire'
+    | 'tank'
+    | 'lamp'
+    | 'crate'
+    | 'crowd'
+    | 'barrier'
+    | 'container',
     HTMLCanvasElement
   >;
   glow: Map<string, HTMLCanvasElement>;
@@ -269,6 +279,8 @@ function bakeAll(): Baked {
       lamp: bakeSprite(makeStreetLamp(), SCALE),
       crate: bakeSprite(makeCrate(), SCALE),
       crowd: bakeSprite(makeCrowd(), SCALE),
+      barrier: bakeSprite(makeBarrier(), SCALE),
+      container: bakeSprite(makeContainer(), SCALE),
     },
     glow: new Map(),
     mapLayers: new Map(),
@@ -325,6 +337,38 @@ function drawNearbyNpcNames(
   }
 }
 
+/** Readable translucent sight cone (fill + outline) for one drone. */
+function paintDroneCone(
+  ctx: CanvasRenderingContext2D,
+  d: { x: number; y: number; facing: number; halfAngle: number; range: number },
+  camX: number,
+  camY: number,
+): void {
+  const cx = d.x * TILE_PX + 16 - camX;
+  const cy = d.y * TILE_PX + 16 - camY;
+  const reach = d.range * TILE_PX;
+  const steps = 18;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  for (let i = 0; i <= steps; i += 1) {
+    const a = d.facing - d.halfAngle + (2 * d.halfAngle * i) / steps;
+    ctx.lineTo(cx + Math.cos(a) * reach, cy + Math.sin(a) * reach);
+  }
+  ctx.closePath();
+  ctx.fillStyle = '#2bfff255';
+  ctx.fill();
+  ctx.strokeStyle = '#ffdf00ee';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+  ctx.strokeStyle = '#2bfff2aa';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = Palette.neonCyan;
+  ctx.fillRect(cx - 8, cy - 8, 16, 16);
+  ctx.fillStyle = '#ff2bd6';
+  ctx.fillRect(cx - 5, cy - 5, 10, 10);
+}
+
 /** Patrolling drones + sight cones during Neon Snap stealth. */
 function drawStealthDrones(
   ctx: CanvasRenderingContext2D,
@@ -335,30 +379,8 @@ function drawStealthDrones(
 ): void {
   const stealth = state.session.getStealthProgress();
   if (!stealth || stealth.done) return;
-  // Cheaper cones (fewer wedges, fill-only) — Odds Avenue FPS dip under drone draw.
-  for (const d of stealth.drones) {
-    const cx = d.x * TILE_PX + 16 - camX;
-    const cy = d.y * TILE_PX + 16 - camY;
-    if ((frame & 1) === 0) {
-      ctx.fillStyle = '#ff3b5c33';
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      const steps = 6;
-      for (let i = 0; i <= steps; i += 1) {
-        const a = d.facing - d.halfAngle + (2 * d.halfAngle * i) / steps;
-        ctx.lineTo(
-          cx + Math.cos(a) * d.range * TILE_PX,
-          cy + Math.sin(a) * d.range * TILE_PX,
-        );
-      }
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.fillStyle = Palette.neonCyan;
-    ctx.fillRect(cx - 6, cy - 6, 12, 12);
-    ctx.fillStyle = '#ff2bd6';
-    ctx.fillRect(cx - 3, cy - 3, 6, 6);
-  }
+  void frame;
+  for (const d of stealth.drones) paintDroneCone(ctx, d, camX, camY);
   // Goal beacon + EXIT label + player→exit arrow.
   const g = stealth.def.goal;
   const gx = g.x * TILE_PX + 16 - camX;
@@ -1280,12 +1302,14 @@ function paintMarkerLabel(
 ): void {
   ctx.font = 'bold 14px monospace';
   ctx.textAlign = 'center';
-  // Keep tags below the HUD band so Antena Tech etc. aren't clipped at the top.
-  const safePy = Math.max(py, 102);
+  const viewH = ctx.canvas.height || 540;
+  // Keep tags inside the safe HUD inset (top objective / bottom chrome).
+  const safePy = Math.min(viewH - 88, Math.max(py, 108));
   const box = layoutMarkerLabel({
     text,
     anchorX: px,
     viewW,
+    pad: 16,
     measure: (t) => ctx.measureText(t).width,
   });
   ctx.fillStyle = '#000000dd';

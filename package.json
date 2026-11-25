@@ -1,6 +1,6 @@
 {
   "name": "house-edge",
-  "version": "1.19.1",
+  "version": "1.20.0",
   "description": "House Edge — cyberpunk bets in a Brazilian megacity",
   "type": "module",
   "private": true,
@@ -17,10 +17,11 @@
     "test": "vitest run --coverage",
     "test:watch": "vitest",
     "e2e": "playwright test",
+    "e2e:prod": "playwright test -c playwright.prod.config.ts",
     "mutation": "stryker run",
     "audit": "npm audit --audit-level=high",
     "prepare": "simple-git-hooks",
-    "ci": "npm run lint && npm run typecheck && npm run test && npm run build && npm run e2e && npm run mutation"
+    "ci": "npm run lint && npm run typecheck && npm run test && npm run build && npm run e2e && npm run e2e:prod && npm run mutation"
   },
   "simple-git-hooks": {
     "pre-push": "npm run lint"

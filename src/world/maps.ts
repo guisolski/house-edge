@@ -14,7 +14,16 @@ export type TileKind =
 
 export type BuildingStyle = 'morro' | 'feira' | 'avenida' | 'torre';
 
-export type PropKind = 'moto' | 'kiosk' | 'wire' | 'tank' | 'lamp' | 'crate' | 'crowd';
+export type PropKind =
+  | 'moto'
+  | 'kiosk'
+  | 'wire'
+  | 'tank'
+  | 'lamp'
+  | 'crate'
+  | 'crowd'
+  | 'barrier'
+  | 'container';
 
 export type MapDef = {
   districtId: DistrictId;
@@ -337,8 +346,8 @@ function layoutMorroTerraces(tiles: TileKind[], w: number, h: number): void {
   rect({ tiles, w, x0: 10, y0: 14, x1: 17, y1: 17, kind: 'plaza' });
   rect({ tiles, w, x0: 5, y0: 14, x1: 9, y1: 16, kind: 'plaza' });
   rect({ tiles, w, x0: 30, y0: 14, x1: 34, y1: 16, kind: 'plaza' });
-  // Exit pad inset from the east wall so the door + sign stay on-screen.
-  paintExitPad(tiles, w, 36, 16);
+  // Fair pad on lower terrace — clear of Seu Zé (28,22) interact radius.
+  paintExitPad(tiles, w, 38, 22);
 }
 
 function buildMorro(): MapDef {
@@ -377,8 +386,8 @@ function buildMorro(): MapDef {
       { x: 19, y: 12, label: 'STAIRS', color: '#b8ff2b' },
       { x: 7, y: 12, label: 'RAMP', color: '#b8ff2b' },
       { x: 32, y: 12, label: 'RAMP', color: '#b8ff2b' },
-      // Inset from east wall so full destination text stays visible.
-      { x: 33, y: 15, label: '> Central Fair', color: '#2bfff2' },
+      // Lower terrace — clear of Seu Zé, next to Fair pad (38,22).
+      { x: 35, y: 21, label: '> Central Fair', color: '#2bfff2' },
     ],
     props,
     landmark: { x: 22, y: 2, kind: 'led-tower' },
@@ -438,8 +447,8 @@ function buildFeira(): MapDef {
   ] as const) {
     rect({ tiles, w, x0: x, y0: y, x1: x + 2, y1: y + 1, kind: 'asphalt' });
   }
-  // Pads inset from walls so EXIT signs + destinations stay fully on-screen.
-  paintExitPad(tiles, w, 5, 13);
+  // West Morro pad — far from district spawn (14,14); east Odds pad inset.
+  paintExitPad(tiles, w, 3, 12);
   paintExitPad(tiles, w, 38, 13);
 
   const stalls: { x: number; y: number; style: number; bw: number }[] = [
@@ -479,7 +488,7 @@ function buildFeira(): MapDef {
       // North stall row — clear of Catador (20,15) and plaza NPCs.
       { x: 12, y: 7, label: 'FEIRA', color: '#ffdf00' },
       { x: 28, y: 7, label: 'ODDS 24h', color: '#ff2bd6' },
-      { x: 5, y: 11, label: '> Morro Neon', color: '#2bfff2' },
+      { x: 3, y: 10, label: '> Morro Neon', color: '#2bfff2' },
       { x: 35, y: 12, label: '> Odds Avenue', color: '#2bfff2' },
     ],
     props,
@@ -494,14 +503,16 @@ function buildAvenida(): MapDef {
   const buildings: MapDef['buildings'] = [];
   const props: MapDef['props'] = [];
   seal(tiles, w, h);
-  // Only the asphalt corridor (y 9–14) is a free east–west run for Neon Snap.
+  // Boulevard asphalt — then seal north/south strips so only y11–12 crosses drones.
   rect({ tiles, w, x0: 1, y0: 9, x1: w - 2, y1: 14, kind: 'asphalt' });
-  // FULL-WIDTH solid walls — edge lanes were the Shift-run bypass.
   rect({ tiles, w, x0: 1, y0: 5, x1: w - 2, y1: 8, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: 15, x1: w - 2, y1: 19, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: 1, x1: w - 2, y1: 1, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: h - 2, x1: w - 2, y1: h - 2, kind: 'blocked' });
-  // Physical wall buildings on the south strip (collision already blocked).
+  // Police barrier corridor — closes Shift-run bypass on north (y9–10) & south (y13–14).
+  // Keep west/east approaches open for Fair/Torre pads (x≤10 / x≥36).
+  rect({ tiles, w, x0: 12, y0: 9, x1: 34, y1: 10, kind: 'blocked' });
+  rect({ tiles, w, x0: 12, y0: 13, x1: 34, y1: 14, kind: 'blocked' });
   for (let x = 2; x <= 42; x += 4) {
     houseBlock({
       tiles,
@@ -515,7 +526,6 @@ function buildAvenida(): MapDef {
       bh: 3,
     });
   }
-  // North glass bulk.
   for (let x = 4; x <= 40; x += 5) {
     houseBlock({
       tiles,
@@ -529,15 +539,22 @@ function buildAvenida(): MapDef {
       bh: 3,
     });
   }
-  // Re-seal walls after houseBlock so footprints can't open edge lanes.
+  // Re-seal after houseBlock so footprints can't reopen edge lanes.
   rect({ tiles, w, x0: 1, y0: 5, x1: w - 2, y1: 8, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: 15, x1: w - 2, y1: 19, kind: 'blocked' });
-  // Exit pads on the far asphalt edges — clear of Mensageiro / NPC routes.
+  rect({ tiles, w, x0: 12, y0: 9, x1: 34, y1: 10, kind: 'blocked' });
+  rect({ tiles, w, x0: 12, y0: 13, x1: 34, y1: 14, kind: 'blocked' });
   paintExitPad(tiles, w, 2, 12);
   paintExitPad(tiles, w, 43, 12);
-  for (let x = 4; x < 42; x += 6) props.push({ x, y: 10, kind: 'lamp' });
-  props.push({ x: 20, y: 13, kind: 'moto' }, { x: 14, y: 11, kind: 'crate' });
-  for (let x = 3; x <= 42; x += 3) props.push({ x, y: 15, kind: 'crate' });
+  for (let x = 4; x < 42; x += 6) props.push({ x, y: 11, kind: 'lamp' });
+  props.push({ x: 20, y: 12, kind: 'moto' }, { x: 14, y: 11, kind: 'crate' });
+  // Solid-looking police barriers / shipping containers on sealed strips.
+  for (let x = 12; x <= 34; x += 2) {
+    props.push({ x, y: 9, kind: 'barrier' }, { x, y: 14, kind: 'barrier' });
+  }
+  for (let x = 13; x <= 33; x += 3) {
+    props.push({ x, y: 10, kind: 'container' }, { x, y: 13, kind: 'container' });
+  }
 
   return {
     districtId: 'avenida-odds',
@@ -550,9 +567,9 @@ function buildAvenida(): MapDef {
       { x: 28, y: 3, label: 'CASA SUPREMA', color: '#ff2bd6' },
       { x: 2, y: 10, label: '> Central Fair', color: '#2bfff2' },
       { x: 41, y: 10, label: '> Casa Tower', color: '#2bfff2' },
-      { x: 12, y: 16, label: 'BARRICADE', color: '#ff8a3d' },
-      { x: 24, y: 16, label: 'NO PASS', color: '#ff8a3d' },
-      { x: 36, y: 16, label: 'WALL', color: '#ff8a3d' },
+      { x: 14, y: 14, label: 'POLICE LINE', color: '#ff8a3d' },
+      { x: 24, y: 14, label: 'NO PASS', color: '#ff8a3d' },
+      { x: 32, y: 9, label: 'BARRIER', color: '#ff8a3d' },
     ],
     props,
     landmark: { x: 22, y: 2, kind: 'glass-corp' },

@@ -21,6 +21,7 @@ import {
   EXIT_CLEAR_RANGE,
   EXIT_COOLDOWN_MS,
   EXIT_STAND_RANGE,
+  INTERACT_RANGE,
   arrivalSpawnFromPad,
   type DistrictExit,
   type WorldNpc,
@@ -100,6 +101,8 @@ export class GameSession {
   private vipMap: MapDef = buildTorreVip();
   /** Ending panel shows the credits roll after the laje epilogue. */
   private creditsRoll = false;
+  /** Ignore Extra Enter after a dialog closes (rematch chain). */
+  private interactLockUntil = 0;
 
   constructor(seed = 42, bus = new EventBus()) {
     this.bus = bus;
@@ -310,7 +313,7 @@ export class GameSession {
     return elev;
   }
 
-  /** Nearest in-range NPC; objective wins only when it is the closest (or tied). */
+  /** Prefer the objective NPC when in range; otherwise nearest. */
   nearbyNpc(): WorldNpc | null {
     const elev = this.nearbyElevatorPad();
     if (elev) return elev;
@@ -318,7 +321,19 @@ export class GameSession {
     const face = this.player.getFacing();
     const pool = this.floorNpcs();
     const available = new Set(this.story.availableBeats(s.districtId).map((b) => b.id));
-    const near = nearestNpc({
+    const obj = this.objective();
+    const objectiveNpc =
+      obj.targetName && obj.districtId === s.districtId
+        ? pool.find(
+            (n) =>
+              n.districtId === s.districtId &&
+              n.name === obj.targetName &&
+              Math.hypot(n.x - s.x, n.y - s.y) <= INTERACT_RANGE,
+          )
+        : undefined;
+    // Playtest #22: objective wins whenever it is in interact range.
+    if (objectiveNpc) return objectiveNpc;
+    return nearestNpc({
       npcs: pool,
       districtId: s.districtId,
       x: s.x,
@@ -327,21 +342,6 @@ export class GameSession {
       faceDy: face.dy,
       prefer: (npc) => npcStoryBeatIds(npc).some((id) => available.has(id)),
     });
-    const obj = this.objective();
-    const objectiveNpc =
-      obj.targetName && obj.districtId === s.districtId
-        ? pool.find(
-            (n) =>
-              n.districtId === s.districtId &&
-              n.name === obj.targetName &&
-              Math.hypot(n.x - s.x, n.y - s.y) <= 3.5,
-          )
-        : undefined;
-    if (!objectiveNpc) return near;
-    if (!near) return objectiveNpc;
-    const dObj = Math.hypot(objectiveNpc.x - s.x, objectiveNpc.y - s.y);
-    const dNear = Math.hypot(near.x - s.x, near.y - s.y);
-    return dObj <= dNear + 0.35 ? objectiveNpc : near;
   }
 
   /** Secondary nearby NPC when objective already claimed the primary prompt. */
@@ -499,6 +499,7 @@ export class GameSession {
 
   interact(): boolean {
     if (!this.ui.is('play')) return false;
+    if (Date.now() < this.interactLockUntil) return false;
     // Standing on an elevator pad always uses the car before other NPCs.
     const elev = this.nearbyElevatorPad();
     if (elev) return this.interactNpc(elev);
@@ -946,9 +947,16 @@ export class GameSession {
   closeModal(): void {
     if (this.ui.is('dialogue')) {
       this.advanceDialogue();
+      this.armInteractLock();
       return;
     }
     this.ui.backToPlay();
+    this.armInteractLock();
+  }
+
+  /** Brief lock so Enter-spam after Close can't open a rematch bet. */
+  private armInteractLock(): void {
+    this.interactLockUntil = Date.now() + 450;
   }
 
   /** Side Jobs / Travel / Upgrades Close → main pause menu (not straight to play). */

@@ -27,6 +27,7 @@ jobs:
       - run: npm test
       - run: BASE_PATH=/ npm run build
       - run: npm run e2e
+      - run: npm run e2e:prod
       - run: npm run mutation
       - name: Upload coverage
         if: always()

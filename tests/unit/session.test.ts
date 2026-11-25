@@ -120,7 +120,7 @@ describe('GameSession persistence', () => {
     session.startNew();
     expect(session.returnToMenu()).toBe(false);
     // Luna beat not ready yet — no side-job fallthrough (she has none) / toast.
-    session.player.setPosition(26, 16);
+    session.player.setPosition(22, 16);
     expect(session.nearbyNpc()?.id).toBe('luna');
     expect(session.interact()).toBe(false);
     // Prefer story NPC over nearby rematch giver when both in range.

@@ -376,6 +376,13 @@ function paintLockpickSkill(
         e.preventDefault();
         e.stopPropagation();
         submit();
+        return;
+      }
+      // Space raises the focused pin (matches on-screen hint).
+      if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        e.stopPropagation();
+        btn.click();
       }
     });
     state.labels.push(btn);
@@ -437,7 +444,7 @@ function paintSequenceSkill(
   if (phase.timerMs && phase.timerMs > 0) {
     bindSequenceTimer(body, session, seq, phase.timerMs, settled, after);
   }
-  const used = [...new Set(seq)] as SeqKey[];
+  const used = sequencePadKeys(seq);
   const buffer = createSequenceKeyBuffer((keyIndex) => {
     if (settled.v) return;
     const beforePhase = session.getSkillProgress()?.phaseIndex;
@@ -466,6 +473,13 @@ function paintSequenceSkill(
     ev.stopPropagation();
     onKey(SEQ_KEYS.indexOf(sym));
   });
+}
+
+/** Arrow chase pads always show ↑→↓← so “match 4” never shows only 3 buttons. */
+function sequencePadKeys(seq: SeqKey[]): SeqKey[] {
+  const arrows: SeqKey[] = ['↑', '→', '↓', '←'];
+  if (seq.every((k) => arrows.includes(k))) return arrows;
+  return [...new Set(seq)] as SeqKey[];
 }
 
 /**

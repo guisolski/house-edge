@@ -21,8 +21,8 @@ export const DISTRICTS: readonly DistrictDef[] = [
     unlockFlag: 'unlocked_feira',
     width: 44,
     height: 26,
-    // Clear of west Morro pad (5,13) and east Odds pad (38,13).
-    spawn: { x: 14, y: 14 },
+    // Clear of west Morro pad (3,12) and east Odds pad (38,13).
+    spawn: { x: 16, y: 14 },
     color: Palette.brasilYellow,
     accent: Palette.neonCyan,
   },

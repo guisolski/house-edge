@@ -1,61 +1,51 @@
-# Playtest REPORT — House Edge v1.19.1
+# Playtest REPORT — House Edge v1.20.0
 
-Independent playtest #21 of v1.18.1 (art 8, fun 6, ~23 min, FPS 56–60 with one Odds dip to 30). P0 VIP softlock already fixed. Ship **v1.19.0** then **v1.19.1** (ATM clear of torre pad; `make check` includes `npm test`).
+Independent playtest #22 of v1.19.1 (~22 min, no softlock; art 7.5 / fun 6.5). Ship **v1.20.0** under the same rules.
 
 ## Verdict: PASS
 
-`make check` (lint + typecheck + **npm test**) + e2e **46/46** green. Coverage branches **90%+**. Neon Snap south Shift-run hits physical wall (e2e + screenshot).
-
-CI (`5aadd31`): GitHub **quality** / **build** / **deploy (Pages)** all success.
+Neon Snap south/north asphalt strips sealed with solid tiles + police barrier / container props. Prod-build Playwright holds Shift+Right 4s and asserts the player never clears the segment (`endX` stayed **11** on both strips).
 
 ## Bugs fixed
 
-| #   | Issue                                               | Result                                                               |
-| --- | --------------------------------------------------- | -------------------------------------------------------------------- |
-| 1   | Neon Snap south/north open (neon labels only)       | PASS — full-width blocked tiles + wall buildings; e2e Shift-run stop |
-| 2   | Fair→Morro arrow through buildings                  | PASS — BFS `nextPathWaypoint` along walkable path                    |
-| 3   | Odds Fair pad on Mensageiro route                   | PASS — pad at west edge (2,12); Mensageiro mid-boulevard             |
-| 4   | Lockpick hint Tab Submit but Tab no-op              | PASS — Enter on pin + Tab submit; e2e                                |
-| 5   | Feira lockbox clue not deducible                    | PASS — rewritten clue + audit                                        |
-| 6   | Epilogue Enter-spam / Close flash                   | PASS — 500ms choice arm + ≥2s closing hold                           |
-| 7   | Post-duel “Free roam” with no Nair pointer          | PASS — points at Nair or hop toward her                              |
-| 8   | Negotiate hush chip marked miss after “Deal sealed” | PASS — any of three offers wins                                      |
-| 9   | E-prompt covers tags / wrong NPC; Antena HUD clip   | PASS — nearest NPC; prompt under feet; tags clamped                  |
-| 10  | Needle miss with no hint                            | PASS — on-panel miss hint                                            |
-| 11  | Odds Avenue instant FPS dip ~30                     | PASS — cheaper cones (fewer wedges, every other frame)               |
-
-## Fun / art
-
-- Physical south/north wall buildings + BARRICADE / NO PASS / WALL signs on Odds Avenue.
-- Objective arrow follows corridors instead of cutting through terraces.
+| #   | Issue                                      | Result                                                             |
+| --- | ------------------------------------------ | ------------------------------------------------------------------ |
+| 1   | Neon Snap Shift+D south bypass (4th time)  | PASS — seal y13–14 / y9–10 x12–34; prod e2e + barrier screenshots  |
+| 2   | Drone cones tiny cyan dots                 | PASS — translucent cyan fill + yellow outline every frame          |
+| 3   | Foyer Guard / Mole / Luna behind buildings | PASS — plaza leash in front of buildings; depth sort               |
+| 4   | E-prompt wrong NPC; tags clipped / overlap | PASS — objective-first in range; clamp tags + prompt to safe inset |
+| 5   | Epilogue closing ~1s greyed Close          | PASS — ≥3s hold + auto-credits after Saúde                         |
+| 6   | Extra Enter chains rematch bets            | PASS — 450ms interact lock after dialog close                      |
+| 7   | Courier “match 4” shows 3 buttons          | PASS — four distinct arrows on pad                                 |
+| 8   | Morro/Fair pads next to Seu Zé / spawn     | PASS — Morro pad (38,22); Fair arrival (3,12)                      |
+| 9   | Lockpick hint never mentions Space raise   | PASS — hint + Space on focused pin                                 |
+| 10  | Elevator needle hard to time               | PASS — window 0.2 / needleSpeed 0.62                               |
+| 11  | F3 FPS not mentioned in pause/controls     | PASS — menu hints + docs/controls                                  |
 
 ## Measured
 
-| Metric                          | Value                                      |
-| ------------------------------- | ------------------------------------------ |
-| User playtest #21 (walking)     | ~23 min (v1.18.1 baseline)                 |
-| Paced harness (v19-timing.json) | **10:01** wall                             |
-| Ending / epilogue               | true / true                                |
-| FPS travel sample (Odds incl.)  | min ~60, avg ~60                           |
-| E2e                             | 46/46 desktop + mobile                     |
-| Unit coverage branches          | 90%+                                       |
-| Neon Snap free-path             | only through drone cones (no south bypass) |
+| Metric                      | Value                                          |
+| --------------------------- | ---------------------------------------------- |
+| User playtest #22 (walking) | ~22 min (v1.19.1 baseline)                     |
+| Prod south Shift hold       | **4008ms**; startX 11 → endX **11**; won false |
+| Prod north Shift hold       | **4015ms**; endX **11**; won false             |
+| Neon Snap free-path         | only through drone cones (no strip bypass)     |
+| E2e                         | 46/46 + 2/2 prod                               |
+| Unit coverage branches      | 90%+                                           |
 
 ## Artifacts
 
-- `v19-neon-snap-barricade.png` — physical south barricade + BARRICADE label (Shift-run stop)
-- `v19-01-title-play.png` … `v19-07-fps-travel.png` (paced harness)
-- `v19-04-lockpick-tension.png` — Feira lockbox
-- `v19-05-drone-stealth.png` — Neon Snap cones
-- `v19-timing.json`
+- `v20-neon-snap-south-barrier.png` — south police barrier stopping Shift-run (prod build)
+- `v20-neon-snap-north-barrier.png` — north barrier strip (prod build)
+- `v20-south-walk-time.json` / `v20-north-walk-time.json` — hold duration + end x
 
-## Scores (playtest #21 baseline → this build)
+## Scores (playtest #22 baseline → this build)
 
-|     | #21 (v1.18.1) | v1.19.0 target        |
-| --- | ------------- | --------------------- |
-| Art | 8             | hold / lift barricade |
-| Fun | 6             | lift (route clarity)  |
+|     | #22 (v1.19.1) | v1.20.0 target         |
+| --- | ------------- | ---------------------- |
+| Art | 7.5           | lift (solid barriers)  |
+| Fun | 6.5           | lift (no strip bypass) |
 
 ## Gaps
 
-- Optional: further Odds FX budget if FPS dips under heavier drone counts.
+- None for this ship list.

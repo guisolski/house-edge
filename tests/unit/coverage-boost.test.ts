@@ -116,7 +116,7 @@ describe('coverage boost v1.13', () => {
     expect(session.brokeHintText()).toMatch(/Broke/);
     expect(session.offerBet('agua-gelada')).toBe(false);
     // Locked exit near Fair while locked.
-    session.player.setPosition(36, 16);
+    session.player.setPosition(38, 22);
     expect(session.nearbyLockedExit()?.toDistrict).toBe('feira-central');
     expect(session.interact()).toBe(false);
     // Dialogue close declines pending story bet.

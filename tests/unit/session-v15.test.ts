@@ -50,14 +50,14 @@ describe('session v1.5 recovery and upgrades', () => {
     const session = new GameSession(5);
     session.startNew();
     session.world.unlock('feira-central');
-    // Generous doorway margin (~2.6); three tiles away does not.
-    session.player.setPosition(33, 16);
+    // Generous doorway margin (~2.6); far plaza tile does not count.
+    session.player.setPosition(28, 16);
     expect(session.nearbyExit()).toBeNull();
-    session.player.setPosition(36, 16);
+    session.player.setPosition(38, 22);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
-    session.player.setPosition(34, 16);
+    session.player.setPosition(36, 22);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
-    session.player.setPosition(39, 16);
+    session.player.setPosition(38, 18);
     expect(session.nearbyExit()).toBeNull();
 
     session.ui.go('ending');
@@ -110,7 +110,7 @@ describe('session v1.5 recovery and upgrades', () => {
     session.world.unlock('feira-central');
     session.player.setFacing(0, 0);
     expect(session.player.getFacing().dx).toBe(1);
-    session.player.setPosition(35, 16);
+    session.player.setPosition(37, 22);
     expect(session.move(1, 0)).toBe(true);
     expect(session.player.getStats().districtId).toBe('feira-central');
     expect(session.player.getFacing().dx).toBe(1);

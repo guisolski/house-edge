@@ -52,9 +52,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'antena-tech',
     name: 'Antena Tech',
     districtId: 'morro-neon',
-    // Clear of RAMP neon (7,12) and BOTECO (8,11).
-    x: 6,
-    y: 9,
+    // Mid terrace plaza — tag stays below HUD; clear of RAMP neon.
+    x: 10,
+    y: 15,
     beatId: 'morro-antena',
     extraBeatIds: ['side-morro-tank'],
     jobBetId: 'antena-sinal',
@@ -64,7 +64,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'luna',
     name: 'Luna Pixel',
     districtId: 'morro-neon',
-    x: 26,
+    // Open asphalt plaza — south of house footprints (in front / reachable).
+    x: 22,
     y: 16,
     beatId: 'luna-beco',
     color: '#2bfff2',
@@ -84,9 +85,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'seu-ze',
     name: 'Seu Zé',
     districtId: 'morro-neon',
-    // South of ODDS 24h (24,8) — clear of neon + Fair exit pad (36,16).
-    x: 30,
-    y: 18,
+    // Lower plaza — clear of Fair pad (38,22) by > INTERACT_RANGE.
+    x: 28,
+    y: 21,
     beatId: 'seu-ze-banca',
     jobBetId: 'laje-lottery',
     color: '#ffdf00',
@@ -217,9 +218,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'mole-contact',
     name: 'Mole Contact',
     districtId: 'avenida-odds',
-    // Boulevard south edge — clear of ODDS 24h neon (16,5) and barricade.
-    x: 12,
-    y: 14,
+    // Center lane west approach — leash clear of barrier strip (x12–34 y13–14).
+    x: 10,
+    y: 12,
     beatId: 'avenida-twist',
     extraBeatIds: ['avenida-betrayal'],
     jobBetId: 'twist-vazamento',
@@ -230,8 +231,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'capita',
     name: 'Captain Vespera',
     districtId: 'avenida-odds',
-    x: 10,
-    y: 10,
+    x: 8,
+    y: 11,
     beatId: 'avenida-checkpoint',
     jobBetId: 'pixo-challenge',
     color: '#b8ff2b',
@@ -241,8 +242,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'courier-odds',
     name: 'Casa Courier',
     districtId: 'avenida-odds',
+    // Center corridor — north strip (y9–10) is sealed for Neon Snap.
     x: 22,
-    y: 10,
+    y: 11,
     beatId: 'avenida-courier',
     color: '#c9b037',
     bodyVariant: 0,
@@ -251,7 +253,6 @@ const NPCS: readonly WorldNpc[] = [
     id: 'influencer',
     name: 'Odds Influencer',
     districtId: 'avenida-odds',
-    // Keep on asphalt — south wall (y 15–18) is blocked for Neon Snap.
     x: 34,
     y: 11,
     beatId: 'avenida-influencer',
@@ -263,9 +264,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'atm-hacker',
     name: 'ATM Hacker',
     districtId: 'avenida-odds',
-    // North asphalt lane — clear of torre pad (43,12) by > INTERACT_RANGE.
+    // East approach — clear of torre pad (43,12) and barrier seal (x≤34).
     x: 38,
-    y: 9,
+    y: 11,
     beatId: 'avenida-atm',
     jobBetId: 'avenida-atm',
     color: '#ff3b5c',
@@ -275,9 +276,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'stealth-cam',
     name: 'Lobby Cam Tech',
     districtId: 'avenida-odds',
-    // South of CASA SUPREMA neon (28,5), east of barricade.
     x: 36,
-    y: 14,
+    y: 12,
     beatId: 'avenida-stealth',
     color: '#6ec8e8',
     bodyVariant: 1,
@@ -286,8 +286,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'margin',
     name: 'Dr. Margin',
     districtId: 'avenida-odds',
-    x: 22,
-    y: 14,
+    x: 20,
+    y: 12,
     beatId: 'lobby-margin',
     color: '#4a6cff',
     bodyVariant: 0,
@@ -296,9 +296,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'mensageiro-avenida',
     name: 'Mensageiro',
     districtId: 'avenida-odds',
-    // Mid-boulevard — west Fair pad sits on the edge (2,12).
+    // Mid center lane — west Fair pad at (2,12).
     x: 16,
-    y: 13,
+    y: 12,
     beatId: 'avenida-radar',
     safeJobId: 'safe-avenida-odds',
     color: '#c9b037',
@@ -308,7 +308,7 @@ const NPCS: readonly WorldNpc[] = [
     name: 'Cage Runner',
     districtId: 'avenida-odds',
     x: 14,
-    y: 14,
+    y: 11,
     beatId: 'avenida-server',
     jobBetId: 'avenida-server',
     color: '#7bc96f',
@@ -318,7 +318,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'neon-snap',
     name: 'Neon Snap',
     districtId: 'avenida-odds',
-    // Asphalt corridor — south barricade (y 15–18) is solid collision.
+    // Center corridor start — only y11–12 crosses the sealed strip.
     x: 30,
     y: 12,
     beatId: 'avenida-drone',
@@ -330,7 +330,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'foyer-guard',
     name: 'Foyer Guard',
     districtId: 'torre-casa',
-    x: 8,
+    // Open plaza south of VIP tables — reachable, in front of furniture.
+    x: 12,
     y: 14,
     beatId: 'torre-foyer',
     color: '#6ec8e8',
@@ -414,16 +415,16 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'morro-to-feira',
     districtId: 'morro-neon',
-    x: 36,
-    y: 16,
+    x: 38,
+    y: 22,
     toDistrict: 'feira-central',
     label: 'Exit → Central Fair',
   },
   {
     id: 'feira-to-morro',
     districtId: 'feira-central',
-    x: 5,
-    y: 13,
+    x: 3,
+    y: 12,
     toDistrict: 'morro-neon',
     label: 'Exit → Morro Neon',
   },
@@ -525,7 +526,7 @@ export const EXIT_STAND_RANGE = 2.2;
 /** Hysteresis: latch clears only after leaving this larger radius (stops bounce-back). */
 export const EXIT_CLEAR_RANGE = 4.2;
 /** Tiles inward from the reciprocal pad on arrival (must exceed CLEAR). */
-export const EXIT_ARRIVAL_OFFSET = 5;
+export const EXIT_ARRIVAL_OFFSET = 7;
 /** Cooldown after travel before any pad can re-arm (≥1.5s run toward pad). */
 export const EXIT_COOLDOWN_MS = 1600;
 

@@ -1,4 +1,4 @@
-.PHONY: install dev test e2e playtest mutation lint check build docker deploy preview typecheck ci clean
+.PHONY: install dev test e2e e2e-prod playtest mutation lint check build docker deploy preview typecheck ci clean
 
 BASE_PATH ?= /
 PORT ?= 43123
@@ -15,6 +15,9 @@ test:
 
 e2e:
 	npm run e2e
+
+e2e-prod:
+	npm run e2e:prod
 
 playtest:
 	mkdir -p artifacts/playtest

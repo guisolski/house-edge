@@ -120,7 +120,7 @@ describe('city maps', () => {
     expect(tileAt(torre, 0, 0)).toBe('blocked');
     expect(tileAt(torre, 0, 13)).toBe('blocked');
     expect(tileAt(torre, 8, 13)).not.toBe('blocked');
-    expect(tileAt(map, 36, 16)).toBe('exit');
+    expect(tileAt(map, 38, 22)).toBe('exit');
     expect(map.buildings.length).toBeGreaterThan(8);
     expect(map.props.length).toBeGreaterThan(5);
     expect(map.signs.every((s) => s.label.length > 2)).toBe(true);
@@ -162,7 +162,7 @@ describe('map queries', () => {
       })?.id,
     ).toBe('catador-morro');
     expect(
-      nearestExit({ exits, districtId: 'morro-neon', x: 36, y: 16 })?.toDistrict,
+      nearestExit({ exits, districtId: 'morro-neon', x: 38, y: 22 })?.toDistrict,
     ).toBe('feira-central');
     expect(nearestExit({ exits, districtId: 'morro-neon', x: 0, y: 0 })).toBeNull();
     expect(inRange({ x: 0, y: 0, tx: 1, ty: 0 })).toBe(true);
@@ -512,7 +512,7 @@ describe('session deep paths', () => {
     const session = new GameSession(10);
     session.startNew();
     session.world.unlock('feira-central');
-    session.player.setPosition(36, 16);
+    session.player.setPosition(38, 22);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
     expect(session.interact()).toBe(true);
     expect(session.player.getStats().districtId).toBe('feira-central');
@@ -551,7 +551,7 @@ describe('session deep paths', () => {
     session.story.setFlag('falou_nair', true);
     session.story.setFlag('antena_ok', true);
     session.story.setFlag('conheceu_luna', true);
-    session.player.setPosition(26, 16);
+    session.player.setPosition(22, 16);
     expect(session.nearbyNpc()?.id).toBe('luna');
     expect(session.interact()).toBe(false);
   });

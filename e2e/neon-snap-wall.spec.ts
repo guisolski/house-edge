@@ -8,7 +8,7 @@ test.beforeAll(() => {
   fs.mkdirSync(ART, { recursive: true });
 });
 
-/** Playtest #21: Shift-run the south street — must hit a solid wall. */
+/** Playtest #22: Shift-run the south asphalt strip — must hit solid barrier tiles. */
 test('Shift-run south street is stopped by physical barricade', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'New Game' }).click();
@@ -31,6 +31,7 @@ test('Shift-run south street is stopped by physical barricade', async ({ page })
               tiles: string[];
               width: number;
               signs: { x: number; y: number; label: string }[];
+              props: { x: number; y: number; kind: string }[];
             };
           };
         };
@@ -39,32 +40,40 @@ test('Shift-run south street is stopped by physical barricade', async ({ page })
     s.world.unlock('feira-central');
     s.world.unlock('avenida-odds');
     s.player.setDistrict('avenida-odds');
-    s.player.setPosition(20, 12);
+    // South approach west of sealed strip (x12–34, y13–14).
+    s.player.setPosition(11, 14);
     s.setRunHeld(true);
     let moved = 0;
     for (let i = 0; i < 40; i += 1) {
       const before = s.player.getStats();
-      const ok = s.move(0, 1);
+      const ok = s.move(1, 0);
       const after = s.player.getStats();
       if (!ok || (after.x === before.x && after.y === before.y)) break;
       moved += 1;
     }
     const pos = s.player.getStats();
     const map = s.getMap();
-    const wallSigns = map.signs.filter((sg) => /BARRICADE|NO PASS|WALL/i.test(sg.label));
+    const wallSigns = map.signs.filter((sg) =>
+      /BARRICADE|NO PASS|WALL|BARRIER|POLICE/i.test(sg.label),
+    );
+    const barriers = map.props.filter(
+      (p) => p.kind === 'barrier' || p.kind === 'container',
+    );
     return {
+      x: pos.x,
       y: pos.y,
       moved,
       wallSigns: wallSigns.length,
+      barriers: barriers.length,
       districtId: pos.districtId,
     };
   });
 
   expect(result.districtId).toBe('avenida-odds');
-  expect(result.y).toBeLessThanOrEqual(14);
+  expect(result.x).toBeLessThan(13);
+  expect(result.barriers).toBeGreaterThan(10);
   expect(result.wallSigns).toBeGreaterThanOrEqual(2);
 
-  // Frame the physical south wall + BARRICADE label for the playtest report.
   await page.evaluate(() => {
     const s = (
       window as unknown as {
@@ -77,7 +86,7 @@ test('Shift-run south street is stopped by physical barricade', async ({ page })
       }
     ).__HOUSE_EDGE__.session;
     s.setRunHeld(false);
-    s.player.setPosition(12, 14);
+    s.player.setPosition(11, 14);
   });
   await page.waitForTimeout(200);
   await page.screenshot({

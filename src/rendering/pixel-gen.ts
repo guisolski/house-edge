@@ -934,6 +934,31 @@ export function makeCrate(): PixelGrid {
   return g;
 }
 
+/** Police crowd-control barrier — reads as a solid street block. */
+export function makeBarrier(): PixelGrid {
+  const g = empty(28, 18, 'transparent');
+  fillRect(g, { x: 1, y: 6, w: 26, h: 8 }, '#1a2030');
+  fillRect(g, { x: 2, y: 7, w: 24, h: 6 }, '#ff8a3d');
+  fillRect(g, { x: 2, y: 9, w: 24, h: 2 }, '#0a0a12');
+  fillRect(g, { x: 4, y: 4, w: 3, h: 4 }, '#c9c9c9');
+  fillRect(g, { x: 21, y: 4, w: 3, h: 4 }, '#c9c9c9');
+  fillRect(g, { x: 6, y: 8, w: 4, h: 1 }, '#fff6');
+  fillRect(g, { x: 14, y: 8, w: 4, h: 1 }, '#fff6');
+  return g;
+}
+
+/** Shipping container — tall solid prop for sealed Neon Snap strips. */
+export function makeContainer(): PixelGrid {
+  const g = empty(30, 26, 'transparent');
+  fillRect(g, { x: 2, y: 4, w: 26, h: 20 }, '#2a4060');
+  fillRect(g, { x: 2, y: 4, w: 26, h: 3 }, '#3a6088');
+  fillRect(g, { x: 2, y: 14, w: 26, h: 2 }, '#1a2838');
+  fillRect(g, { x: 4, y: 7, w: 6, h: 5 }, '#ff3b5c88');
+  fillRect(g, { x: 20, y: 7, w: 6, h: 5 }, '#ff3b5c88');
+  fillRect(g, { x: 13, y: 6, w: 4, h: 16 }, '#1a2838');
+  return g;
+}
+
 /** Compact crowd silhouettes for Fair atmosphere (non-interactive). */
 export function makeCrowd(): PixelGrid {
   const g = empty(36, 28, 'transparent');

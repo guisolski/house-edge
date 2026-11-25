@@ -9,6 +9,7 @@ Input-adaptive UI (see `docs/research/ux-input.md` — UX-1…UX-7).
 - **F** — bet when near a job NPC / confirm bet modal
 - **Esc** — pause menu (Travel, Side Jobs, Mute)
 - **M** — mute
+- **F3** — toggle FPS overlay (also listed in the pause-menu controls hint)
 
 On-screen touch buttons stay hidden. Keyboard hint strip stays in the HUD.
 
