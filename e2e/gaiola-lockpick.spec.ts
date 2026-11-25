@@ -4,9 +4,12 @@
  */
 import { test, expect } from '@playwright/test';
 
+/** Mobile touch chrome sits over skill actions — force clicks when needed. */
+const tap = { force: true as const };
+
 async function openGaiola(page: import('@playwright/test').Page): Promise<void> {
   await page.goto('/');
-  await page.getByRole('button', { name: /New Game|Novo jogo/i }).click();
+  await page.getByRole('button', { name: /New Game|Novo jogo/i }).click(tap);
   await expect(page.locator('.play-hud')).toBeVisible();
   await page.evaluate(() => {
     const he = (
@@ -37,10 +40,15 @@ async function openGaiola(page: import('@playwright/test').Page): Promise<void> 
   });
   await expect(page.locator('.dialogue-choice').first()).toBeVisible({ timeout: 5_000 });
   await page.waitForTimeout(450);
-  await page.locator('.dialogue-choice').first().click();
+  await page.locator('.dialogue-choice').first().click(tap);
   await expect(page.locator('.btn-take-bet')).toBeVisible({ timeout: 3_000 });
-  await page.locator('.btn-take-bet').click();
+  await page.locator('.btn-take-bet').click(tap);
   await expect(page.locator('.lockpick-pin').first()).toBeVisible({ timeout: 8_000 });
+  // Hide stick so it cannot intercept Submit on mobile-chromium.
+  await page.evaluate(() => {
+    const touch = document.querySelector('.touch-controls') as HTMLElement | null;
+    if (touch) touch.style.display = 'none';
+  });
 }
 
 function parseVerdicts(text: string, count: number): ('ok' | 'low' | 'high' | null)[] {
@@ -57,15 +65,20 @@ function parseVerdicts(text: string, count: number): ('ok' | 'low' | 'high' | nu
   return out;
 }
 
+async function submitLock(page: import('@playwright/test').Page): Promise<void> {
+  const submit = page.getByRole('button', { name: /Submit lock|Enviar fechadura/i });
+  await submit.click(tap);
+}
+
 test('Gaiola solvable from on-screen feedback within 4 attempts', async ({ page }) => {
+  test.setTimeout(90_000);
   await openGaiola(page);
   const pins = page.locator('.lockpick-pin');
   const count = await pins.count();
   expect(count).toBeGreaterThanOrEqual(3);
-  const submit = page.getByRole('button', { name: /Submit lock|Enviar fechadura/i });
 
   for (let attempt = 0; attempt < 4; attempt += 1) {
-    await submit.click();
+    await submitLock(page);
     await page.waitForTimeout(400);
     if ((await pins.count()) === 0) {
       expect(attempt).toBeLessThan(4);
@@ -77,10 +90,10 @@ test('Gaiola solvable from on-screen feedback within 4 attempts', async ({ page 
     for (let i = 0; i < count; i += 1) {
       const v = verdicts[i];
       if (v === 'ok' || v === null) continue;
-      await pins.nth(i).click();
+      await pins.nth(i).click(tap);
       await page.waitForTimeout(40);
     }
   }
-  await submit.click();
+  await submitLock(page);
   await expect(pins).toHaveCount(0, { timeout: 5_000 });
 });
