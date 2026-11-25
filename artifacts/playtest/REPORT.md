@@ -49,6 +49,8 @@ Artifacts: `v130-*.png`, `v130-walkthrough.webm`.
 - `npm test` — pass (branches ≥90%)
 - `npm run lint` / `typecheck` — pass
 - `e2e/story-walk` — PASS (unique marker + skill perfect)
+- `e2e/story-complete` — PASS (skill perfect + woven beats)
+- `e2e/playtest` golden path — PASS (skill panel, not bet panel)
 - `e2e/fps-overlay` — PASS
 - `e2e/perf-throttle` — PASS (≥50 FPS @ 4×)
 

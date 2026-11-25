@@ -73,14 +73,23 @@ test.describe('Playtest golden path', () => {
     await expect(page.locator('.dialogue-panel')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Take the bet' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Walk away' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: /Play it loud|Play it quiet/ }),
+    ).toHaveCount(2);
     await page.screenshot({ path: path.join(ART, '03-dialogue.png') });
     await page.getByRole('button', { name: 'Take the bet' }).click();
-    await expect(page.locator('.bet-panel')).toBeVisible();
-    await expect(page.locator('.bet-panel')).toContainText('Odds');
-    await expect(page.locator('.bet-panel')).toContainText('Win chance');
-    await expect(page.getByRole('button', { name: 'Stake +' })).toBeVisible();
-    await page.screenshot({ path: path.join(ART, '04-bet.png') });
-    await page.getByRole('button', { name: 'Place bet' }).click();
+    // Story gates open skill UI (not RNG bet panel).
+    await expect(page.locator('.skill-panel')).toBeVisible();
+    await expect(page.locator('.skill-panel')).toContainText('Stake at risk');
+    await expect(page.locator('.skill-panel')).toContainText('Phase');
+    await page.screenshot({ path: path.join(ART, '04-skill.png') });
+    await page.evaluate(() => {
+      (
+        window as unknown as {
+          __HOUSE_EDGE__: { session: { completeSkillPerfect: () => boolean } };
+        }
+      ).__HOUSE_EDGE__.session.completeSkillPerfect();
+    });
     await expect(page.locator('.play-hud')).toBeVisible({ timeout: 5000 });
 
     await page.keyboard.press('Escape');

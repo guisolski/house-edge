@@ -8,8 +8,10 @@ test.beforeAll(() => {
   fs.mkdirSync(ART, { recursive: true });
 });
 
+/** Main-path beats in unlock order (woven side quests included). */
 const STORY_IDS = [
   'boteco-nair',
+  'side-morro-copper',
   'morro-antena',
   'luna-beco',
   'morro-fios',
@@ -17,6 +19,7 @@ const STORY_IDS = [
   'feira-kiko',
   'feira-catador',
   'bia-set',
+  'feira-dancer',
   'feira-forro',
   'feira-radio',
   'feira-tipster',
@@ -24,11 +27,14 @@ const STORY_IDS = [
   'prova-luna',
   'avenida-twist',
   'avenida-checkpoint',
+  'avenida-courier',
   'avenida-influencer',
   'avenida-radar',
   'avenida-atm',
+  'avenida-stealth',
   'lobby-margin',
   'morro-return-nair',
+  'morro-return-fio',
   'torre-foyer',
   'torre-pit',
   'torre-elevator',
@@ -39,6 +45,7 @@ const STORY_IDS = [
 
 const BEAT_DISTRICT: Record<(typeof STORY_IDS)[number], string> = {
   'boteco-nair': 'morro-neon',
+  'side-morro-copper': 'morro-neon',
   'morro-antena': 'morro-neon',
   'luna-beco': 'morro-neon',
   'morro-fios': 'morro-neon',
@@ -46,6 +53,7 @@ const BEAT_DISTRICT: Record<(typeof STORY_IDS)[number], string> = {
   'feira-kiko': 'feira-central',
   'feira-catador': 'feira-central',
   'bia-set': 'feira-central',
+  'feira-dancer': 'feira-central',
   'feira-forro': 'feira-central',
   'feira-radio': 'feira-central',
   'feira-tipster': 'feira-central',
@@ -53,11 +61,14 @@ const BEAT_DISTRICT: Record<(typeof STORY_IDS)[number], string> = {
   'prova-luna': 'feira-central',
   'avenida-twist': 'avenida-odds',
   'avenida-checkpoint': 'avenida-odds',
+  'avenida-courier': 'avenida-odds',
   'avenida-influencer': 'avenida-odds',
   'avenida-radar': 'avenida-odds',
   'avenida-atm': 'avenida-odds',
+  'avenida-stealth': 'avenida-odds',
   'lobby-margin': 'avenida-odds',
   'morro-return-nair': 'morro-neon',
+  'morro-return-fio': 'morro-neon',
   'torre-foyer': 'torre-casa',
   'torre-pit': 'torre-casa',
   'torre-elevator': 'torre-casa',
@@ -69,7 +80,7 @@ const BEAT_DISTRICT: Record<(typeof STORY_IDS)[number], string> = {
 test('full story reaches ending with safe-job recovery', async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto('/');
-  await expect(page.locator('.version')).toContainText('v1.12');
+  await expect(page.locator('.version')).toContainText('v1.13');
   await page.getByRole('button', { name: 'New Game' }).click();
   await page.locator('.world-canvas').click({ position: { x: 48, y: 48 } });
 
@@ -82,10 +93,12 @@ test('full story reaches ending with safe-job recovery', async ({ page }) => {
               runStoryBeat: (id: string) => boolean;
               acceptStoryBet: () => boolean;
               confirmBet: () => boolean;
+              completeSkillPerfect: () => boolean;
               doSafeJob: (id: string) => boolean;
               travelTo: (id: string) => boolean;
               closeModal: () => void;
               continueExploring: () => boolean;
+              pickDialogueChoice: (flag?: string, reply?: string) => void;
               ui: { is: (s: string) => boolean };
               player: {
                 getStats: () => { credits: number; districtId: string };
@@ -98,6 +111,7 @@ test('full story reaches ending with safe-job recovery', async ({ page }) => {
         }
       ).__HOUSE_EDGE__;
       let bets = 0;
+      let skills = 0;
       let safe = 0;
       let sawEnding = false;
       const goTo = (districtId: string): void => {
@@ -122,14 +136,21 @@ test('full story reaches ending with safe-job recovery', async ({ page }) => {
             safe += 1;
           }
           if (!he.session.runStoryBeat(id)) break;
+          // Optional style choice — non-blocking.
+          he.session.pickDialogueChoice?.('rita_loud', 'Loud it is.');
           if (!he.session.acceptStoryBet()) {
             // Dialogue-only: close finishes the beat.
             he.session.closeModal();
             if (he.session.story.getCompleted().includes(id)) break;
             continue;
           }
-          he.session.confirmBet();
-          bets += 1;
+          if (he.session.ui.is('skill')) {
+            he.session.completeSkillPerfect();
+            skills += 1;
+          } else {
+            he.session.confirmBet();
+            bets += 1;
+          }
           if (he.session.story.getCompleted().includes(id)) break;
         }
         if (id === 'torre-final' && he.session.ui.is('ending')) {
@@ -143,6 +164,7 @@ test('full story reaches ending with safe-job recovery', async ({ page }) => {
       return {
         completed: he.session.story.getCompleted(),
         bets,
+        skills,
         safe,
         ending: he.session.story.getCompleted().includes('torre-final'),
         epilogue: he.session.story.getCompleted().includes('epilogue-laje'),
@@ -155,6 +177,7 @@ test('full story reaches ending with safe-job recovery', async ({ page }) => {
   expect(result.ending, JSON.stringify(result)).toBe(true);
   expect(result.epilogue, JSON.stringify(result)).toBe(true);
   expect(result.sawEnding, JSON.stringify(result)).toBe(true);
+  expect(result.skills, JSON.stringify(result)).toBeGreaterThan(10);
   await page.screenshot({ path: path.join(ART, '10-story-ending.png') });
   expect(
     errors.filter((e) => !e.includes('favicon.ico')),
