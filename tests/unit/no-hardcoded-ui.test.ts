@@ -12,6 +12,13 @@ const FILES = [
   'src/systems/minigame.ts',
   'src/systems/upgrade.ts',
   'src/game/wiring.ts',
+  'src/world/maps.ts',
+  'src/rendering/world-view.ts',
+  'src/systems/interaction.ts',
+  'src/content/districts.ts',
+  'src/content/bets.ts',
+  'src/systems/grind.ts',
+  'src/systems/betting.ts',
 ];
 
 /** Known English player-facing phrases that must live in i18n catalogs. */
@@ -34,6 +41,23 @@ const BLOCKLIST = [
   'Duel vs Augusto',
   'Pick durability',
   'Esc cancels',
+  'Ice-cold water',
+  'Street pixo',
+  'Travel to',
+  'Built with Excalibur',
+  'Skip anytime',
+  'Onboarding timing',
+  'Almost clean',
+  'The house takes its cut',
+  'Rita Odds — timed',
+  'Stage Hand',
+  'Radio Pirate',
+  'Mole Contact',
+  'Cage Runner',
+  'VIP SALON',
+  'POLICE LINE',
+  'CENTRAL FAIR',
+  'PIT FLOOR',
 ];
 
 function stripComments(src: string): string {

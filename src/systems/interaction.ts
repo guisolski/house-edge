@@ -1,4 +1,5 @@
 import type { DistrictId } from '../core/types';
+import { englishNpcName } from '../i18n/localize-npc';
 
 export type WorldNpc = {
   id: string;
@@ -65,7 +66,7 @@ export const INTERACT_RANGE = 3.5;
 const NPCS: readonly WorldNpc[] = [
   {
     id: 'dona-nair',
-    name: 'Dona Nair',
+    name: englishNpcName('dona-nair'),
     districtId: 'morro-neon',
     // Spawn plaza asphalt — same band as Rita spawn (12,16), easy first talk.
     x: 13,
@@ -78,7 +79,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'antena-tech',
-    name: 'Antena Tech',
+    name: englishNpcName('antena-tech'),
     districtId: 'morro-neon',
     // West ridge — well clear of spawn/Nair interact bubble (12–14,16).
     x: 5,
@@ -90,7 +91,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'luna',
-    name: 'Luna Pixel',
+    name: englishNpcName('luna'),
     districtId: 'morro-neon',
     // Open asphalt plaza — south of house footprints (in front / reachable).
     x: 22,
@@ -100,7 +101,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'fio-ladrao',
-    name: 'Fio Ladrão',
+    name: englishNpcName('fio-ladrao'),
     districtId: 'morro-neon',
     x: 18,
     y: 10,
@@ -111,7 +112,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'seu-ze',
-    name: 'Seu Zé',
+    name: englishNpcName('seu-ze'),
     districtId: 'morro-neon',
     // Lower plaza — clear of Fair pad (38,22) by > INTERACT_RANGE.
     x: 28,
@@ -122,7 +123,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'catador-morro',
-    name: 'Catador do Morro',
+    name: englishNpcName('catador-morro'),
     districtId: 'morro-neon',
     x: 4,
     y: 16,
@@ -133,7 +134,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'kiko',
-    name: 'Kiko',
+    name: englishNpcName('kiko'),
     districtId: 'feira-central',
     x: 10,
     y: 12,
@@ -146,7 +147,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'catador-feira',
-    name: 'Catador da Feira',
+    name: englishNpcName('catador-feira'),
     districtId: 'feira-central',
     // South aisle — clear of Bia (18,10) and Barraca Tia.
     x: 26,
@@ -159,7 +160,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'bia',
-    name: 'Bia Forró',
+    name: englishNpcName('bia'),
     districtId: 'feira-central',
     // North stage — clear of Catador (26,16) tag stack.
     x: 18,
@@ -170,7 +171,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'dancer-feira',
-    name: 'Dancer Sol',
+    name: englishNpcName('dancer-feira'),
     districtId: 'feira-central',
     // Mid aisle — clear of DJ interact bubble.
     x: 26,
@@ -181,7 +182,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'forro-dj',
-    name: 'DJ Forró',
+    name: englishNpcName('forro-dj'),
     districtId: 'feira-central',
     // East stage — clear of Odds pad (38,13) and Dancer (26,14).
     x: 34,
@@ -193,7 +194,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'stage-hand',
-    name: 'Stage Hand',
+    name: englishNpcName('stage-hand'),
     districtId: 'feira-central',
     x: 30,
     y: 16,
@@ -204,7 +205,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'luna-feira',
-    name: 'Luna Pixel',
+    name: englishNpcName('luna-feira'),
     districtId: 'feira-central',
     // Clear of east exit pad (38,13) and the south aisle cluster.
     x: 34,
@@ -214,7 +215,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'lavador-feira',
-    name: 'Lavador da Feira',
+    name: englishNpcName('lavador-feira'),
     districtId: 'feira-central',
     x: 14,
     y: 16,
@@ -225,7 +226,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'radio-pirate',
-    name: 'Radio Pirate',
+    name: englishNpcName('radio-pirate'),
     districtId: 'feira-central',
     x: 22,
     y: 16,
@@ -236,7 +237,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'barraca-tia',
-    name: 'Barraca Tia',
+    name: englishNpcName('barraca-tia'),
     districtId: 'feira-central',
     // Clear of west exit pad (5,13).
     x: 10,
@@ -248,7 +249,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'mole-contact',
-    name: 'Mole Contact',
+    name: englishNpcName('mole-contact'),
     districtId: 'avenida-odds',
     // North shoulder of west plaza — clear of Fair pad (2,12) lane.
     x: 9,
@@ -262,7 +263,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'capita',
-    name: 'Captain Vespera',
+    name: englishNpcName('capita'),
     districtId: 'avenida-odds',
     // South shoulder — leaves the west Fair asphalt (y11–12) clear.
     x: 5,
@@ -274,7 +275,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'courier-odds',
-    name: 'Casa Courier',
+    name: englishNpcName('courier-odds'),
     districtId: 'avenida-odds',
     // South of west approach — never inside the drone lane or Fair pad bubble.
     x: 8,
@@ -285,7 +286,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'influencer',
-    name: 'Odds Influencer',
+    name: englishNpcName('influencer'),
     districtId: 'avenida-odds',
     // East of goal — outside lane (x > 34).
     x: 35,
@@ -297,7 +298,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'atm-hacker',
-    name: 'ATM Hacker',
+    name: englishNpcName('atm-hacker'),
     districtId: 'avenida-odds',
     // East approach — clear of torre pad (43,12) by > INTERACT_RANGE.
     x: 38,
@@ -309,7 +310,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'stealth-cam',
-    name: 'Lobby Cam Tech',
+    name: englishNpcName('stealth-cam'),
     districtId: 'avenida-odds',
     x: 36,
     y: 12,
@@ -319,7 +320,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'margin',
-    name: 'Dr. Margin',
+    name: englishNpcName('margin'),
     districtId: 'avenida-odds',
     // East plaza — clear of lane / ATM / torre pad.
     x: 39,
@@ -330,7 +331,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'mensageiro-avenida',
-    name: 'Mensageiro',
+    name: englishNpcName('mensageiro-avenida'),
     districtId: 'avenida-odds',
     x: 37,
     y: 12,
@@ -340,7 +341,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'cage-runner',
-    name: 'Cage Runner',
+    name: englishNpcName('cage-runner'),
     districtId: 'avenida-odds',
     // South-east of Fair approach — no Vespera overlap on the west lane.
     x: 10,
@@ -352,7 +353,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'neon-snap',
-    name: 'Neon Snap',
+    name: englishNpcName('neon-snap'),
     districtId: 'avenida-odds',
     // Corridor mouth — clear of Fair pad (2,12); starts the run, never in cones.
     x: 11,
@@ -365,7 +366,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'foyer-guard',
-    name: 'Foyer Guard',
+    name: englishNpcName('foyer-guard'),
     districtId: 'torre-casa',
     // Open plaza south of VIP tables — reachable, in front of furniture.
     x: 12,
@@ -378,7 +379,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'pit-dealer',
-    name: 'Pit Dealer',
+    name: englishNpcName('pit-dealer'),
     districtId: 'torre-casa',
     x: 14,
     y: 14,
@@ -390,8 +391,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'elevator',
-    // Canvas tag hidden — neon already says ELEVATOR ↑.
-    name: 'Elevator',
+    name: englishNpcName('elevator'),
     districtId: 'torre-casa',
     x: 24,
     y: 11,
@@ -401,8 +401,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'elevator-vip',
-    // Canvas tag hidden — neon already says ELEVATOR ↓.
-    name: 'Elevator',
+    name: englishNpcName('elevator-vip'),
     districtId: 'torre-casa',
     x: 20,
     y: 9,
@@ -411,7 +410,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'vip-host',
-    name: 'VIP Host',
+    name: englishNpcName('vip-host'),
     districtId: 'torre-casa',
     // Clear of VIP SALON neon (14,4) and elevator pad (20,9).
     x: 30,
@@ -425,7 +424,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'ceo',
-    name: 'Augusto Casa',
+    name: englishNpcName('ceo'),
     districtId: 'torre-casa',
     // Keep clear of the VIP elevator (20,9) so E on the pad uses the car.
     x: 32,
@@ -437,7 +436,7 @@ const NPCS: readonly WorldNpc[] = [
   },
   {
     id: 'busboy-torre',
-    name: 'Busboy',
+    name: englishNpcName('busboy-torre'),
     districtId: 'torre-casa',
     x: 34,
     y: 16,
@@ -559,8 +558,11 @@ function pickNearest(
   return best;
 }
 
-/** Doorway trigger radius — must walk onto the pad (not brush past). */
-export const EXIT_STAND_RANGE = 1.15;
+/**
+ * Doorway trigger radius — covers the painted plus-shaped exit pad
+ * (center ± cardinals), not just the exact arrow tile.
+ */
+export const EXIT_STAND_RANGE = 1.85;
 /** Hysteresis: latch clears only after leaving this larger radius (stops bounce-back). */
 export const EXIT_CLEAR_RANGE = 3.2;
 /** Tiles inward from the reciprocal pad on arrival (must exceed CLEAR). */

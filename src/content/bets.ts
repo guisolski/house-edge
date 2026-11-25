@@ -1,4 +1,12 @@
 import type { BetDefinition, Odds } from '../core/types';
+import { betEn } from '../i18n/bet-en';
+
+function betCopy(id: string): { title: string; description: string } {
+  return {
+    title: betEn[`bet.${id}.title` as keyof typeof betEn],
+    description: betEn[`bet.${id}.description` as keyof typeof betEn],
+  };
+}
 
 /** Keep winChance aligned with displayed odds + house edge. */
 function chance(odds: Odds, houseEdge: number): number {
@@ -18,9 +26,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'agua-gelada',
     kind: 'purchase',
-    title: 'Ice-cold water at the boteco',
-    description:
-      'Onboarding timing pour — stop the needle on cold. After the credits this rematch is a side hustle (repeatable grind).',
+    ...betCopy('agua-gelada'),
     stake: 8,
     stakeMin: 4,
     stakeMax: 30,
@@ -34,9 +40,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'antena-sinal',
     kind: 'story',
-    title: 'Pirate signal jack',
-    description:
-      'Bet the pirate jack Antena Tech spliced on the LED tower — catch Luna’s beco feed.',
+    ...betCopy('antena-sinal'),
     stake: 14,
     stakeMin: 8,
     stakeMax: 40,
@@ -49,9 +53,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'laje-lottery',
     kind: 'draw',
-    title: 'Rooftop number draw',
-    description:
-      'Old street lotteries are gone — wiped out by the corps. The laje now runs a corp-licensed draw.',
+    ...betCopy('laje-lottery'),
     stake: 12,
     stakeMin: 5,
     stakeMax: 40,
@@ -64,8 +66,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'fio-corrida',
     kind: 'race',
-    title: 'Laje wire chase',
-    description: 'Sprint across rooftops to catch the thief before he cuts Luna’s line.',
+    ...betCopy('fio-corrida'),
     stake: 16,
     stakeMin: 8,
     stakeMax: 50,
@@ -78,8 +79,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'corrida-moto',
     kind: 'race',
-    title: 'Rooftop moto race',
-    description: 'Illegal dash between antennas and clotheslines. Back the local rider.',
+    ...betCopy('corrida-moto'),
     stake: 18,
     stakeMin: 8,
     stakeMax: 60,
@@ -93,8 +93,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'pastel-surpresa',
     kind: 'purchase',
-    title: 'Surprise pastel from the fair',
-    description: 'Might be beef, cheese… or a Casa debt chip.',
+    ...betCopy('pastel-surpresa'),
     stake: 12,
     stakeMin: 5,
     stakeMax: 40,
@@ -107,8 +106,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'feira-garrafa',
     kind: 'job',
-    title: 'Calçadão bottle haul',
-    description: 'Sift the fair trash for returnable glass before the militia sweep.',
+    ...betCopy('feira-garrafa'),
     stake: 12,
     stakeMin: 10,
     stakeMax: 35,
@@ -121,9 +119,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'forro-crowd',
     kind: 'dialogue',
-    title: 'Forró crowd surge',
-    description:
-      'Wager whether the calçadão erupts into dance and spooks the corp patrol.',
+    ...betCopy('forro-crowd'),
     stake: 18,
     stakeMin: 10,
     stakeMax: 45,
@@ -136,8 +132,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'freela-entregas',
     kind: 'job',
-    title: 'Delivery freela',
-    description: 'Drop a package in the alley without corp militia stopping you.',
+    ...betCopy('freela-entregas'),
     stake: 15,
     stakeMin: 5,
     stakeMax: 50,
@@ -149,8 +144,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'pixo-challenge',
     kind: 'story',
-    title: 'Pixo on the OddsCorp facade',
-    description: 'Climb the scaffold, paint the truth, climb down alive.',
+    ...betCopy('pixo-challenge'),
     stake: 20,
     stakeMin: 8,
     stakeMax: 60,
@@ -163,8 +157,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'samba-odds',
     kind: 'dialogue',
-    title: 'Samba vs corp jingle',
-    description: 'Who wins the duel: the hill malandro or the influencer on payroll?',
+    ...betCopy('samba-odds'),
     stake: 15,
     stakeMin: 5,
     stakeMax: 50,
@@ -177,9 +170,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'feira-radio',
     kind: 'job',
-    title: 'Pirate radio filter jump',
-    description:
-      'Bet the next track overwhelms Casa’s noise filter for a clean handoff window.',
+    ...betCopy('feira-radio'),
     stake: 12,
     stakeMin: 6,
     stakeMax: 40,
@@ -192,9 +183,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'feira-lockbox',
     kind: 'story',
-    title: 'Casa lockbox under the stage',
-    description:
-      'Pick the tumblers on a Casa lockbox shaken loose under the forró risers.',
+    ...betCopy('feira-lockbox'),
     stake: 14,
     stakeMin: 8,
     stakeMax: 45,
@@ -207,9 +196,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'avenida-server',
     kind: 'story',
-    title: 'Server-cage infiltration',
-    description:
-      'Crack four tumblers on a Casa server cage before the militia sweep returns.',
+    ...betCopy('avenida-server'),
     stake: 18,
     stakeMin: 10,
     stakeMax: 55,
@@ -222,9 +209,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'avenida-betrayal',
     kind: 'story',
-    title: 'Betrayal on the boulevard',
-    description:
-      'Skill read: name who sold the hill’s bytes — then choose who you still trust.',
+    ...betCopy('avenida-betrayal'),
     stake: 16,
     stakeMin: 8,
     stakeMax: 50,
@@ -237,9 +222,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'avenida-drone',
     kind: 'story',
-    title: 'Drone cone evade',
-    description:
-      'Slip militia drone sight cones across Odds Avenue — match the blind path before the sweep locks.',
+    ...betCopy('avenida-drone'),
     stake: 15,
     stakeMin: 8,
     stakeMax: 48,
@@ -252,9 +235,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'torre-negotiate',
     kind: 'story',
-    title: 'VIP Host negotiation',
-    description:
-      'Negotiate an exit with the VIP Host before the smile hardens — pick has consequences.',
+    ...betCopy('torre-negotiate'),
     stake: 18,
     stakeMin: 10,
     stakeMax: 55,
@@ -267,9 +248,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'twist-vazamento',
     kind: 'story',
-    title: 'Leak or Casa plant',
-    description:
-      'Bet whether Luna’s vazamento is genuine street intel or corp counter-intel.',
+    ...betCopy('twist-vazamento'),
     stake: 22,
     stakeMin: 12,
     stakeMax: 60,
@@ -282,8 +261,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'influencer-duelo',
     kind: 'dialogue',
-    title: 'Street pixo vs influencer',
-    description: 'Who wins the live duel: sponsored Odds TV or raw hill pixo?',
+    ...betCopy('influencer-duelo'),
     stake: 20,
     stakeMin: 10,
     stakeMax: 55,
@@ -296,8 +274,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'prova-vazamento',
     kind: 'story',
-    title: 'Algorithm leak wager',
-    description: "Bet whether Luna's pendrive holds Casa Suprema's source RNG.",
+    ...betCopy('prova-vazamento'),
     stake: 20,
     stakeMin: 8,
     stakeMax: 70,
@@ -311,8 +288,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'audiencia-publica',
     kind: 'story',
-    title: 'Rigged public hearing',
-    description: 'On Odds Avenue, even the council mic comes with a house edge.',
+    ...betCopy('audiencia-publica'),
     stake: 25,
     stakeMin: 10,
     stakeMax: 80,
@@ -326,9 +302,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'duelo-casa',
     kind: 'story',
-    title: 'Final duel at the Tower',
-    description:
-      'Multi-phase skill duel vs Augusto — timing, read, and hack. Stake hurts on a miss; no coin-flip retries.',
+    ...betCopy('duelo-casa'),
     stake: 28,
     stakeMin: 8,
     stakeMax: 80,
@@ -342,8 +316,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'feira-tipster',
     kind: 'story',
-    title: 'Wired mango crate',
-    description: 'Bet which mango crate hums with a Casa tracker.',
+    ...betCopy('feira-tipster'),
     stake: 10,
     stakeMin: 4,
     stakeMax: 30,
@@ -356,8 +329,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'torre-foyer',
     kind: 'story',
-    title: 'Foyer badge check',
-    description: 'Bluff past foyer security before the pit opens.',
+    ...betCopy('torre-foyer'),
     stake: 14,
     stakeMin: 5,
     stakeMax: 40,
@@ -370,8 +342,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'torre-pit',
     kind: 'job',
-    title: 'Pit floor warm-up',
-    description: 'One quiet hand on the pit floor before VIP.',
+    ...betCopy('torre-pit'),
     stake: 18,
     stakeMin: 6,
     stakeMax: 50,
@@ -384,8 +355,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'torre-elevator',
     kind: 'story',
-    title: 'Elevator call',
-    description: 'Time the express call — then ride the fade up to VIP.',
+    ...betCopy('torre-elevator'),
     stake: 16,
     stakeMin: 6,
     stakeMax: 45,
@@ -398,8 +368,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'torre-vip',
     kind: 'job',
-    title: 'VIP table rake skim',
-    description: 'Skim a cut from the Tower VIP table before security notices.',
+    ...betCopy('torre-vip'),
     stake: 24,
     stakeMin: 8,
     stakeMax: 70,
@@ -412,8 +381,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'avenida-atm',
     kind: 'job',
-    title: 'Casa ATM glitch hunt',
-    description: 'Find the rounding bug in an Odds Avenue ATM before midnight.',
+    ...betCopy('avenida-atm'),
     stake: 20,
     stakeMin: 8,
     stakeMax: 70,
@@ -426,8 +394,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'morro-return-nair',
     kind: 'story',
-    title: 'Hill trust odd',
-    description: 'Wager that the lajes stand with you before the tower climb.',
+    ...betCopy('morro-return-nair'),
     stake: 16,
     stakeMin: 8,
     stakeMax: 50,
@@ -440,8 +407,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'morro-return-fio',
     kind: 'story',
-    title: 'Private wire splice',
-    description: 'Ghost a private line into the tower — quieter, lonelier.',
+    ...betCopy('morro-return-fio'),
     stake: 16,
     stakeMin: 8,
     stakeMax: 50,
@@ -454,8 +420,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'side-morro-copper',
     kind: 'job',
-    title: 'Spare copper haul',
-    description: 'Small rooftop scrap odd. Quiet credits.',
+    ...betCopy('side-morro-copper'),
     stake: 6,
     stakeMin: 3,
     stakeMax: 20,
@@ -468,8 +433,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'side-morro-tank',
     kind: 'job',
-    title: 'Water tank refill',
-    description: 'Bet the hill’s tank fills before morning thirst.',
+    ...betCopy('side-morro-tank'),
     stake: 5,
     stakeMin: 2,
     stakeMax: 16,
@@ -481,8 +445,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'side-feira-mango',
     kind: 'purchase',
-    title: 'Mango crate gamble',
-    description: 'Ripe or moth-eaten — the stall won’t say until you bet.',
+    ...betCopy('side-feira-mango'),
     stake: 5,
     stakeMin: 2,
     stakeMax: 18,
@@ -494,8 +457,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'side-feira-ice',
     kind: 'purchase',
-    title: 'Ice cart timing',
-    description: 'Bet the ice blocks arrive before the fryer dies.',
+    ...betCopy('side-feira-ice'),
     stake: 5,
     stakeMin: 2,
     stakeMax: 16,
@@ -507,8 +469,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'side-avenida-neon',
     kind: 'job',
-    title: 'Neon vs billboard',
-    description: 'Street glow against sponsored LED — small side odd.',
+    ...betCopy('side-avenida-neon'),
     stake: 8,
     stakeMin: 4,
     stakeMax: 24,
@@ -520,8 +481,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'side-torre-tip',
     kind: 'job',
-    title: 'Fallen chip tip',
-    description: 'Pocket a “dropped” high-roller chip before cameras blink.',
+    ...betCopy('side-torre-tip'),
     stake: 10,
     stakeMin: 5,
     stakeMax: 30,
@@ -534,9 +494,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'courier-tip',
     kind: 'story',
-    title: 'Courier shadow',
-    description:
-      'Shadow a Casa courier through Odds alleys — skill chase, not a coin flip.',
+    ...betCopy('courier-tip'),
     stake: 12,
     stakeMin: 6,
     stakeMax: 36,
@@ -549,8 +507,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'dancer-tip',
     kind: 'story',
-    title: 'Dancer’s cue',
-    description: 'Catch the fair dancer’s cue beat before the corp playlist takes over.',
+    ...betCopy('dancer-tip'),
     stake: 10,
     stakeMin: 5,
     stakeMax: 30,
@@ -563,8 +520,7 @@ export const BETS: readonly BetDefinition[] = [
   bet({
     id: 'avenida-stealth',
     kind: 'story',
-    title: 'Lobby cam slip',
-    description: 'Slip past Odds Avenue lobby cameras before the hearing.',
+    ...betCopy('avenida-stealth'),
     stake: 14,
     stakeMin: 6,
     stakeMax: 40,

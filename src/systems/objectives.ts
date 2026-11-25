@@ -1,6 +1,7 @@
-import { DISTRICTS } from '../content/districts';
 import type { DistrictId, StoryBeat } from '../core/types';
 import { t, tf } from '../i18n';
+import { localizeDistrictName, localizeDistrictShort } from '../i18n/localize-district';
+import { localizedNpcName } from '../i18n/localize-npc';
 import type { WorldNpc, DistrictExit } from './interaction';
 
 /** GD-1: always show the next concrete objective with a world marker. */
@@ -50,9 +51,10 @@ function epilogueNpc(ctx: ObjectiveCtx): WorldNpc | undefined {
 }
 
 function freeRoamTowardNair(ctx: ObjectiveCtx, epi: WorldNpc): Objective {
+  const who = localizedNpcName(epi);
   if (epi.districtId === ctx.districtId) {
     return {
-      text: tf('ui.obj.talkTo', { name: epi.name, place: districtName(ctx.districtId) }),
+      text: tf('ui.obj.talkTo', { name: who, place: districtName(ctx.districtId) }),
       detail: t('ui.obj.epilogueDetail'),
       targetName: epi.name,
       targetX: epi.x,
@@ -65,14 +67,14 @@ function freeRoamTowardNair(ctx: ObjectiveCtx, epi: WorldNpc): Objective {
     return {
       text: tf('ui.obj.travelTo', {
         place: districtName(epi.districtId),
-        name: epi.name,
+        name: who,
       }),
       detail: t('ui.obj.epilogueHill'),
       districtId: epi.districtId,
     };
   }
   return {
-    text: tf('ui.obj.exitTo', { place: districtName(hop.toDistrict), name: epi.name }),
+    text: tf('ui.obj.exitTo', { place: districtName(hop.toDistrict), name: who }),
     detail: t('ui.obj.epilogueHill'),
     targetName: districtShortName(hop.toDistrict),
     targetX: hop.x,
@@ -105,16 +107,12 @@ export function nextBeat(ctx: ObjectiveCtx): StoryBeat | undefined {
 }
 
 function districtName(id: string): string {
-  return DISTRICTS.find((d) => d.id === id)?.name ?? id;
+  return localizeDistrictName(id);
 }
 
 /** Short marker labels so edge pointers stay readable (arrow-only when near EXIT signs). */
 function districtShortName(id: string): string {
-  if (id === 'torre-casa') return 'Casa Tower';
-  if (id === 'feira-central') return 'Central Fair';
-  if (id === 'avenida-odds') return 'Odds Avenue';
-  if (id === 'morro-neon') return 'Morro Neon';
-  return districtName(id);
+  return localizeDistrictShort(id);
 }
 
 function beatNpc(ctx: ObjectiveCtx, beat: StoryBeat): WorldNpc | undefined {
@@ -176,7 +174,7 @@ function hopTravelObjective(
   const place = districtName(next.districtId);
   const hopPlace = districtName(hop.toDistrict);
   const direct = hop.toDistrict === next.districtId;
-  const who = npc?.name ?? place;
+  const who = npc ? localizedNpcName(npc) : place;
   return {
     text: direct
       ? tf('ui.obj.talkTo', { name: who, place })
@@ -198,7 +196,7 @@ function travelObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
     return {
       text: tf('ui.obj.travelMenu', { place }),
       detail: npc
-        ? tf('ui.obj.talkTo', { name: npc.name, place })
+        ? tf('ui.obj.talkTo', { name: localizedNpcName(npc), place })
         : t(`story.${next.id}.title`),
       districtId: next.districtId,
     };
@@ -219,7 +217,7 @@ function npcObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
         : t('ui.verb.talk');
     const place = districtName(ctx.districtId);
     return {
-      text: tf('ui.obj.actOn', { verb, name: npc.name, place }),
+      text: tf('ui.obj.actOn', { verb, name: localizedNpcName(npc), place }),
       detail: title,
       targetName: npc.name,
       targetX: npc.x,

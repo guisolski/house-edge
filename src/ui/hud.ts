@@ -18,7 +18,9 @@ import { bakeSprite } from '../rendering/bake';
 import { makeEndingScene } from '../rendering/pixel-gen';
 import type { FpsSample } from '../rendering/fps';
 import { resolveInteractPriority } from '../systems/interact-priority';
-import { getLocale, setLocale, t, type LocaleCode } from '../i18n';
+import { getLocale, setLocale, t, tf, type LocaleCode } from '../i18n';
+import { localizedNpcName } from '../i18n/localize-npc';
+import { localizeDistrictName } from '../i18n/localize-district';
 import {
   tutorialCopyKey,
   tutorialStepCount,
@@ -316,21 +318,15 @@ function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
   art.getContext('2d')?.drawImage(src, 0, 0);
   const viewport = el('div', 'credits-viewport');
   const roll = el('div', 'credits-roll');
+  const creditLines = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) =>
+    el('p', 'credits-line', t(`ui.credits.line.${i}`)),
+  );
   roll.append(
     el('h2', '', UI.creditsTitle),
-    el('p', 'credits-line', 'Rita Odds — timed every needle'),
-    el('p', 'credits-line', 'Dona Nair — honest ice, open laje'),
-    el('p', 'credits-line', 'Capitã & Fio — antenna + chase tiles'),
-    el('p', 'credits-line', 'Luna — pit ledger on the feed'),
-    el('p', 'credits-line', 'Mole Contact — the twist that cut'),
-    el('p', 'credits-line', 'Lockbox crew — Fair stage + server cage'),
-    el('p', 'credits-line', 'Augusto Casa — the house that fell'),
-    el('p', 'credits-line', 'Morro · Feira · Avenida · Torre'),
+    ...creditLines.slice(0, 8),
     el('p', 'credits-thanks', UI.creditsThanks),
-    el('p', 'credits-line', '—'),
-    el('p', 'credits-line', 'Pixel neon · free / CC0 + AI art'),
-    el('p', 'credits-line', 'Built with Excalibur · Vite · Playwright'),
-    el('p', 'credits-thanks', 'Skip anytime — buttons stay below the roll.'),
+    ...creditLines.slice(8),
+    el('p', 'credits-thanks', t('ui.credits.skipHint')),
   );
   viewport.appendChild(roll);
   p.ending.append(art, viewport);
@@ -618,7 +614,7 @@ function openFromMenu(
 
 function refresh(p: Parts, session: GameSession): void {
   const s = session.player.getStats();
-  const district = session.world.get(s.districtId)?.name ?? s.districtId;
+  const district = localizeDistrictName(s.districtId);
   p.stats.textContent = `${district} · ${UI.credits} ${s.credits} · ${UI.reputation} ${s.reputation}`;
   const obj = session.objective();
   p.objective.textContent = `▸ ${obj.text}`;
@@ -672,28 +668,31 @@ function paintPrompt(prompt: HTMLElement, session: GameSession): void {
 }
 
 function promptVerb(npc: { id: string; name: string }): string {
-  if (npc.id === 'elevator-vip') return 'E — Ride down';
-  if (npc.id === 'elevator') return 'E — Ride up';
+  if (npc.id === 'elevator-vip') return t('ui.promptRideDown');
+  if (npc.id === 'elevator') return t('ui.promptRideUp');
   return 'E';
+}
+
+function promptNamed(npc: { id: string; name: string }): string {
+  const verb = promptVerb(npc);
+  if (npc.id === 'elevator' || npc.id === 'elevator-vip') return verb;
+  const name = localizedNpcName(npc);
+  return name ? `${verb} (${name})` : verb;
 }
 
 function promptLabel(
   kind: string,
   npc: ReturnType<GameSession['nearbyNpc']>,
   exit: ReturnType<GameSession['nearbyExit']>,
-  session: GameSession,
+  _session: GameSession,
 ): string | null {
-  if (kind === 'objective' && npc) {
-    return `${promptVerb(npc)}${npc.name ? ` (${npc.name})` : ''}`;
-  }
+  if (kind === 'objective' && npc) return promptNamed(npc);
   if (kind === 'travel' && exit) {
-    if (exit.id === 'avenida-to-torre') return 'E — Enter Casa Tower →';
-    const dest =
-      session.world.get(exit.toDistrict)?.name ?? exit.label.replace(/^Exit → /, '');
-    return `E — Travel to ${dest}`;
+    if (exit.id === 'avenida-to-torre') return t('ui.promptEnterTower');
+    return tf('ui.promptTravel', { dest: localizeDistrictName(exit.toDistrict) });
   }
   if (kind === 'locked') return t('ui.promptPathLocked');
-  if (npc) return `${promptVerb(npc)}${npc.name ? ` (${npc.name})` : ''}`;
+  if (npc) return promptNamed(npc);
   return null;
 }
 

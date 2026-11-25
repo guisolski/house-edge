@@ -1,4 +1,9 @@
 import type { DistrictId } from '../core/types';
+import { signEn } from '../i18n/sign-en';
+
+function signLabel(slug: string): string {
+  return signEn[`sign.${slug}` as keyof typeof signEn];
+}
 
 /** Tile kinds — night city (collision / semantics). */
 export type TileKind =
@@ -120,10 +125,10 @@ export function buildTorreVip(): MapDef {
     tiles,
     buildings,
     signs: [
-      { x: 12, y: 4, label: 'VIP SALON', color: '#ffdf00' },
-      { x: 10, y: 8, label: 'HIGH ROLLERS', color: '#ff2bd6' },
-      { x: 28, y: 6, label: 'PRIVATE TABLE', color: '#ffdf00' },
-      { x: 20, y: 6, label: 'ELEVATOR ↓', color: '#c8d0d8' },
+      { x: 12, y: 4, label: signLabel('vip-salon'), color: '#ffdf00' },
+      { x: 10, y: 8, label: signLabel('high-rollers'), color: '#ff2bd6' },
+      { x: 28, y: 6, label: signLabel('private-table'), color: '#ffdf00' },
+      { x: 20, y: 6, label: signLabel('elevator-down'), color: '#c8d0d8' },
     ],
     props,
     landmark: { x: 18, y: 6, kind: 'casa-tower' },
@@ -422,15 +427,15 @@ function buildMorro(): MapDef {
     buildings,
     signs: [
       // Above the boteco wall — not on the ramp walk band (playtest #27 occlusion).
-      { x: 8, y: 8, label: 'BOTECO NAIR', color: '#ffdf00' },
-      { x: 10, y: 20, label: 'LAJE BET', color: '#ffdf00' },
+      { x: 8, y: 8, label: signLabel('boteco-nair'), color: '#ffdf00' },
+      { x: 10, y: 20, label: signLabel('laje-bet'), color: '#ffdf00' },
       // High on terrace glass — clear of Seu Zé (34,18) and Fair exit.
-      { x: 24, y: 8, label: 'ODDS 24h', color: '#ff2bd6' },
-      { x: 19, y: 12, label: 'STAIRS', color: '#b8ff2b' },
-      { x: 7, y: 12, label: 'RAMP', color: '#b8ff2b' },
-      { x: 32, y: 12, label: 'RAMP', color: '#b8ff2b' },
+      { x: 24, y: 8, label: signLabel('odds-24h'), color: '#ff2bd6' },
+      { x: 19, y: 12, label: signLabel('stairs'), color: '#b8ff2b' },
+      { x: 7, y: 12, label: signLabel('ramp'), color: '#b8ff2b' },
+      { x: 32, y: 12, label: signLabel('ramp'), color: '#b8ff2b' },
       // Lower terrace — clear of Seu Zé, next to Fair pad (38,22).
-      { x: 35, y: 21, label: '> Central Fair', color: '#2bfff2' },
+      { x: 35, y: 21, label: signLabel('to-central-fair'), color: '#2bfff2' },
     ],
     props,
     landmark: { x: 22, y: 2, kind: 'led-tower' },
@@ -566,10 +571,10 @@ function buildFeira(): MapDef {
     buildings,
     signs: [
       // North stall row — clear of Catador (20,15) and plaza NPCs.
-      { x: 12, y: 7, label: 'FEIRA', color: '#ffdf00' },
-      { x: 28, y: 7, label: 'ODDS 24h', color: '#ff2bd6' },
-      { x: 3, y: 10, label: '> Morro Neon', color: '#2bfff2' },
-      { x: 35, y: 12, label: '> Odds Avenue', color: '#2bfff2' },
+      { x: 12, y: 7, label: signLabel('feira'), color: '#ffdf00' },
+      { x: 28, y: 7, label: signLabel('odds-24h'), color: '#ff2bd6' },
+      { x: 3, y: 10, label: signLabel('to-morro-neon'), color: '#2bfff2' },
+      { x: 35, y: 12, label: signLabel('to-odds-avenue'), color: '#2bfff2' },
     ],
     props,
     landmark: { x: 20, y: 6, kind: 'calcadao' },
@@ -674,13 +679,13 @@ function buildAvenida(): MapDef {
     tiles,
     buildings,
     signs: [
-      { x: 16, y: 3, label: 'ODDS 24h', color: '#ff2bd6' },
-      { x: 28, y: 3, label: 'CASA SUPREMA', color: '#ff2bd6' },
-      { x: 2, y: 10, label: '> Central Fair', color: '#2bfff2' },
-      { x: 41, y: 10, label: '> Casa Tower', color: '#2bfff2' },
-      { x: 14, y: 14, label: 'POLICE LINE', color: '#ff8a3d' },
-      { x: 24, y: 14, label: 'NO PASS', color: '#ff8a3d' },
-      { x: 32, y: 9, label: 'BARRIER', color: '#ff8a3d' },
+      { x: 16, y: 3, label: signLabel('odds-24h'), color: '#ff2bd6' },
+      { x: 28, y: 3, label: signLabel('casa-suprema'), color: '#ff2bd6' },
+      { x: 2, y: 10, label: signLabel('to-central-fair'), color: '#2bfff2' },
+      { x: 41, y: 10, label: signLabel('to-casa-tower'), color: '#2bfff2' },
+      { x: 14, y: 14, label: signLabel('police-line'), color: '#ff8a3d' },
+      { x: 24, y: 14, label: signLabel('no-pass'), color: '#ff8a3d' },
+      { x: 32, y: 9, label: signLabel('barrier'), color: '#ff8a3d' },
     ],
     props,
     landmark: { x: 22, y: 2, kind: 'glass-corp' },
@@ -735,11 +740,11 @@ function buildTorre(): MapDef {
     tiles,
     buildings,
     signs: [
-      { x: 16, y: 5, label: 'CASA SUPREMA', color: '#ffdf00' },
-      { x: 12, y: 9, label: 'PIT FLOOR', color: '#ff2bd6' },
+      { x: 16, y: 5, label: signLabel('casa-suprema'), color: '#ffdf00' },
+      { x: 12, y: 9, label: signLabel('pit-floor'), color: '#ff2bd6' },
       // Above the car (24,11) — tagless elevator NPC stands on the pad.
-      { x: 24, y: 7, label: 'ELEVATOR ↑', color: '#c8d0d8' },
-      { x: 5, y: 16, label: '> Odds Avenue', color: '#2bfff2' },
+      { x: 24, y: 7, label: signLabel('elevator-up'), color: '#c8d0d8' },
+      { x: 5, y: 16, label: signLabel('to-odds-avenue'), color: '#2bfff2' },
     ],
     props,
     landmark: { x: 18, y: 8, kind: 'casa-tower' },

@@ -1,5 +1,8 @@
 import { Palette } from '../content/palette';
 import type { DistrictId } from '../core/types';
+import { getLocale } from '../i18n';
+import { localizedNpcName } from '../i18n/localize-npc';
+import { localizeSign } from '../i18n/localize-sign';
 import type { GameSession } from '../systems/session';
 import type { WorldNpc } from '../systems/interaction';
 import { createCamera, followPlayer, viewportPadding } from '../world/camera';
@@ -366,7 +369,7 @@ function collectTagRows(state: ViewState): TagRow[] {
     if (isObj) {
       seen.add(npc.name);
       near.push({ npc, d, force: true });
-    } else if (d <= 1.5) {
+    } else if (d <= 2.8) {
       seen.add(npc.name);
       near.push({ npc, d, force: false });
     }
@@ -406,11 +409,12 @@ function paintOneNpcTag(o: {
   i: number;
   placed: { x: number; y: number }[];
 }): void {
+  const tagName = localizedNpcName(o.row.npc);
   const avoid = labelOffsetForSigns({
     tileX: o.row.npc.x,
     tileY: o.row.npc.y,
     signs: o.map.signs,
-    tagText: o.row.npc.name,
+    tagText: tagName,
     camX: o.camX,
     camY: o.camY,
   });
@@ -430,7 +434,7 @@ function paintOneNpcTag(o: {
   }
   if (!o.row.force && o.placed.some((p) => Math.hypot(px - p.x, py - p.y) < 28)) return;
   o.placed.push({ x: px, y: py });
-  paintMarkerLabel(o.ctx, px, py, o.row.npc.name, o.ctx.canvas.width);
+  paintMarkerLabel(o.ctx, px, py, tagName, o.ctx.canvas.width);
 }
 
 /** Steady translucent sight cone — always drawn (brightness may pulse). */
@@ -486,7 +490,7 @@ function drawStealthDrones(
   ctx.beginPath();
   ctx.arc(gx, gy, 14, 0, Math.PI * 2);
   ctx.stroke();
-  paintMarkerLabel(ctx, gx, gy - 22, 'EXIT', ctx.canvas.width);
+  paintMarkerLabel(ctx, gx, gy - 22, localizeSign('EXIT'), ctx.canvas.width);
   const me = state.session.player.getStats();
   const px = me.x * TILE_PX + 16 - camX;
   const py = me.y * TILE_PX + 16 - camY;
@@ -749,10 +753,11 @@ function pushBakedLandmark(
 }
 
 function signImage(baked: Baked, label: string, color: string): HTMLCanvasElement {
-  const key = `${label}|${color}`;
+  const localized = localizeSign(label);
+  const key = `${getLocale()}|${localized}|${color}`;
   let img = baked.sign.get(key);
   if (!img) {
-    img = bakeSignWithText(label, color);
+    img = bakeSignWithText(localized, color);
     baked.sign.set(key, img);
   }
   return img;
@@ -1331,7 +1336,10 @@ function refreshMarkerCache(state: ViewState, frame: number): void {
     y: obj.targetY,
     districtId: obj.districtId ?? '',
     name: obj.targetName ?? '',
-    arrowOnly: /Fair|Avenue|Tower|Morro Neon|Elevator/i.test(obj.targetName ?? ''),
+      arrowOnly:
+        /Fair|Avenue|Tower|Morro Neon|Elevator|Feira|Avenida|Torre|Elevador/i.test(
+          obj.targetName ?? '',
+        ),
     npcOwns: false,
   };
 }
@@ -1413,7 +1421,8 @@ type ObjectiveMark = {
  */
 function objectiveArrowLabel(m: ObjectiveMark & { onScreen: boolean }): string | null {
   if (!m.label || m.arrowOnly) return null;
-  if (/Fair|Avenue|Tower|Morro Neon|Elevator/i.test(m.label)) return null;
+  if (/Fair|Avenue|Tower|Morro Neon|Elevator|Feira|Avenida|Torre|Elevador/i.test(m.label))
+    return null;
   // Sprite nameplate owns the name — arrow is pointer-only.
   if (m.npcNameplateOwns) return null;
   // Off-screen edge pointer may keep a destination hint for non-NPC targets.

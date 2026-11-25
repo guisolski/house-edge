@@ -2,6 +2,8 @@ import { el, clearNode } from './dom';
 import { UI } from './strings';
 import { t, tf } from '../i18n';
 import { localizePhase, localizeSkillDef } from '../i18n/localize-phase';
+import { localizeBet } from '../i18n/localize-bet';
+import { localizeDistrictName } from '../i18n/localize-district';
 import type { GameSession } from '../systems/session';
 import type { DialogueLine } from '../core/types';
 import { listJobs } from '../systems/grind';
@@ -654,9 +656,14 @@ function appendBetDetails(
   const sideHustle = bet.id === 'agua-gelada' && session.story.getFlag('free_roam');
   const pityPct = pityStacks > 0 ? pityStacks * 8 : 0;
   const pityStr = pityPct > 0 ? tf('ui.bet.pity', { pct: String(pityPct) }) : '';
+  const localized = localizeBet(bet);
   panel.append(
-    el('h2', '', sideHustle ? t('ui.sideHustle.title') : bet.title),
-    el('p', 'bet-desc', sideHustle ? t('ui.sideHustle.descBet') : bet.description),
+    el('h2', '', sideHustle ? t('ui.sideHustle.title') : localized.title),
+    el(
+      'p',
+      'bet-desc',
+      sideHustle ? t('ui.sideHustle.descBet') : localized.description,
+    ),
     stakeLine,
     el(
       'p',
@@ -726,7 +733,7 @@ export function paintTravel(
   clearNode(panel);
   panel.appendChild(el('h2', '', UI.travel));
   for (const d of DISTRICTS) {
-    panel.appendChild(travelBtn(d.name, d.id, session, after));
+    panel.appendChild(travelBtn(localizeDistrictName(d.id), d.id, session, after));
   }
   panel.appendChild(
     button(UI.close, () => {

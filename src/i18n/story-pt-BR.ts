@@ -1,11 +1,11 @@
 /** Story dialogue catalog — do not edit by hand; regenerate from JSON. */
 export const storyPtBR: Record<string, string> = {
-  'story.avenida-atm.0.speaker': 'ATM Hacker',
+  'story.avenida-atm.0.speaker': 'Hacker do Caixa',
   'story.avenida-atm.0.text':
     'Uplink da gaiola tá no ar. Os multibancos da Casa arredondam pro centavo e guardam a sobra. Dispara o glitch antes do bloqueio.',
   'story.avenida-atm.1.speaker': 'Rita Odds',
   'story.avenida-atm.1.text': 'Cada moeda lascada compra tempo. Roda o exploit.',
-  'story.avenida-atm.2.speaker': 'ATM Hacker',
+  'story.avenida-atm.2.speaker': 'Hacker do Caixa',
   'story.avenida-atm.2.text':
     'A máquina fica ao sul da faixa de vidro — longe do café do Margin. Não mistura meu glitch com o ouvido dele.',
   'story.avenida-atm.title': 'Caçada ao glitch do ATM',
@@ -28,13 +28,13 @@ export const storyPtBR: Record<string, string> = {
   'story.avenida-betrayal.3.text':
     'De qualquer jeito, o café do Margin vem depois. Ganha o depoimento — a torre abre.',
   'story.avenida-betrayal.title': 'Traição na avenida',
-  'story.avenida-checkpoint.0.speaker': 'Captain Vespera',
+  'story.avenida-checkpoint.0.speaker': 'Capitã Vespera',
   'story.avenida-checkpoint.0.text':
     'Papel e fichas. Sem odd, sem passagem. Ou… pinta a fachada e prova que tem sangue de rua.',
   'story.avenida-checkpoint.1.speaker': 'Rita Odds',
   'story.avenida-checkpoint.1.text':
     'Prefiro pixo a carimbo. A avenida já escolheu lado.',
-  'story.avenida-checkpoint.2.speaker': 'Captain Vespera',
+  'story.avenida-checkpoint.2.speaker': 'Capitã Vespera',
   'story.avenida-checkpoint.2.text':
     'Então aposta no spray. Ganhou e a milícia fecha o olho — por um quarteirão.',
   'story.avenida-checkpoint.title': 'Checkpoint da capitã',
@@ -86,7 +86,7 @@ export const storyPtBR: Record<string, string> = {
   'story.avenida-radar.3.speaker': 'Rita Odds',
   'story.avenida-radar.3.text': 'Varredura, depois sul. Fechou.',
   'story.avenida-radar.title': 'Radar neon na avenida',
-  'story.avenida-server.0.speaker': 'Cage Runner',
+  'story.avenida-server.0.speaker': 'Corredor da Gaiola',
   'story.avenida-server.0.text':
     'As vans da milícia sumiram. Tem gaiola de servidor da Casa fora da faixa de vidro — quatro pinos, um minuto de silêncio.',
   'story.avenida-server.1.speaker': 'Rita Odds',
@@ -98,19 +98,19 @@ export const storyPtBR: Record<string, string> = {
   'story.avenida-server.2.choice.1.label': 'Plantar beacon do morto',
   'story.avenida-server.2.choice.1.reply':
     'Beacon plantado. Se a audiência travar, o feed ainda grita.',
-  'story.avenida-server.2.speaker': 'Cage Runner',
+  'story.avenida-server.2.speaker': 'Corredor da Gaiola',
   'story.avenida-server.2.text':
     'A pista tá gravada embaixo do trinco. Ajusta cada pino, manda uma vez. Erra e vira a aposta — mesma gaiola, mesmos pinos.',
-  'story.avenida-server.3.speaker': 'Cage Runner',
+  'story.avenida-server.3.speaker': 'Corredor da Gaiola',
   'story.avenida-server.3.text':
     'Depois da gaiola, o hacker do ATM espera no sul. Não enrola — câmera acorda com pino errado.',
   'story.avenida-server.title': 'Infiltração na gaiola de servidor',
-  'story.avenida-stealth.0.speaker': 'Lobby Cam Tech',
+  'story.avenida-stealth.0.speaker': 'Tech das Câmeras',
   'story.avenida-stealth.0.text':
     'O glitch do ATM acordou as câmeras do lobby. Desliza pelas rotas antes da audiência do Margin — cinco passos quietos.',
   'story.avenida-stealth.1.speaker': 'Rita Odds',
   'story.avenida-stealth.1.text': 'Perseguição furtiva. Sem dado. Me guia.',
-  'story.avenida-stealth.2.speaker': 'Lobby Cam Tech',
+  'story.avenida-stealth.2.speaker': 'Tech das Câmeras',
   'story.avenida-stealth.2.text':
     'Erra um passo e vira a aposta. Depois o encontro da traição — depois café com o Margin.',
   'story.avenida-stealth.title': 'Fuga pelas câmeras do lobby',
@@ -214,12 +214,12 @@ export const storyPtBR: Record<string, string> = {
   'story.feira-courier.4.text':
     'Quando terminar, a saída leste nessa mesma faixa vai pra Avenida Odds — quando o arquivo da Luna destravar.',
   'story.feira-courier.title': 'Dica do correio no calçadão',
-  'story.feira-dancer.0.speaker': 'Dancer Sol',
+  'story.feira-dancer.0.speaker': 'Dançarina Sol',
   'story.feira-dancer.0.text':
     'A Bia esquentou a praça. Pega meu sinal de batida antes da playlist da corp sequestrar o som.',
   'story.feira-dancer.1.speaker': 'Rita Odds',
   'story.feira-dancer.1.text': 'Timing, não sorte. Me mostra a janela.',
-  'story.feira-dancer.2.speaker': 'Dancer Sol',
+  'story.feira-dancer.2.speaker': 'Dançarina Sol',
   'story.feira-dancer.2.text':
     'Zona verde no meio do giro. Erra e vira a aposta — tenta de novo. Depois vai no DJ.',
   'story.feira-dancer.title': 'Sinal da dançarina',
@@ -245,9 +245,9 @@ export const storyPtBR: Record<string, string> = {
   'story.feira-kiko.3.text':
     'A feira cheira a óleo e guaraná. Me mantém apontada pro catador.',
   'story.feira-kiko.title': 'Calçadão das odds',
-  'story.feira-lockbox.0.speaker': 'Stage Hand',
+  'story.feira-lockbox.0.speaker': 'Maquinista',
   'story.feira-lockbox.0.text': 'O forró sacudiu um cofre da Casa embaixo do palco.',
-  'story.feira-lockbox.1.speaker': 'Stage Hand',
+  'story.feira-lockbox.1.speaker': 'Maquinista',
   'story.feira-lockbox.1.text':
     'A milícia resgata depois do set — a menos que você abra antes.',
   'story.feira-lockbox.2.speaker': 'Rita Odds',
@@ -258,10 +258,10 @@ export const storyPtBR: Record<string, string> = {
   'story.feira-lockbox.3.choice.1.label': 'Abrir pra alavancagem',
   'story.feira-lockbox.3.choice.1.reply':
     'Alavancagem primeiro. Gasto as fichas quando o Augusto piscar.',
-  'story.feira-lockbox.3.speaker': 'Stage Hand',
+  'story.feira-lockbox.3.speaker': 'Maquinista',
   'story.feira-lockbox.3.text':
     'Fichas do livro. Cartão reserva. Placa riscada mente — timer é real, gazua pode quebrar.',
-  'story.feira-lockbox.4.speaker': 'Stage Hand',
+  'story.feira-lockbox.4.speaker': 'Maquinista',
   'story.feira-lockbox.4.text':
     'Qualquer prêmio alimenta o rádio pirata depois. Não confia no adesivo vermelho.',
   'story.feira-lockbox.title': 'Cofre da Casa embaixo do palco',
@@ -447,18 +447,18 @@ export const storyPtBR: Record<string, string> = {
   'story.torre-final.3.speaker': 'Rita Odds',
   'story.torre-final.3.text': 'Ótimo. Cansei de jogar seu dado. Distribui a cidade.',
   'story.torre-final.title': 'Duelo na Torre Casa Suprema',
-  'story.torre-foyer.0.speaker': 'Foyer Guard',
+  'story.torre-foyer.0.speaker': 'Guarda do Foyer',
   'story.torre-foyer.0.text':
     'Crachá ou aposta. A Casa não deixa odd de rua entrar no pit de graça.',
   'story.torre-foyer.1.speaker': 'Rita Odds',
   'story.torre-foyer.1.text': 'Trouxe escândalo e morro. Isso basta de crachá?',
-  'story.torre-foyer.2.speaker': 'Foyer Guard',
+  'story.torre-foyer.2.speaker': 'Guarda do Foyer',
   'story.torre-foyer.2.text':
     'Bonitinho. Aposta no blefe. Ganha e a corda de veludo sobe. Perde e espera com os turistas.',
   'story.torre-foyer.3.speaker': 'Rita Odds',
   'story.torre-foyer.3.text': 'Cansei de esperar. Aposta.',
   'story.torre-foyer.title': 'Crachá no foyer',
-  'story.torre-negotiate.0.speaker': 'VIP Host',
+  'story.torre-negotiate.0.speaker': 'Anfitrião VIP',
   'story.torre-negotiate.0.text':
     'Rake tá sendo desviado. Ainda posso te fazer sair sorrindo — ou com papel que queima.',
   'story.torre-negotiate.1.speaker': 'Rita Odds',
@@ -472,29 +472,29 @@ export const storyPtBR: Record<string, string> = {
   'story.torre-negotiate.2.choice.2.label': 'Sair sorrindo',
   'story.torre-negotiate.2.choice.2.reply':
     'Sorriso pras câmeras. Sem papel. Puro nervo.',
-  'story.torre-negotiate.2.speaker': 'VIP Host',
+  'story.torre-negotiate.2.speaker': 'Anfitrião VIP',
   'story.torre-negotiate.2.text':
     'Três ofertas. Uma fica. O Augusto ouve o que você deixa na mesa.',
-  'story.torre-negotiate.3.speaker': 'VIP Host',
+  'story.torre-negotiate.3.speaker': 'Anfitrião VIP',
   'story.torre-negotiate.3.text':
     'Acordo selado. Trilho de ouro pro Augusto — não pisque primeiro.',
   'story.torre-negotiate.title': 'Negociar a saída VIP',
-  'story.torre-pit.0.speaker': 'Pit Dealer',
+  'story.torre-pit.0.speaker': 'Dealer do Salão',
   'story.torre-pit.0.text':
     'VIP tá lá em cima, mas o pit quer mão de aquecimento. Acha o baralho de verdade — meu polegar volta num canto macio; brilho de papel alumínio e plástico são cenário.',
   'story.torre-pit.1.speaker': 'Rita Odds',
   'story.torre-pit.1.text': 'Então converte. Uma mão limpa antes dos high rollers.',
-  'story.torre-pit.2.speaker': 'Pit Dealer',
+  'story.torre-pit.2.speaker': 'Dealer do Salão',
   'story.torre-pit.2.text':
     'Carta marcada em três pontos. Aposta que você acha o baralho real antes do gerente.',
   'story.torre-pit.3.speaker': 'Rita Odds',
   'story.torre-pit.3.text': 'Cresci lendo asfalto marcado. Fechado.',
   'story.torre-pit.title': 'Aquecimento no pit',
-  'story.torre-vip.0.speaker': 'VIP Host',
+  'story.torre-vip.0.speaker': 'Anfitrião VIP',
   'story.torre-vip.0.text': 'O elevador cuspiu você limpo. High rollers querem show.',
   'story.torre-vip.1.speaker': 'Rita Odds',
   'story.torre-vip.1.text': 'Uma mão quieta. Depois o Augusto.',
-  'story.torre-vip.2.speaker': 'VIP Host',
+  'story.torre-vip.2.speaker': 'Anfitrião VIP',
   'story.torre-vip.2.text':
     'Desvia o rake antes da segurança piscar. Depois disso — a gente conversa termos.',
   'story.torre-vip.title': 'Salão VIP',

@@ -1,6 +1,7 @@
 import type { BetDefinition, BetResult, Odds } from '../core/types';
 import type { Rng } from '../core/rng';
 import { STORY_GATE_BET_IDS } from '../content/bets';
+import { t } from '../i18n';
 
 /** Fair probability from fractional odds after house edge. */
 export function impliedWinChance(odds: Odds, houseEdge: number): number {
@@ -106,10 +107,10 @@ export function canAfford(credits: number, stake: number): boolean {
 }
 
 export function applyHouseFlavor(edge: number): string {
-  if (edge >= 0.25) return 'The house is getting fat, mano.';
-  if (edge >= 0.15) return 'Crooked odds — classic Casa Suprema.';
-  if (edge >= 0.08) return 'The house takes its cut, as always.';
-  return 'Almost clean… almost.';
+  if (edge >= 0.25) return t('ui.flavor.fat');
+  if (edge >= 0.15) return t('ui.flavor.crooked');
+  if (edge >= 0.08) return t('ui.flavor.cut');
+  return t('ui.flavor.almost');
 }
 
 export function formatOdds(odds: Odds): string {

@@ -71,6 +71,7 @@ import {
   type TutorialState,
 } from './tutorial';
 import { t, tf } from '../i18n';
+import { localizedNpcName } from '../i18n/localize-npc';
 import { localizeBeatDialogue, localizeHushLine } from '../i18n/localize-story';
 
 const SAFE_JOB_COOLDOWN_MS = 10_000;
@@ -1318,9 +1319,10 @@ export class GameSession {
   private showNpcDoneLine(npc: WorldNpc, text: string): boolean {
     this.pendingStoryBeat = null;
     this.pendingBetAfterDialogue = null;
-    this.lastDialogue = [{ speaker: npc.name, text }];
+    const speaker = localizedNpcName(npc);
+    this.lastDialogue = [{ speaker, text }];
     this.ui.go('dialogue');
-    this.bus.emit('ui:dialogue', { speaker: npc.name, text });
+    this.bus.emit('ui:dialogue', { speaker, text });
     return true;
   }
 
@@ -1382,7 +1384,7 @@ export class GameSession {
   private toastNpcBusy(npc: WorldNpc): void {
     this.bus.emit('ui:toast', {
       message: tf('ui.npcBusy', {
-        name: npc.name,
+        name: localizedNpcName(npc),
         objective: this.objective().text,
       }),
       kind: 'info',
