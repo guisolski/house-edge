@@ -1,56 +1,55 @@
-# Playtest REPORT — House Edge v1.18.0
+# Playtest REPORT — House Edge v1.18.1
 
-Independent playtest #19 of v1.17.0 (ratings art 7, fun 6; story ~20 min; FPS ~60 / min 52 in Augusto). Goal: tag/sprite/sign bbox coverage, Neon Snap no free path, pad leave/re-enter, VIP exit, epilogue choices, sequence buffer, elevator 1.2s, clue re-audit, hush chip consequence.
+Independent playtest #20 of v1.18.0 (art 8, fun 6) hit a **P0 softlock** after VIP ↓. Ship v1.18.1 ASAP: duel target across floors, Neon Snap real barricades, run-release pad latch, elevator direction, influencer clue, lockpick hints, lobby FPS.
 
 ## Verdict: PASS
 
-`make check` + full e2e (38/38) green. Coverage branches **91%+**. Paced New Game → ending wall-clock **10:01** (user walking playtest #19 ~20 min). FPS travel sample min ~60 / avg ~60.
-
-CI (`5872d45`): GitHub **quality** / **build** / **deploy (Pages)** all success.
+`make check` + full e2e (**40/40**) green. Coverage branches **90%+**. P0 softlock fixed: VIP ↓ → lobby objective points at elevator ↑ → Augusto duel completes.
 
 ## Bugs fixed
 
-| #   | Issue                                              | Result                                                                 |
-| --- | -------------------------------------------------- | ---------------------------------------------------------------------- |
-| 1   | Tag/sign overlaps (Seu Zé, Catador, Elevator, VIP) | PASS — bbox covers tags+sprites+all districts+VIP; elevator unlabeled  |
-| 2   | Neon Snap south bypass                             | PASS — barricades + 5 drones; EXIT arrow; no drone-free path test      |
-| 3   | Pad bounce Odds↔Fair                               | PASS — off-pad spawn, arrival-only gate, 1.6s cooldown; e2e clear wait |
-| 4   | VIP no visible exit                                | PASS — elevator pad + `Elevator ↓` arrow + Ride down prompt            |
-| 5   | Epilogue choices below scroll / Close / Saúde      | PASS — no Close on choices; sticky actions; Saúde ≥3.5s                |
-| 6   | Sequence drops keys ~150ms                         | PASS — keydown buffer; rapid-input unit test                           |
-| 7   | Elevator fade too fast                             | PASS — ~1.2s + Floor 42 indicator                                      |
-| 8   | Cage / Pit clues                                   | PASS — lockpick positional grease; Pit dialogue no dog-eared           |
-| 9   | Hush chip no consequence                           | PASS — Augusto line + −20% duel stake                                  |
+| #   | Issue                                            | Result                                                                 |
+| --- | ------------------------------------------------ | ---------------------------------------------------------------------- |
+| P0  | VIP ↓ → `missing target` / elevator refuses duel | PASS — floor-aware objective + foyer elevator re-ride to VIP           |
+| 2   | Neon Snap south bypass still open                | PASS — full south/north walls on collision map; free-path ignores ends |
+| 3   | Hold-run Odds → Fair → Morro chain               | PASS — arrival while Run held blocks walk-in until release             |
+| 4   | Elevator ↓ showed Floor 42 ↑                     | PASS — ▼ Pit Foyer · Floor 1 / ▲ VIP Salon · Floor 42                  |
+| 5   | Influencer clue leaked “Bought likes”            | PASS — Inflated metrics + indirect overnight/cold-walls clue           |
+| 6   | Cage lockpick controls unclear                   | PASS — on-screen hint for keyboard / gamepad / touch                   |
+| 7   | Tower lobby FPS ~36                              | PASS — skip indoor rain; throttle lobby lights                         |
 
 ## Fun / art
 
-- Neon Snap EXIT beacon + player→exit arrow; south/north barricades force the drone corridor.
-- Elevator ride shows `VIP Salon · Floor 42` during the fade.
+- Visible BARRICADE / NO PASS signs + crate clutter on Odds Avenue south wall.
+- Elevator floor card matches travel direction.
 
 ## Measured
 
-| Metric                          | Value                                    |
-| ------------------------------- | ---------------------------------------- |
-| User playtest #19 (walking)     | ~20 min                                  |
-| Paced harness (v18-timing.json) | **10:01** wall (07:57:08 → 08:07:09 UTC) |
-| Ending / epilogue               | true / true                              |
-| FPS travel sample               | min ~60, avg ~60                         |
-| E2e                             | 38/38 desktop + mobile                   |
-| Unit coverage branches          | 91%+                                     |
+| Metric                           | Value                                    |
+| -------------------------------- | ---------------------------------------- |
+| User playtest #20 (walking)      | ~20 min class (v1.18.0 baseline)         |
+| Paced harness (v181-timing.json) | **10:01** wall (09:01:39 → 09:11:40 UTC) |
+| Ending / epilogue                | true / true                              |
+| FPS travel sample                | min ~60, avg ~60                         |
+| E2e                              | 40/40 desktop + mobile                   |
+| Unit coverage branches           | 90%+                                     |
+| P0 path                          | VIP ↓ lobby → ↑ duel (e2e + screenshots) |
 
 ## Artifacts
 
-- `v18-01-title-play.png` … `v18-07-fps-travel.png`
-- `v18-timing.json`
-- Desktop district stills (`v18-desktop-*.png`)
+- `v181-vip-down-lobby.png` — foyer after VIP descent (elevator objective)
+- `v181-vip-up-duel-marker.png` — back on VIP aiming at Augusto
+- `v181-vip-down-then-duel.png` — duel complete / ending
+- `v181-01-title-play.png` … `v181-07-fps-travel.png` (paced harness)
+- `v181-timing.json`
 
-## Scores (playtest #19 baseline → this build)
+## Scores (playtest #20 baseline → this build)
 
-|     | #19 (v1.17.0) | v1.18.0 target |
+|     | #20 (v1.18.0) | v1.18.1 target |
 | --- | ------------- | -------------- |
-| Art | 7             | hold / lift    |
-| Fun | 6             | hold / lift    |
+| Art | 8             | hold           |
+| Fun | 6             | lift (no P0)   |
 
 ## Gaps
 
-- Optional: ending lines that mention drone_low / negotiate flags beyond hush.
+- CI tip SHA noted after GitHub quality/build/deploy green.

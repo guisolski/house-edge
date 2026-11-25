@@ -497,12 +497,11 @@ function buildAvenida(): MapDef {
   rect({ tiles, w, x0: 1, y0: 9, x1: w - 2, y1: 14, kind: 'asphalt' });
   hStrip(tiles, w, 8, 1, w - 2, 'plaza');
   hStrip(tiles, w, 15, 1, w - 2, 'plaza');
-  // Solid south barricade under the Neon Snap corridor — no free east-west bypass.
-  rect({ tiles, w, x0: 13, y0: 15, x1: 33, y1: 16, kind: 'blocked' });
-  // North glass lip pillars so the roof line isn't a free bypass either.
-  for (const x of [16, 20, 24, 28, 32]) {
-    set(tiles, w, x, 8, 'blocked');
-  }
+  // Full south construction wall (visible blocked strip) — no Shift-run bypass
+  // along the plaza/sidewalk under the Neon Snap corridor.
+  rect({ tiles, w, x0: 11, y0: 15, x1: 36, y1: 18, kind: 'blocked' });
+  // North glass lip — continuous wall so the roof line isn't a free bypass.
+  rect({ tiles, w, x0: 11, y0: 7, x1: 36, y1: 8, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: 1, x1: w - 2, y1: 1, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: h - 2, x1: w - 2, y1: h - 2, kind: 'blocked' });
   paintExitPad(tiles, w, 5, 12);
@@ -534,6 +533,10 @@ function buildAvenida(): MapDef {
   }
   for (let x = 6; x < 42; x += 5) props.push({ x, y: 8, kind: 'lamp' });
   props.push({ x: 20, y: 13, kind: 'moto' }, { x: 14, y: 11, kind: 'crate' });
+  // Visible south wall clutter so the barricade reads in-play (not just collision).
+  for (let x = 12; x <= 34; x += 4) {
+    props.push({ x, y: 15, kind: 'crate' });
+  }
 
   return {
     districtId: 'avenida-odds',
@@ -548,6 +551,9 @@ function buildAvenida(): MapDef {
       { x: 5, y: 10, label: '> Central Fair', color: '#2bfff2' },
       // Keep within ~3 tiles of exit pad (40,12) so doorway + label read as one hotspot.
       { x: 38, y: 11, label: '> Casa Tower', color: '#2bfff2' },
+      // On the wall row, clear of boulevard NPC sprites (y≈14).
+      { x: 18, y: 17, label: 'BARRICADE', color: '#ff8a3d' },
+      { x: 28, y: 17, label: 'NO PASS', color: '#ff8a3d' },
     ],
     props,
     landmark: { x: 22, y: 3, kind: 'glass-corp' },

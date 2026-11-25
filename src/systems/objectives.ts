@@ -21,7 +21,12 @@ export type ObjectiveCtx = {
   completed: readonly string[];
   flags: (f: string) => boolean;
   districtId: string;
+  /** NPCs visible on the active floor (VIP vs foyer). */
   npcs: readonly WorldNpc[];
+  /** Full NPC roster — used to resolve targets on the other Casa floor. */
+  allNpcs?: readonly WorldNpc[];
+  /** True while Rita is on the VIP salon map. */
+  vipFloor?: boolean;
   exits: readonly DistrictExit[];
   unlocked: (id: string) => boolean;
 };
@@ -165,7 +170,7 @@ function travelObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
 function npcObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
   const npc = beatNpc(ctx, next);
   if (npc) {
-    const verb = npc.id === 'elevator' ? 'Use' : 'Talk to';
+    const verb = npc.id === 'elevator' || npc.id === 'elevator-vip' ? 'Use' : 'Talk to';
     const place = districtName(ctx.districtId);
     return {
       text: `${verb} ${npc.name} (${place})`,
@@ -176,8 +181,55 @@ function npcObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
       districtId: ctx.districtId,
     };
   }
+  // Same district, other Casa floor — point at the elevator, never "missing target".
+  const floorHop = elevatorFloorObjective(ctx, next);
+  if (floorHop) return floorHop;
+  // Last resort: never surface a bug string to the player.
   return {
-    text: `${next.title} — missing target (bug)`,
+    text: `Find the next lead (${districtName(ctx.districtId)})`,
+    detail: next.title,
+    districtId: ctx.districtId,
+  };
+}
+
+function beatNpcOnRoster(
+  roster: readonly WorldNpc[],
+  beatId: string,
+): WorldNpc | undefined {
+  return roster.find((n) => n.beatId === beatId || n.extraBeatIds?.includes(beatId));
+}
+
+function casaElevatorPad(
+  ctx: ObjectiveCtx,
+  roster: readonly WorldNpc[],
+): WorldNpc | undefined {
+  const elevId = ctx.vipFloor ? 'elevator-vip' : 'elevator';
+  return ctx.npcs.find((n) => n.id === elevId) ?? roster.find((n) => n.id === elevId);
+}
+
+function needsCasaFloorHop(ctx: ObjectiveCtx, target: WorldNpc): boolean {
+  const wantVip = (target.floor ?? 'foyer') === 'vip';
+  return target.districtId === 'torre-casa' && Boolean(ctx.vipFloor) !== wantVip;
+}
+
+/** When Augusto (etc.) is upstairs/downstairs, route through the elevator pad. */
+function elevatorFloorObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective | null {
+  if (ctx.districtId !== 'torre-casa') return null;
+  const roster = ctx.allNpcs ?? ctx.npcs;
+  const target = beatNpcOnRoster(roster, next.id);
+  if (!target || !needsCasaFloorHop(ctx, target)) return null;
+  const elev = casaElevatorPad(ctx, roster);
+  if (!elev) return null;
+  const wantVip = (target.floor ?? 'foyer') === 'vip';
+  return {
+    text: wantVip
+      ? `Ride elevator up — ${next.title}`
+      : `Ride elevator down — then ${target.name}`,
+    detail: next.title,
+    // Must match WorldNpc.name so nearbyNpc / e2e uniqueness resolve.
+    targetName: elev.name,
+    targetX: elev.x,
+    targetY: elev.y,
     districtId: ctx.districtId,
   };
 }

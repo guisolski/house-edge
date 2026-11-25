@@ -27,7 +27,12 @@ import {
 } from './interaction';
 import { buildDistrictMap, buildTorreVip, type MapDef } from '../world/maps';
 import { slideStep } from '../world/slide';
-import { currentObjective, sideQuestMarkers, type Objective } from './objectives';
+import {
+  currentObjective,
+  nextBeat,
+  sideQuestMarkers,
+  type Objective,
+} from './objectives';
 import {
   assistAfterMiss,
   attemptSkill,
@@ -86,6 +91,9 @@ export class GameSession {
   private exitCleared = false;
   /** Reciprocal pad id that bounced us here — only this pad is gated. */
   private arrivalExitId: string | null = null;
+  /** After travel, block all walk-in exits until Run is released once. */
+  private awaitRunRelease = false;
+  private runHeld = false;
   /** True while Rita is on the distinct VIP floor map. */
   private vipFloor = false;
   private skillStreak = 0;
@@ -124,6 +132,8 @@ export class GameSession {
     // Fresh spawn can use pads; travelTo gates only the arrival pad.
     this.exitCleared = true;
     this.arrivalExitId = null;
+    this.awaitRunRelease = false;
+    this.runHeld = false;
     this.stealthProgress = null;
     this.skillStreak = 0;
     this.creditsRoll = false;
@@ -263,9 +273,17 @@ export class GameSession {
     this.exitCleared = false;
     // Cooldown + leave/re-enter on the arrival pad only — other doors stay open.
     this.exitLatchUntil = Date.now() + EXIT_COOLDOWN_MS;
+    // Holding Run through arrival chain-traveled the next district — require a release.
+    this.awaitRunRelease = this.runHeld;
     this.ui.go('play');
     this.bus.emit('district:entered', { districtId });
     return true;
+  }
+
+  /** App feeds Run key state each tick so arrival travel can wait for release. */
+  setRunHeld(held: boolean): void {
+    if (!held) this.awaitRunRelease = false;
+    this.runHeld = held;
   }
 
   /** True while a chase/hack/evade sequence phase owns arrow input. */
@@ -342,6 +360,8 @@ export class GameSession {
 
   nearbyExit(): DistrictExit | null {
     if (this.vipFloor) return null;
+    // Chain-travel fix: no walk-in until Run is released after a running arrival.
+    if (this.awaitRunRelease) return null;
     const s = this.player.getStats();
     const exit = nearestExit({
       exits: this.exits,
@@ -900,6 +920,8 @@ export class GameSession {
       flags: (f) => this.story.getFlag(f),
       districtId: s.districtId,
       npcs: this.floorNpcs(),
+      allNpcs: this.npcs,
+      vipFloor: this.vipFloor,
       exits: this.exits,
       unlocked: (id) => this.world.isUnlocked(id as DistrictId),
     });
@@ -989,6 +1011,11 @@ export class GameSession {
       this.descendVipElevator();
       return true;
     }
+    // Foyer car: re-ride up when the next story beat lives on the VIP floor.
+    if (npc.id === 'elevator' && !this.vipFloor && this.needsVipFloorRide()) {
+      this.runElevatorRide();
+      return true;
+    }
     if (this.tryNpcStory(npc)) return true;
     if (this.npcStoryBlocksRematch(npc)) {
       this.toastNpcBusy(npc);
@@ -1000,11 +1027,31 @@ export class GameSession {
     return false;
   }
 
+  /** True when the live objective NPC is on the VIP salon (player is in foyer). */
+  private needsVipFloorRide(): boolean {
+    const s = this.player.getStats();
+    const next = nextBeat({
+      beats: STORY_BEATS,
+      completed: this.story.getCompleted(),
+      flags: (f) => this.story.getFlag(f),
+      districtId: s.districtId,
+      npcs: this.npcs,
+      exits: this.exits,
+      unlocked: (id) => this.world.isUnlocked(id as DistrictId),
+    });
+    if (!next || next.districtId !== 'torre-casa') return false;
+    const npc = this.npcs.find(
+      (n) => n.beatId === next.id || n.extraBeatIds?.includes(next.id),
+    );
+    return Boolean(npc && (npc.floor ?? 'foyer') === 'vip');
+  }
+
   private descendVipElevator(): void {
     this.bus.emit('world:transition', {
       kind: 'elevator',
       from: 'torre-casa',
       to: 'torre-casa',
+      label: '▼ Elevator\nPit Foyer · Floor 1',
     });
     this.ui.go('transition');
     this.vipFloor = false;
@@ -1148,6 +1195,7 @@ export class GameSession {
       kind: 'elevator',
       from: 'torre-casa',
       to: 'torre-casa',
+      label: '▲ Elevator\nVIP Salon · Floor 42',
     });
     this.bus.emit('fx:flash', { kind: 'travel' });
     this.bus.emit('audio:play-sfx', { id: 'travel' });

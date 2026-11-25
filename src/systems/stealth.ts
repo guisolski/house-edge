@@ -304,6 +304,10 @@ export function droneFreePathExists(
   const covered = coneCoverageOverCycle(def, opts);
   const start = { x: Math.round(def.start.x), y: Math.round(def.start.y) };
   const goal = { x: Math.round(def.goal.x), y: Math.round(def.goal.y) };
+  // Start/goal may be swept at some sample — a free bypass is an intermediate
+  // never-covered corridor on the real collision map (not "goal is covered").
+  covered.delete(tileKey(start.x, start.y));
+  covered.delete(tileKey(goal.x, goal.y));
   return bfsUncovered(start, goal, walkable, covered);
 }
 

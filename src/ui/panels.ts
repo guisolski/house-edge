@@ -78,6 +78,13 @@ export function paintDialogue(
   focusFirst(panel);
 }
 
+function lockpickControlHint(panel: HTMLElement): string {
+  const mode = panel.closest('.hud')?.getAttribute('data-input-mode') ?? 'keyboard';
+  if (mode === 'gamepad') return UI.lockpickHintGamepad;
+  if (mode === 'touch') return UI.lockpickHintTouch;
+  return UI.lockpickHintKeyboard;
+}
+
 export function paintSkill(
   panel: HTMLElement,
   session: GameSession,
@@ -121,6 +128,7 @@ export function paintSkill(
         `Pick durability: ${progress.pickLeft} snap${progress.pickLeft === 1 ? '' : 's'} left`,
       ),
     );
+    body.appendChild(el('p', 'skill-seq lockpick-hint', lockpickControlHint(panel)));
   }
   const actions = el('div', 'panel-actions skill-actions');
   if (phase) paintPhaseControls(body, actions, session, after, phase, progress.pickLeft);

@@ -186,6 +186,7 @@ function onTick(deps: TickDeps, delta: number): void {
 }
 
 function maybeMove(deps: TickDeps): void {
+  deps.session.setRunHeld(deps.state.run);
   if (deps.cooldown.ms > 0) return;
   if (!deps.session.ui.is('play')) return;
   const { dx, dy } = movementDelta(deps.state);

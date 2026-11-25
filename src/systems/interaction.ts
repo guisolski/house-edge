@@ -251,8 +251,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'influencer',
     name: 'Odds Influencer',
     districtId: 'avenida-odds',
+    // Keep on asphalt — south wall (y 15–18) is blocked for Neon Snap.
     x: 34,
-    y: 15,
+    y: 11,
     beatId: 'avenida-influencer',
     jobBetId: 'influencer-duelo',
     color: '#ff2bd6',
@@ -317,8 +318,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'neon-snap',
     name: 'Neon Snap',
     districtId: 'avenida-odds',
-    x: 32,
-    y: 17,
+    // Asphalt corridor — south barricade (y 15–18) is solid collision.
+    x: 30,
+    y: 12,
     beatId: 'avenida-drone',
     extraBeatIds: ['side-avenida-neon'],
     jobBetId: 'avenida-drone',

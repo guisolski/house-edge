@@ -118,8 +118,9 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     kind: 'choice',
     prompt: 'Call the fake engagement.',
     target: 0,
-    options: ['Bought likes', 'Real hill tags', 'Casa promo'],
-    clue: 'Overnight spikes don’t grow from the hill — and this glow isn’t a corp ad buy either.',
+    // Options avoid spelling the leak; clue never names “bought” / “likes”.
+    options: ['Inflated metrics', 'Organic alley tags', 'Sponsored corp drop'],
+    clue: 'The follower curve jumped overnight while the alley walls stayed cold — and the neon palette isn’t Casa chrome.',
   },
   'avenida-atm': {
     kind: 'hack',

@@ -5,6 +5,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.1] — 2026-11-25
+
+### Fixed
+
+- **P0 softlock**: after VIP ↓, duel objective no longer shows `missing target`; foyer elevator re-rides up to Augusto.
+- Neon Snap: full south/north construction walls on the real collision map + visible BARRICADE signs; free-path test ignores start/goal cone sweeps.
+- Pad chain-travel: arrival while holding Run blocks walk-in exits until Run is released.
+- Elevator ↓ shows **Pit Foyer · Floor 1** (▼); ↑ keeps Floor 42.
+- Odds influencer clue re-audit (no “Bought likes” leak).
+- Cage lockpick: on-screen control hint matched to keyboard / gamepad / touch.
+- Tower lobby FPS: skip indoor rain; throttle lobby lights.
+
+### Tests
+
+- Unit: floor/objective invariant, VIP down→up duel, barricade walkability, run-release latch, influencer clue.
+- E2e: `vip-down-duel` rides down then completes Augusto.
+
 ## [1.18.0] — 2026-11-25
 
 ### Added

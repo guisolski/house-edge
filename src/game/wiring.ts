@@ -88,7 +88,7 @@ function wireUi(session: GameSession, hud: HudHandles, audio: AudioEngine): void
   });
   session.bus.on('fx:flash', (p) => hud.flash(p.kind));
   session.bus.on('fx:credits', (p) => hud.creditPopup(p.delta));
-  session.bus.on('world:transition', (p) => hud.playTransition(p.kind));
+  session.bus.on('world:transition', (p) => hud.playTransition(p.kind, p.label));
   session.bus.on('story:ended', () => {
     /* showEnding also wired above; keep play HUD from racing it */
   });

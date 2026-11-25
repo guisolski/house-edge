@@ -41,7 +41,7 @@ export type HudHandles = {
   gamepadNav: (dir: 'up' | 'down' | 'confirm' | 'back') => void;
   flash: (kind: string) => void;
   creditPopup: (delta: number) => void;
-  playTransition: (kind: string) => void;
+  playTransition: (kind: string, label?: string) => void;
 };
 
 type Parts = {
@@ -176,7 +176,7 @@ function baseShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudHa
     gamepadNav: (dir) => navModal(h, p, session, dir),
     flash: (kind) => runFlash(p.flash, kind),
     creditPopup: (delta) => runCreditPopup(p.creditsFx, delta),
-    playTransition: (kind) => runTransition(p.transition, kind),
+    playTransition: (kind, label) => runTransition(p.transition, kind, label),
   };
 }
 
@@ -538,7 +538,7 @@ function paintPrompt(prompt: HTMLElement, session: GameSession): void {
 
 function promptVerb(npc: { id: string; name: string }): string {
   if (npc.id === 'elevator-vip') return 'E — Ride down';
-  if (npc.id.startsWith('elevator')) return 'E — Use';
+  if (npc.id === 'elevator') return 'E — Ride up';
   return 'E';
 }
 
@@ -592,9 +592,10 @@ function runCreditPopup(node: HTMLElement, delta: number): void {
   window.setTimeout(() => setVisible(node, false), 900);
 }
 
-function runTransition(node: HTMLElement, kind: string): void {
+function runTransition(node: HTMLElement, kind: string, label?: string): void {
   node.className = `fx-transition fx-${kind}`;
-  node.textContent = kind === 'elevator' ? '▲ Elevator\nVIP Salon · Floor 42' : '';
+  node.textContent =
+    kind === 'elevator' ? (label ?? '▲ Elevator\nVIP Salon · Floor 42') : '';
   setVisible(node, true);
   // ~1.2s visible ride with floor indicator (matches session hold).
   const ms = kind === 'elevator' ? 1200 : 720;

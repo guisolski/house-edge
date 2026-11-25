@@ -447,11 +447,13 @@ function paintPlayOverlays(o: {
   frame: number;
 }): void {
   if (!o.state.session.ui.is('play')) return;
-  // Lights every other frame — radial 'lighter' blit is costly under CPU throttle.
-  if ((o.frame & 1) === 0) {
+  const indoor = o.state.session.player.getStats().districtId === 'torre-casa';
+  // Tower lobby FPS: skip rain indoors; lights every 4th frame (was every other).
+  const lightMask = indoor ? 3 : 1;
+  if ((o.frame & lightMask) === 0) {
     drawFewLights(o.ctx, o.state, o.px, o.py, o.camX, o.camY);
   }
-  if ((o.frame & 3) === 0) drawRain(o.ctx, o.frame);
+  if (!indoor && (o.frame & 3) === 0) drawRain(o.ctx, o.frame);
   if ((o.frame & 3) === 0) drawSteam(o.ctx, o.state, o.camX, o.camY, o.frame);
 }
 

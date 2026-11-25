@@ -170,7 +170,9 @@ describe('coverage boost v1.13', () => {
       exits,
       unlocked: () => true,
     });
-    expect(missing.text).toMatch(/missing target|Dona Nair/);
+    // Empty floor roster must never show a player-facing "missing target" bug string.
+    expect(missing.text).not.toMatch(/missing target/i);
+    expect(missing.text).toMatch(/Find the next lead|Dona Nair/);
     const elev = currentObjective({
       beats: STORY_BEATS,
       completed: [
