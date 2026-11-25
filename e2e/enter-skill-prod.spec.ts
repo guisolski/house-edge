@@ -19,15 +19,32 @@ test('prod: Enter×4×2 after needle no bet; KeyE Nair done; Luna E works', asyn
   await expect(page.locator('.btn-take-bet')).toBeVisible();
   await page.locator('.btn-take-bet').click();
   await expect(page.locator('.btn-needle-stop')).toBeVisible({ timeout: 3000 });
-  // Freeze needle in the green zone, then Stop with the mouse (Interact not held).
-  await page.evaluate(() => {
-    const meter = document.querySelector('.skill-meter') as HTMLElement | null;
-    const tick = meter?.dataset.needleTick;
-    if (tick) window.clearInterval(Number(tick));
-    const needle = document.querySelector('.skill-needle') as HTMLElement | null;
-    if (needle) needle.style.left = '55%';
+  // rAF needle — Stop on the first frame the visible needle is in the drawn zone
+  // (DOM style writes no longer drive sampleNeedle).
+  const stopped = await page.evaluate(async () => {
+    const deadline = performance.now() + 12_000;
+    while (performance.now() < deadline) {
+      const zone = document.querySelector('.skill-zone') as HTMLElement | null;
+      const needle = document.querySelector('.skill-needle') as HTMLElement | null;
+      const btn = document.querySelector('.btn-needle-stop') as HTMLButtonElement | null;
+      if (zone && needle && btn) {
+        const left = parseFloat(zone.style.left);
+        const width = parseFloat(zone.style.width);
+        const at = parseFloat(needle.style.left);
+        if (
+          [left, width, at].every(Number.isFinite) &&
+          at >= left &&
+          at <= left + width
+        ) {
+          btn.click();
+          return true;
+        }
+      }
+      await new Promise<void>((r) => requestAnimationFrame(() => r()));
+    }
+    return false;
   });
-  await page.locator('.btn-needle-stop').click();
+  expect(stopped).toBe(true);
   await expect(page.locator('.play-hud')).toBeVisible({ timeout: 5000 });
   for (let i = 0; i < 4; i += 1) {
     await page.keyboard.press('Enter');
