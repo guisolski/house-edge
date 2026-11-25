@@ -314,7 +314,9 @@ const NPCS: readonly WorldNpc[] = [
     districtId: 'avenida-odds',
     x: 32,
     y: 17,
-    beatId: 'side-avenida-neon',
+    beatId: 'avenida-drone',
+    extraBeatIds: ['side-avenida-neon'],
+    jobBetId: 'avenida-drone',
     color: '#2bfff2',
   },
   {
@@ -366,6 +368,7 @@ const NPCS: readonly WorldNpc[] = [
     x: 30,
     y: 12,
     beatId: 'torre-vip',
+    extraBeatIds: ['torre-negotiate'],
     jobBetId: 'torre-vip',
     color: '#ffd700',
     bodyVariant: 3,

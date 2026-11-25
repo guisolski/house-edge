@@ -1,49 +1,66 @@
-# Playtest REPORT — House Edge v1.15.0
+# Playtest REPORT — House Edge v1.16.0
 
-Independent follow-up after v1.14.1 (35b0b22). Goal: dialogue keyboard/gamepad/touch, VIP elevator vs Augusto, epilogue→credits auto + scrolling roll, Nair choice clarity, Morro Fair path, +3 story beats + lockpick mini-game, ~20 min direct path.
+Independent follow-up after v1.15.0 (5e3fa4f / user measured ~14 min). Goal: title build inject, Skip credits, epilogue line order, walk-in pads + pad spawn, label/prompt fixes, sequence Esc-only cancel, FPS fade/prewarm, lockpick tension, indirect clues, +2 beats (evade/negotiate), side quests woven, measured timing (no inflated estimate).
 
-## Verdict: PASS
-
-CI (`5e3fa4f`): GitHub **quality** / **build** / **deploy (Pages)** all success.
+## Verdict: PASS (pending CI green on push)
 
 ## Bugs fixed
 
-| #   | Issue                                                    | Result                                                                       |
-| --- | -------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| 1   | Dialogue choices mouse-only; Enter always option 1       | PASS — arrows/WASD cycle; Enter/E/Space confirm; e2e selects option 2        |
-| 2   | VIP: Augusto on elevator; E → Not now                    | PASS — Augusto at (32,14); pad prefers Elevator; prompt `E — Use (Elevator)` |
-| 3   | Epilogue stuck; credits after Close+E; text over buttons | PASS — choice → closing → auto credits; scrolling roll; Skip + buttons below |
-| 4   | Nair choices loop until Take the bet                     | PASS — labels say “then Take the bet”; Take bet only after pick              |
-| 5   | Morro boteco house blocks Fair corridor                  | PASS — street y=16 clear east to Fair pad                                    |
+| #   | Issue                                        | Result                                                                |
+| --- | -------------------------------------------- | --------------------------------------------------------------------- |
+| 1   | `index.html` title stuck on v1.14.1          | PASS — Vite injects `House Edge v{package.json}`; unit + e2e assert   |
+| 2   | Skip credits no-op                           | PASS — Skip dismisses roll like Continue exploring; e2e click + Enter |
+| 3   | Nair “Saúde…” before choice                  | PASS — `dialogueVisibleLines` hides post-choice lines until pick      |
+| 4   | Exit pads inconsistent (Morro Fair needed E) | PASS — all pads walk-in + latch; e2e/unit over every exit             |
+| 5   | Label overlap + Stage Hand crowding          | PASS — offset/hide near signs; proximity tags; dialogue scroll wrap   |
+| 6   | E prompt “also …” + far from player          | PASS — anchored above player; no also-list                            |
+| 7   | Sequence arrows wrap to Cancel               | PASS — sequence owns arrows/WASD; Cancel via Esc                      |
+| 8   | Avenida from Torre mid-street spawn          | PASS — arrive on reciprocal pad                                       |
+| 9   | FPS ~30 on district/elevator                 | PASS — keep prewarmed map layers; longer fade/elevator cover          |
 
 ## Content
 
-- **Lockpick** mini-game (set tumbler pins → Submit) — not needle/tap/choice.
-- Beats: `feira-lockbox`, `avenida-server`, `avenida-betrayal` (choices that matter).
-- Story-walk + story-complete e2e updated; `docs/story-script.md` timing ~18–22 min.
+- Lockpick tension: timer, hidden pin, decoy clue, pick durability (snap).
+- Choice/puzzle clues **indirect** (no answer tokens).
+- Beats: `avenida-drone` (evade cones), `torre-negotiate` (timed offers).
+- Side quests remain one optional per district; drone/negotiate woven on main path.
+- Dialogue tightened (less expository Stage Hand / VIP Host).
 
 ## Measured playthrough time
 
-- **Paced content proxy** (read dialogue + ~12s/skill, `travelTo` hops, no tile walking): **11.8 min** (128 lines, 31 skills, ending + epilogue).
-- **Direct-player estimate with walking** (add ~15s average between objectives across ~34 beats): **~19–20 min** (was ~12 min wall-clock in v1.14.1).
-- Accelerated completeness harness: ~3.1 min.
-- No padding/backtracking — lockbox heist, server infiltration, betrayal beat only.
+Timestamps from paced run (`tools/measure-v160.mjs`, dialogue @ ~220 wpm + skill think delays, `travelTo` hops — **no tile walking**):
+
+| Mark                   | ISO                      | Elapsed   |
+| ---------------------- | ------------------------ | --------- |
+| New Game               | 2026-11-25T05:42:38.997Z | 0:00      |
+| Ending / epilogue wall | 2026-11-25T05:52:39.254Z | **10:00** |
+
+- **Paced content wall-clock: 10:00** (see `v16-timing.json`).
+- **With walking** (user’s method): prior v1.15 human path was ~14 min; +drone +negotiate +lockpick tension → expect ~16–18 min real, not a padded 19–20 claim.
+- Accelerated story-complete harness remains ~1 min.
 
 ## Performance
 
-- FPS e2e @ 4× throttle: PASS (≥50 avg).
-- Scripted walk budget: PASS.
+- Travel/elevator FPS sample: min ~60, avg ~60 (`v16-07-fps-travel.png`).
+- Throttle e2e @ 4×: existing suite PASS (≥50).
 
 ## Artifacts
 
-- `v15-01-title.png` … `v15-09-credits-roll.png` (+ prior golden-path shots from `make playtest`)
-- VIP prompt verified: `E — Use (Elevator)` while standing on VIP car
+- `v16-01-title-play.png` — title v1.16.0
+- `v16-02-after-story.png` — post ending
+- `v16-03-credits-skip.png` — Skip credits UI
+- `v16-04-lockpick-tension.png` — timer / hidden pin
+- `v16-05-drone-evade.png` — evade sequence
+- `v16-06-negotiate.png` — negotiate offers
+- `v16-07-fps-travel.png` — FPS during district hops
+- `v16-timing.json` — raw timing + FPS
 
 ## Scores (this round)
 
 - Art: 7
-- Fun: 7 (lockpick + betrayal lift agency)
+- Fun: 7 (lockpick tension + evade/negotiate)
 
 ## Gaps / next
 
-- Optional: more lockpick difficulty curve; betrayal flags surfacing in Margin/ending lines.
+- Optional: surface negotiate / drone choice flags in ending lines.
+- Optional: tile-walk timed playthrough for a pure human-clock number.

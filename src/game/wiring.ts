@@ -102,6 +102,14 @@ function wireModes(
 }
 
 function handleAction(session: GameSession, hud: HudHandles, action: string): void {
+  // Sequence skill owns arrows/WASD/A — Cancel only via Esc (menu).
+  if (session.isSequenceSkillActive()) {
+    if (action === 'menu') {
+      session.cancelBet();
+      hud.syncScreen();
+    }
+    return;
+  }
   // Modal navigation: arrows/WASD cycle focus; E/Space/Enter activates.
   if (!session.ui.is('play') && !session.ui.is('title')) {
     if (action === 'up' || action === 'left') {

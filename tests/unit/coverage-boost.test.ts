@@ -195,6 +195,7 @@ describe('coverage boost v1.13', () => {
         'avenida-checkpoint',
         'avenida-courier',
         'avenida-influencer',
+        'avenida-drone',
         'avenida-radar',
         'avenida-server',
         'avenida-atm',
@@ -209,6 +210,7 @@ describe('coverage boost v1.13', () => {
         ![
           'elevator_ok',
           'vip_ok',
+          'negotiate_ok',
           'casa_quebrada',
           'free_roam',
           'epilogue_done',

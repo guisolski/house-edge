@@ -43,6 +43,7 @@ async function bootDuelSkill(page: Page): Promise<{ skill: boolean; phase: numbe
       'avenida_ok',
       'vazamento_ok',
       'vip_ok',
+      'negotiate_ok',
     ]) {
       session.story.setFlag(f, true);
     }

@@ -1,7 +1,17 @@
 /** Skill encounters that replace pure RNG for story gates. */
 
+import { SKILL_PHASE_TABLE } from '../content/skill-phases';
+
 export type SkillKind =
-  'timing' | 'choice' | 'puzzle' | 'chase' | 'hack' | 'duel' | 'lockpick';
+  | 'timing'
+  | 'choice'
+  | 'puzzle'
+  | 'chase'
+  | 'hack'
+  | 'duel'
+  | 'lockpick'
+  | 'evade'
+  | 'negotiate';
 
 /** Simon-style keys — arrows (movement) + colors (terminals). */
 export const SEQ_KEYS = ['↑', '→', '↓', '←', 'R', 'G', 'B', 'Y'] as const;
@@ -20,14 +30,23 @@ export type SkillPhase = {
   /** Timing needle revolutions per second (higher = harder). */
   needleSpeed?: number;
   options?: string[];
-  /** Readable in-world clue that points at the correct choice. */
+  /**
+   * In-world clue. For choice/puzzle must be *indirect* (no answer tokens).
+   * For lockpick may be a decoy — never spell every pin height.
+   */
   clue?: string;
-  /** Chase/hack length fallback when sequence omitted. */
+  /** Chase/hack/evade length fallback when sequence omitted. */
   steps?: number;
   /** Simon sequence the player must reproduce (one key at a time). */
   sequence?: SeqKey[];
   /** Lockpick target pin heights (0–2 each). */
   pins?: number[];
+  /** Pin index hidden until first toggle (tension). */
+  hiddenPin?: number;
+  /** Lockpick / negotiate countdown in ms. */
+  timerMs?: number;
+  /** Wrong submits before the pick snaps (lockpick). */
+  pickDurability?: number;
 };
 
 /** Encode pin heights as a single base-3 integer for skill attempts. */
@@ -76,7 +95,7 @@ export type SkillProgress = {
   phaseIndex: number;
   /** Successful phases so far. */
   cleared: number;
-  /** Correct sequence taps within the current chase/hack phase. */
+  /** Correct sequence taps within the current chase/hack/evade phase. */
   seqIndex: number;
   /** Phase misses in this encounter (retry same phase; never ends the duel). */
   misses: number;
@@ -84,6 +103,8 @@ export type SkillProgress = {
   justMissed: boolean;
   done: boolean;
   won: boolean;
+  /** Lockpick: remaining durability (undefined = unlimited). */
+  pickLeft?: number;
 };
 
 /** Inclusive green-zone bounds matching the drawn meter (target ± window). */
@@ -118,6 +139,7 @@ export function skillForBet(betId: string, kind: SkillKind | undefined): SkillDe
 }
 
 export function startSkill(def: SkillDef): SkillProgress {
+  const phase0 = def.phases[0];
   return {
     def,
     phaseIndex: 0,
@@ -127,7 +149,13 @@ export function startSkill(def: SkillDef): SkillProgress {
     justMissed: false,
     done: false,
     won: false,
+    pickLeft: phase0?.pickDurability,
   };
+}
+
+/** True when the active phase owns arrow/WASD/A-B input (Cancel = Esc only). */
+export function isSequencePhase(phase: SkillPhase | undefined): boolean {
+  return phase?.kind === 'chase' || phase?.kind === 'hack' || phase?.kind === 'evade';
 }
 
 /** Apply one player attempt; phase misses retry the same phase (no full reset). */
@@ -138,11 +166,21 @@ export function attemptSkill(
   if (progress.done) return progress;
   const phase = progress.def.phases[progress.phaseIndex];
   if (!phase) return { ...progress, done: true, won: false, justMissed: false };
-  if (phase.kind === 'chase' || phase.kind === 'hack') {
+  if (isSequencePhase(phase)) {
     return attemptSequence(progress, phase, attempt.value);
   }
   const ok = judgePhase(phase, attempt.value);
-  if (!ok) return phaseMiss(progress);
+  if (!ok) {
+    const missed = phaseMiss(progress);
+    if (phase.kind === 'lockpick' && missed.pickLeft !== undefined) {
+      const left = Math.max(0, (missed.pickLeft ?? 1) - 1);
+      if (left <= 0) {
+        return { ...missed, pickLeft: 0, done: true, won: false, justMissed: true };
+      }
+      return { ...missed, pickLeft: left };
+    }
+    return missed;
+  }
   return advancePhase(progress);
 }
 
@@ -192,6 +230,7 @@ function attemptSequence(
 function advancePhase(progress: SkillProgress): SkillProgress {
   const cleared = progress.cleared + 1;
   const next = progress.phaseIndex + 1;
+  const nextPhase = progress.def.phases[next];
   if (next >= progress.def.phases.length) {
     return {
       ...progress,
@@ -211,6 +250,7 @@ function advancePhase(progress: SkillProgress): SkillProgress {
     justMissed: false,
     done: false,
     won: false,
+    pickLeft: nextPhase?.pickDurability ?? progress.pickLeft,
   };
 }
 
@@ -218,7 +258,7 @@ function advancePhase(progress: SkillProgress): SkillProgress {
 export function perfectAttempt(progress: SkillProgress): SkillAttempt {
   const phase = progress.def.phases[progress.phaseIndex];
   if (!phase) return { phaseIndex: progress.phaseIndex, value: 0 };
-  if (phase.kind === 'chase' || phase.kind === 'hack') {
+  if (isSequencePhase(phase)) {
     const seq = phaseSequence(phase);
     const key = seq[progress.seqIndex] ?? seq[0]!;
     return { phaseIndex: progress.phaseIndex, value: SEQ_KEYS.indexOf(key) };
@@ -240,7 +280,7 @@ export function judgePhase(phase: SkillPhase, value: number): boolean {
   if (phase.kind === 'timing') {
     return judgeTimingStop(value, timingZone(phase));
   }
-  if (phase.kind === 'chase' || phase.kind === 'hack') {
+  if (isSequencePhase(phase)) {
     // Full-sequence match is handled in attemptSkill; this is for single-shot tests.
     const seq = phaseSequence(phase);
     return Math.round(value) === SEQ_KEYS.indexOf(seq[0]!);
@@ -277,18 +317,49 @@ export function allTimingPhases(): { betId: string; phase: SkillPhase }[] {
   return out;
 }
 
-/** Every choice/puzzle phase must expose a clue that names the correct option. */
-export function choiceClueCoversAnswer(phase: SkillPhase): boolean {
-  if (phase.kind !== 'choice' && phase.kind !== 'puzzle') return true;
+/**
+ * Choice/puzzle clues must be deducible but must NOT name the answer directly
+ * (no answer tokens ≥3 letters appear in the clue).
+ */
+export function choiceClueIndirect(phase: SkillPhase): boolean {
+  if (phase.kind !== 'choice' && phase.kind !== 'puzzle' && phase.kind !== 'negotiate') {
+    return true;
+  }
   const opts = phase.options ?? [];
   const answer = opts[phase.target];
-  if (!answer || !phase.clue) return false;
+  if (!answer || !phase.clue || phase.clue.length < 16) return false;
+  const stop = new Set(['the', 'and', 'for', 'you', 'with', 'from', 'that', 'this']);
   const tokens = answer
     .toLowerCase()
     .split(/[^a-z0-9]+/)
-    .filter((t) => t.length >= 3);
+    .filter((t) => t.length >= 3 && !stop.has(t));
+  if (!tokens.length) return phase.clue.length >= 16;
   const clue = phase.clue.toLowerCase();
-  return tokens.some((t) => clue.includes(t));
+  return tokens.every((t) => !new RegExp(`\\b${t}\\b`, 'i').test(clue));
+}
+
+/** @deprecated Prefer choiceClueIndirect — kept as alias for older imports. */
+export function choiceClueCoversAnswer(phase: SkillPhase): boolean {
+  return choiceClueIndirect(phase);
+}
+
+/** Lockpick clues must not list every pin height digit in order. */
+export function lockpickClueIsDecoy(phase: SkillPhase): boolean {
+  if (phase.kind !== 'lockpick') return true;
+  if (!phase.clue) return false;
+  const pins = phasePins(phase);
+  const digitRun = pins.join('');
+  const spaced = pins.join(' ');
+  const clue = phase.clue.toLowerCase();
+  if (clue.includes(digitRun) || clue.includes(spaced)) return false;
+  // Ban spelling every pin via mid/high/sunk vocabulary in order.
+  const words = pins.map((p) => (p === 0 ? 'sink|flush|sunk' : p === 1 ? 'mid' : 'high'));
+  const ordered = words.every((w, i) => {
+    const re = new RegExp(w, 'i');
+    const slice = clue.slice(0, Math.floor(((i + 1) * clue.length) / pins.length) + 12);
+    return re.test(slice);
+  });
+  return !ordered;
 }
 
 function skillBlurb(kind: SkillKind): string {
@@ -304,7 +375,11 @@ function skillBlurb(kind: SkillKind): string {
     case 'hack':
       return 'Match the terminal sequence.';
     case 'lockpick':
-      return 'Set each tumbler pin, then submit the lock.';
+      return 'Set tumblers under a timer — pick can snap.';
+    case 'evade':
+      return 'Slip the drone sight cones — match the blind path.';
+    case 'negotiate':
+      return 'Pick an offer before the timer — consequences stick.';
     case 'duel':
       return 'Multi-phase showdown — timing, read, and hack.';
     default:
@@ -317,239 +392,33 @@ function arrows(n: number, seed: SeqKey[]): SeqKey[] {
 }
 
 function singlePhase(betId: string, kind: Exclude<SkillKind, 'duel'>): SkillPhase {
-  const table: Record<string, SkillPhase> = {
-    'agua-gelada': {
-      kind: 'timing',
-      prompt: 'Catch the ice pour — stop on cold.',
-      target: 0.55,
-      window: 0.22,
-      needleSpeed: 0.55,
-    },
-    'antena-sinal': {
-      kind: 'hack',
-      prompt: 'Splice the pirate jack — match the beep sequence.',
-      target: 0,
-      steps: 3,
-      sequence: ['R', 'G', 'B'],
-    },
-    'laje-lottery': {
-      kind: 'choice',
-      prompt: 'Which draw ball is unmarked?',
-      target: 1,
-      options: ['Corp red 7', 'Hill chalk 3', 'Gold VIP 0'],
-      clue: 'Seu Zé chalked a 3 on the hill ball — corp red and gold VIP are stamped.',
-    },
-    'fio-corrida': {
-      kind: 'chase',
-      prompt: 'Chase Fio across the lajes — match his tile path.',
-      target: 0,
-      steps: 4,
-      sequence: ['↑', '→', '↑', '←'],
-    },
-    'corrida-moto': {
-      kind: 'chase',
-      prompt: 'Wire the moto lane — clear the gate sequence.',
-      target: 0,
-      steps: 4,
-      sequence: ['→', '→', '↓', '→'],
-    },
-    'pastel-surpresa': {
-      kind: 'puzzle',
-      prompt: 'Which pastel crate is wired?',
-      target: 2,
-      options: ['Left steam', 'Middle quiet', 'Right buzz'],
-      clue: 'Kiko whispered the right crate buzzes — left steams, middle stays quiet.',
-    },
-    'feira-garrafa': {
-      kind: 'choice',
-      prompt: 'Which bottle still has street proof?',
-      target: 0,
-      options: ['Green glass', 'Corp clear', 'Neon pink'],
-      clue: 'Catador only keeps green glass with the street stamp; clear and pink are Casa blanks.',
-    },
-    'samba-odds': {
-      kind: 'timing',
-      prompt: 'Hit the samba downbeat.',
-      target: 0.48,
-      window: 0.14,
-      needleSpeed: 0.85,
-    },
-    'forro-crowd': {
-      kind: 'timing',
-      prompt: 'Step on the forró accent.',
-      target: 0.62,
-      window: 0.14,
-      needleSpeed: 0.9,
-    },
-    'feira-radio': {
-      kind: 'hack',
-      prompt: 'Tune the pirate dial — match 3 clicks.',
-      target: 0,
-      steps: 3,
-      sequence: ['←', '→', '↑'],
-    },
-    'feira-tipster': {
-      kind: 'puzzle',
-      prompt: 'Which mango crate hums?',
-      target: 1,
-      options: ['Sun crate', 'Hum crate', 'Empty crate'],
-      clue: 'Barraca Tia says the middle hum crate is the one that sings — sun and empty are decoys.',
-    },
-    'prova-vazamento': {
-      kind: 'choice',
-      prompt: 'Which leak drops the house first?',
-      target: 2,
-      options: ['Influencer clip', 'ATM glitch', 'Pit ledger'],
-      clue: 'Luna’s pendrive labels the pit ledger as the kill shot — clips and ATM noise are smokescreens.',
-    },
-    'twist-vazamento': {
-      kind: 'hack',
-      prompt: 'Twist the feed — match the packet sequence.',
-      target: 0,
-      steps: 3,
-      sequence: ['B', 'Y', 'R'],
-    },
-    'pixo-challenge': {
-      kind: 'timing',
-      prompt: 'Spray on the beat.',
-      target: 0.5,
-      window: 0.15,
-      needleSpeed: 0.8,
-    },
-    'influencer-duelo': {
-      kind: 'choice',
-      prompt: 'Call the fake engagement.',
-      target: 0,
-      options: ['Bought likes', 'Real hill tags', 'Casa promo'],
-      clue: 'The influencer’s feed spikes overnight — bought likes, not real hill tags or a Casa promo.',
-    },
-    'avenida-atm': {
-      kind: 'hack',
-      prompt: 'Glitch the ATM rounding — match 4 digits.',
-      target: 0,
-      steps: 4,
-      sequence: ['↑', '↓', '←', '→'],
-    },
-    'avenida-stealth': {
-      kind: 'chase',
-      prompt: 'Slip past lobby cams — match the blind spots.',
-      target: 0,
-      steps: 5,
-      sequence: ['←', '↑', '→', '↑', '→'],
-    },
-    'audiencia-publica': {
-      kind: 'choice',
-      prompt: 'Which testimony sticks?',
-      target: 1,
-      options: ['Corp PR', 'Hill ledger', 'Empty threat'],
-      clue: 'Dr. Margin says only the hill ledger survives cross-exam — corp PR and empty threats fold.',
-    },
-    'morro-return-nair': {
-      kind: 'timing',
-      prompt: 'Toast with the hill — stop on warm.',
-      target: 0.5,
-      window: 0.16,
-      needleSpeed: 0.7,
-    },
-    'morro-return-fio': {
-      kind: 'hack',
-      prompt: 'Ghost the private splice — match 3 tones.',
-      target: 0,
-      steps: 3,
-      sequence: ['G', 'B', 'G'],
-    },
-    'torre-foyer': {
-      kind: 'choice',
-      prompt: 'Bluff the badge reader.',
-      target: 2,
-      options: ['Tourist pass', 'Staff QR', 'Scandal leak'],
-      clue: 'Foyer Guard flinches at a scandal leak — tourist passes and staff QR ping the alarm.',
-    },
-    'torre-pit': {
-      kind: 'puzzle',
-      prompt: 'Spot the real deck.',
-      target: 0,
-      options: ['Dog-eared', 'Gold foil', 'Shrink-wrap'],
-      clue: 'Pit Dealer’s thumb worries the dog-eared deck; gold foil and shrink-wrap are show props.',
-    },
-    'torre-elevator': {
-      kind: 'timing',
-      prompt: 'Call the express car — stop on green.',
-      target: 0.52,
-      window: 0.16,
-      needleSpeed: 0.75,
-    },
-    'torre-vip': {
-      kind: 'timing',
-      prompt: 'Skim the rake on the sweep.',
-      target: 0.45,
-      window: 0.11,
-      needleSpeed: 1.05,
-    },
-    'side-morro-copper': {
-      kind: 'puzzle',
-      prompt: 'Weigh the spare copper — which bag is light?',
-      target: 1,
-      options: ['Heavy rust', 'Light bright', 'Wet coil'],
-      clue: 'Catador points at the light bright bag — heavy rust and wet coil tip the scale.',
-    },
-    'courier-tip': {
-      kind: 'chase',
-      prompt: 'Shadow the courier — match 4 alleys.',
-      target: 0,
-      steps: 4,
-      sequence: ['→', '↓', '→', '↑'],
-    },
-    'dancer-tip': {
-      kind: 'timing',
-      prompt: 'Catch the dancer’s cue.',
-      target: 0.58,
-      window: 0.15,
-      needleSpeed: 0.95,
-    },
-    'feira-lockbox': {
-      kind: 'lockpick',
-      prompt: 'Pick the Casa lockbox under the forró stage.',
-      target: 0,
-      pins: [1, 2, 0],
-      clue: 'Middle pin rides high; left sits mid; right sinks flush.',
-    },
-    'avenida-server': {
-      kind: 'lockpick',
-      prompt: 'Crack the server-cage tumblers before the sweep.',
-      target: 0,
-      pins: [2, 0, 1, 2],
-      clue: 'Outer pins high, second sunk, third mid — four tumblers.',
-    },
-    'avenida-betrayal': {
-      kind: 'choice',
-      prompt: 'Who sold the hill’s bytes?',
-      target: 1,
-      options: ['Blame Luna', 'Blame the mole', 'Blame Margin'],
-      clue: 'The mole’s burner still pings Casa — Luna’s archive is clean; Margin’s hearing is theater.',
-    },
+  const hit = SKILL_PHASE_TABLE[betId];
+  if (hit) return hit;
+  return fallbackPhase(kind);
+}
+
+function fallbackPhase(kind: Exclude<SkillKind, 'duel'>): SkillPhase {
+  const choiceish = kind === 'choice' || kind === 'puzzle' || kind === 'negotiate';
+  const seqish = kind === 'chase' || kind === 'hack' || kind === 'evade';
+  return {
+    kind,
+    prompt: skillBlurb(kind),
+    target: kind === 'timing' ? 0.5 : 0,
+    window: 0.14,
+    needleSpeed: 0.8,
+    steps: 3,
+    sequence: seqish ? arrows(3, ['↑', '→', '↓']) : undefined,
+    options: choiceish ? ['Option A', 'Option B', 'Option C'] : undefined,
+    clue: choiceish
+      ? 'Default clue never names the safe pick — read the street instead.'
+      : kind === 'lockpick'
+        ? 'Default lock feels sticky; ignore the stamped digits on the side.'
+        : undefined,
+    pins: kind === 'lockpick' ? [1, 0, 2] : undefined,
+    hiddenPin: kind === 'lockpick' ? 0 : undefined,
+    timerMs: kind === 'lockpick' ? 25_000 : kind === 'negotiate' ? 10_000 : undefined,
+    pickDurability: kind === 'lockpick' ? 3 : undefined,
   };
-  return (
-    table[betId] ?? {
-      kind,
-      prompt: skillBlurb(kind),
-      target: kind === 'timing' ? 0.5 : kind === 'choice' || kind === 'puzzle' ? 0 : 0,
-      window: 0.14,
-      needleSpeed: 0.8,
-      steps: 3,
-      sequence:
-        kind === 'chase' || kind === 'hack' ? arrows(3, ['↑', '→', '↓']) : undefined,
-      options:
-        kind === 'choice' || kind === 'puzzle'
-          ? ['Option A', 'Option B', 'Option C']
-          : undefined,
-      clue:
-        kind === 'choice' || kind === 'puzzle'
-          ? 'Default clue names Option A as the safe pick.'
-          : undefined,
-      pins: kind === 'lockpick' ? [1, 0, 2] : undefined,
-    }
-  );
 }
 
 function duelSkill(betId: string): SkillDef {
@@ -571,7 +440,7 @@ function duelSkill(betId: string): SkillDef {
         prompt: 'Phase 2 — call Augusto’s bluff.',
         target: 1,
         options: ['All-in smile', 'Ledger shake', 'Crowd roar'],
-        clue: 'Augusto’s cuff trembles — the ledger shake tells; the smile and roar are theater.',
+        clue: 'Watch the cuff — theater fills the room, but the tremor tells.',
       },
       {
         kind: 'hack',

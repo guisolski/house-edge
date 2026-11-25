@@ -34,6 +34,13 @@ export function focusFirst(panel: HTMLElement): void {
   btn?.focus();
 }
 
+/** Hide lines after an unresolved choice so closing beats don't spoil the pick. */
+export function dialogueVisibleLines(lines: DialogueLine[]): DialogueLine[] {
+  const cut = lines.findIndex((l) => Boolean(l.choices?.length));
+  if (cut < 0) return lines;
+  return lines.slice(0, cut + 1);
+}
+
 export function paintDialogue(
   panel: HTMLElement,
   lines: DialogueLine[],
@@ -45,9 +52,9 @@ export function paintDialogue(
   },
 ): void {
   clearNode(panel);
-  const body = el('div', 'panel-body');
+  const body = el('div', 'panel-body dialogue-body');
   let pendingChoices: DialogueLine['choices'] | undefined;
-  for (const line of lines) {
+  for (const line of dialogueVisibleLines(lines)) {
     body.appendChild(el('p', 'line', `${line.speaker}: ${line.text}`));
     if (line.choices?.length) pendingChoices = line.choices;
   }
@@ -100,16 +107,17 @@ export function paintSkill(
   if (phase?.clue) {
     body.appendChild(el('p', 'skill-clue', `Clue: ${phase.clue}`));
   }
-  const actions = el('div', 'panel-actions skill-actions');
-  if (phase?.kind === 'timing') {
-    paintTimingSkill(body, actions, session, after, phase);
-  } else if (phase?.kind === 'lockpick') {
-    paintLockpickSkill(body, actions, session, after, phase);
-  } else if (phase?.kind === 'choice' || phase?.kind === 'puzzle') {
-    paintChoiceSkill(actions, phase.options ?? ['A', 'B', 'C'], session, after);
-  } else if (phase) {
-    paintSequenceSkill(body, actions, session, after);
+  if (phase?.kind === 'lockpick' && progress.pickLeft !== undefined) {
+    body.appendChild(
+      el(
+        'p',
+        'skill-seq',
+        `Pick durability: ${progress.pickLeft} snap${progress.pickLeft === 1 ? '' : 's'} left`,
+      ),
+    );
   }
+  const actions = el('div', 'panel-actions skill-actions');
+  if (phase) paintPhaseControls(body, actions, session, after, phase, progress.pickLeft);
   actions.appendChild(
     button(UI.cancel, () => {
       session.cancelBet();
@@ -118,6 +126,29 @@ export function paintSkill(
   );
   panel.append(body, actions);
   focusFirst(panel);
+}
+
+function paintPhaseControls(
+  body: HTMLElement,
+  actions: HTMLElement,
+  session: GameSession,
+  after: () => void,
+  phase: SkillPhase,
+  pickLeft?: number,
+): void {
+  if (phase.kind === 'timing') {
+    paintTimingSkill(body, actions, session, after, phase);
+    return;
+  }
+  if (phase.kind === 'lockpick') {
+    paintLockpickSkill(body, actions, session, after, phase, pickLeft);
+    return;
+  }
+  if (phase.kind === 'choice' || phase.kind === 'puzzle' || phase.kind === 'negotiate') {
+    paintChoiceSkill(actions, phase.options ?? ['A', 'B', 'C'], session, after, phase);
+    return;
+  }
+  paintSequenceSkill(body, actions, session, after);
 }
 
 function paintTimingSkill(
@@ -169,15 +200,34 @@ function paintChoiceSkill(
   options: string[],
   session: GameSession,
   after: () => void,
+  phase?: SkillPhase,
 ): void {
+  let settled = false;
+  const settle = (i: number): void => {
+    if (settled) return;
+    settled = true;
+    session.submitSkill(i);
+    after();
+  };
   options.forEach((label, i) => {
-    actions.appendChild(
-      button(label, () => {
-        session.submitSkill(i);
-        after();
-      }),
-    );
+    actions.appendChild(button(label, () => settle(i)));
   });
+  const ms = phase?.timerMs;
+  if (ms && ms > 0) {
+    const timer = el('p', 'skill-seq', `Offer expires in ${Math.ceil(ms / 1000)}s`);
+    actions.prepend(timer);
+    const started = Date.now();
+    const tick = window.setInterval(() => {
+      const left = Math.max(0, ms - (Date.now() - started));
+      timer.textContent =
+        left > 0 ? `Offer expires in ${Math.ceil(left / 1000)}s` : 'Offer expired';
+      if (left <= 0) {
+        window.clearInterval(tick);
+        // Wrong answer on timeout — miss, then UI refreshes via after.
+        settle((phase?.target ?? 0) === 0 ? 1 : 0);
+      }
+    }, 200);
+  }
 }
 
 function paintLockpickSkill(
@@ -186,19 +236,31 @@ function paintLockpickSkill(
   session: GameSession,
   after: () => void,
   phase: SkillPhase,
+  pickLeft?: number,
 ): void {
   const target = phasePins(phase);
   const heights = target.map(() => 0);
+  const revealed = new Set<number>();
+  const hidden = phase.hiddenPin;
   const row = el('div', 'lockpick-row');
   const labels: HTMLButtonElement[] = [];
+  const timerEl = el('p', 'skill-seq', '');
+  let expired = false;
+  let settled = false;
   const refresh = (): void => {
     labels.forEach((btn, i) => {
+      if (hidden === i && !revealed.has(i)) {
+        btn.textContent = `Pin ${i + 1}: ???`;
+        return;
+      }
       const h = heights[i] ?? 0;
       btn.textContent = `Pin ${i + 1}: ${'▮'.repeat(h + 1)}${'▯'.repeat(LOCK_PIN_LEVELS - 1 - h)}`;
     });
   };
   target.forEach((_, i) => {
     const btn = button(`Pin ${i + 1}`, () => {
+      if (expired || settled) return;
+      if (hidden === i) revealed.add(i);
       heights[i] = ((heights[i] ?? 0) + 1) % LOCK_PIN_LEVELS;
       refresh();
     });
@@ -206,11 +268,32 @@ function paintLockpickSkill(
     labels.push(btn);
     row.appendChild(btn);
   });
-  // Clue already painted by paintSkill — only append the pin row here.
   body.appendChild(row);
+  void pickLeft;
+  if (phase.timerMs) {
+    body.appendChild(timerEl);
+    const started = Date.now();
+    const ms = phase.timerMs;
+    const tick = window.setInterval(() => {
+      const left = Math.max(0, ms - (Date.now() - started));
+      timerEl.textContent =
+        left > 0 ? `Timer ${Math.ceil(left / 1000)}s` : 'Timer expired — pick snaps';
+      if (left <= 0) {
+        window.clearInterval(tick);
+        expired = true;
+        if (!settled) {
+          settled = true;
+          session.submitSkill(encodePins(target.map((p) => (p + 1) % LOCK_PIN_LEVELS)));
+          after();
+        }
+      }
+    }, 200);
+  }
   refresh();
   actions.appendChild(
     button('Submit lock', () => {
+      if (settled || expired) return;
+      settled = true;
       session.submitSkill(encodePins(heights));
       after();
     }),
@@ -227,11 +310,18 @@ function paintSequenceSkill(
   const phase = progress?.def.phases[progress.phaseIndex];
   if (!progress || !phase) return;
   const seq = phaseSequence(phase);
-  const pattern = el('p', 'skill-pattern', `Sequence: ${seq.join('  ')}`);
+  const evade = phase.kind === 'evade';
+  const pattern = el(
+    'p',
+    'skill-pattern',
+    evade ? `Blind path: ${seq.join('  ')}` : `Sequence: ${seq.join('  ')}`,
+  );
   const status = el(
     'p',
     'skill-seq',
-    `Match ${progress.seqIndex + 1} / ${seq.length} — next key…`,
+    evade
+      ? `Cone ${progress.seqIndex + 1} / ${seq.length} — slip next…`
+      : `Match ${progress.seqIndex + 1} / ${seq.length} — next key…`,
   );
   body.append(pattern, status);
   const pad = el('div', 'skill-seq-pad');
@@ -260,28 +350,31 @@ function paintSequenceSkill(
     );
   }
   actions.appendChild(pad);
-  const onKeyDown = (ev: KeyboardEvent): void => {
-    const map: Record<string, SeqKey> = {
-      ArrowUp: '↑',
-      ArrowRight: '→',
-      ArrowDown: '↓',
-      ArrowLeft: '←',
-      KeyW: '↑',
-      KeyD: '→',
-      KeyS: '↓',
-      KeyA: '←',
-      KeyR: 'R',
-      KeyG: 'G',
-      KeyB: 'B',
-      KeyY: 'Y',
-    };
-    const sym = map[ev.code];
+  // Hint: Esc cancels (wired in handleAction); arrows never cycle Cancel.
+  actions.appendChild(el('p', 'skill-seq', 'Esc cancels · arrows are sequence only'));
+  panelKeyHook(actions, (ev) => {
+    const sym = SEQ_KEY_CODES[ev.code];
     if (!sym || !used.includes(sym)) return;
     ev.preventDefault();
+    ev.stopPropagation();
     onKey(SEQ_KEYS.indexOf(sym));
-  };
-  panelKeyHook(actions, onKeyDown);
+  });
 }
+
+const SEQ_KEY_CODES: Record<string, SeqKey> = {
+  ArrowUp: '↑',
+  ArrowRight: '→',
+  ArrowDown: '↓',
+  ArrowLeft: '←',
+  KeyW: '↑',
+  KeyD: '→',
+  KeyS: '↓',
+  KeyA: '←',
+  KeyR: 'R',
+  KeyG: 'G',
+  KeyB: 'B',
+  KeyY: 'Y',
+};
 
 function panelKeyHook(root: HTMLElement, handler: (ev: KeyboardEvent) => void): void {
   const fn = (ev: KeyboardEvent): void => {

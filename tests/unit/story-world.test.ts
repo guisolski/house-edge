@@ -38,6 +38,7 @@ describe('StorySystem', () => {
         unlocked_torre: true,
         escandalo_aberto: true,
         vip_ok: true,
+        negotiate_ok: true,
         morro_return_ok: true,
       },
       STORY_BEATS.filter((b) => b.id !== 'torre-final').map((b) => b.id),

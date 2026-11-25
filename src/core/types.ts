@@ -6,7 +6,15 @@ export type BetKind = 'dialogue' | 'purchase' | 'race' | 'draw' | 'job' | 'story
 
 /** Skill encounter kind — story gates prefer this over pure RNG. */
 export type SkillKind =
-  'timing' | 'choice' | 'puzzle' | 'chase' | 'hack' | 'duel' | 'lockpick';
+  | 'timing'
+  | 'choice'
+  | 'puzzle'
+  | 'chase'
+  | 'hack'
+  | 'duel'
+  | 'lockpick'
+  | 'evade'
+  | 'negotiate';
 
 export type Odds = {
   numerator: number;

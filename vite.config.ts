@@ -1,9 +1,13 @@
 import { defineConfig } from 'vite';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const base = process.env.BASE_PATH ?? '/';
+const pkg = JSON.parse(readFileSync(path.join(rootDir, 'package.json'), 'utf8')) as {
+  version: string;
+};
 
 export default defineConfig({
   base,
@@ -27,4 +31,15 @@ export default defineConfig({
     sourcemap: true,
     chunkSizeWarningLimit: 900,
   },
+  plugins: [
+    {
+      name: 'html-package-version',
+      transformIndexHtml(html) {
+        return html.replace(
+          /<title>[^<]*<\/title>/,
+          `<title>House Edge v${pkg.version}</title>`,
+        );
+      },
+    },
+  ],
 });

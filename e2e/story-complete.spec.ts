@@ -30,6 +30,7 @@ const STORY_IDS = [
   'avenida-checkpoint',
   'avenida-courier',
   'avenida-influencer',
+  'avenida-drone',
   'avenida-radar',
   'avenida-server',
   'avenida-atm',
@@ -42,6 +43,7 @@ const STORY_IDS = [
   'torre-pit',
   'torre-elevator',
   'torre-vip',
+  'torre-negotiate',
   'torre-final',
   'epilogue-laje',
 ] as const;
@@ -67,6 +69,7 @@ const BEAT_DISTRICT: Record<(typeof STORY_IDS)[number], string> = {
   'avenida-checkpoint': 'avenida-odds',
   'avenida-courier': 'avenida-odds',
   'avenida-influencer': 'avenida-odds',
+  'avenida-drone': 'avenida-odds',
   'avenida-radar': 'avenida-odds',
   'avenida-server': 'avenida-odds',
   'avenida-atm': 'avenida-odds',
@@ -79,6 +82,7 @@ const BEAT_DISTRICT: Record<(typeof STORY_IDS)[number], string> = {
   'torre-pit': 'torre-casa',
   'torre-elevator': 'torre-casa',
   'torre-vip': 'torre-casa',
+  'torre-negotiate': 'torre-casa',
   'torre-final': 'torre-casa',
   'epilogue-laje': 'morro-neon',
 };

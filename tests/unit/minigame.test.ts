@@ -59,7 +59,7 @@ describe('minigame skill system', () => {
     expect(p.def.phases[1]!.window).toBe(choiceWin);
   });
 
-  it('choiceClueCoversAnswer rejects missing clues and covers fallback skill', () => {
+  it('choiceClueIndirect rejects missing/direct clues; fallback stays indirect', () => {
     expect(
       choiceClueCoversAnswer({
         kind: 'choice',
@@ -68,13 +68,14 @@ describe('minigame skill system', () => {
         options: ['Alpha', 'Beta'],
       }),
     ).toBe(false);
+    // Direct token "beta" fails indirect rule.
     expect(
       choiceClueCoversAnswer({
         kind: 'choice',
         prompt: 'x',
-        target: 0,
+        target: 1,
         options: ['Alpha', 'Beta'],
-        clue: 'pick beta somehow',
+        clue: 'pick beta somehow from the street',
       }),
     ).toBe(false);
     expect(skillForBet('nope', undefined)).toBeNull();
@@ -153,7 +154,7 @@ describe('minigame skill system', () => {
     expect(p.cleared).toBe(3);
   });
 
-  it('every choice/puzzle story gate has a clue naming the correct answer', () => {
+  it('every choice/puzzle story gate has an indirect clue (no answer tokens)', () => {
     const skillBets = BETS.filter(
       (b) => b.skill === 'choice' || b.skill === 'puzzle' || b.skill === 'duel',
     );
@@ -168,13 +169,14 @@ describe('minigame skill system', () => {
         ).toBe(true);
       }
     }
+    // Direct answer token in clue fails the indirect rule.
     expect(
       choiceClueCoversAnswer({
         kind: 'choice',
         prompt: 'x',
         target: 0,
         options: ['Alpha'],
-        clue: 'nope',
+        clue: 'obviously pick Alpha here',
       }),
     ).toBe(false);
     expect(
@@ -195,7 +197,17 @@ describe('minigame skill system', () => {
   });
 
   it('covers every skill kind blurb and multi-phase progress', () => {
-    for (const kind of ['timing', 'choice', 'puzzle', 'chase', 'hack', 'duel'] as const) {
+    for (const kind of [
+      'timing',
+      'choice',
+      'puzzle',
+      'chase',
+      'hack',
+      'duel',
+      'lockpick',
+      'evade',
+      'negotiate',
+    ] as const) {
       const def = skillForBet(`cov-${kind}`, kind);
       expect(def?.blurb.length).toBeGreaterThan(0);
       expect(def?.phases.length).toBeGreaterThan(0);

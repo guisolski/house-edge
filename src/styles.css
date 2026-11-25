@@ -439,7 +439,7 @@ canvas.excalibur-game {
 .interact-prompt {
   position: absolute;
   left: 50%;
-  bottom: 22%;
+  bottom: 28%;
   transform: translateX(-50%);
   padding: 0.45rem 0.9rem;
   background: #12121cee;
@@ -448,6 +448,18 @@ canvas.excalibur-game {
   font-weight: 700;
   pointer-events: none;
   z-index: 6;
+  white-space: nowrap;
+}
+
+.dialogue-body {
+  max-height: min(42vh, 320px);
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.dialogue-body .line {
+  line-height: 1.35;
 }
 
 /* UX-3 / UX-7: touch chrome only when mode=touch */
@@ -686,8 +698,34 @@ canvas.excalibur-game {
   letter-spacing: 0.12em;
   z-index: 70;
   pointer-events: none;
+  animation: fx-fade-in 0.18s ease-out;
+}
+
+.fx-fade {
+  animation:
+    fx-fade-in 0.22s ease-out,
+    fx-fade-hold 0.5s ease-in 0.22s;
 }
 
 .fx-elevator {
   background: linear-gradient(180deg, #050508 0%, #1a2040 50%, #050508 100%);
+  animation: fx-fade-in 0.25s ease-out;
+}
+
+@keyframes fx-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fx-fade-hold {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+  }
 }

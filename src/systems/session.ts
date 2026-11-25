@@ -22,12 +22,13 @@ import {
   type DistrictExit,
   type WorldNpc,
 } from './interaction';
-import { buildDistrictMap, buildTorreVip, tileAt, type MapDef } from '../world/maps';
+import { buildDistrictMap, buildTorreVip, type MapDef } from '../world/maps';
 import { slideStep } from '../world/slide';
 import { currentObjective, sideQuestMarkers, type Objective } from './objectives';
 import {
   assistAfterMiss,
   attemptSkill,
+  isSequencePhase,
   perfectAttempt,
   skillForBet,
   startSkill,
@@ -151,8 +152,8 @@ export class GameSession {
     // NPCs are non-blocking — walk-through keeps interaction from trapping the player.
     this.player.setPosition(dest.x, dest.y);
     this.refreshExitLatch();
-    // Walk-on travel only on exit tiles (plus-pad). Stand margin still shows E — Travel.
-    if (!this.vipFloor && tileAt(map, dest.x, dest.y) === 'exit') {
+    // All pads: walk-in within stand range (latch prevents bounce-back).
+    if (!this.vipFloor) {
       const exit = this.nearbyExit();
       if (exit) return this.travelTo(exit.toDistrict);
     }
@@ -169,12 +170,29 @@ export class GameSession {
     this.bus.emit('audio:play-sfx', { id: 'travel' });
     this.vipFloor = false;
     this.player.setDistrict(districtId);
-    this.player.setPosition(district.spawn.x, district.spawn.y);
+    // Arrive at the reciprocal pad (not mid-street spawn) with latch engaged.
+    const arrival = this.exits.find(
+      (e) => e.districtId === districtId && e.toDistrict === from,
+    );
+    if (arrival) this.player.setPosition(arrival.x, arrival.y);
+    else this.player.setPosition(district.spawn.x, district.spawn.y);
     this.exitLatch = true;
     this.ui.go('play');
     this.bus.emit('district:entered', { districtId });
     return true;
   }
+
+  /** True while a chase/hack/evade sequence phase owns arrow input. */
+  isSequenceSkillActive(): boolean {
+    if (!this.ui.is('skill') || !this.skillProgress || this.skillProgress.done) {
+      return false;
+    }
+    const phase = this.skillProgress.def.phases[this.skillProgress.phaseIndex];
+    return isSequencePhase(phase);
+  }
+
+  /** Last player screen anchor for the E-prompt (updated by world-view). */
+  promptAnchor: { x: number; y: number } | null = null;
 
   /**
    * Elevator pad wins when the player stands on/near the car (≤1.6 tiles),
@@ -412,14 +430,23 @@ export class GameSession {
       phaseIndex: this.skillProgress.phaseIndex,
       value,
     });
+    // Pick snap / full fail ends the encounter (do not treat as a soft retry).
+    if (next.done) {
+      this.skillProgress = next;
+      return this.finishSkill(next.won);
+    }
     if (next.justMissed || next.misses > beforeMisses) {
       // Retry current phase only — no stake drain, optional timing assist.
       this.skillProgress = assistAfterMiss(next);
       const phase = this.skillProgress.def.phases[this.skillProgress.phaseIndex];
+      const left =
+        phase?.kind === 'lockpick' && this.skillProgress.pickLeft !== undefined
+          ? ` Pick left: ${this.skillProgress.pickLeft}.`
+          : '';
       const widened =
         phase?.kind === 'timing'
           ? ' Zone widened / needle slowed — try this phase again.'
-          : ' Retry this phase.';
+          : ` Retry this phase.${left}`;
       this.bus.emit('ui:toast', {
         message: `Missed phase ${this.skillProgress.phaseIndex + 1}.${widened}`,
         kind: 'info',
@@ -429,11 +456,8 @@ export class GameSession {
       return true;
     }
     this.skillProgress = next;
-    if (!next.done) {
-      this.bus.emit('audio:play-sfx', { id: 'interact' });
-      return true;
-    }
-    return this.finishSkill(next.won);
+    this.bus.emit('audio:play-sfx', { id: 'interact' });
+    return true;
   }
 
   /** Harness / e2e: auto-clear remaining skill phases with perfect play. */

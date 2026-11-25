@@ -5,6 +5,33 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.16.0] — 2026-11-25
+
+### Added
+
+- **Evade** skill — drone sight-cone path on Odds Avenue (`avenida-drone`).
+- **Negotiate** skill — timed VIP Host offers with consequences (`torre-negotiate`).
+- Lockpick tension: countdown timer, hidden pin, decoy clue, pick durability (snap on 0).
+- Choice/puzzle clues are **indirect** (must not name the answer token).
+- Build injects `<title>House Edge v{version}</title>` from `package.json`.
+- Proximity NPC name tags; objective labels offset/hide near neon signs.
+- Map layer prewarm cache + longer fade/elevator cover for district swaps.
+
+### Fixed
+
+- Credits **Skip credits** dismisses the roll (same as Continue exploring).
+- Epilogue “Saúde…” line only appears after the final choice.
+- All exit pads walk-in with latch (Central Fair in Morro included).
+- Arrival spawn lands on the reciprocal pad (Torre → Avenida no longer mid-street).
+- E-prompt anchors above the player; dropped the “also …” alt list.
+- Sequence gates: arrows/WASD/A-B are sequence-only; Cancel via Esc.
+- Stage Hand / long dialogue wraps and paginates in a scroll body.
+
+### Tests
+
+- Unit: title build, walk-in all pads, pad spawn, lockpick tension, indirect clues, evade/negotiate.
+- E2e: Skip credits; document title matches package version; story-complete includes new beats.
+
 ## [1.15.0] — 2026-11-25
 
 ### Added

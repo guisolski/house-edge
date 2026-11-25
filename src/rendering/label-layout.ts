@@ -8,6 +8,28 @@ export type LabelBox = {
 };
 
 /**
+ * When an objective / name tag sits on a neon sign, push the label up
+ * (or hide it) so "Dancer Sol" doesn't cover "ODDS 24H".
+ */
+export function labelOffsetForSigns(opts: {
+  tileX: number;
+  tileY: number;
+  signs: readonly { x: number; y: number }[];
+  nearTiles?: number;
+}): { dy: number; hideLabel: boolean } {
+  const near = opts.nearTiles ?? 2.4;
+  let closest = Infinity;
+  for (const s of opts.signs) {
+    const d = Math.hypot(s.x - opts.tileX, s.y - opts.tileY);
+    if (d < closest) closest = d;
+  }
+  if (closest > near) return { dy: 0, hideLabel: false };
+  // Exit-pad markers often sit on "> CENTRAL FAIR" — hide the name tag.
+  if (closest < 1.35) return { dy: -48, hideLabel: true };
+  return { dy: -40, hideLabel: false };
+}
+
+/**
  * Measure + clamp a centered label so the full box stays in [pad, viewW-pad].
  * Shortens only when the measured width cannot fit even after clamping.
  */

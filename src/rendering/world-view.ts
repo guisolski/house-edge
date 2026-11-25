@@ -12,7 +12,7 @@ import {
 } from '../world/maps';
 import { bakeSprite, blitImage } from './bake';
 import { FpsMeter, type FpsSample } from './fps';
-import { layoutMarkerLabel } from './label-layout';
+import { labelOffsetForSigns, layoutMarkerLabel } from './label-layout';
 import { drawPixelText, measurePixelText } from './pixel-font';
 import {
   makeAlley,
@@ -71,6 +71,8 @@ type Baked = {
     HTMLCanvasElement
   >;
   glow: Map<string, HTMLCanvasElement>;
+  /** Prewarmed district layers so travel/elevator don't hitch. */
+  mapLayers: Map<string, HTMLCanvasElement>;
 };
 
 type MapCache = {
@@ -268,6 +270,7 @@ function bakeAll(): Baked {
       crowd: bakeSprite(makeCrowd(), SCALE),
     },
     glow: new Map(),
+    mapLayers: new Map(),
   };
 }
 
@@ -282,8 +285,37 @@ function paintPlayHud(
   if (!state.session.ui.is('play')) return;
   // Signs hide under modals so dialogue doesn't cover CASA SUPREMA / EXIT text.
   drawLiveSigns(ctx, state, map, camX, camY);
+  drawNearbyNpcNames(ctx, state, map, camX, camY);
   drawMarker(ctx, state, camX, camY, frame);
   drawSideMarkers(ctx, state, camX, camY);
+}
+
+/** Name tags only within ~2.2 tiles; offset/hide when they would cover a sign. */
+function drawNearbyNpcNames(
+  ctx: CanvasRenderingContext2D,
+  state: ViewState,
+  map: MapDef,
+  camX: number,
+  camY: number,
+): void {
+  const me = state.session.player.getStats();
+  const objName = state.marker?.name;
+  for (const npc of state.session.floorNpcs()) {
+    if (npc.districtId !== me.districtId) continue;
+    const d = Math.hypot(npc.x - me.x, npc.y - me.y);
+    if (d > 2.2) continue;
+    // Objective marker already labels the quest target.
+    if (objName && npc.name === objName) continue;
+    const avoid = labelOffsetForSigns({
+      tileX: npc.x,
+      tileY: npc.y,
+      signs: map.signs,
+    });
+    if (avoid.hideLabel) continue;
+    const px = npc.x * TILE_PX + 16 - camX;
+    const py = npc.y * TILE_PX - 28 - camY + avoid.dy;
+    paintMarkerLabel(ctx, px, py, npc.name, ctx.canvas.width);
+  }
 }
 
 function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCamera> {
@@ -330,6 +362,11 @@ function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCa
     frame,
   });
   paintPlayHud(ctx, state, map, viewCamX, viewCamY, frame);
+  // Anchor the E-prompt above the on-screen player (not a fixed bottom band).
+  state.session.promptAnchor = {
+    x: stats.x * TILE_PX + 16 - viewCamX,
+    y: stats.y * TILE_PX - (baked.player[0]!.height - TILE_PX) - viewCamY,
+  };
   // FPS meter is a DOM overlay (see hud) — canvas draw was covered by .hud.
   void showFps;
   void sample;
@@ -361,17 +398,21 @@ function mapCacheKey(session: GameSession, map: MapDef): string {
 function ensureMapCache(state: ViewState, map: MapDef, baked: Baked): void {
   const key = mapCacheKey(state.session, map);
   if (state.mapCache?.key === key) return;
-  state.mapCache = {
-    key,
-    layer: bakeMapLayer(map, baked),
-  };
+  let layer = baked.mapLayers.get(key);
+  if (!layer) {
+    layer = bakeMapLayer(map, baked);
+    baked.mapLayers.set(key, layer);
+  }
+  state.mapCache = { key, layer };
 }
 
-/** Bake every district (+ VIP) on boot so first travel into Casa doesn't hitch. */
+/** Bake every district (+ VIP) on boot and keep layers so travel doesn't hitch. */
 function prewarmDistricts(session: GameSession, baked: Baked): void {
   const ids: DistrictId[] = ['morro-neon', 'feira-central', 'avenida-odds', 'torre-casa'];
-  for (const id of ids) bakeMapLayer(buildDistrictMap(id), baked);
-  bakeMapLayer(buildTorreVip(), baked);
+  for (const id of ids) {
+    baked.mapLayers.set(id, bakeMapLayer(buildDistrictMap(id), baked));
+  }
+  baked.mapLayers.set('torre-vip', bakeMapLayer(buildTorreVip(), baked));
   for (const npc of session.npcs) {
     npcSprite(baked, npc, 0);
     npcSprite(baked, npc, 1);
@@ -996,6 +1037,7 @@ function drawMarker(
   const m = state.marker;
   const me = state.session.player.getStats();
   if (!m || m.districtId !== me.districtId) return;
+  const map = state.session.getMap();
   paintObjectiveMarker({
     ctx,
     tx: m.x,
@@ -1007,6 +1049,7 @@ function drawMarker(
     viewW: ctx.canvas.width,
     viewH: ctx.canvas.height,
     distTiles: Math.round(Math.hypot(m.x - me.x, m.y - me.y)),
+    signs: map.signs,
   });
 }
 
@@ -1041,24 +1084,33 @@ type ObjectiveMark = {
   viewW: number;
   viewH: number;
   distTiles: number;
+  signs: readonly { x: number; y: number }[];
 };
 
 /** Large bouncing yellow arrow + name; edge pointer when off-screen. */
 function paintObjectiveMarker(m: ObjectiveMark): void {
   const bob = Math.sin(m.frame / 8) * 6;
+  const avoid = labelOffsetForSigns({
+    tileX: m.tx,
+    tileY: m.ty,
+    signs: m.signs,
+  });
   const rawX = m.tx * TILE_PX + 16 - m.camX;
-  const rawY = m.ty * TILE_PX - 18 + bob - m.camY;
+  const rawY = m.ty * TILE_PX - 18 + bob - m.camY + avoid.dy;
   const margin = 28;
   const onScreen =
     rawX >= margin && rawX <= m.viewW - margin && rawY >= 120 && rawY <= m.viewH - margin;
   if (onScreen) {
     paintBigArrow(m.ctx, rawX, rawY, Palette.brasilYellow);
-    if (m.label) paintMarkerLabel(m.ctx, rawX, rawY - 22, m.label, m.viewW);
+    if (m.label && !avoid.hideLabel) {
+      paintMarkerLabel(m.ctx, rawX, rawY - 22, m.label, m.viewW);
+    }
     return;
   }
   const px = clamp(rawX, margin, m.viewW - margin);
   const py = clamp(rawY, 120, m.viewH - margin);
   paintBigArrow(m.ctx, px, py, Palette.brasilYellow);
+  if (avoid.hideLabel) return;
   // Prefer full destination name; layoutMarkerLabel shortens only if it cannot fit.
   const label = m.label ? `${m.label} · ${m.distTiles}m` : `${m.distTiles}m`;
   paintMarkerLabel(m.ctx, px, py - 22, label, m.viewW);

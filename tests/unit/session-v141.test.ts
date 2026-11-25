@@ -105,6 +105,7 @@ describe('session v1.14.1 needle / economy / epilogue', () => {
       'avenida_ok',
       'vazamento_ok',
       'vip_ok',
+      'negotiate_ok',
     ]) {
       session.story.setFlag(f, true);
     }

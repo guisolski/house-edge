@@ -310,20 +310,24 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     dialogue: [
       {
         speaker: 'Stage Hand',
-        text: 'Forró shook a Casa lockbox loose under the risers. Militia will reclaim it after the set — unless you pick it first.',
-      },
-      {
-        speaker: 'Rita Odds',
-        text: 'A mid-fair heist. Tumblers, not dice. What’s inside?',
+        text: 'Forró shook a Casa lockbox loose under the risers.',
       },
       {
         speaker: 'Stage Hand',
-        text: 'Ledger chips and a spare keycard for Odds Avenue cages. Set the pins — clue’s on the scratched plate.',
+        text: 'Militia reclaim it after the set — unless you pick it first.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Tumblers, not dice. What’s inside?',
+      },
+      {
+        speaker: 'Stage Hand',
+        text: 'Ledger chips. Spare keycard. Scratched plate lies — timer’s real, pick can snap.',
         choices: [
           {
             label: 'Crack it for the hill',
             setsFlag: 'lockbox_for_hill',
-            reply: 'Chips for the hill. If Casa cries, the calçadão laughs louder.',
+            reply: 'Chips for the hill. Calçadão laughs louder than Casa.',
           },
           {
             label: 'Crack it for leverage',
@@ -334,7 +338,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Stage Hand',
-        text: 'Either score feeds the radio pirate next. Miss a pin and the stake tips — retry the same tumblers.',
+        text: 'Either score feeds the radio pirate next. Don’t trust the red sticker.',
       },
     ],
   },
@@ -535,15 +539,53 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     ],
   },
   {
+    id: 'avenida-drone',
+    title: 'Drone cones on the boulevard',
+    districtId: 'avenida-odds',
+    requiredFlags: ['influencer_ok'],
+    setsFlags: ['drone_ok'],
+    betId: 'avenida-drone',
+    dialogue: [
+      {
+        speaker: 'Neon Snap',
+        text: 'Influencer’s feed cooked the airspace. Militia drones paint cones on the asphalt.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'I don’t walk into light. Show me the blind path.',
+      },
+      {
+        speaker: 'Neon Snap',
+        text: 'Hug the glass shadow. Cut when the cone blinks. Miss a step and the sweep tags you.',
+        choices: [
+          {
+            label: 'Slip low — no photos',
+            setsFlag: 'drone_low',
+            reply: 'Low and quiet. Snap stays offline until I’m clear.',
+          },
+          {
+            label: 'Dash loud — burn a flare',
+            setsFlag: 'drone_flare',
+            reply: 'Flare first. If they chase the light, I own the dark.',
+          },
+        ],
+      },
+      {
+        speaker: 'Neon Snap',
+        text: 'Either way — Mensageiro’s waiting once the cones go dark.',
+      },
+    ],
+  },
+  {
     id: 'avenida-radar',
     title: 'Neon radar shop',
     districtId: 'avenida-odds',
-    requiredFlags: ['influencer_ok'],
+    requiredFlags: ['drone_ok'],
     setsFlags: ['radar_ok'],
     dialogue: [
       {
         speaker: 'Mensageiro',
-        text: 'Influencer’s feed is cooked. Militia radar vans circle the ATM strip — wait for the sweep to pass.',
+        text: 'Drones blinked. Radar vans still circle the ATM strip.',
       },
       {
         speaker: 'Rita Odds',
@@ -551,11 +593,11 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Mensageiro',
-        text: 'Militia vans sweep west-to-east. When the boulevard clears, cut south off the asphalt to the ATM hacker by the glass strip.',
+        text: 'West-to-east sweep. When it clears, cut south off asphalt to the cage — then the ATM.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'Wait for the sweep, then south to the ATM. Got it.',
+        text: 'Sweep, then south. Got it.',
       },
     ],
   },
@@ -853,23 +895,58 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     dialogue: [
       {
         speaker: 'VIP Host',
-        text: 'Elevator spit you out clean. High rollers want entertainment now. Skim the VIP table — bet the rake before security blinks.',
+        text: 'Elevator spit you out clean. High rollers want a show.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'One quiet hand at the top, then I face Augusto himself.',
+        text: 'One quiet hand. Then Augusto.',
       },
       {
         speaker: 'VIP Host',
-        text: 'Whatever you decided on the hill — trust or silence — the rake doesn’t care. Place it.',
+        text: 'Skim the rake before security blinks. After that — we talk terms.',
+      },
+    ],
+  },
+  {
+    id: 'torre-negotiate',
+    title: 'Negotiate the VIP exit',
+    districtId: 'torre-casa',
+    requiredFlags: ['vip_ok'],
+    setsFlags: ['negotiate_ok'],
+    betId: 'torre-negotiate',
+    dialogue: [
+      {
+        speaker: 'VIP Host',
+        text: 'Rake’s skimmed. I can still walk you out smiling — or with paper that burns.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'The rake can wait. My debt can’t. Let’s skim.',
+        text: 'Name your price. Timer’s already on your face.',
       },
       {
         speaker: 'VIP Host',
-        text: 'Augusto’s table is past the gold rail. Don’t talk until the chips land.',
+        text: 'Three offers. One sticks. Augusto hears whatever you leave on the table.',
+        choices: [
+          {
+            label: 'Take the hush chip',
+            setsFlag: 'neg_hush',
+            reply: 'Hush chip in the pocket. Quiet doors. Thin leverage.',
+          },
+          {
+            label: 'Demand the pit mirror',
+            setsFlag: 'neg_mirror',
+            reply: 'Pit mirror. If Augusto bluffs, the books still scream.',
+          },
+          {
+            label: 'Walk out smiling',
+            setsFlag: 'neg_smile',
+            reply: 'Smile for the cams. No paper. Pure nerve.',
+          },
+        ],
+      },
+      {
+        speaker: 'VIP Host',
+        text: 'Deal’s sealed. Gold rail to Augusto — don’t blink first.',
       },
     ],
   },
@@ -877,7 +954,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     id: 'torre-final',
     title: 'Duel at Casa Suprema Tower',
     districtId: 'torre-casa',
-    requiredFlags: ['vip_ok'],
+    requiredFlags: ['negotiate_ok'],
     setsFlags: ['casa_quebrada', 'final_bom', 'free_roam'],
     betId: 'duelo-casa',
     isEnding: true,

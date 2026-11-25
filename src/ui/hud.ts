@@ -310,16 +310,19 @@ function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
   viewport.appendChild(roll);
   p.ending.append(art, viewport);
   const actions = el('div', 'panel-actions ending-actions');
+  const leaveCredits = (): void => {
+    blurActive();
+    session.continueExploring();
+    h.syncScreen();
+  };
   const skip = (): void => {
+    // Jump the roll, then dismiss into free roam (Enter/E/Space/click all work).
     roll.classList.add('credits-skipped');
+    leaveCredits();
   };
   actions.append(
     button(UI.skipCredits, skip),
-    button(UI.continueExploring, () => {
-      blurActive();
-      session.continueExploring();
-      h.syncScreen();
-    }),
+    button(UI.continueExploring, leaveCredits),
     button(UI.playAgain, () => {
       blurActive();
       queueMicrotask(() => session.startNew());
@@ -523,33 +526,49 @@ function paintPrompt(prompt: HTMLElement, session: GameSession): void {
     setVisible(prompt, false);
     return;
   }
+  void alt;
   if (kind === 'objective' && npc) {
     const verb = npc.id.startsWith('elevator') ? 'E — Use' : 'E';
-    const extra = alt ? ` · also ${alt.name}` : '';
-    prompt.textContent = `${verb} (${npc.name})${extra}`;
-    setVisible(prompt, true);
+    prompt.textContent = `${verb} (${npc.name})`;
+    placePrompt(prompt, session);
     return;
   }
   if (kind === 'travel' && exit) {
     const dest =
       session.world.get(exit.toDistrict)?.name ?? exit.label.replace(/^Exit → /, '');
     prompt.textContent = `E — Travel to ${dest}`;
-    setVisible(prompt, true);
+    placePrompt(prompt, session);
     return;
   }
   if (kind === 'locked') {
     prompt.textContent = 'E — Path locked';
-    setVisible(prompt, true);
+    placePrompt(prompt, session);
     return;
   }
   if (npc) {
     const verb = npc.id.startsWith('elevator') ? 'E — Use' : 'E';
-    const extra = alt ? ` · also ${alt.name}` : '';
-    prompt.textContent = `${verb} (${npc.name})${extra}`;
-    setVisible(prompt, true);
+    prompt.textContent = `${verb} (${npc.name})`;
+    placePrompt(prompt, session);
     return;
   }
   setVisible(prompt, false);
+}
+
+/** Anchor the E-prompt just above the on-screen player when we know the pixel. */
+function placePrompt(prompt: HTMLElement, session: GameSession): void {
+  const a = session.promptAnchor;
+  if (a) {
+    prompt.style.left = `${Math.round(a.x)}px`;
+    prompt.style.top = `${Math.round(a.y - 36)}px`;
+    prompt.style.bottom = 'auto';
+    prompt.style.transform = 'translateX(-50%)';
+  } else {
+    prompt.style.left = '50%';
+    prompt.style.top = 'auto';
+    prompt.style.bottom = '28%';
+    prompt.style.transform = 'translateX(-50%)';
+  }
+  setVisible(prompt, true);
 }
 
 function runFlash(node: HTMLElement, kind: string): void {
@@ -570,7 +589,9 @@ function runTransition(node: HTMLElement, kind: string): void {
   node.className = `fx-transition fx-${kind}`;
   node.textContent = kind === 'elevator' ? '▲ Elevator' : '';
   setVisible(node, true);
-  window.setTimeout(() => setVisible(node, false), 520);
+  // Longer fade covers map swap / elevator bake so FPS stays ≥50 under throttle.
+  const ms = kind === 'elevator' ? 900 : 720;
+  window.setTimeout(() => setVisible(node, false), ms);
 }
 
 function paintToast(toast: HTMLElement, message: string, kind: string): void {
