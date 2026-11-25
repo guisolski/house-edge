@@ -55,7 +55,7 @@ export const uiPtBR = {
     '←→ trocar pinos · Espaço / clique erguer · Enter / Tab Enviar · Esc cancelar',
   'ui.lockpickHintGamepad': 'D-pad pinos · A erguer · Y Enviar · B cancelar',
   'ui.lockpickHintTouch': 'Toque num pino para erguer · Enviar fechadura · Cancelar',
-  'ui.needleMissHint': 'Errou — para na zona verde. Na próxima a zona fica mais larga.',
+  'ui.needleMissHint': 'Errou — para na zona. Na próxima ela abre um pouco.',
   'ui.language': 'Idioma',
   'ui.languageEn': 'English',
   'ui.languagePt': 'Português (Brasil)',
@@ -92,7 +92,7 @@ export const uiPtBR = {
   'ui.minigameTip.choice':
     'Escolha a fala que cabe no ambiente — tom errado queima o acordo.',
   'ui.minigameTip.hack':
-    'Combine os glifos do feed antes do tempo. Toques errados disparam o alarme.',
+    'Combine os glifos da transmissão antes do tempo. Toques errados disparam o alarme.',
   'ui.minigameTip.negotiate':
     'Leia o outro lado. Aperte quando hesitar; recue quando endurecer.',
   'ui.minigameTip.duel':
@@ -130,7 +130,7 @@ export const uiPtBR = {
   'ui.stakeAtRisk': 'Aposta em jogo: {stake} créditos',
   'ui.stakeLine': 'Aposta: {stake} créditos',
   'ui.skill.phase': 'Fase {current}/{total}: {prompt}',
-  'ui.skill.combo': 'Combo ×{streak} — bônus na próxima vitória',
+  'ui.skill.combo': 'Sequência ×{streak} — bônus na próxima vitória',
   'ui.skill.clue': 'Pista: {clue}',
   'ui.skill.pickDurabilityOne': 'Gazua: {n} quebra restante',
   'ui.skill.pickDurabilityMany': 'Gazua: {n} quebras restantes',
@@ -207,6 +207,37 @@ export const uiPtBR = {
   'ui.toast.missHint.avenida-stealth': 'Cam Tech: ponto cego, não atalho de corredor.',
   'ui.toast.missHint.morro-return-fio': 'Fio: o tom fantasma some se você força.',
   'ui.toast.missHint.avenida-drone': 'Neon Snap: cola na sombra — o cone não perdoa.',
+  'ui.toast.missHint.avenida-server':
+    'Gaiola: graxa e poeira mentem menos que adesivo — sente a mordida.',
+  'ui.toast.missHint.feira-lockbox':
+    'Maquinista: poste untado, banquinho empoeirado — adesivo gritante mente.',
+  'ui.toast.missHint.avenida-betrayal':
+    'Vira-Casaca: quem ainda atende barato não é quem grita no palco.',
+  'ui.toast.missHint.audiencia-publica':
+    'Margin: o que o morro já assinou pesa; brilho de assessoria escorrega.',
+  'ui.toast.missHint.torre-foyer':
+    'Guarda: plástico passa; só trava quando o boato já mandou na sala.',
+  'ui.toast.missHint.torre-pit':
+    'Dealer: baralho cansado da casa — folha e plástico são pra turista.',
+  'ui.toast.missHint.influencer-duelo':
+    'Influenciador: métrica inchada de madrugada não aquenta beco frio.',
+  'ui.toast.missHint.feira-garrafa':
+    'Catador: a carga honesta ainda cheira a chuva, não perfume.',
+  'ui.toast.missHint.feira-tipster':
+    'Barraca Tia: só a tampa grampeada responde com arrepio.',
+  'ui.toast.missHint.pastel-surpresa':
+    'Kiko: a bandeja que unta os dedos — vapor e quietude são isca.',
+  'ui.toast.missHint.laje-lottery':
+    'Luna: bola que ainda cheira a chuva de laje, não verniz VIP.',
+  'ui.toast.missHint.prova-vazamento':
+    'Luna: papel que câmera nenhuma enquadrou — reel é cortina.',
+  'ui.toast.missHint.side-morro-copper':
+    'Catador: o saco que não arrasta o pulso é o leve.',
+  'ui.toast.missHint.courier-tip': 'Mensageiro: quatro becos — não inventa atalho.',
+  'ui.toast.missHint.duelo-casa':
+    'Augusto: agulha, leitura, transmissão — uma fase de cada vez.',
+  'ui.toast.missHint.torre-negotiate':
+    'Anfitrião: qualquer porta vale — escolhe antes do sorriso gelar.',
   'ui.toast.cleared': 'Passou — {payout} créditos.',
   'ui.toast.missedPour':
     'Errou o gelo — fala com a Nair de novo. O objetivo continua no lugar.',

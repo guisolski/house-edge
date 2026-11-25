@@ -94,7 +94,7 @@ export const storyPtBR: Record<string, string> = {
     'Infiltração, não cara ou coroa. Se eu abrir, o travada do ATM ganha enlace limpo.',
   'story.avenida-server.2.choice.0.label': 'Puxar os espelhos do salão',
   'story.avenida-server.2.choice.0.reply':
-    'Espelho o salão. As mesas privadas com comissão do Augusto vêm comigo.',
+    'Levo o espelho do salão. As mesas privadas com comissão do Augusto vêm comigo.',
   'story.avenida-server.2.choice.1.label': 'Plantar sinal falso do morto',
   'story.avenida-server.2.choice.1.reply':
     'Sinal plantado. Se a audiência travar, a transmissão ainda grita.',
@@ -257,7 +257,7 @@ export const storyPtBR: Record<string, string> = {
     'Ficha pro morro. O calçadão ri mais alto que a Casa.',
   'story.feira-lockbox.3.choice.1.label': 'Abrir pra alavancagem',
   'story.feira-lockbox.3.choice.1.reply':
-    'Alavancagem primeiro. Gasto as fichas quando o Augusto piscar.',
+    'Pressão primeiro. Gasto as fichas quando o Augusto piscar.',
   'story.feira-lockbox.3.speaker': 'Maquinista',
   'story.feira-lockbox.3.text':
     'Fichas do livro. Cartão reserva. Placa riscada mente — timer é real, gazua pode quebrar.',
@@ -455,7 +455,7 @@ export const storyPtBR: Record<string, string> = {
   'story.torre-foyer.2.text':
     'Bonitinho. Aposta no blefe. Ganha e a corda de veludo sobe. Perde e espera com os turistas.',
   'story.torre-foyer.3.speaker': 'Rita Odds',
-  'story.torre-foyer.3.text': 'Cansei de esperar. Aposta.',
+  'story.torre-foyer.3.text': 'Chega de fila. Fecha a aposta.',
   'story.torre-foyer.title': 'Crachá no foyer',
   'story.torre-negotiate.0.speaker': 'Anfitrião VIP',
   'story.torre-negotiate.0.text':
@@ -464,7 +464,7 @@ export const storyPtBR: Record<string, string> = {
   'story.torre-negotiate.1.text': 'Fala o preço. O timer já tá na sua cara.',
   'story.torre-negotiate.2.choice.0.label': 'Pegar a ficha do silêncio',
   'story.torre-negotiate.2.choice.0.reply':
-    'Ficha do silêncio no bolso. Porta quieta. Alavancagem fina.',
+    'Ficha do silêncio no bolso. Porta quieta. Pressão na medida.',
   'story.torre-negotiate.2.choice.1.label': 'Exigir o espelho do salão',
   'story.torre-negotiate.2.choice.1.reply':
     'Espelho do salão. Se o Augusto blefar, os livros ainda gritam.',

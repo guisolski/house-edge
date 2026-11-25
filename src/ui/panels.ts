@@ -1,4 +1,4 @@
-import { el, clearNode } from './dom';
+import { el, clearNode, bindPanelKeydown } from './dom';
 import { UI } from './strings';
 import { t, tf } from '../i18n';
 import { localizePhase, localizeSkillDef } from '../i18n/localize-phase';
@@ -249,6 +249,12 @@ function paintPhaseControls(
   paintSequenceSkill(body, actions, session, after);
 }
 
+function needleMissLine(session: GameSession): string {
+  const betId = session.getPendingBet()?.id;
+  const keyed = betId ? t(`ui.toast.missHint.${betId}`) : '';
+  return keyed && keyed !== `ui.toast.missHint.${betId}` ? keyed : UI.needleMissHint;
+}
+
 function paintTimingSkill(
   body: HTMLElement,
   actions: HTMLElement,
@@ -259,7 +265,6 @@ function paintTimingSkill(
   const meter = el('div', 'skill-meter');
   const needle = el('div', 'skill-needle');
   const zoneEl = el('div', 'skill-zone');
-  // Drawn zone MUST match judgeTimingStop(timingZone(phase)).
   const zone = timingZone(phase);
   zoneEl.style.left = `${zone.lo * 100}%`;
   zoneEl.style.width = `${(zone.hi - zone.lo) * 100}%`;
@@ -275,19 +280,25 @@ function paintTimingSkill(
       }),
     ),
   );
-  const misses = session.getSkillProgress()?.misses ?? 0;
-  if (misses > 0) {
-    body.appendChild(el('p', 'skill-clue skill-miss-hint', UI.needleMissHint));
+  if ((session.getSkillProgress()?.misses ?? 0) > 0) {
+    body.appendChild(el('p', 'skill-clue skill-miss-hint', needleMissLine(session)));
   }
   let needlePos = 0;
   let settled = false;
-  const speed = phase.needleSpeed ?? 0.8;
-  const step = Math.max(0.015, 0.028 * speed);
+  const step = Math.max(0.015, 0.028 * (phase.needleSpeed ?? 0.8));
   const tick = window.setInterval(() => {
     needlePos = (needlePos + step) % 1;
     needle.style.left = `${needlePos * 100}%`;
   }, 32);
   meter.dataset.needleTick = String(tick);
+  const sampleNeedle = (): number => {
+    const raw = needle.style.left;
+    if (raw.endsWith('%')) {
+      const v = parseFloat(raw) / 100;
+      if (Number.isFinite(v)) return v;
+    }
+    return needlePos;
+  };
   const stopAt = (pos: number): void => {
     if (settled) return;
     settled = true;
@@ -296,20 +307,10 @@ function paintTimingSkill(
     session.submitSkill(pos);
     after();
   };
-  const sampleNeedle = (): number => {
-    // Prefer the live style (e2e freezes the needle via left%) at input time.
-    const raw = needle.style.left;
-    if (raw.endsWith('%')) {
-      const v = parseFloat(raw) / 100;
-      if (Number.isFinite(v)) return v;
-    }
-    return needlePos;
-  };
   const onKey = (e: KeyboardEvent): void => {
     if (e.repeat) return;
-    const stopKey =
-      e.key === 'Enter' || e.code === 'Enter' || e.key === ' ' || e.code === 'Space';
-    if (!stopKey) return;
+    if (!(e.key === 'Enter' || e.code === 'Enter' || e.key === ' ' || e.code === 'Space'))
+      return;
     e.preventDefault();
     e.stopPropagation();
     stopAt(sampleNeedle());
@@ -520,6 +521,12 @@ function bindSequenceTimer(
   }, 200);
 }
 
+function seqProgressLabel(seq: SeqKey[], index: number): string {
+  return tf('ui.skill.sequenceLabel', {
+    seq: seq.map((_, i) => (i < index ? '✓' : '·')).join('  '),
+  });
+}
+
 function paintSequenceSkill(
   body: HTMLElement,
   actions: HTMLElement,
@@ -539,10 +546,9 @@ function paintSequenceSkill(
       total: String(seq.length),
     }) + (missCap ? tf('ui.skill.missesFail', { n: String(missCap) }) : ''),
   );
-  body.append(
-    el('p', 'skill-pattern', tf('ui.skill.sequenceLabel', { seq: seq.join('  ') })),
-    status,
-  );
+  // Playtest #30: never print the full sequence — only progress (2–3 tries).
+  const pattern = el('p', 'skill-pattern', seqProgressLabel(seq, progress.seqIndex));
+  body.append(pattern, status);
   const settled = { v: false };
   if (phase.timerMs && phase.timerMs > 0) {
     bindSequenceTimer(body, session, seq, phase.timerMs, settled, after);
@@ -569,6 +575,7 @@ function paintSequenceSkill(
         current: String(next.seqIndex + 1),
         total: String(seq.length),
       }) + left;
+    pattern.textContent = seqProgressLabel(seq, next.seqIndex);
   });
   const onKey = (keyIndex: number): void => buffer.push(keyIndex);
   const pad = el('div', 'skill-seq-pad');
@@ -630,14 +637,9 @@ const SEQ_KEY_CODES: Record<string, SeqKey> = {
 };
 
 function panelKeyHook(root: HTMLElement, handler: (ev: KeyboardEvent) => void): void {
-  const fn = (ev: KeyboardEvent): void => {
-    if (!root.isConnected) {
-      window.removeEventListener('keydown', fn);
-      return;
-    }
-    handler(ev);
-  };
-  window.addEventListener('keydown', fn);
+  // Prefer the skill/bet panel root so clearNode aborts listeners on repaint.
+  const panel = (root.closest('.panel') as HTMLElement | null) ?? root;
+  bindPanelKeydown(panel, handler);
 }
 
 export function paintBet(
@@ -698,13 +700,15 @@ function betActionRow(
   after: () => void,
 ): HTMLElement {
   const actions = el('div', 'bet-actions panel-actions');
+  const confirm = button(UI.confirmBet, () => {
+    animateRoll(panel, () => {
+      session.confirmBet();
+      after();
+    });
+  });
+  confirm.classList.add('btn-confirm-bet', 'btn-primary');
   actions.append(
-    button(UI.confirmBet, () => {
-      animateRoll(panel, () => {
-        session.confirmBet();
-        after();
-      });
-    }),
+    confirm,
     button(UI.cancel, () => {
       session.cancelBet();
       after();
@@ -715,16 +719,20 @@ function betActionRow(
 
 function stakeControls(session: GameSession, writeStake: () => void): HTMLElement {
   const row = el('div', 'stake-row');
-  row.append(
-    button(UI.stakeDown, () => {
-      session.adjustStake(-5);
-      writeStake();
-    }),
-    button(UI.stakeUp, () => {
-      session.adjustStake(5);
-      writeStake();
-    }),
-  );
+  // Mouse/touch only — Enter must never lower/raise stake (playtest #30).
+  const down = button(UI.stakeDown, () => {
+    session.adjustStake(-5);
+    writeStake();
+  });
+  down.dataset.skipNav = '1';
+  down.tabIndex = -1;
+  const up = button(UI.stakeUp, () => {
+    session.adjustStake(5);
+    writeStake();
+  });
+  up.dataset.skipNav = '1';
+  up.tabIndex = -1;
+  row.append(down, up);
   return row;
 }
 

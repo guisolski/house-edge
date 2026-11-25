@@ -219,6 +219,14 @@ function handleEscModal(session: GameSession, hud: HudHandles): boolean {
 
 function handleModalNav(session: GameSession, hud: HudHandles, action: string): boolean {
   if (session.ui.is('play') || session.ui.is('title')) return false;
+  // Playtest #30: Enter on bet panel always confirms — never Stake −/+.
+  if (session.ui.is('bet') && action === 'interact') {
+    if (!session.allowModalConfirm()) return true;
+    session.confirmBet();
+    hud.syncScreen();
+    hud.showHud();
+    return true;
+  }
   if (action === 'up' || action === 'left') {
     hud.gamepadNav('up');
     return true;

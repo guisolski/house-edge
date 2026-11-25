@@ -10,23 +10,23 @@ export const skillEn = {
   'skill.agua-gelada.prompt': 'Catch the ice pour — stop on cold.',
   'skill.antena-sinal.prompt': 'Splice the pirate jack — match the beep sequence.',
   'skill.audiencia-publica.clue':
-    'Dr. Margin cross-exams community paper, not press releases or empty threats.',
+    'Dr. Margin weighs what the quebrada already signed — glossy spin and empty threats slide off.',
   'skill.audiencia-publica.option.0': 'Corp PR',
   'skill.audiencia-publica.option.1': 'Hill ledger',
   'skill.audiencia-publica.option.2': 'Empty threat',
   'skill.audiencia-publica.prompt': 'Which testimony sticks?',
   'skill.avenida-atm.prompt': 'Glitch the ATM rounding — match 4 digits.',
   'skill.avenida-betrayal.clue':
-    'A burner still pings Casa. The archive is clean; the hearing is theater.',
+    'Someone still answers Casa on a cheap line. The archive is clean; the hearing is theater.',
   'skill.avenida-betrayal.option.0': 'Blame Luna',
-  'skill.avenida-betrayal.option.1': 'Blame the mole',
+  'skill.avenida-betrayal.option.1': 'Blame the contact',
   'skill.avenida-betrayal.option.2': 'Blame Margin',
   'skill.avenida-betrayal.prompt': 'Who sold the hill’s bytes?',
   'skill.avenida-drone.clue':
     'Cones sweep the asphalt center — hug the glass shadow, then cut when the light blinks.',
   'skill.avenida-drone.prompt': 'Evade the militia drone cones — slip the blind path.',
   'skill.avenida-server.clue':
-    'Left hinge grease climbs the cage post; next seat kisses the floor plate. Third tumbler’s click sits between them; the far-right post matches the left hinge. Sticker on three is a decoy.',
+    'Cage Runner says grease remembers the hinge he trusts and dust marks the seat he skips. Matching posts rhyme; a sticker never does. Feel the bite, don’t count the stamps.',
   'skill.avenida-server.prompt': 'Crack the server-cage tumblers before the sweep.',
   'skill.avenida-stealth.prompt': 'Slip past lobby cams — match the blind spots.',
   'skill.corrida-moto.prompt': 'Dash the moto lane — clear the gate sequence.',
@@ -55,7 +55,7 @@ export const skillEn = {
   'skill.feira-garrafa.option.2': 'Neon pink',
   'skill.feira-garrafa.prompt': 'Which bottle still has street proof?',
   'skill.feira-lockbox.clue':
-    'Maquinista leaves grease on the post he trusts and dust on the seat he ignores. A loud sticker is always a decoy — feel which tumbler resists like wet wood.',
+    'Maquinista leaves grease on the post he leans on and dust on the seat he ignores. A loud sticker always lies — the honest tumbler fights like damp wood under the stage.',
   'skill.feira-lockbox.prompt': 'Pick the Casa lockbox under the forró stage.',
   'skill.feira-radio.prompt': 'Tune the pirate dial — match 3 clicks.',
   'skill.feira-tipster.clue':
@@ -102,7 +102,7 @@ export const skillEn = {
   'skill.side-morro-copper.prompt': 'Weigh the spare copper — which bag is light?',
   'skill.torre-elevator.prompt': 'Call the express car — stop on green.',
   'skill.torre-foyer.clue':
-    'Foyer Guard waves plastic past — he only flinches when yesterday’s hill gossip already hit every screen.',
+    'Foyer Guard stamps plastic without looking — he only freezes when the rumor already owns the room.',
   'skill.torre-foyer.option.0': 'Tourist pass',
   'skill.torre-foyer.option.1': 'Staff QR',
   'skill.torre-foyer.option.2': 'Scandal leak',
@@ -115,11 +115,11 @@ export const skillEn = {
   'skill.torre-negotiate.prompt':
     'VIP Host offers three exits — pick before the smile hardens.',
   'skill.torre-pit.clue':
-    'Trust the soft corner the dealer keeps closest to his cuff; shiny foil and sealed plastic are tourist bait.',
+    'Dealer’s house pack looks tired; foil and plastic are for the tourist rail.',
   'skill.torre-pit.option.0': 'Dog-eared',
   'skill.torre-pit.option.1': 'Gold foil',
   'skill.torre-pit.option.2': 'Shrink-wrap',
   'skill.torre-pit.prompt': 'Spot the real deck.',
   'skill.torre-vip.prompt': 'Skim the rake on the sweep.',
-  'skill.twist-vazamento.prompt': 'Twist the feed — match the packet sequence.',
+  'skill.twist-vazamento.prompt': 'Twist the packet — match the sequence.',
 } satisfies Record<string, string>;

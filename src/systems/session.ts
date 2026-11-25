@@ -405,6 +405,8 @@ export class GameSession {
     // Holding Run through arrival chain-traveled the next district — require a release.
     this.awaitRunRelease = this.runHeld;
     this.ui.go('play');
+    // Playtest #30: only arm when Interact is held across travel (harness stays free).
+    if (this.interactKeyDown) this.armInteractLock(true, 300);
     this.bus.emit('district:entered', { districtId });
     return true;
   }
@@ -587,6 +589,8 @@ export class GameSession {
     this.story.setFlag('free_roam', true);
     this.persist();
     if (!this.ui.go('play')) return false;
+    // Playtest #30: always arm after credits — Enter spam must not reopen Nair.
+    this.armInteractLock(true, 300);
     this.bus.emit('game:started', { newGame: false });
     this.bus.emit('ui:toast', {
       message: afterCredits ? t('ui.toast.continueCredits') : t('ui.toast.continueFree'),
@@ -697,9 +701,9 @@ export class GameSession {
 
   /** Call when dialogue/skill/bet opens. `interactHeld` = Interact down at open. */
   noteModalOpened(interactHeld: boolean): void {
-    // Playtest #28: 400ms so Enter×3 right after E cannot select a choice.
+    // Playtest #28/#30: 400ms + key-up so buffered Enter cannot auto-pick.
     this.modalConfirmArmUntil = Date.now() + 400;
-    this.modalConfirmNeedsRelease = interactHeld;
+    this.modalConfirmNeedsRelease = interactHeld || this.interactKeyDown;
   }
 
   /**

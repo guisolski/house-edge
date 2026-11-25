@@ -66,8 +66,8 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
   goal: { x: 34, y: 12 },
   goalRadius: 1.1,
   targetMs: 90_000,
-  // Playtest #28: smaller cover pads — optimal path still ≥1.4s dwell, humans ~3–6 tries.
-  coverRadius: 0.44,
+  // Playtest #30: was ~9 tries — ease toward 3–6 (wider cover, slower/narrower cones).
+  coverRadius: 0.58,
   cover: [
     { x: 15, y: 12 },
     { x: 20, y: 11 },
@@ -82,9 +82,9 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
         { x: 17, y: 16 },
         { x: 17, y: 8 },
       ],
-      speed: 0.98,
-      halfAngle: Math.PI / 6.2,
-      range: 3.1,
+      speed: 0.82,
+      halfAngle: Math.PI / 7.2,
+      range: 2.85,
     },
     {
       id: 'drone-b',
@@ -93,9 +93,9 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
         { x: 23, y: 8 },
         { x: 23, y: 16 },
       ],
-      speed: 1.0,
-      halfAngle: Math.PI / 6.2,
-      range: 3.1,
+      speed: 0.86,
+      halfAngle: Math.PI / 7.2,
+      range: 2.85,
     },
     {
       id: 'drone-c',
@@ -104,9 +104,9 @@ export const AVENIDA_DRONE_STEALTH: StealthDef = {
         { x: 29, y: 16 },
         { x: 29, y: 8 },
       ],
-      speed: 0.94,
-      halfAngle: Math.PI / 6.8,
-      range: 2.95,
+      speed: 0.8,
+      halfAngle: Math.PI / 7.6,
+      range: 2.7,
     },
   ],
 };

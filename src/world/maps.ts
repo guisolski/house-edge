@@ -389,6 +389,9 @@ function layoutMorroTerraces(tiles: TileKind[], w: number, h: number): void {
   // Side ramps so terraces are reachable without hunting gaps.
   paintRamp(tiles, w, 6, 8, 3, 20);
   paintRamp(tiles, w, 31, 33, 3, 20);
+  // Playtest #30: clear top landing so the player never soft-sticks at escada crest.
+  rect({ tiles, w, x0: 17, y0: 1, x1: 24, y1: 3, kind: 'plaza' });
+  paintRamp(tiles, w, 18, 23, 3, 20);
   // Clear approach plazas at ramp feet / tops (readable walk affordance).
   rect({ tiles, w, x0: 10, y0: 14, x1: 17, y1: 17, kind: 'plaza' });
   rect({ tiles, w, x0: 5, y0: 14, x1: 9, y1: 16, kind: 'plaza' });

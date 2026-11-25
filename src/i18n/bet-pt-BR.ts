@@ -5,7 +5,7 @@ export const betPtBR = {
     'Timing do primeiro gole — para a agulha no frio. Depois dos créditos essa revanche vira bico (grind repetível).',
   'bet.antena-sinal.title': 'Jack do sinal pirata',
   'bet.antena-sinal.description':
-    'Aposta no jack pirata que o Antena Tech emendou na torre de LED — pega o feed do beco da Luna.',
+    'Aposta no jack pirata que o Antena Tech emendou na torre de LED — pega a transmissão do beco da Luna.',
   'bet.laje-lottery.title': 'Sorteio da laje',
   'bet.laje-lottery.description':
     'As loterias de rua acabaram — as corps limparam. A laje agora roda sorteio licenciado.',

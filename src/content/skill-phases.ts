@@ -160,7 +160,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Which testimony sticks?',
     target: 1,
     options: ['Corp PR', 'Hill ledger', 'Empty threat'],
-    clue: 'Dr. Margin cross-exams community paper, not press releases or empty threats.',
+    // Playtest #30: no hill/ledger/community/PR giveaway tokens.
+    clue: 'Dr. Margin weighs what the quebrada already signed — glossy spin and empty threats slide off.',
   },
   'morro-return-nair': {
     kind: 'timing',
@@ -183,15 +184,16 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     prompt: 'Bluff the badge reader.',
     target: 2,
     options: ['Tourist pass', 'Staff QR', 'Scandal leak'],
-    clue: 'Foyer Guard waves plastic past — he only flinches when yesterday’s hill gossip already hit every screen.',
+    // Playtest #30: no “gossip / every screen” giveaway.
+    clue: 'Foyer Guard stamps plastic without looking — he only freezes when the rumor already owns the room.',
   },
   'torre-pit': {
     kind: 'puzzle',
     prompt: 'Spot the real deck.',
     target: 0,
     options: ['Dog-eared', 'Gold foil', 'Shrink-wrap'],
-    // Answer Dog-eared — never say dog/ear; handled pack vs foil/plastic.
-    clue: 'Trust the soft corner the dealer keeps closest to his cuff; shiny foil and sealed plastic are tourist bait.',
+    // Playtest #30: softer hint — still 2–3 tries, no cuff/soft-corner giveaway.
+    clue: 'Dealer’s house pack looks tired; foil and plastic are for the tourist rail.',
   },
   'torre-elevator': {
     kind: 'timing',
@@ -251,12 +253,12 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     // Pins: mid / raised / sunk — left=shoulder mid, center=riser high, right=soft sunk.
     pins: [1, 2, 0],
     hiddenPin: 1,
-    timerMs: 28_000,
-    pickDurability: 3,
-    // Avoid naming pin heights / riser / sunk — stage-hand vibe only.
+    timerMs: 32_000,
+    pickDurability: 4,
+    // Playtest #30: clearer without naming heights — ~2–3 tries (≥3 hook words).
     clue:
-      'Maquinista leaves grease on the post he trusts and dust on the seat he ignores. ' +
-      'A loud sticker is always a decoy — feel which tumbler resists like wet wood.',
+      'Maquinista leaves grease on the post he leans on and dust on the seat he ignores. ' +
+      'A loud sticker always lies — the honest tumbler fights like damp wood under the stage.',
   },
   'avenida-server': {
     kind: 'lockpick',
@@ -265,15 +267,19 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     // Pins: high / flush / mid / high — positional grease hooks, no height labels.
     pins: [2, 0, 1, 2],
     hiddenPin: 2,
-    timerMs: 32_000,
-    pickDurability: 3,
-    clue: 'Left hinge grease climbs the cage post; next seat kisses the floor plate. Third tumbler’s click sits between them; the far-right post matches the left hinge. Sticker on three is a decoy.',
+    timerMs: 34_000,
+    pickDurability: 4,
+    // Playtest #30: no left/right/third pin map — grease/hinge/seat/sticker hooks.
+    clue:
+      'Cage Runner says grease remembers the hinge he trusts and dust marks the seat he skips. ' +
+      'Matching posts rhyme; a sticker never does. Feel the bite, don’t count the stamps.',
   },
   'avenida-betrayal': {
     kind: 'choice',
     prompt: 'Who sold the hill’s bytes?',
     target: 1,
     options: ['Blame Luna', 'Blame the mole', 'Blame Margin'],
-    clue: 'A burner still pings Casa. The archive is clean; the hearing is theater.',
+    // Playtest #30: no “burner / mole” giveaway in the clue.
+    clue: 'Someone still answers Casa on a cheap line. The archive is clean; the hearing is theater.',
   },
 };

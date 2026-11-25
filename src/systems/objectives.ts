@@ -208,8 +208,11 @@ function travelObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
 }
 
 function npcObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
-  const npc = beatNpc(ctx, next);
   const title = t(`story.${next.id}.title`);
+  // Playtest #30: floor-hop first — never pin the VIP target while still in foyer.
+  const floorHop = elevatorFloorObjective(ctx, next);
+  if (floorHop) return floorHop;
+  const npc = beatNpc(ctx, next);
   if (npc) {
     const verb =
       npc.id === 'elevator' || npc.id === 'elevator-vip'
@@ -225,9 +228,6 @@ function npcObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
       districtId: ctx.districtId,
     };
   }
-  // Same district, other Casa floor — point at the elevator, never "missing target".
-  const floorHop = elevatorFloorObjective(ctx, next);
-  if (floorHop) return floorHop;
   // Last resort: never surface a bug string to the player.
   return {
     text: tf('ui.obj.findLead', { place: districtName(ctx.districtId) }),

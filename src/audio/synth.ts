@@ -96,6 +96,15 @@ function blip(state: AudioState, freq: number, dur: number, type: OscKind): void
   osc.start();
   g.gain.exponentialRampToValueAtTime(0.001, state.ctx.currentTime + dur);
   osc.stop(state.ctx.currentTime + dur + 0.02);
+  // Playtest #30: disconnect nodes after stop so Chrome doesn’t retain graphs.
+  osc.onended = () => {
+    try {
+      osc.disconnect();
+      g.disconnect();
+    } catch {
+      /* already closed */
+    }
+  };
 }
 
 function startLoop(state: AudioState): ReturnType<typeof setInterval> {

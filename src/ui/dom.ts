@@ -9,8 +9,39 @@ export function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
+const PANEL_ABORT = '__heAbort';
+
+/** Abort prior panel key hooks when a panel is repainted (playtest #30 leaks). */
 export function clearNode(node: HTMLElement): void {
+  const prev = (node as unknown as Record<string, AbortController | undefined>)[
+    PANEL_ABORT
+  ];
+  prev?.abort();
+  delete (node as unknown as Record<string, AbortController | undefined>)[PANEL_ABORT];
   while (node.firstChild) node.removeChild(node.firstChild);
+}
+
+/** Bind a keydown listener that dies when the panel is cleared or detached. */
+export function bindPanelKeydown(
+  panel: HTMLElement,
+  handler: (ev: KeyboardEvent) => void,
+  capture = false,
+): void {
+  const ac = new AbortController();
+  const bag = panel as unknown as Record<string, AbortController | undefined>;
+  bag[PANEL_ABORT]?.abort();
+  bag[PANEL_ABORT] = ac;
+  window.addEventListener(
+    'keydown',
+    (ev) => {
+      if (!panel.isConnected) {
+        ac.abort();
+        return;
+      }
+      handler(ev);
+    },
+    { capture, signal: ac.signal },
+  );
 }
 
 export function setVisible(node: HTMLElement, visible: boolean): void {

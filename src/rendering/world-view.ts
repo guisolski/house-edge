@@ -570,13 +570,13 @@ function paintPlayOverlays(o: {
 }): void {
   if (!o.state.session.ui.is('play')) return;
   const indoor = o.state.session.player.getStats().districtId === 'torre-casa';
-  // Tower lobby FPS: skip rain indoors; lights every 4th frame (was every other).
-  const lightMask = indoor ? 3 : 1;
+  // Playtest #30: VIP/Anfitrião — lights every 8th frame indoors; skip steam on VIP.
+  const lightMask = indoor ? 7 : 1;
   if ((o.frame & lightMask) === 0) {
     drawFewLights(o.ctx, o.state, o.px, o.py, o.camX, o.camY);
   }
   if (!indoor && (o.frame & 3) === 0) drawRain(o.ctx, o.frame);
-  if ((o.frame & 3) === 0) drawSteam(o.ctx, o.state, o.camX, o.camY, o.frame);
+  if (!indoor && (o.frame & 3) === 0) drawSteam(o.ctx, o.state, o.camX, o.camY, o.frame);
 }
 
 function mapCacheKey(session: GameSession, map: MapDef): string {

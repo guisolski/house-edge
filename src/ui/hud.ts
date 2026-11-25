@@ -203,6 +203,9 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
   return {
     showDialogue: (lines) => {
       only(p, 'dialogue');
+      // Playtest #30: re-arm after every dialogue paint (incl. post-choice panels).
+      // Pass false — noteModalOpened still gates if Interact is physically held.
+      session.noteModalOpened(false);
       const offerBet = session.hasPendingStoryBet();
       const epi = session.getPendingStoryBeat() === 'epilogue-laje';
       const hasChoice = lines.some((l) => Boolean(l.choices?.length));
@@ -240,7 +243,11 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
     showBet: () => {
       only(p, 'bet');
       paintBet(p.bet, session, () => h.syncScreen());
-      focusFirst(p.bet);
+      // Playtest #30: focus Confirm — never Stake − (Enter would lower).
+      const confirm = p.bet.querySelector('.btn-confirm-bet') as HTMLElement | null;
+      if (confirm) confirm.focus();
+      else focusFirst(p.bet);
+      session.noteModalOpened(false);
     },
     showSkill: () => {
       only(p, 'skill');
@@ -335,7 +342,13 @@ function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
   const leaveCredits = (): void => {
     blurActive();
     session.continueExploring();
+    // Canvas focus so WASD/Enter go through ActionState, not leftover Skip button.
+    const canvas = document.querySelector(
+      'canvas.world-canvas, canvas.engine-canvas',
+    ) as HTMLCanvasElement | null;
+    canvas?.focus({ preventScroll: true });
     h.syncScreen();
+    h.showHud();
   };
   const skip = (): void => {
     // Jump the roll, then dismiss into free roam (Enter/E/Space/click all work).
@@ -697,17 +710,21 @@ function promptLabel(
   return null;
 }
 
-/** Anchor the E-prompt below the player; clamp inside the safe HUD inset. */
+/** Anchor the E-prompt below the player; clamp fully inside the viewport. */
 function placePrompt(prompt: HTMLElement, session: GameSession): void {
   const a = session.promptAnchor;
   const host = prompt.ownerDocument?.defaultView;
   const vw = host?.innerWidth ?? 960;
   const vh = host?.innerHeight ?? 540;
-  const padX = 72;
   const padTop = 110;
   const padBot = 96;
+  setVisible(prompt, true);
   if (a) {
-    const x = Math.min(vw - padX, Math.max(padX, Math.round(a.x)));
+    // Measure after visible so Torre / long pt-BR prompts don't clip at the edge.
+    const pw = Math.max(prompt.offsetWidth || 0, 160);
+    const half = pw / 2;
+    const margin = 12;
+    const x = Math.min(vw - half - margin, Math.max(half + margin, Math.round(a.x)));
     const y = Math.min(vh - padBot, Math.max(padTop, Math.round(a.y + 28)));
     prompt.style.left = `${x}px`;
     prompt.style.top = `${y}px`;
@@ -719,7 +736,6 @@ function placePrompt(prompt: HTMLElement, session: GameSession): void {
     prompt.style.bottom = '18%';
     prompt.style.transform = 'translateX(-50%)';
   }
-  setVisible(prompt, true);
 }
 
 function runFlash(node: HTMLElement, kind: string): void {

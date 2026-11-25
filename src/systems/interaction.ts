@@ -296,9 +296,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'influencer',
     name: englishNpcName('influencer'),
     districtId: 'avenida-odds',
-    // East of goal — outside lane (x > 34).
-    x: 35,
-    y: 11,
+    // Playtest #30: east plaza 4-way, clear of Torre pad (43,12) interact.
+    x: 39,
+    y: 10,
     beatId: 'avenida-influencer',
     jobBetId: 'influencer-duelo',
     color: '#ff2bd6',
@@ -320,8 +320,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'stealth-cam',
     name: englishNpcName('stealth-cam'),
     districtId: 'avenida-odds',
+    // SW of influencer cluster — tags ≥3 tiles apart.
     x: 36,
-    y: 12,
+    y: 13,
     beatId: 'avenida-stealth',
     color: '#6ec8e8',
     bodyVariant: 1,
@@ -342,7 +343,7 @@ const NPCS: readonly WorldNpc[] = [
     name: englishNpcName('mensageiro-avenida'),
     districtId: 'avenida-odds',
     x: 37,
-    y: 12,
+    y: 10,
     beatId: 'avenida-radar',
     safeJobId: 'safe-avenida-odds',
     color: '#c9b037',
@@ -351,8 +352,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'cage-runner',
     name: englishNpcName('cage-runner'),
     districtId: 'avenida-odds',
-    // South of west plaza — spaced from Capita / Neon Snap (playtest #29).
-    x: 9,
+    // Playtest #30: clear of Fair arrival (9,12) + Fair pad (2,12) interact.
+    x: 7,
     y: 13,
     wanderRadius: 0,
     beatId: 'avenida-server',
@@ -364,9 +365,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'neon-snap',
     name: englishNpcName('neon-snap'),
     districtId: 'avenida-odds',
-    // West of sealed lane (x<12) — 4-way asphalt, outside drone cones.
+    // Playtest #30: off arrival east lane (10–11,12); 4-way at (11,11).
     x: 11,
-    y: 12,
+    y: 11,
     wanderRadius: 0,
     beatId: 'avenida-drone',
     extraBeatIds: ['side-avenida-neon'],

@@ -207,6 +207,36 @@ export const uiEn = {
   'ui.toast.missHint.morro-return-fio': 'Fio: the ghost tone fades if you force it.',
   'ui.toast.missHint.avenida-drone':
     'Neon Snap: hug the shadow — the cone won’t forgive.',
+  'ui.toast.missHint.avenida-server':
+    'Cage: grease and dust lie less than stickers — feel the bite.',
+  'ui.toast.missHint.feira-lockbox':
+    'Stage hand: greased post, dusty stool — loud stickers lie.',
+  'ui.toast.missHint.avenida-betrayal':
+    'Mole: whoever still answers cheap isn’t the one yelling on stage.',
+  'ui.toast.missHint.audiencia-publica':
+    'Margin: what the hill already signed weighs; glossy spin slides off.',
+  'ui.toast.missHint.torre-foyer':
+    'Guard: plastic passes; he freezes when the rumor already owns the room.',
+  'ui.toast.missHint.torre-pit':
+    'Dealer: house pack looks tired — foil and plastic are tourist bait.',
+  'ui.toast.missHint.influencer-duelo':
+    'Influencer: midnight metrics don’t survive a cold alley.',
+  'ui.toast.missHint.feira-garrafa':
+    'Picker: the honest load still smells like rain, not perfume.',
+  'ui.toast.missHint.feira-tipster':
+    'Aunt stall: only the stapled lid answers with a shiver.',
+  'ui.toast.missHint.pastel-surpresa':
+    'Kiko: the tray that greases your fingers — steam and quiet are bait.',
+  'ui.toast.missHint.laje-lottery':
+    'Luna: the ball that still smells like hill rain, not VIP lacquer.',
+  'ui.toast.missHint.prova-vazamento':
+    'Luna: paper no camera framed — vanity reels are curtains.',
+  'ui.toast.missHint.side-morro-copper':
+    'Picker: the sack that doesn’t drag the wrist is the light one.',
+  'ui.toast.missHint.courier-tip': 'Courier: four alleys — don’t invent a shortcut.',
+  'ui.toast.missHint.duelo-casa': 'Augusto: needle, read, feed — one phase at a time.',
+  'ui.toast.missHint.torre-negotiate':
+    'Host: any door works — pick before the smile freezes.',
   'ui.toast.cleared': 'Cleared — {payout} credits.',
   'ui.toast.missedPour':
     'Missed the pour — talk to Nair again to retry. Objective stays put.',

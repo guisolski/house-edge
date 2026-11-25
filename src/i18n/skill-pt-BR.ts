@@ -15,23 +15,23 @@ export const skillPtBR = {
   'skill.corrida-moto.title': 'Portão da moto na laje',
   'skill.corrida-moto.blurb': 'Racha do Seu Zé — limpa o portão, não o fio do Fio.',
   'skill.audiencia-publica.clue':
-    'Doutor Margin cruza papel da comunidade, não release de imprensa nem ameaça vazia.',
-  'skill.audiencia-publica.option.0': 'RP da corp',
+    'Doutor Margin pesa o que a quebrada já assinou — brilho de assessoria e ameaça vazia escorregam.',
+  'skill.audiencia-publica.option.0': 'Assessoria da corp',
   'skill.audiencia-publica.option.1': 'Livro do morro',
   'skill.audiencia-publica.option.2': 'Ameaça vazia',
   'skill.audiencia-publica.prompt': 'Qual depoimento prende?',
   'skill.avenida-atm.prompt': 'Bug no arredondamento do caixa — repete 4 dígitos.',
   'skill.avenida-betrayal.clue':
-    'Um burner ainda pinga a Casa. O arquivo tá limpo; a audiência é teatro.',
+    'Alguém ainda atende a Casa num linha barata. O arquivo tá limpo; a audiência é teatro.',
   'skill.avenida-betrayal.option.0': 'Culpar a Luna',
-  'skill.avenida-betrayal.option.1': 'Culpar o informante',
+  'skill.avenida-betrayal.option.1': 'Culpar o contato',
   'skill.avenida-betrayal.option.2': 'Culpar o Margin',
   'skill.avenida-betrayal.prompt': 'Quem vendeu os bytes do morro?',
   'skill.avenida-drone.clue':
     'Cones varrem o centro do asfalto — cola na sombra do vidro e corta quando a luz piscar.',
   'skill.avenida-drone.prompt': 'Desvia dos cones do drone — passa pelo ponto cego.',
   'skill.avenida-server.clue':
-    'Graxa na dobradiça esquerda sobe no poste; o próximo encosto beija o chão. O terceiro clique fica entre eles; o poste da direita espelha a esquerda. Adesivo no três é isca.',
+    'O Corredor diz: graxa lembra a dobradiça em que ele confia e poeira marca o assento que ele pula. Postes iguais rimam; adesivo nunca. Sente a mordida, não conta carimbo.',
   'skill.avenida-server.prompt':
     'Quebra os pinos da gaiola do servidor antes da varredura.',
   'skill.avenida-stealth.prompt':
@@ -43,11 +43,11 @@ export const skillPtBR = {
   'skill.duelo-casa.phase.0.prompt': 'Fase 1 — para a agulha da casa.',
   'skill.duelo-casa.phase.1.clue':
     'Olha o punho — o teatro enche a sala, mas o tremor entrega.',
-  'skill.duelo-casa.phase.1.option.0': 'Sorriso all-in',
+  'skill.duelo-casa.phase.1.option.0': 'Sorriso na mesa',
   'skill.duelo-casa.phase.1.option.1': 'Sacode o livro',
   'skill.duelo-casa.phase.1.option.2': 'Rugido da galera',
   'skill.duelo-casa.phase.1.prompt': 'Fase 2 — lê o blefe do Augusto.',
-  'skill.duelo-casa.phase.2.prompt': 'Fase 3 — quebra o feed da torre.',
+  'skill.duelo-casa.phase.2.prompt': 'Fase 3 — quebra a transmissão da torre.',
   'skill.duelo-casa.title': 'Duelo vs Augusto Casa',
   'skill.feira-garrafa.clue':
     'O Catador guardou uma rolha antes da prateleira virar boutique — a carga honesta ainda cheira a chuva, não perfume.',
@@ -56,7 +56,7 @@ export const skillPtBR = {
   'skill.feira-garrafa.option.2': 'Rosa neon',
   'skill.feira-garrafa.prompt': 'Qual garrafa ainda tem prova de rua?',
   'skill.feira-lockbox.clue':
-    'O Maquinista deixa graxa no poste em que confia e poeira no assento que ignora. Adesivo gritante é sempre isca — sente qual pino resiste como madeira molhada.',
+    'O Maquinista deixa graxa no poste em que se apoia e poeira no assento que ignora. Adesivo gritante mente — o pino honesto luta como madeira úmida sob o palco.',
   'skill.feira-lockbox.prompt': 'Abre o cofre da Casa debaixo do palco do forró.',
   'skill.feira-radio.prompt': 'Sintoniza o dial pirata — repete 3 cliques.',
   'skill.feira-tipster.clue':
@@ -104,9 +104,9 @@ export const skillPtBR = {
   'skill.side-morro-copper.prompt': 'Pesa o cobre sobrando — qual saco é leve?',
   'skill.torre-elevator.prompt': 'Chama o elevador expresso — para no verde.',
   'skill.torre-foyer.clue':
-    'O guarda do foyer deixa plástico passar — só treme quando a fofoca do morro de ontem já tá em toda tela.',
+    'O guarda do foyer carimba plástico sem olhar — só trava quando o boato já mandou na sala.',
   'skill.torre-foyer.option.0': 'Passe turista',
-  'skill.torre-foyer.option.1': 'QR staff',
+  'skill.torre-foyer.option.1': 'QR da equipe',
   'skill.torre-foyer.option.2': 'Vazamento do escândalo',
   'skill.torre-foyer.prompt': 'Blefa no leitor de crachá.',
   'skill.torre-negotiate.clue':
@@ -117,7 +117,7 @@ export const skillPtBR = {
   'skill.torre-negotiate.prompt':
     'O host VIP oferece três saídas — escolhe antes do sorriso endurecer.',
   'skill.torre-pit.clue':
-    'Confia no canto macio que o dealer guarda perto do punho; folha brilhante e plástico lacrado são isca.',
+    'O baralho da casa parece cansado; folha brilhante e plástico lacrado são pra turista.',
   'skill.torre-pit.option.0': 'Orelha de cachorro',
   'skill.torre-pit.option.1': 'Folha dourada',
   'skill.torre-pit.option.2': 'Plástico lacrado',
