@@ -91,7 +91,8 @@ describe('coverage edge branches', () => {
         'morro-fios',
         'seu-ze-banca',
       ],
-      flags: () => true,
+      flags: (f) =>
+        !['casa_quebrada', 'free_roam', 'epilogue_done', 'unlocked_feira'].includes(f),
       districtId: 'morro-neon',
       npcs: districtNpcs(),
       exits: districtExits(),
@@ -101,7 +102,7 @@ describe('coverage edge branches', () => {
     const orphan = currentObjective({
       beats: STORY_BEATS,
       completed: ['intro-laje'],
-      flags: () => true,
+      flags: (f) => f === 'conheceu_rita',
       districtId: 'morro-neon',
       npcs: [],
       exits: districtExits(),

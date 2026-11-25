@@ -379,9 +379,17 @@ function paintPrompt(prompt: HTMLElement, session: GameSession): void {
     return;
   }
   const exit = session.nearbyExit();
+  const locked = session.nearbyLockedExit();
   const npc = session.nearbyNpc();
   if (exit) {
-    prompt.textContent = UI.promptExit;
+    const dest =
+      session.world.get(exit.toDistrict)?.name ?? exit.label.replace(/^Exit → /, '');
+    prompt.textContent = `E — Travel to ${dest}`;
+    setVisible(prompt, true);
+    return;
+  }
+  if (locked) {
+    prompt.textContent = 'E — Path locked';
     setVisible(prompt, true);
     return;
   }

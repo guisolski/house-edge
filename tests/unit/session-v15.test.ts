@@ -50,9 +50,12 @@ describe('session v1.5 recovery and upgrades', () => {
     const session = new GameSession(5);
     session.startNew();
     session.world.unlock('feira-central');
-    session.player.setPosition(37, 16);
+    // Adjacent (Chebyshev ≤ 1) counts; two tiles away does not.
+    session.player.setPosition(34, 16);
     expect(session.nearbyExit()).toBeNull();
-    session.player.setPosition(38, 16);
+    session.player.setPosition(36, 16);
+    expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
+    session.player.setPosition(37, 16);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
     session.player.setPosition(39, 16);
     expect(session.nearbyExit()).toBeNull();
@@ -104,14 +107,23 @@ describe('session v1.5 recovery and upgrades', () => {
     const session = new GameSession(8);
     session.startNew();
     session.world.unlock('feira-central');
-    session.player.setPosition(37, 16);
+    session.player.setFacing(0, 0);
+    expect(session.player.getFacing().dx).toBe(1);
+    session.player.setPosition(35, 16);
     expect(session.move(1, 0)).toBe(true);
     expect(session.player.getStats().districtId).toBe('feira-central');
+    expect(session.player.getFacing().dx).toBe(1);
     expect(session.offerBet('no-such-bet')).toBe(false);
     expect(session.getPendingBet()).toBeNull();
     expect(session.adjustStake(5)).toBe(0);
     session.ui.go('menu');
     expect(session.interact()).toBe(false);
     expect(session.doSafeJob('missing-job')).toBe(false);
+    // Locked exit toast path
+    session.ui.go('play');
+    session.travelTo('feira-central');
+    session.player.setPosition(38, 13);
+    expect(session.nearbyLockedExit()?.toDistrict).toBe('avenida-odds');
+    expect(session.interact()).toBe(false);
   });
 });

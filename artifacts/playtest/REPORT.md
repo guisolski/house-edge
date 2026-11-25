@@ -1,52 +1,44 @@
-# Playtest report — House Edge 1.11.0
+# Playtest REPORT — House Edge v1.12.0
 
-Independent check against v1.10.0 feedback (Casa exit teleport, Fair art, story length, y-sort).
+Independent follow-up after v1.11 (~11m40s story, Fair east exit dead, stale post-ending objective).
 
 ## Verdict
 
-**Bugs: PASS** (Casa west aisle no longer teleports). **Story length: ~21 min careful / ~5–12 min speedrun.** **Art: ~7/10** (Fair stalls/crowds improved; still blocky). Console: **0 errors**. FPS **~60** (desktop 4× throttle restored after bake).
+**PASS** for ship gates (exits e2e, story e2e, 4× throttle FPS ≥50, lint/unit). Art still ~7/10. Story careful estimate **~20.5 min** main / **~24.8 min** with sides.
 
-## Perf (4× CPU throttle, Desktop Chrome)
+## Fixes vs playtest findings
 
-| Build                                       | Throttled avg FPS               |
-| ------------------------------------------- | ------------------------------- |
-| v1.11 pre-bake (CI run 45517085944)         | **~24–25** (fail, budget ≥50)   |
-| After bake static scenery + cached backdrop | **~60** local; CI must stay ≥50 |
+| #   | Issue                                 | Result                                                                                                    |
+| --- | ------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 1   | Fair EAST exit dead; sign clipped     | Pads inset; `EXIT > ODDS AVE` fully visible; prompt `E — Travel to Odds Avenue`; e2e walks **every** exit |
+| 2   | Post-ending stale Travel → Nair       | Free-roam objective; epilogue optional                                                                    |
+| 3   | Travel menu when walkable exit exists | Multi-hop `firstHopExit` prefers walking                                                                  |
+| 4   | E wrong NPC                           | Facing + distance score; prompt shows name                                                                |
+| 5   | Dialogue vs flow                      | Lavador / Mensageiro / Margin lines audited                                                               |
+| 6   | Default stake all-in                  | `defaultStake` ≈12% of credits, never all                                                                 |
+| 7   | Morro nav                             | Side ramps + plaza approaches + RAMP/STAIRS signs                                                         |
+| 8   | Signs under modals                    | Live signs only while `ui === play`                                                                       |
+| 9   | Story ~12 min                         | Tipster + foyer/pit/elevator Casa beats → ~20.5 min careful                                               |
+| 10  | NPC clones                            | 4 body/hair/outfit variants + idle bob; cyan side markers                                                 |
 
-## Before → After
+## Measured
 
-| Item               | v1.10 / ask                            | v1.11 result                                                                                |
-| ------------------ | -------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Casa west teleport | Oversized/hidden exit snags west walks | Single pad at (2,12) + EXIT sign; aisle walks stay in Torre                                 |
-| Exit visibility    | Mixed pad sizes / misaligned signs     | 1-tile pads; EXIT signs within 2.5 tiles; unit test asserts overlap                         |
-| Fair art           | Weakest district                       | Market stalls with produce/awnings, crates, crowd clusters, calçadão landmark               |
-| Y-sort             | Possible Fair glitch                   | Props share foot-y sort with buildings/actors; behind/front stall checks OK                 |
-| Story ~20 min      | New player ~10–12 min to ending        | Twist + Fair radio + Morro return choice + sides + epilogue; careful estimate **~21.4 min** |
-
-## Measured story time
-
-| Method                                                                 | Result                                                                       |
-| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Content model (80 main dialogue lines × 5.2s + 20 bets × 22s + travel) | **~21.4 min** main path; **~23.8 min** with half the side quests             |
-| Paced harness (scripted delays, no real walking)                       | 4.7 min wall clock (under-counts exploration; 40 bet attempts incl. retries) |
-| Prior v1.10 new-player report                                          | ~10–12 min — v1.11 adds meaningful beats, not padding                        |
-
-Honest call: a careful first play should land near the **20 min** target; a known-route speedrun can still finish under 12.
+| Metric                       | Value                                              |
+| ---------------------------- | -------------------------------------------------- |
+| Desktop 4× throttle avg FPS  | **~60.0** (budget ≥50)                             |
+| Scripted paced harness       | ~5 min (sleep-accelerated; not human pace)         |
+| Careful estimate (main path) | **~20.5 min** (98 lines ×5.5s + 23 bets + travels) |
+| Careful + side quests        | **~24.8 min**                                      |
+| Default stake @ 100 credits  | **12**                                             |
 
 ## Automated
 
-- `npm test` — pass (coverage ≥90%)
-- `npm run lint` — pass
-- `make playtest` — pass (FPS, edge flatness, story+epilogue)
-- Browser: Fair market, Casa exit walk, y-sort checks — pass
+- `npm test` — pass (coverage gates)
+- `npx playwright test` — 26/26 pass (incl. `e2e/exits.spec.ts`)
+- e2e golden path / story-complete — pass
 
-## Honest art note
+## Gaps (honest)
 
-Fair now reads as a market (awnings, produce piles, crowds) instead of an empty plaza. Crowds are still silhouette clusters; some stall/kiosk overlaps can muddy. Casa exit is a clear door pad. Pixel signs use `EXIT > DEST` (bitmap font has no `→`).
-
-## Shots
-
-- `11-fair-market.png` — Fair stalls / produce / crowd
-- `12-casa-exit-pad.png` — single west EXIT pad
-- `13-fair-ysort.png` — player in front of stall
-- Video: `/opt/cursor/artifacts/v111-fair-casa-exit.webm`
+- NPC variants are still blocky CC0-style silhouettes — readable variety, not full sprite sheets.
+- Crowds remain mostly baked silhouettes (NPCs idle-bob; crowds do not).
+- West EXIT signs can leave frame when the camera is far east (expected); on the pad they read fully.

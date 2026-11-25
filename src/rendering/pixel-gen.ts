@@ -33,79 +33,161 @@ export function makePlayerSprite(frame = 0): PixelGrid {
   return g;
 }
 
+type BodyVariant = 0 | 1 | 2 | 3;
+
+function paintNamedHead(
+  g: PixelGrid,
+  accent: string,
+  npcId: string,
+  headY: number,
+  y0: number,
+): boolean {
+  if (npcId === 'dona-nair') {
+    fillRect(g, { x: 9, y: headY + y0, w: 14, h: 4 }, '#1faa5a');
+    fillRect(g, { x: 10, y: headY + 4 + y0, w: 12, h: 10 }, accent);
+    return true;
+  }
+  if (npcId === 'capita') {
+    fillRect(g, { x: 8, y: headY + y0, w: 16, h: 5 }, '#1a2810');
+    fillRect(g, { x: 10, y: headY + 4 + y0, w: 12, h: 9 }, accent);
+    return true;
+  }
+  if (npcId === 'luna' || npcId === 'luna-feira') {
+    fillRect(g, { x: 9, y: headY + y0, w: 14, h: 12 }, '#141828');
+    fillRect(g, { x: 12, y: headY + 3 + y0, w: 8, h: 7 }, accent);
+    return true;
+  }
+  if (npcId === 'ceo') {
+    fillRect(g, { x: 10, y: headY + y0, w: 12, h: 10 }, '#2a1020');
+    fillRect(g, { x: 9, y: headY + 1 + y0, w: 14, h: 3 }, '#1a0818');
+    return true;
+  }
+  return false;
+}
+
+function paintVariantHead(
+  g: PixelGrid,
+  accent: string,
+  headY: number,
+  y0: number,
+  variant: BodyVariant,
+): void {
+  if (variant === 1) {
+    fillRect(g, { x: 9, y: headY + y0, w: 14, h: 4 }, '#2a1810');
+    fillRect(g, { x: 10, y: headY + 3 + y0, w: 12, h: 9 }, accent);
+    fillRect(g, { x: 8, y: headY + 4 + y0, w: 3, h: 8 }, '#2a1810');
+    return;
+  }
+  if (variant === 2) {
+    fillRect(g, { x: 11, y: headY + y0, w: 10, h: 11 }, accent);
+    fillRect(g, { x: 10, y: headY + y0, w: 12, h: 3 }, '#f0e0c0');
+    return;
+  }
+  if (variant === 3) {
+    fillRect(g, { x: 9, y: headY + y0, w: 14, h: 11 }, accent);
+    fillRect(g, { x: 8, y: headY + 1 + y0, w: 16, h: 3 }, '#1a1028');
+    return;
+  }
+  fillRect(g, { x: 10, y: headY + y0, w: 12, h: 10 }, accent);
+}
+
 function paintNpcHead(
   g: PixelGrid,
   accent: string,
   npcId: string | undefined,
   headY: number,
   y0: number,
+  variant: BodyVariant,
 ): void {
-  if (npcId === 'dona-nair') {
-    fillRect(g, { x: 9, y: headY + y0, w: 14, h: 4 }, '#1faa5a');
-    fillRect(g, { x: 10, y: headY + 4 + y0, w: 12, h: 10 }, accent);
-    return;
-  }
-  if (npcId === 'capita') {
-    fillRect(g, { x: 8, y: headY + y0, w: 16, h: 5 }, '#1a2810');
-    fillRect(g, { x: 10, y: headY + 4 + y0, w: 12, h: 9 }, accent);
-    return;
-  }
-  if (npcId === 'luna' || npcId === 'luna-feira') {
-    fillRect(g, { x: 9, y: headY + y0, w: 14, h: 12 }, '#141828');
-    fillRect(g, { x: 12, y: headY + 3 + y0, w: 8, h: 7 }, accent);
-    return;
-  }
-  if (npcId === 'ceo') {
-    fillRect(g, { x: 10, y: headY + y0, w: 12, h: 10 }, '#2a1020');
-    fillRect(g, { x: 9, y: headY + 1 + y0, w: 14, h: 3 }, '#1a0818');
-    return;
-  }
-  fillRect(g, { x: 10, y: headY + y0, w: 12, h: 10 }, accent);
+  if (npcId && paintNamedHead(g, accent, npcId, headY, y0)) return;
+  paintVariantHead(g, accent, headY, y0, variant);
 }
 
-function npcCoat(npcId: string | undefined): string {
+function npcCoat(npcId: string | undefined, variant: BodyVariant): string {
   if (npcId === 'margin') return '#1a2048';
   if (npcId === 'ceo') return '#1a1020';
+  if (variant === 1) return '#2a2438';
+  if (variant === 2) return '#1a2830';
+  if (variant === 3) return '#302018';
   return Palette.concrete;
 }
 
-type NpcLayout = { tall: boolean; headY: number; bodyY: number; legY: number };
+type NpcLayout = {
+  tall: boolean;
+  wide: boolean;
+  headY: number;
+  bodyY: number;
+  legY: number;
+};
 
-function npcLayout(npcId: string | undefined): NpcLayout {
-  const tall = npcId === 'seu-ze' || npcId === 'ceo';
-  return { tall, headY: tall ? 1 : 2, bodyY: tall ? 15 : 14, legY: tall ? 32 : 30 };
+function npcLayout(npcId: string | undefined, variant: BodyVariant): NpcLayout {
+  const tall = npcId === 'seu-ze' || npcId === 'ceo' || variant === 3;
+  const wide = variant === 1 || variant === 2;
+  return {
+    tall,
+    wide,
+    headY: tall ? 1 : 2,
+    bodyY: tall ? 15 : 14,
+    legY: tall ? 32 : 30,
+  };
 }
 
-function paintNpcBody(
-  g: PixelGrid,
+type BodyPaint = {
+  g: PixelGrid;
+  accent: string;
+  npcId?: string;
+  layout: NpcLayout;
+  y0: number;
+  bob: number;
+  variant: BodyVariant;
+};
+
+function paintNpcBody(p: BodyPaint): void {
+  const coat = npcCoat(p.npcId, p.variant);
+  const h = p.layout.tall ? 16 : 14;
+  const bw = p.layout.wide ? 18 : 16;
+  const bx = p.layout.wide ? 7 : 8;
+  fillRect(p.g, { x: bx, y: p.layout.bodyY + p.y0, w: bw, h }, coat);
+  fillRect(p.g, { x: bx + 1, y: p.layout.bodyY + 3 + p.y0, w: bw - 2, h: 3 }, p.accent);
+  if (p.variant === 2) {
+    fillRect(
+      p.g,
+      { x: bx + 2, y: p.layout.bodyY + 8 + p.y0, w: bw - 4, h: 2 },
+      Palette.brasilYellow,
+    );
+  }
+  if (p.variant === 3) {
+    fillRect(p.g, { x: bx, y: p.layout.bodyY + p.y0, w: bw, h: 2 }, '#4a3020');
+  }
+  fillRect(p.g, { x: 3, y: p.layout.bodyY + 1 + p.y0 + p.bob, w: 5, h: 10 }, coat);
+  fillRect(p.g, { x: 24, y: p.layout.bodyY + 1 + p.y0 + (1 - p.bob), w: 5, h: 10 }, coat);
+  fillRect(p.g, { x: 10 + p.bob, y: p.layout.legY + p.y0, w: 5, h: 16 }, Palette.asphalt);
+  fillRect(p.g, { x: 18 - p.bob, y: p.layout.legY + p.y0, w: 5, h: 16 }, Palette.asphalt);
+  if (p.npcId === 'bia') {
+    fillRect(
+      p.g,
+      { x: 8, y: p.layout.bodyY - 1 + p.y0, w: 16, h: 3 },
+      Palette.neonMagenta,
+    );
+  }
+}
+
+export function makeNpcSprite(
   accent: string,
-  npcId: string | undefined,
-  layout: NpcLayout,
-  y0: number,
-  bob: number,
-): void {
-  const coat = npcCoat(npcId);
-  const h = layout.tall ? 16 : 14;
-  fillRect(g, { x: 8, y: layout.bodyY + y0, w: 16, h }, coat);
-  fillRect(g, { x: 9, y: layout.bodyY + 3 + y0, w: 14, h: 3 }, accent);
-  fillRect(g, { x: 3, y: layout.bodyY + 1 + y0 + bob, w: 5, h: 10 }, coat);
-  fillRect(g, { x: 24, y: layout.bodyY + 1 + y0 + (1 - bob), w: 5, h: 10 }, coat);
-  fillRect(g, { x: 10 + bob, y: layout.legY + y0, w: 5, h: 16 }, Palette.asphalt);
-  fillRect(g, { x: 18 - bob, y: layout.legY + y0, w: 5, h: 16 }, Palette.asphalt);
-  if (npcId === 'bia')
-    fillRect(g, { x: 8, y: layout.bodyY - 1 + y0, w: 16, h: 3 }, Palette.neonMagenta);
-}
-
-export function makeNpcSprite(accent: string, frame = 0, npcId?: string): PixelGrid {
-  const layout = npcLayout(npcId);
+  frame = 0,
+  npcId?: string,
+  bodyVariant: BodyVariant = 0,
+): PixelGrid {
+  const layout = npcLayout(npcId, bodyVariant);
   const g = empty(32, layout.tall ? 58 : 54, 'transparent');
+  // Idle bob even when standing — crowds/NPCs feel alive.
   const bob = frame % 2;
   const y0 = bob;
 
-  paintNpcHead(g, accent, npcId, layout.headY, y0);
+  paintNpcHead(g, accent, npcId, layout.headY, y0, bodyVariant);
   fillRect(g, { x: 12, y: layout.headY + 5 + y0, w: 3, h: bob === 0 ? 3 : 1 }, '#111018');
   fillRect(g, { x: 18, y: layout.headY + 5 + y0, w: 3, h: bob === 0 ? 3 : 1 }, '#111018');
-  paintNpcBody(g, accent, npcId, layout, y0, bob);
+  paintNpcBody({ g, accent, npcId, layout, y0, bob, variant: bodyVariant });
   if (npcId === 'seu-ze')
     fillRect(g, { x: 11, y: layout.headY - 1 + y0, w: 10, h: 3 }, '#4a3820');
   return g;

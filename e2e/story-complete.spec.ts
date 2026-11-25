@@ -19,6 +19,7 @@ const STORY_IDS = [
   'bia-set',
   'feira-forro',
   'feira-radio',
+  'feira-tipster',
   'feira-courier',
   'prova-luna',
   'avenida-twist',
@@ -28,6 +29,9 @@ const STORY_IDS = [
   'avenida-atm',
   'lobby-margin',
   'morro-return-nair',
+  'torre-foyer',
+  'torre-pit',
+  'torre-elevator',
   'torre-vip',
   'torre-final',
   'epilogue-laje',
@@ -44,6 +48,7 @@ const BEAT_DISTRICT: Record<(typeof STORY_IDS)[number], string> = {
   'bia-set': 'feira-central',
   'feira-forro': 'feira-central',
   'feira-radio': 'feira-central',
+  'feira-tipster': 'feira-central',
   'feira-courier': 'feira-central',
   'prova-luna': 'feira-central',
   'avenida-twist': 'avenida-odds',
@@ -53,6 +58,9 @@ const BEAT_DISTRICT: Record<(typeof STORY_IDS)[number], string> = {
   'avenida-atm': 'avenida-odds',
   'lobby-margin': 'avenida-odds',
   'morro-return-nair': 'morro-neon',
+  'torre-foyer': 'torre-casa',
+  'torre-pit': 'torre-casa',
+  'torre-elevator': 'torre-casa',
   'torre-vip': 'torre-casa',
   'torre-final': 'torre-casa',
   'epilogue-laje': 'morro-neon',
@@ -61,7 +69,7 @@ const BEAT_DISTRICT: Record<(typeof STORY_IDS)[number], string> = {
 test('full story reaches ending with safe-job recovery', async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto('/');
-  await expect(page.locator('.version')).toContainText('v1.11');
+  await expect(page.locator('.version')).toContainText('v1.12');
   await page.getByRole('button', { name: 'New Game' }).click();
   await page.locator('.world-canvas').click({ position: { x: 48, y: 48 } });
 

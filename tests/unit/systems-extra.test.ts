@@ -10,7 +10,11 @@ import {
 } from '../../src/systems/interaction';
 import { buildDistrictMap, isWalkable, tileAt } from '../../src/world/maps';
 import { createCamera, followPlayer, viewportPadding } from '../../src/world/camera';
-import { currentObjective } from '../../src/systems/objectives';
+import {
+  currentObjective,
+  firstHopExit,
+  sideQuestMarkers,
+} from '../../src/systems/objectives';
 import { STORY_BEATS } from '../../src/content/story';
 import { GameSession } from '../../src/systems/session';
 import { clearStorage } from '../../src/systems/save';
@@ -100,7 +104,7 @@ describe('city maps', () => {
     expect(buildDistrictMap('avenida-odds').buildings[0]?.kind).toBe('avenida');
     expect(buildDistrictMap('torre-casa').landmark.kind).toBe('casa-tower');
     expect(map.width).toBeGreaterThanOrEqual(40);
-    expect(tileAt(map, 8, 15)).toBe('asphalt');
+    expect(['asphalt', 'plaza']).toContain(tileAt(map, 8, 15));
     expect(isWalkable(map, 8, 15)).toBe(true);
     expect(isWalkable(map, 13, 14)).toBe(true);
     expect(tileAt(map, -1, 0)).toBe('blocked');
@@ -111,7 +115,7 @@ describe('city maps', () => {
     expect(tileAt(torre, 0, 0)).toBe('blocked');
     expect(tileAt(torre, 0, 13)).toBe('blocked');
     expect(tileAt(torre, 8, 13)).not.toBe('blocked');
-    expect(tileAt(map, 38, 16)).toBe('exit');
+    expect(tileAt(map, 36, 16)).toBe('exit');
     expect(map.buildings.length).toBeGreaterThan(8);
     expect(map.props.length).toBeGreaterThan(5);
     expect(map.signs.every((s) => s.label.length > 2)).toBe(true);
@@ -152,8 +156,10 @@ describe('map queries', () => {
         prefer: (n) => n.id === 'catador-morro',
       })?.id,
     ).toBe('catador-morro');
-    expect(nearestExit(exits, 'morro-neon', 38, 16)?.toDistrict).toBe('feira-central');
-    expect(nearestExit(exits, 'morro-neon', 0, 0)).toBeNull();
+    expect(
+      nearestExit({ exits, districtId: 'morro-neon', x: 36, y: 16 })?.toDistrict,
+    ).toBe('feira-central');
+    expect(nearestExit({ exits, districtId: 'morro-neon', x: 0, y: 0 })).toBeNull();
     expect(inRange({ x: 0, y: 0, tx: 1, ty: 0 })).toBe(true);
   });
 });
@@ -173,12 +179,12 @@ describe('exit pads', () => {
       expect(sign, `${exit.id} needs EXIT sign on/near pad`).toBeTruthy();
     }
     const torre = buildDistrictMap('torre-casa');
-    for (let x = 4; x <= 20; x += 1) {
+    for (let x = 6; x <= 20; x += 1) {
       expect(tileAt(torre, x, 12)).not.toBe('exit');
       expect(tileAt(torre, x, 11)).not.toBe('exit');
       expect(tileAt(torre, x, 13)).not.toBe('exit');
     }
-    expect(tileAt(torre, 2, 12)).toBe('exit');
+    expect(tileAt(torre, 5, 12)).toBe('exit');
   });
 
   it('camera follows player within map bounds', () => {
@@ -245,23 +251,122 @@ describe('objectives', () => {
         'morro-fios',
         'seu-ze-banca',
       ],
-      flags: () => true,
+      flags: (f) =>
+        [
+          'conheceu_rita',
+          'falou_nair',
+          'antena_ok',
+          'conheceu_luna',
+          'fios_ok',
+          'unlocked_feira',
+        ].includes(f),
       districtId: 'morro-neon',
       npcs,
       exits,
       unlocked: (id) => id === 'feira-central',
     });
-    expect(travel.text).toMatch(/Central Fair|Go to/);
+    expect(travel.text).toMatch(/Central Fair|Go to|Walk to/);
     const done = currentObjective({
       beats: STORY_BEATS,
       completed: STORY_BEATS.map((b) => b.id),
-      flags: () => true,
+      flags: (f) => f === 'casa_quebrada' || f === 'epilogue_done' || f === 'free_roam',
       districtId: 'morro-neon',
       npcs,
       exits,
       unlocked: () => true,
     });
-    expect(done.text).toContain('complete');
+    expect(done.text).toMatch(/complete|Free roam/);
+  });
+});
+
+describe('objective routing', () => {
+  it('routes multi-hop walks and surfaces free-roam + side markers', () => {
+    const npcs = districtNpcs();
+    const exits = districtExits();
+    const hop = firstHopExit(
+      {
+        beats: STORY_BEATS,
+        completed: [],
+        flags: () => false,
+        districtId: 'torre-casa',
+        npcs,
+        exits,
+        unlocked: (id) =>
+          id === 'avenida-odds' || id === 'feira-central' || id === 'morro-neon',
+      },
+      'morro-neon',
+    );
+    expect(hop?.toDistrict).toBe('avenida-odds');
+    const free = currentObjective({
+      beats: STORY_BEATS,
+      completed: ['torre-final'],
+      flags: (f) => f === 'casa_quebrada' || f === 'free_roam',
+      districtId: 'torre-casa',
+      npcs,
+      exits,
+      unlocked: () => true,
+    });
+    expect(free.text).toMatch(/Free roam/);
+    const onHill = currentObjective({
+      beats: STORY_BEATS,
+      completed: ['torre-final'],
+      flags: (f) => f === 'casa_quebrada',
+      districtId: 'morro-neon',
+      npcs,
+      exits,
+      unlocked: () => true,
+    });
+    expect(onHill.text).toMatch(/epilogue|Dona Nair/);
+    const sides = sideQuestMarkers({
+      beats: STORY_BEATS,
+      completed: [],
+      flags: (f) => f === 'falou_nair',
+      districtId: 'morro-neon',
+      npcs,
+      exits,
+      unlocked: () => true,
+    });
+    expect(sides.some((s) => s.label.includes('copper') || s.x > 0)).toBe(true);
+  });
+
+  it('falls back to Travel menu and story-complete free roam', () => {
+    const npcs = districtNpcs();
+    const exits = districtExits();
+    const menu = currentObjective({
+      beats: STORY_BEATS,
+      completed: [
+        'intro-laje',
+        'boteco-nair',
+        'morro-antena',
+        'luna-beco',
+        'morro-fios',
+        'seu-ze-banca',
+      ],
+      flags: (f) =>
+        [
+          'conheceu_rita',
+          'falou_nair',
+          'antena_ok',
+          'conheceu_luna',
+          'fios_ok',
+          'unlocked_feira',
+        ].includes(f),
+      districtId: 'morro-neon',
+      npcs,
+      exits: [],
+      unlocked: (id) => id === 'feira-central',
+    });
+    expect(menu.text).toMatch(/Travel menu/);
+    const doneFree = currentObjective({
+      beats: STORY_BEATS,
+      completed: STORY_BEATS.map((b) => b.id),
+      flags: (f) => f === 'casa_quebrada' || f === 'epilogue_done',
+      districtId: 'morro-neon',
+      npcs,
+      exits,
+      unlocked: () => true,
+    });
+    expect(doneFree.text).toContain('complete');
   });
 });
 
@@ -309,7 +414,7 @@ describe('session deep paths', () => {
     const session = new GameSession(10);
     session.startNew();
     session.world.unlock('feira-central');
-    session.player.setPosition(38, 16);
+    session.player.setPosition(36, 16);
     expect(session.nearbyExit()?.toDistrict).toBe('feira-central');
     expect(session.interact()).toBe(true);
     expect(session.player.getStats().districtId).toBe('feira-central');

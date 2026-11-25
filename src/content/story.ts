@@ -257,15 +257,41 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     ],
   },
   {
+    id: 'feira-tipster',
+    title: 'Tipster at the mango crates',
+    districtId: 'feira-central',
+    requiredFlags: ['radio_ok'],
+    setsFlags: ['tipster_ok'],
+    betId: 'feira-tipster',
+    dialogue: [
+      {
+        speaker: 'Barraca Tia',
+        text: 'Radio’s loud, kid. Before you chase pendrives — a tip: Casa pays snitches in mango crates. Want to bet which crate’s wired?',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'I’d rather not eat a tracker. Point me at the clean one.',
+      },
+      {
+        speaker: 'Barraca Tia',
+        text: 'East crates look sweeter. West crates hum. Place the odd — then Lavador will walk you to Luna.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'East it is. After this, asphalt only.',
+      },
+    ],
+  },
+  {
     id: 'feira-courier',
     title: 'Calçadão courier tip',
     districtId: 'feira-central',
-    requiredFlags: ['radio_ok'],
+    requiredFlags: ['tipster_ok'],
     setsFlags: ['courier_ok'],
     dialogue: [
       {
         speaker: 'Lavador da Feira',
-        text: 'Radio’s covering the square. Luna’s waiting with the pendrive — but militia still sniffs USB heat.',
+        text: 'Tia cleared the wired crate. Luna’s waiting with the pendrive — militia still sniffs USB heat.',
       },
       {
         speaker: 'Rita Odds',
@@ -273,11 +299,15 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Lavador da Feira',
-        text: 'Stay on the asphalt strip. Stalls block the side alleys. She’s east of the FEIRA sign — past the mango crates.',
+        text: 'Stay on the asphalt strip. She’s just past the pink ODDS 24h sign — cyan hair, same asphalt lane. Don’t climb the stalls.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'Asphalt to Luna. Got it.',
+        text: 'Asphalt past ODDS 24h. Got it.',
+      },
+      {
+        speaker: 'Lavador da Feira',
+        text: 'When you’re done, the east exit on this same strip goes to Odds Avenue — once Luna’s file unlocks it.',
       },
     ],
   },
@@ -387,11 +417,11 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Mensageiro',
-        text: 'Count the neon blinks. When the pink ODDS sign dims twice, the alley’s clear for the hacker south of the glass.',
+        text: 'Militia vans sweep west-to-east. When the boulevard clears, cut south off the asphalt to the ATM hacker by the glass strip.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'Pink blink, then south to the ATM. Got it.',
+        text: 'Wait for the sweep, then south to the ATM. Got it.',
       },
     ],
   },
@@ -436,11 +466,11 @@ export const STORY_BEATS: readonly StoryBeat[] = [
       },
       {
         speaker: 'Dr. Margin',
-        text: 'The hearing decides everything. Place your chips — the mic is already bought.',
+        text: 'The hearing decides everything. Place your chips — win, and the scandal trends citywide.',
       },
       {
         speaker: 'Rita Odds',
-        text: 'Then I buy the mic back with scandal. But first I go home — the hill needs to hear this before the tower.',
+        text: 'Then I buy the mic back with scandal. Let’s open the books.',
       },
     ],
   },
@@ -469,6 +499,10 @@ export const STORY_BEATS: readonly StoryBeat[] = [
         speaker: 'Rita Odds',
         text: 'I’m not cutting the hill out. Place it.',
       },
+      {
+        speaker: 'Dona Nair',
+        text: 'Either way: west exit stays Morro, east through Fair then Avenue. The tower doesn’t open for tourists.',
+      },
     ],
   },
   {
@@ -492,19 +526,101 @@ export const STORY_BEATS: readonly StoryBeat[] = [
         speaker: 'Fio Ladrão',
         text: 'Bet the splice. Win and you climb alone. Nair’s path is the loud one if you prefer company.',
       },
+      {
+        speaker: 'Rita Odds',
+        text: 'Company or silence — I still walk the asphalt myself. Place it.',
+      },
+    ],
+  },
+  {
+    id: 'torre-foyer',
+    title: 'Foyer badge check',
+    districtId: 'torre-casa',
+    requiredFlags: ['unlocked_torre', 'escandalo_aberto', 'morro_return_ok'],
+    setsFlags: ['foyer_ok'],
+    betId: 'torre-foyer',
+    dialogue: [
+      {
+        speaker: 'Foyer Guard',
+        text: 'Badge or bet. Casa doesn’t let street odds into the pit for free.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'I brought scandal and a hill. That badge enough?',
+      },
+      {
+        speaker: 'Foyer Guard',
+        text: 'Cute. Wager the bluff. Win and the velvet rope lifts. Lose and you wait with the tourists.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'I’m done waiting. Place it.',
+      },
+    ],
+  },
+  {
+    id: 'torre-pit',
+    title: 'Pit floor warm-up',
+    districtId: 'torre-casa',
+    requiredFlags: ['foyer_ok'],
+    setsFlags: ['pit_ok'],
+    betId: 'torre-pit',
+    dialogue: [
+      {
+        speaker: 'Pit Dealer',
+        text: 'VIP’s upstairs, but the pit wants a warm-up hand. House chips only — your street credits convert at a cut.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Convert, then. One clean hand before the high rollers.',
+      },
+      {
+        speaker: 'Pit Dealer',
+        text: 'Cards are marked in three places. Bet you spot the real deck before the floor manager does.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'I grew up reading marked asphalt. Deal.',
+      },
+    ],
+  },
+  {
+    id: 'torre-elevator',
+    title: 'Elevator odds',
+    districtId: 'torre-casa',
+    requiredFlags: ['pit_ok'],
+    setsFlags: ['elevator_ok'],
+    betId: 'torre-elevator',
+    dialogue: [
+      {
+        speaker: 'Pit Dealer',
+        text: 'VIP’s upstairs. Elevator’s a coin flip — express or security stop. Bet the shaft.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'I’ve climbed worse stairs. Call the car.',
+      },
+      {
+        speaker: 'Pit Dealer',
+        text: 'Win and the doors open on chrome. Lose and you ride with the busboys. Place it.',
+      },
+      {
+        speaker: 'Rita Odds',
+        text: 'Chrome or freight — I’m going up either way. Deal.',
+      },
     ],
   },
   {
     id: 'torre-vip',
     title: 'VIP floor',
     districtId: 'torre-casa',
-    requiredFlags: ['unlocked_torre', 'escandalo_aberto', 'morro_return_ok'],
+    requiredFlags: ['elevator_ok'],
     setsFlags: ['vip_ok'],
     betId: 'torre-vip',
     dialogue: [
       {
         speaker: 'VIP Host',
-        text: 'Elevator’s open but the high rollers want entertainment. Skim the VIP table — bet the rake before security blinks.',
+        text: 'Elevator spit you out clean. High rollers want entertainment now. Skim the VIP table — bet the rake before security blinks.',
       },
       {
         speaker: 'Rita Odds',
@@ -514,6 +630,14 @@ export const STORY_BEATS: readonly StoryBeat[] = [
         speaker: 'VIP Host',
         text: 'Whatever you decided on the hill — trust or silence — the rake doesn’t care. Place it.',
       },
+      {
+        speaker: 'Rita Odds',
+        text: 'The rake can wait. My debt can’t. Let’s skim.',
+      },
+      {
+        speaker: 'VIP Host',
+        text: 'Augusto’s table is past the gold rail. Don’t talk until the chips land.',
+      },
     ],
   },
   {
@@ -521,7 +645,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     title: 'Duel at Casa Suprema Tower',
     districtId: 'torre-casa',
     requiredFlags: ['vip_ok'],
-    setsFlags: ['casa_quebrada', 'final_bom'],
+    setsFlags: ['casa_quebrada', 'final_bom', 'free_roam'],
     betId: 'duelo-casa',
     isEnding: true,
     endingId: 'povo-no-controle',
@@ -538,6 +662,10 @@ export const STORY_BEATS: readonly StoryBeat[] = [
         speaker: 'Augusto Casa',
         text: 'One last odd, then. High stakes. No appeals.',
       },
+      {
+        speaker: 'Rita Odds',
+        text: 'Good. I’m done playing by your meter. Deal the city.',
+      },
     ],
   },
   {
@@ -546,6 +674,7 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     districtId: 'morro-neon',
     requiredFlags: ['casa_quebrada'],
     setsFlags: ['epilogue_done'],
+    optional: true,
     dialogue: [
       {
         speaker: 'Dona Nair',

@@ -3,6 +3,7 @@ import {
   applyHouseFlavor,
   canAfford,
   clampStake,
+  defaultStake,
   formatOdds,
   formatWinChance,
   impliedWinChance,
@@ -52,7 +53,9 @@ describe('betting', () => {
 
   it('soft-clamps story stakes and applies pity', () => {
     const pixo = getBet('pixo-challenge')!;
+    // Soft floor drops to 1 when broke — never forces an all-in min.
     expect(clampStake(pixo, 40, 6)).toBe(6);
+    expect(clampStake(pixo, 3, 6)).toBe(3);
     expect(clampStake(pixo, 40, 0)).toBe(0);
     const win = resolveBet(
       { ...pixo, odds: { numerator: 1, denominator: 1 }, houseEdge: 0 },
@@ -61,5 +64,14 @@ describe('betting', () => {
     );
     expect(typeof win.won).toBe('boolean');
     expect(formatWinChance(pixo.odds, pixo.houseEdge, 2, true)).toMatch(/%$/);
+  });
+
+  it('default stake is ~12% of credits and never all-in', () => {
+    const bet = getBet('duelo-casa')!;
+    const stake = defaultStake(bet, 100);
+    expect(stake).toBeGreaterThanOrEqual(10);
+    expect(stake).toBeLessThanOrEqual(15);
+    expect(stake).toBeLessThan(100);
+    expect(defaultStake(bet, 2)).toBeLessThanOrEqual(1);
   });
 });

@@ -13,6 +13,9 @@ const START: PlayerStats = {
 
 export class PlayerSystem {
   private stats: PlayerStats;
+  /** Last non-zero move facing (tile steps). Used for E-target bias. */
+  private faceDx = 1;
+  private faceDy = 0;
 
   constructor(
     private readonly bus: EventBus,
@@ -23,6 +26,16 @@ export class PlayerSystem {
 
   getStats(): PlayerStats {
     return { ...this.stats };
+  }
+
+  getFacing(): { dx: number; dy: number } {
+    return { dx: this.faceDx, dy: this.faceDy };
+  }
+
+  setFacing(dx: number, dy: number): void {
+    if (!dx && !dy) return;
+    this.faceDx = Math.sign(dx);
+    this.faceDy = Math.sign(dy);
   }
 
   setPosition(x: number, y: number): void {

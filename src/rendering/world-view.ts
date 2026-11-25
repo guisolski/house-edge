@@ -261,6 +261,21 @@ function bakeAll(): Baked {
   };
 }
 
+function paintPlayHud(
+  ctx: CanvasRenderingContext2D,
+  state: ViewState,
+  map: MapDef,
+  camX: number,
+  camY: number,
+  frame: number,
+): void {
+  if (!state.session.ui.is('play')) return;
+  // Signs hide under modals so dialogue doesn't cover CASA SUPREMA / EXIT text.
+  drawLiveSigns(ctx, state, map, camX, camY);
+  drawMarker(ctx, state, camX, camY, frame);
+  drawSideMarkers(ctx, state, camX, camY, frame);
+}
+
 function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCamera> {
   const { canvas, session, baked, showFps, lastSample: sample } = state;
   const ctx = canvas.getContext('2d', { alpha: false });
@@ -286,15 +301,12 @@ function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCa
     viewH: canvas.height,
     tilePx: TILE_PX,
   });
-  // Screen-space camera: world - viewCam (+ letterbox via pad when map < view).
   const viewCamX = cam.x - pad.padX;
   const viewCamY = cam.y - pad.padY;
   ctx.imageSmoothingEnabled = false;
-  // Never fill with flat district brand colours — dark themed scenery only.
   paintBackdrop(state, ctx, canvas.width, canvas.height, stats.districtId);
   const layer = state.mapCache?.layer;
   if (layer) ctx.drawImage(layer, -viewCamX, -viewCamY);
-  // Static stalls/buildings/props are baked into the map layer; only actors y-sort.
   drawSortedActors(ctx, state, frame, viewCamX, viewCamY);
   paintPlayOverlays({
     ctx,
@@ -305,7 +317,7 @@ function paintFrame(state: ViewState, frame: number): ReturnType<typeof createCa
     camY: viewCamY,
     frame,
   });
-  drawMarker(ctx, state, viewCamX, viewCamY, frame);
+  paintPlayHud(ctx, state, map, viewCamX, viewCamY, frame);
   if (showFps) drawFpsOverlay(ctx, sample);
   return cam;
 }
@@ -407,7 +419,8 @@ function bakeMapLayer(map: MapDef, baked: Baked): HTMLCanvasElement {
   paintStairSides(ctx, map);
   paintMapEdges(ctx, map);
   paintTerraceEdges(ctx, map);
-  // Market stalls, crowds, buildings, landmark, signs — baked once (foot-y order).
+  // Market stalls, crowds, buildings, landmark — baked once (foot-y order).
+  // Signs stay live so they can hide under dialogue/bet modals.
   bakeStaticDecor(ctx, map, baked);
   ctx.fillStyle = '#2bfff210';
   ctx.fillRect(0, 0, layer.width, layer.height);
@@ -420,7 +433,6 @@ function bakeStaticDecor(ctx: CanvasRenderingContext2D, map: MapDef, baked: Bake
   pushBakedBuildings(items, ctx, map, baked);
   pushBakedProps(items, ctx, map, baked);
   pushBakedLandmark(items, ctx, map, baked);
-  pushBakedSigns(items, ctx, map, baked);
   items.sort((a, b) => a.y - b.y || a.x - b.x);
   for (const it of items) it.draw();
 }
@@ -479,25 +491,32 @@ function pushBakedLandmark(
   });
 }
 
-function pushBakedSigns(
-  items: SortBlit[],
+function signImage(baked: Baked, label: string, color: string): HTMLCanvasElement {
+  const key = `${label}|${color}`;
+  let img = baked.sign.get(key);
+  if (!img) {
+    img = bakeSignWithText(label, color);
+    baked.sign.set(key, img);
+  }
+  return img;
+}
+
+/** Draw signs in screen space; clamp so wide EXIT labels stay inside the map. */
+function drawLiveSigns(
   ctx: CanvasRenderingContext2D,
+  state: ViewState,
   map: MapDef,
-  baked: Baked,
+  camX: number,
+  camY: number,
 ): void {
+  const maxX = map.width * TILE_PX;
   for (const s of map.signs) {
-    const key = `${s.label}|${s.color}`;
-    let img = baked.sign.get(key);
-    if (!img) {
-      img = bakeSignWithText(s.label, s.color);
-      baked.sign.set(key, img);
-    }
-    const signImg = img;
-    items.push({
-      y: s.y,
-      x: s.x,
-      draw: () => blitImage(ctx, signImg, s.x * TILE_PX, s.y * TILE_PX - 8),
-    });
+    const img = signImage(state.baked, s.label, s.color);
+    let sx = s.x * TILE_PX;
+    // Keep full destination text on-screen (east exits used to clip mid-word).
+    if (sx + img.width > maxX - TILE_PX)
+      sx = Math.max(TILE_PX, maxX - TILE_PX - img.width);
+    blitImage(ctx, img, sx - camX, s.y * TILE_PX - 8 - camY);
   }
 }
 
@@ -621,11 +640,12 @@ function glowSprite(baked: Baked, color: string): HTMLCanvasElement {
 }
 
 function npcSprite(baked: Baked, npc: WorldNpc, frame: number): HTMLCanvasElement {
-  const key = `${npc.id}:${frame % 2}`;
+  const variant = npc.bodyVariant ?? 0;
+  const key = `${npc.id}:${variant}:${frame % 2}`;
   let img = baked.npc.get(key);
   if (img) return img;
-  // Same 22×38 hand-authored base as the player — recolored per NPC.
-  img = bakeSprite(makeNpcSprite(npc.color, frame % 2, npc.id), SCALE);
+  // Shared base with 4 body/hair/outfit variants — not just a recolor.
+  img = bakeSprite(makeNpcSprite(npc.color, frame % 2, npc.id, variant), SCALE);
   baked.npc.set(key, img);
   return img;
 }
@@ -929,15 +949,58 @@ function drawMarker(
   const m = state.marker;
   if (!m) return;
   if (m.districtId !== state.session.player.getStats().districtId) return;
-  const bob = Math.sin(frame / 10) * 4;
-  const px = m.x * TILE_PX + 16 - camX;
-  const py = m.y * TILE_PX - 14 + bob - camY;
-  ctx.fillStyle = Palette.brasilYellow;
-  ctx.beginPath();
-  ctx.moveTo(px, py);
-  ctx.lineTo(px - 8, py - 14);
-  ctx.lineTo(px + 8, py - 14);
-  ctx.fill();
+  paintArrowMarker({
+    ctx,
+    tx: m.x,
+    ty: m.y,
+    camX,
+    camY,
+    frame,
+    color: Palette.brasilYellow,
+  });
+}
+
+function drawSideMarkers(
+  ctx: CanvasRenderingContext2D,
+  state: ViewState,
+  camX: number,
+  camY: number,
+  frame: number,
+): void {
+  const markers = state.session.sideMarkers();
+  for (const m of markers) {
+    paintArrowMarker({
+      ctx,
+      tx: m.x,
+      ty: m.y,
+      camX,
+      camY,
+      frame: frame + 4,
+      color: Palette.neonCyan,
+    });
+  }
+}
+
+type ArrowMark = {
+  ctx: CanvasRenderingContext2D;
+  tx: number;
+  ty: number;
+  camX: number;
+  camY: number;
+  frame: number;
+  color: string;
+};
+
+function paintArrowMarker(m: ArrowMark): void {
+  const bob = Math.sin(m.frame / 10) * 4;
+  const px = m.tx * TILE_PX + 16 - m.camX;
+  const py = m.ty * TILE_PX - 14 + bob - m.camY;
+  m.ctx.fillStyle = m.color;
+  m.ctx.beginPath();
+  m.ctx.moveTo(px, py);
+  m.ctx.lineTo(px - 8, py - 14);
+  m.ctx.lineTo(px + 8, py - 14);
+  m.ctx.fill();
 }
 
 function drawFpsOverlay(ctx: CanvasRenderingContext2D, sample: FpsSample): void {

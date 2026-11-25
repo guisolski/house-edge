@@ -1,7 +1,7 @@
 import { EventBus } from '../core/event-bus';
 import { createRng, type Rng } from '../core/rng';
 import type { BetDefinition, GameSave, DistrictId } from '../core/types';
-import { canAfford, clampStake, resolveBet } from './betting';
+import { canAfford, clampStake, defaultStake, resolveBet } from './betting';
 import { PlayerSystem } from './player';
 import { StorySystem } from './story';
 import { WorldSystem } from './world';
@@ -18,11 +18,12 @@ import {
   nearestExit,
   nearestNpc,
   npcStoryBeatIds,
+  EXIT_STAND_RANGE,
   type DistrictExit,
   type WorldNpc,
 } from './interaction';
 import { buildDistrictMap, isWalkable, tileAt, type MapDef } from '../world/maps';
-import { currentObjective, type Objective } from './objectives';
+import { currentObjective, sideQuestMarkers, type Objective } from './objectives';
 
 const SAFE_JOB_COOLDOWN_MS = 10_000;
 const SAFE_JOB_CAP = 6;
@@ -99,12 +100,13 @@ export class GameSession {
     const nx = Math.max(0, Math.min(map.width - 1, s.x + dx));
     const ny = Math.max(0, Math.min(map.height - 1, s.y + dy));
     if (!isWalkable(map, nx, ny)) return false;
+    this.player.setFacing(dx, dy);
     // NPCs are non-blocking — walk-through keeps interaction from trapping the player.
     this.player.setPosition(nx, ny);
-    // All districts: stepping onto an unlocked exit pad travels (consistent).
-    if (tileAt(map, nx, ny) === 'exit') {
-      const exit = this.nearbyExit();
-      if (exit) return this.travelTo(exit.toDistrict);
+    // Stepping onto / adjacent to an unlocked exit pad travels.
+    const exit = this.nearbyExit();
+    if (exit && tileAt(map, nx, ny) === 'exit') {
+      return this.travelTo(exit.toDistrict);
     }
     return true;
   }
@@ -121,6 +123,7 @@ export class GameSession {
 
   nearbyNpc(): WorldNpc | null {
     const s = this.player.getStats();
+    const face = this.player.getFacing();
     const available = new Set(this.story.availableBeats(s.districtId).map((b) => b.id));
     // Prefer story NPCs with an active beat so side-job rematches don't steal E.
     return nearestNpc({
@@ -128,26 +131,66 @@ export class GameSession {
       districtId: s.districtId,
       x: s.x,
       y: s.y,
+      faceDx: face.dx,
+      faceDy: face.dy,
       prefer: (npc) => npcStoryBeatIds(npc).some((id) => available.has(id)),
     });
   }
 
   nearbyExit(): DistrictExit | null {
     const s = this.player.getStats();
-    // Prompt / interact only when standing on an exit tile (matches the pad visual).
-    if (tileAt(this.getMap(), s.x, s.y) !== 'exit') return null;
-    const exit = nearestExit(this.exits, s.districtId, s.x, s.y);
+    const exit = nearestExit({
+      exits: this.exits,
+      districtId: s.districtId,
+      x: s.x,
+      y: s.y,
+      range: EXIT_STAND_RANGE,
+    });
     if (!exit) return null;
     return this.world.isUnlocked(exit.toDistrict) ? exit : null;
+  }
+
+  /** Locked exit underfoot / adjacent — for toast + prompt feedback. */
+  nearbyLockedExit(): DistrictExit | null {
+    const s = this.player.getStats();
+    const exit = nearestExit({
+      exits: this.exits,
+      districtId: s.districtId,
+      x: s.x,
+      y: s.y,
+      range: EXIT_STAND_RANGE,
+    });
+    if (!exit) return null;
+    return this.world.isUnlocked(exit.toDistrict) ? null : exit;
   }
 
   /** Dismiss ending and keep the completed save for side jobs / grind. */
   continueExploring(): boolean {
     if (!this.ui.is('ending')) return false;
+    // Epilogue is optional free-roam flavour — mark it available without blocking HUD.
+    this.story.setFlag('free_roam', true);
     this.persist();
     if (!this.ui.go('play')) return false;
     this.bus.emit('game:started', { newGame: false });
+    this.bus.emit('ui:toast', {
+      message: 'Free roam — grind side jobs or explore. Epilogue waits on the hill.',
+      kind: 'info',
+    });
     return true;
+  }
+
+  /** Optional side-quest markers in the current district. */
+  sideMarkers(): { x: number; y: number; label: string }[] {
+    const s = this.player.getStats();
+    return sideQuestMarkers({
+      beats: STORY_BEATS,
+      completed: this.story.getCompleted(),
+      flags: (f) => this.story.getFlag(f),
+      districtId: s.districtId,
+      npcs: this.npcs,
+      exits: this.exits,
+      unlocked: (id) => this.world.isUnlocked(id as DistrictId),
+    });
   }
 
   /** Nearest odd-job giver (same district first). */
@@ -190,6 +233,14 @@ export class GameSession {
     if (!this.ui.is('play')) return false;
     const exit = this.nearbyExit();
     if (exit) return this.travelTo(exit.toDistrict);
+    const locked = this.nearbyLockedExit();
+    if (locked) {
+      this.bus.emit('ui:toast', {
+        message: 'Path locked — finish the current bet first.',
+        kind: 'info',
+      });
+      return false;
+    }
     const npc = this.nearbyNpc();
     if (!npc) {
       this.bus.emit('ui:toast', { message: 'Nobody in range.', kind: 'info' });
@@ -202,7 +253,7 @@ export class GameSession {
     const bet = getBet(betId);
     if (!bet) return false;
     const credits = this.player.getStats().credits;
-    const stake = clampStake(bet, bet.stake, credits);
+    const stake = defaultStake(bet, credits);
     if (!canAfford(credits, stake)) {
       this.bus.emit('ui:toast', {
         message: this.brokeHintText() ?? 'Not enough credits — find an odd-job NPC.',

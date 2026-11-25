@@ -12,6 +12,8 @@ export type WorldNpc = {
   jobBetId?: string;
   safeJobId?: string;
   color: string;
+  /** Body / hair / outfit silhouette variant (0–3). */
+  bodyVariant?: 0 | 1 | 2 | 3;
 };
 
 export function npcStoryBeatIds(npc: WorldNpc): string[] {
@@ -171,7 +173,8 @@ const NPCS: readonly WorldNpc[] = [
     districtId: 'feira-central',
     x: 8,
     y: 12,
-    beatId: 'side-feira-mango',
+    beatId: 'feira-tipster',
+    extraBeatIds: ['side-feira-mango'],
     color: '#ff8c42',
   },
   {
@@ -198,8 +201,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'influencer',
     name: 'Odds Influencer',
     districtId: 'avenida-odds',
-    x: 36,
-    y: 14,
+    x: 34,
+    y: 16,
     beatId: 'avenida-influencer',
     jobBetId: 'influencer-duelo',
     color: '#ff2bd6',
@@ -219,8 +222,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'margin',
     name: 'Dr. Margin',
     districtId: 'avenida-odds',
-    x: 28,
-    y: 12,
+    x: 26,
+    y: 11,
     beatId: 'lobby-margin',
     color: '#4a6cff',
   },
@@ -244,11 +247,30 @@ const NPCS: readonly WorldNpc[] = [
     color: '#2bfff2',
   },
   {
+    id: 'foyer-guard',
+    name: 'Foyer Guard',
+    districtId: 'torre-casa',
+    x: 10,
+    y: 12,
+    beatId: 'torre-foyer',
+    color: '#6ec8e8',
+  },
+  {
+    id: 'pit-dealer',
+    name: 'Pit Dealer',
+    districtId: 'torre-casa',
+    x: 20,
+    y: 11,
+    beatId: 'torre-pit',
+    jobBetId: 'torre-pit',
+    color: '#d946ef',
+  },
+  {
     id: 'vip-host',
     name: 'VIP Host',
     districtId: 'torre-casa',
-    x: 14,
-    y: 10,
+    x: 28,
+    y: 12,
     beatId: 'torre-vip',
     jobBetId: 'torre-vip',
     color: '#ffd700',
@@ -257,7 +279,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'ceo',
     name: 'Augusto Casa',
     districtId: 'torre-casa',
-    x: 18,
+    x: 22,
     y: 13,
     beatId: 'torre-final',
     color: '#ff3b5c',
@@ -266,7 +288,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'busboy-torre',
     name: 'Busboy',
     districtId: 'torre-casa',
-    x: 24,
+    x: 30,
     y: 16,
     extraBeatIds: ['side-torre-tip'],
     safeJobId: 'safe-torre-casa',
@@ -279,7 +301,7 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'morro-to-feira',
     districtId: 'morro-neon',
-    x: 38,
+    x: 36,
     y: 16,
     toDistrict: 'feira-central',
     label: 'Exit → Central Fair',
@@ -287,7 +309,7 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'feira-to-morro',
     districtId: 'feira-central',
-    x: 2,
+    x: 5,
     y: 13,
     toDistrict: 'morro-neon',
     label: 'Exit → Morro Neon',
@@ -295,7 +317,7 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'feira-to-avenida',
     districtId: 'feira-central',
-    x: 41,
+    x: 38,
     y: 13,
     toDistrict: 'avenida-odds',
     label: 'Exit → Odds Avenue',
@@ -303,7 +325,7 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'avenida-to-feira',
     districtId: 'avenida-odds',
-    x: 2,
+    x: 5,
     y: 12,
     toDistrict: 'feira-central',
     label: 'Exit → Central Fair',
@@ -311,7 +333,7 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'avenida-to-torre',
     districtId: 'avenida-odds',
-    x: 43,
+    x: 40,
     y: 12,
     toDistrict: 'torre-casa',
     label: 'Exit → Casa Tower',
@@ -319,7 +341,7 @@ const EXITS: readonly DistrictExit[] = [
   {
     id: 'torre-to-avenida',
     districtId: 'torre-casa',
-    x: 2,
+    x: 5,
     y: 12,
     toDistrict: 'avenida-odds',
     label: 'Exit → Odds Avenue',
@@ -337,6 +359,9 @@ export type NearestNpcQuery = {
   districtId: DistrictId;
   x: number;
   y: number;
+  /** Last facing vector (tile steps). Biases toward the NPC the player faces. */
+  faceDx?: number;
+  faceDy?: number;
   prefer?: (npc: WorldNpc) => boolean;
 };
 
@@ -345,41 +370,73 @@ export function nearestNpc(q: NearestNpcQuery): WorldNpc | null {
   return preferred ?? pickNearest(q);
 }
 
+/** Lower score is better: distance, with a facing bonus when looking toward the NPC. */
+export function npcPickScore(
+  q: { x: number; y: number; faceDx?: number; faceDy?: number },
+  npc: WorldNpc,
+): number {
+  const d = distance(q.x, q.y, npc.x, npc.y);
+  const fdx = q.faceDx ?? 0;
+  const fdy = q.faceDy ?? 0;
+  if (!fdx && !fdy) return d;
+  const toX = npc.x - q.x;
+  const toY = npc.y - q.y;
+  const len = Math.hypot(toX, toY) || 1;
+  const facing = (fdx * toX + fdy * toY) / len;
+  // Facing the NPC subtracts up to ~1.2 tiles from the effective distance.
+  return d - Math.max(0, facing) * 1.2;
+}
+
 function pickNearest(
   q: NearestNpcQuery,
   filter?: (npc: WorldNpc) => boolean,
 ): WorldNpc | null {
   let best: WorldNpc | null = null;
-  let bestDist = Infinity;
+  let bestScore = Infinity;
   for (const npc of q.npcs) {
     if (npc.districtId !== q.districtId) continue;
     if (filter && !filter(npc)) continue;
     const d = distance(q.x, q.y, npc.x, npc.y);
-    if (d <= INTERACT_RANGE && d < bestDist) {
+    if (d > INTERACT_RANGE) continue;
+    const score = npcPickScore(q, npc);
+    if (score < bestScore) {
       best = npc;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
+/** Adjacent (Chebyshev ≤ 1) counts — players aim at the visible pad/sign, not a 1px hotspot. */
+export const EXIT_STAND_RANGE = 1.05;
+
+export type NearestExitQuery = {
+  exits: readonly DistrictExit[];
+  districtId: DistrictId;
+  x: number;
+  y: number;
+  range?: number;
+};
+
+export function nearestExit(q: NearestExitQuery): DistrictExit | null {
+  const range = q.range ?? EXIT_STAND_RANGE;
+  let best: DistrictExit | null = null;
+  let bestDist = Infinity;
+  for (const exit of q.exits) {
+    if (exit.districtId !== q.districtId) continue;
+    const d = distance(q.x, q.y, exit.x, exit.y);
+    if (d <= range && d < bestDist) {
+      best = exit;
       bestDist = d;
     }
   }
   return best;
 }
 
-export function nearestExit(
-  exits: readonly DistrictExit[],
-  districtId: DistrictId,
-  x: number,
-  y: number,
-): DistrictExit | null {
-  let best: DistrictExit | null = null;
-  let bestDist = Infinity;
-  for (const exit of exits) {
-    if (exit.districtId !== districtId) continue;
-    const d = distance(x, y, exit.x, exit.y);
-    if (d <= INTERACT_RANGE && d < bestDist) {
-      best = exit;
-      bestDist = d;
-    }
-  }
-  return best;
+export function npcBodyVariant(id: string): 0 | 1 | 2 | 3 {
+  let h = 0;
+  for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return (h % 4) as 0 | 1 | 2 | 3;
 }
 
 export function inRange(a: {
@@ -393,7 +450,10 @@ export function inRange(a: {
 }
 
 export function districtNpcs(): WorldNpc[] {
-  return [...NPCS];
+  return NPCS.map((n) => ({
+    ...n,
+    bodyVariant: n.bodyVariant ?? npcBodyVariant(n.id),
+  }));
 }
 
 export function districtExits(): DistrictExit[] {

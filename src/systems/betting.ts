@@ -78,11 +78,21 @@ export function formatWinChance(
 export function clampStake(bet: BetDefinition, stake: number, credits: number): number {
   let min = bet.stakeMin ?? Math.max(1, Math.floor(bet.stake / 2));
   const max = Math.min(bet.stakeMax ?? bet.stake * 3, credits);
+  // Soft story bets: allow a tiny stake when broke — never force an all-in min.
   if (isSoftStakeBet(bet) && credits > 0 && credits < min) {
-    min = Math.max(1, credits);
+    min = 1;
   }
-  if (max < min) return Math.max(0, credits);
+  if (max < min) return Math.max(0, Math.min(credits, stake));
   return Math.min(max, Math.max(min, stake));
+}
+
+/** Default offer ≈ 12% of bankroll (clamped 10–15% band), never all credits. */
+export function defaultStake(bet: BetDefinition, credits: number): number {
+  if (credits <= 0) return 0;
+  const pct = Math.max(1, Math.round(credits * 0.12));
+  const half = Math.max(1, Math.floor(credits * 0.5));
+  const neverAll = credits <= 2 ? 1 : Math.min(pct, half, credits - 1);
+  return clampStake(bet, neverAll, credits);
 }
 
 export function isSoftStakeBet(bet: BetDefinition): boolean {

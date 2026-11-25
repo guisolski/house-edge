@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] — 2026-11-25
+
+### Fixed
+
+- Central Fair / all district EXIT pads inset from walls; signs show full destination names and stay on-screen; e2e walks every exit.
+- Post-ending HUD is free-roam (epilogue optional); objectives prefer walkable exit hops over Travel menu.
+- E picks nearest + facing NPC and shows the name; default stake ≈12% of credits (never all-in).
+- World signs hide under dialogue/bet modals; dialogue audited vs objective flow.
+- Morro: side ramps + plaza approaches so terraces are reachable without hunting gaps.
+
+### Changed
+
+- Casa Suprema: foyer + pit floor beats before VIP; denser floor art.
+- NPC body/hair/outfit variants (4 silhouettes) with idle bob; cyan markers for available side quests.
+
 ## [1.11.0] — 2026-11-24
 
 ### Fixed
