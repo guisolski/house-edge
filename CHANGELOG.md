@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.22.7] — 2026-11-25
+
+### Fixed
+
+- **Gaiola lockpick (P0)**: per-pin certo/baixo/alto feedback persists across retries; decodeable clue; no hidden pin; clamp ←→ selection; hint after 3 misses; e2e solves from on-screen feedback ≤4 tries.
+- **Viajar keyboard (P0)**: clear modal arm on menu/travel; Enter/Space activate destinations + Fechar; e2e travels via Esc → Viajar → Enter.
+- **Wipe confirm (P0)**: Esc = Voltar on ending + settings; credits Play again uses confirm.
+- **Tags / Enter / pt-BR / needle (P1)**: Entregador/Vira-Casaca spacing; tag e2e every district; post-arm focus first choice; puzzle tip; copy polish; rAF needle wrap.
+
 ## [1.22.6] — 2026-11-25
 
 ### Fixed

@@ -725,6 +725,14 @@ export class GameSession {
     this.modalReleasePending = false;
   }
 
+  /** Playtest #33: clear arm so Viajar / menu Confirm works on the first Enter. */
+  clearModalConfirmGate(): void {
+    this.modalConfirmArmUntil = 0;
+    this.modalConfirmNeedsRelease = false;
+    this.modalHeldThroughArm = false;
+    this.modalReleasePending = false;
+  }
+
   /** Mash during arm / blocked confirm: reset arm so 60ms bursts never clear. */
   bumpModalConfirmArm(): void {
     this.modalConfirmArmUntil = Date.now() + 400;

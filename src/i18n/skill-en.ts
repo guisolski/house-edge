@@ -26,7 +26,7 @@ export const skillEn = {
     'Cones sweep the asphalt center — hug the glass shadow, then cut when the light blinks.',
   'skill.avenida-drone.prompt': 'Evade the militia drone cones — slip the blind path.',
   'skill.avenida-server.clue':
-    'Cage Runner: outer post grease marks the hinge he trusts. Inside, the soft seat sits lowest, then the next tumbler climbs one notch. A sticker lies. Listen for the click after each raise.',
+    'Cage Runner: both outer posts sit high (full stack). The soft seat next to the left post rests flush on the floor. The next tumbler climbs one click above that seat. Stickers lie.',
   'skill.avenida-server.prompt': 'Crack the server-cage tumblers before the sweep.',
   'skill.avenida-stealth.prompt': 'Slip past lobby cams — match the blind spots.',
   'skill.corrida-moto.prompt': 'Dash the moto lane — clear the gate sequence.',

@@ -263,15 +263,15 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     kind: 'lockpick',
     prompt: 'Crack the server-cage tumblers before the sweep.',
     target: 0,
-    // Pins: high / flush / mid / high — outer posts match; middle two step down then mid.
+    // Pins: high / flush / mid / high — outer posts match; #2 flush, #3 one above.
     pins: [2, 0, 1, 2],
-    hiddenPin: 2,
-    timerMs: 34_000,
-    pickDurability: 5,
-    // Playtest #31: ≥3 lockpick hooks (outer/grease/hinge/soft/seat/click) — no digit map.
+    // Playtest #33: no hidden pin — every tumbler visible; feedback + clear clue.
+    timerMs: 45_000,
+    pickDurability: 6,
+    // Decode in 1–3 tries: ends high, second flush, third one click up.
     clue:
-      'Cage Runner: outer post grease marks the hinge he trusts. Inside, the soft seat sits lowest, ' +
-      'then the next tumbler climbs one notch. A sticker lies. Listen for the click after each raise.',
+      'Cage Runner: both outer posts sit high (full stack). The soft seat next to the left post ' +
+      'rests flush on the floor. The next tumbler climbs one click above that seat. Stickers lie.',
   },
   'avenida-betrayal': {
     kind: 'choice',

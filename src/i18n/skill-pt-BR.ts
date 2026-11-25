@@ -31,7 +31,7 @@ export const skillPtBR = {
     'Cones varrem o centro do asfalto — cola na sombra do vidro e corta quando a luz piscar.',
   'skill.avenida-drone.prompt': 'Desvia dos cones do drone — passa pelo ponto cego.',
   'skill.avenida-server.clue':
-    'Corredor: poste de fora com graxa marca a dobradiça em que ele confia. Por dentro, o assento macio fica mais baixo; o próximo sobe um ponto. Adesivo mente. Escuta o clique depois de cada alavanca.',
+    'Corredor: os dois postes das pontas ficam no alto (pilha cheia). O assento macio ao lado do posto esquerdo dorme no fundo. O próximo pino sobe só um clique acima desse assento. Adesivo mente.',
   'skill.avenida-server.prompt':
     'Quebra os pinos da gaiola do servidor antes da varredura.',
   'skill.avenida-stealth.prompt':

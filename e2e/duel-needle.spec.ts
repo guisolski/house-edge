@@ -83,20 +83,33 @@ async function missOutsideZone(page: Page): Promise<{
   });
 }
 
-async function placeNeedleInDrawnZone(
-  page: Page,
-): Promise<{ ok: true; left: number; width: number } | { ok: false; reason: string }> {
-  return page.evaluate(() => {
-    const meter = document.querySelector('.skill-meter') as HTMLElement | null;
-    const zone = document.querySelector('.skill-zone') as HTMLElement | null;
-    const needle = document.querySelector('.skill-needle') as HTMLElement | null;
-    if (!zone || !needle) return { ok: false as const, reason: 'missing-dom' };
-    const tickId = Number(meter?.dataset.needleTick ?? '');
-    if (Number.isFinite(tickId)) window.clearInterval(tickId);
-    const left = parseFloat(zone.style.left);
-    const width = parseFloat(zone.style.width);
-    needle.style.left = `${left + width / 2}%`;
-    return { ok: true as const, left, width };
+/**
+ * Stop on the first frame the visible needle is inside the drawn zone.
+ * No DOM mutation — samples player-visible styles, then clicks Stop same tick.
+ */
+async function stopWhenNeedleInDrawnZone(page: Page): Promise<boolean> {
+  return page.evaluate(async () => {
+    const deadline = performance.now() + 12_000;
+    while (performance.now() < deadline) {
+      const zone = document.querySelector('.skill-zone') as HTMLElement | null;
+      const needle = document.querySelector('.skill-needle') as HTMLElement | null;
+      const btn = document.querySelector('.btn-needle-stop') as HTMLButtonElement | null;
+      if (zone && needle && btn) {
+        const left = parseFloat(zone.style.left);
+        const width = parseFloat(zone.style.width);
+        const at = parseFloat(needle.style.left);
+        if (
+          [left, width, at].every(Number.isFinite) &&
+          at >= left &&
+          at <= left + width
+        ) {
+          btn.click();
+          return true;
+        }
+      }
+      await new Promise<void>((r) => requestAnimationFrame(() => r()));
+    }
+    return false;
   });
 }
 
@@ -130,11 +143,10 @@ test('duel needle Stop inside drawn zone advances phase', async ({ page }) => {
   });
   await expect(page.locator('.skill-zone')).toBeVisible();
 
-  const stopResult = await placeNeedleInDrawnZone(page);
-  expect(stopResult.ok, JSON.stringify(stopResult)).toBe(true);
-
+  // Playtest #33: judge from live needle + zone (not DOM mutation / internal state).
+  const stopped = await stopWhenNeedleInDrawnZone(page);
+  expect(stopped).toBe(true);
   await page.screenshot({ path: path.join(ART, '14-duel-needle-in-zone.png') });
-  await page.getByRole('button', { name: 'Stop!' }).click();
 
   const after = await page.evaluate(() => {
     const session = (window as unknown as { __HOUSE_EDGE__: { session: HeSession } })

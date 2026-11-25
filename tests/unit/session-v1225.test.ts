@@ -151,7 +151,7 @@ describe('v1.22.5 minigame fairness', () => {
 
   it('lockpick miss does not advance; cage has pin clue hooks', () => {
     const cage = SKILL_PHASE_TABLE['avenida-server']!;
-    expect(cage.clue ?? '').toMatch(/posts|seat|click|greasy|hinge/i);
+    expect(cage.clue ?? '').toMatch(/posts|seat|click|flush|stack/i);
     const def = skillForBet('avenida-server', 'lockpick')!;
     const prog = startSkill(def);
     const wrong = attemptSkill(prog, { phaseIndex: 0, value: 0 });

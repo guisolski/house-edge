@@ -180,6 +180,28 @@ canvas.excalibur-game {
   min-width: 6.5rem;
 }
 
+.lockpick-pin-selected {
+  outline: 2px solid var(--neon-cyan, #2bfff2);
+  outline-offset: 2px;
+}
+
+.lockpick-pin-ok {
+  color: #7bc96f;
+  border-color: #7bc96f;
+}
+
+.lockpick-pin-low,
+.lockpick-pin-high,
+.lockpick-pin-bad {
+  color: #ffdf00;
+  border-color: #ffdf00;
+}
+
+.skill-lockpick-feedback {
+  min-height: 2.4em;
+  font-weight: 600;
+}
+
 .panel-body {
   display: flex;
   flex-direction: column;

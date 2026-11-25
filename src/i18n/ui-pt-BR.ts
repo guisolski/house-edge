@@ -91,6 +91,8 @@ export const uiPtBR = {
     'Desvie dos cones do drone nos pontos cegos. Corte quando a luz piscar.',
   'ui.minigameTip.choice':
     'Escolha a fala que cabe no ambiente — tom errado queima o acordo.',
+  'ui.minigameTip.puzzle':
+    'Leia a pista e marque a opção que a rua confirma — não a mais barulhenta.',
   'ui.minigameTip.hack':
     'Combine os glifos da transmissão antes do tempo. Toques errados disparam o alarme.',
   'ui.minigameTip.negotiate':
@@ -148,9 +150,12 @@ export const uiPtBR = {
   'ui.skill.escSeqHint': 'Esc cancela · setas só na sequência',
   'ui.skill.pinHidden': 'Pino {n}: ???',
   'ui.skill.pinBtn': 'Pino {n}',
-  'ui.skill.pinClick': 'Pino {n}: clique',
-  'ui.skill.pinLow': 'Pino {n}: baixo',
-  'ui.skill.pinHigh': 'Pino {n}: alto',
+  'ui.skill.pinClick': 'Pino {n}: certo',
+  'ui.skill.pinLow': 'Pino {n}: baixo demais',
+  'ui.skill.pinHigh': 'Pino {n}: alto demais',
+  'ui.skill.pinHint': 'Dica — pino {n} = {bars}',
+  'ui.skill.lockpickFeedbackIdle':
+    'Ajuste cada pino (←→ escolher, Espaço erguer) e Enviar. Depois de cada tentativa: certo / baixo / alto.',
   'ui.skill.submitLock': 'Enviar fechadura',
   'ui.elevatorCard.foyer': '▼ Elevador / Foyer do pit',
   'ui.elevatorCard.vip': '▲ Elevador / Salão VIP · Andar 42',

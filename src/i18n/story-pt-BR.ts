@@ -45,7 +45,7 @@ export const storyPtBR: Record<string, string> = {
   'story.avenida-courier.1.text': 'Perseguição, não cara ou coroa. Manda.',
   'story.avenida-courier.2.speaker': 'Entregador da Casa',
   'story.avenida-courier.2.text':
-    'Quatro becos. Erra a curva e vira a aposta — aí o influenciador ainda espera no leste.',
+    'Quatro becos. Erra a curva e vira a aposta — o Influenciador Odds ainda te espera no leste da avenida.',
   'story.avenida-courier.title': 'Sombra do correio',
   'story.avenida-drone.0.speaker': 'Neon Snap',
   'story.avenida-drone.0.text':
@@ -150,10 +150,10 @@ export const storyPtBR: Record<string, string> = {
     'E aí, Rita? Cara de quem deve pra corp. Quer água? Tem que apostar — lei da cidade.',
   'story.boteco-nair.1.choice.0.label': 'Alto — depois aceitar a aposta',
   'story.boteco-nair.1.choice.0.reply':
-    'Alto então. Estilo travado — no próximo toque aceita a aposta pra cair o gelo. Sem ficar em loop no menu.',
+    'Alto então. Estilo fechado — no próximo toque, aceita a aposta do gelo. As opções não voltam.',
   'story.boteco-nair.1.choice.1.label': 'Baixo — depois aceitar a aposta',
   'story.boteco-nair.1.choice.1.reply':
-    'Baixo. Estilo travado — no próximo toque aceita a aposta pra cair o gelo. As opções não voltam.',
+    'Baixo. Estilo fechado — no próximo toque, aceita a aposta do gelo. As opções não voltam.',
   'story.boteco-nair.1.speaker': 'Rita Odds',
   'story.boteco-nair.1.text':
     'Que país. Me dá a odd da água gelada — eu cronometro o gelo.',
@@ -316,7 +316,7 @@ export const storyPtBR: Record<string, string> = {
     'Lotaria de rua morreu quando a corp tomou conta. Agora até a laje joga pelo regulamento da Casa.',
   'story.luna-beco.2.speaker': 'Luna Pixel',
   'story.luna-beco.2.text':
-    'A banca do Seu Zé fica depois da escada. Cobre com o Catador — Fio é outro lance, não mistura.',
+    'A banca do Seu Zé fica depois da escada. Fala com o Catador pra pesar o cobre; o Fio cuida só da corrida nas lajes.',
   'story.luna-beco.title': 'Beco do pixo',
   'story.morro-antena.0.speaker': 'Antena Tech',
   'story.morro-antena.0.text':

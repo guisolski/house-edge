@@ -277,27 +277,31 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
       const confirm = p.bet.querySelector('.btn-confirm-bet') as HTMLElement | null;
       if (confirm) confirm.focus();
       else focusFirst(p.bet);
-      // Playtest #31: arm so Enter mash can't Confirm the stake mid-open.
+      // Playtest #33: arm without quiet when key up — first post-arm Enter confirms.
       session.noteModalOpened(session.isInteractHeld());
     },
     showSkill: () => {
       only(p, 'skill');
       paintSkill(p.skill, session, () => h.syncScreen());
       if (!session.isSequenceSkillActive()) focusFirst(p.skill);
+      session.noteModalOpened(session.isInteractHeld());
     },
     showTravel: () => {
       only(p, 'travel');
       paintTravel(p.travel, session, () => h.syncScreen());
+      session.clearModalConfirmGate();
       focusFirst(p.travel);
     },
     showJobs: () => {
       only(p, 'jobs');
       paintJobs(p.jobs, session, () => h.syncScreen());
+      session.clearModalConfirmGate();
       focusFirst(p.jobs);
     },
     showUpgrades: () => {
       only(p, 'upgrades');
       paintUpgrades(p.upgrades, session, () => h.syncScreen());
+      session.clearModalConfirmGate();
       focusFirst(p.upgrades);
     },
     showEnding: (text) => showEnding(p, session, h, text),
@@ -410,10 +414,8 @@ function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
   actions.append(
     skipBtn,
     button(UI.continueExploring, leaveCredits),
-    button(UI.playAgain, () => {
-      blurActive();
-      queueMicrotask(() => session.startNew());
-    }),
+    // Playtest #33: wipe confirm (Esc = Voltar) — never startNew without asking.
+    button(UI.playAgain, () => paintEnding(p, session, h, UI.wonEnding, true)),
   );
   p.ending.append(actions);
   // Don't focus Skip while armed — Enter spam can't dismiss the roll.
@@ -573,6 +575,7 @@ function langRow(onPick: (code: LocaleCode) => void): HTMLElement {
 
 function fillMenu(panel: HTMLElement, session: GameSession, h: HudHandles): void {
   clearNode(panel);
+  delete panel.dataset.menuConfirm;
   panel.append(
     el('h2', '', UI.menu),
     button(UI.resume, () => {
@@ -584,12 +587,26 @@ function fillMenu(panel: HTMLElement, session: GameSession, h: HudHandles): void
     button(UI.upgrades, () => openFromMenu(session, h, 'upgrades')),
     button(UI.settings, () => {
       clearNode(panel);
+      delete panel.dataset.menuConfirm;
       panel.append(
         el('h2', '', UI.settings),
         langRow((code) => {
           setLocale(code);
           fillMenu(panel, session, h);
           h.updateStats();
+        }),
+        button(UI.playAgain, () => {
+          clearNode(panel);
+          panel.dataset.menuConfirm = '1';
+          panel.append(
+            el('p', 'ending-confirm', UI.playAgainConfirm),
+            button(UI.playAgainYes, () => {
+              blurActive();
+              queueMicrotask(() => session.startNew());
+            }),
+            button(UI.playAgainNo, () => fillMenu(panel, session, h)),
+          );
+          focusFirst(panel);
         }),
         button(UI.resume, () => {
           session.closeModal();

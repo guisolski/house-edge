@@ -376,10 +376,11 @@ function collectTagRows(state: ViewState): TagRow[] {
     }
   }
   near.sort((a, b) => Number(b.force) - Number(a.force) || a.d - b.d);
-  // Playtest #32: objective + only the single nearest other (no stacked groups).
-  const forced = near.filter((r) => r.force);
-  const other = near.find((r) => !r.force);
-  return other ? [...forced.slice(0, 1), other] : forced.slice(0, 1);
+  // Playtest #33: at most one nameplate — objective if present, else nearest.
+  // (Two tags in Avenida still overlapped Entregador / Vira-Casaca.)
+  const forced = near.find((r) => r.force);
+  if (forced) return [forced];
+  return near.slice(0, 1);
 }
 
 /**

@@ -73,13 +73,8 @@ function routeInputAction(
   const before = session.ui.get();
   handleAction(session, hud, action);
   const after = session.ui.get();
-  if (
-    action === 'interact' &&
-    before !== after &&
-    after !== 'play' &&
-    after !== 'title'
-  ) {
-    session.noteModalOpened(true);
+  if (action === 'interact' && before !== after) {
+    armAfterModalOpen(session, after);
   }
   if (after === 'play') session.setTutorialOverlay(false);
   else if (after !== 'title') session.setTutorialOverlay(true);
@@ -90,6 +85,21 @@ function gateInteract(session: GameSession): boolean {
   if (session.ui.is('play')) return session.allowInteractInput();
   if (session.ui.is('title')) return true;
   return session.allowModalConfirm();
+}
+
+/** Playtest #33: menu/Viajar must not inherit mash arm from the opening Enter. */
+function armAfterModalOpen(session: GameSession, after: string): void {
+  if (after === 'play' || after === 'title') return;
+  if (
+    after === 'menu' ||
+    after === 'travel' ||
+    after === 'jobs' ||
+    after === 'upgrades'
+  ) {
+    session.clearModalConfirmGate();
+    return;
+  }
+  session.noteModalOpened(true);
 }
 
 function wirePlayer(session: GameSession, hud: HudHandles): void {
@@ -193,7 +203,7 @@ function handleTitleAction(
 }
 
 function handleEscModal(session: GameSession, hud: HudHandles): boolean {
-  // Playtest #32: Esc on "wipe save?" acts as Voltar.
+  // Playtest #32/#33: Esc on "wipe save?" acts as Voltar (ending or settings).
   if (session.ui.is('ending')) {
     const ending = document.querySelector('.ending-panel') as HTMLElement | null;
     if (ending?.dataset.endingConfirm === '1') {
@@ -201,6 +211,13 @@ function handleEscModal(session: GameSession, hud: HudHandles): boolean {
       return true;
     }
     return false;
+  }
+  if (session.ui.is('menu')) {
+    const menu = document.querySelector('.menu-panel') as HTMLElement | null;
+    if (menu?.dataset.menuConfirm === '1') {
+      hud.showMenu(true);
+      return true;
+    }
   }
   // Playtest #29: Esc must fully close any panel and release WASD.
   if (

@@ -93,6 +93,17 @@ export type SkillAttempt = {
   value: number;
 };
 
+/** Persisted lockpick UI across soft retries (playtest #33). */
+export type LockpickUiState = {
+  heights: number[];
+  /** Per-pin verdict after last guess: ok | low | high. */
+  verdicts: ('ok' | 'low' | 'high')[];
+  feedback: string;
+  /** Pin indices with correct height revealed as a hint. */
+  hinted: number[];
+  selected: number;
+};
+
 export type SkillProgress = {
   def: SkillDef;
   phaseIndex: number;
@@ -108,6 +119,8 @@ export type SkillProgress = {
   won: boolean;
   /** Lockpick: remaining durability (undefined = unlimited). */
   pickLeft?: number;
+  /** Lockpick: keep heights + feedback across soft retries. */
+  lockpickUi?: LockpickUiState;
 };
 
 /** Inclusive green-zone bounds matching the drawn meter (target ± window). */

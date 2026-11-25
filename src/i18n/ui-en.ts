@@ -89,6 +89,8 @@ export const uiEn = {
     'Slip through drone cones in the blind spots. Cut when the light blinks.',
   'ui.minigameTip.choice':
     'Pick the line that fits the room — wrong tone burns the deal.',
+  'ui.minigameTip.puzzle':
+    'Read the clue and mark what the street confirms — not the loudest option.',
   'ui.minigameTip.hack':
     'Match the feed glyphs before the timer. Wrong taps spike noise.',
   'ui.minigameTip.negotiate':
@@ -147,9 +149,12 @@ export const uiEn = {
   'ui.skill.escSeqHint': 'Esc cancels · arrows are sequence only',
   'ui.skill.pinHidden': 'Pin {n}: ???',
   'ui.skill.pinBtn': 'Pin {n}',
-  'ui.skill.pinClick': 'Pin {n}: click',
-  'ui.skill.pinLow': 'Pin {n}: low',
-  'ui.skill.pinHigh': 'Pin {n}: high',
+  'ui.skill.pinClick': 'Pin {n}: set',
+  'ui.skill.pinLow': 'Pin {n}: too low',
+  'ui.skill.pinHigh': 'Pin {n}: too high',
+  'ui.skill.pinHint': 'Hint — pin {n} = {bars}',
+  'ui.skill.lockpickFeedbackIdle':
+    'Set each pin (←→ select, Space raise) then Submit. After each guess: set / too low / too high.',
   'ui.skill.submitLock': 'Submit lock',
   'ui.elevatorCard.foyer': '▼ Elevator / Pit Foyer · Floor 1',
   'ui.elevatorCard.vip': '▲ Elevator / VIP Salon · Floor 42',

@@ -24,6 +24,7 @@ import {
   sequencePadKeys,
   SEQ_KEYS,
   timingZone,
+  type LockpickUiState,
   type SeqKey,
   type SkillPhase,
 } from '../systems/minigame';
@@ -197,11 +198,21 @@ export function paintDialogue(
   panel.append(body, actions);
   const primary = panel.querySelector('.btn-take-bet') as HTMLElement | null;
   if (pendingChoices?.length) {
-    // Playtest #32: no default focus on option 1 — mash Enter does nothing
-    // until the player arrows onto a choice.
+    // Playtest #32/#33: blur at open (mash-safe); after arm, focus first choice
+    // so one clean Enter works without Tab.
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
+    const armAt = opts.choiceArmAt ?? Date.now();
+    const delay = Math.max(0, armAt - Date.now()) + 20;
+    window.setTimeout(() => {
+      if (!panel.isConnected) return;
+      if (opts.allowChoice && !opts.allowChoice()) return;
+      const first = panel.querySelector(
+        'button.dialogue-choice:not([disabled])',
+      ) as HTMLButtonElement | null;
+      first?.focus();
+    }, delay);
   } else if (primary) primary.focus();
   else focusFirst(panel);
   requestAnimationFrame(() => {
@@ -373,25 +384,27 @@ function paintTimingSkill(
   let needlePos = 0;
   let settled = false;
   const step = Math.max(0.015, 0.028 * (phase.needleSpeed ?? 0.8));
-  const tick = window.setInterval(() => {
-    needlePos = (needlePos + step) % 1;
-    needle.style.left = `${needlePos * 100}%`;
-  }, 32);
-  meter.dataset.needleTick = String(tick);
-  const sampleNeedle = (): number => {
-    const raw = needle.style.left;
-    if (raw.endsWith('%')) {
-      const v = parseFloat(raw) / 100;
-      if (Number.isFinite(v)) return v;
-    }
-    return needlePos;
+  // Playtest #33: rAF wrap — avoid stuck needle at 100% from interval drift.
+  let raf = 0;
+  let lastTs = performance.now();
+  const tickNeedle = (ts: number): void => {
+    if (settled || !meter.isConnected) return;
+    const dt = Math.min(48, Math.max(8, ts - lastTs));
+    lastTs = ts;
+    needlePos = (needlePos + step * (dt / 32)) % 1;
+    if (needlePos < 0) needlePos += 1;
+    needle.style.left = `${(needlePos * 100).toFixed(3)}%`;
+    raf = requestAnimationFrame(tickNeedle);
   };
+  raf = requestAnimationFrame(tickNeedle);
+  meter.dataset.needleRaf = '1';
+  const sampleNeedle = (): number => needlePos % 1;
   const stopAt = (pos: number): void => {
     if (settled) return;
     settled = true;
-    window.clearInterval(tick);
+    cancelAnimationFrame(raf);
     window.removeEventListener('keydown', onKey, true);
-    session.submitSkill(pos);
+    session.submitSkill(pos % 1);
     after();
   };
   const onKey = (e: KeyboardEvent): void => {
@@ -471,22 +484,90 @@ function paintChoiceSkill(
 
 type LockpickState = {
   heights: number[];
-  revealed: Set<number>;
-  hidden: number | undefined;
   labels: HTMLButtonElement[];
+  feedback: HTMLElement;
+  selected: number;
+  hinted: Set<number>;
   expired: boolean;
   settled: boolean;
 };
 
-function refreshLockpick(state: LockpickState): void {
+function pinBars(h: number): string {
+  return `${'▮'.repeat(h + 1)}${'▯'.repeat(LOCK_PIN_LEVELS - 1 - h)}`;
+}
+
+function refreshLockpick(
+  state: LockpickState,
+  verdicts?: ('ok' | 'low' | 'high')[],
+): void {
   state.labels.forEach((btn, i) => {
-    if (state.hidden === i && !state.revealed.has(i)) {
-      btn.textContent = tf('ui.skill.pinHidden', { n: String(i + 1) });
-      return;
-    }
     const h = state.heights[i] ?? 0;
-    btn.textContent = `${tf('ui.skill.pinBtn', { n: String(i + 1) })}: ${'▮'.repeat(h + 1)}${'▯'.repeat(LOCK_PIN_LEVELS - 1 - h)}`;
+    const hint = state.hinted.has(i) ? ` ★` : '';
+    btn.textContent = `${tf('ui.skill.pinBtn', { n: String(i + 1) })}: ${pinBars(h)}${hint}`;
+    btn.classList.toggle('lockpick-pin-selected', i === state.selected);
+    btn.setAttribute('aria-current', i === state.selected ? 'true' : 'false');
+    const v = verdicts?.[i];
+    btn.classList.toggle('lockpick-pin-ok', v === 'ok');
+    btn.classList.toggle('lockpick-pin-low', v === 'low');
+    btn.classList.toggle('lockpick-pin-high', v === 'high');
+    btn.classList.toggle('lockpick-pin-bad', v === 'low' || v === 'high');
   });
+}
+
+function lockpickVerdicts(
+  heights: number[],
+  target: number[],
+): { verdicts: ('ok' | 'low' | 'high')[]; text: string } {
+  const verdicts: ('ok' | 'low' | 'high')[] = [];
+  const bits: string[] = [];
+  heights.forEach((h, i) => {
+    const want = target[i] ?? 0;
+    if (h === want) {
+      verdicts.push('ok');
+      bits.push(tf('ui.skill.pinClick', { n: String(i + 1) }));
+    } else if (h < want) {
+      verdicts.push('low');
+      bits.push(tf('ui.skill.pinLow', { n: String(i + 1) }));
+    } else {
+      verdicts.push('high');
+      bits.push(tf('ui.skill.pinHigh', { n: String(i + 1) }));
+    }
+  });
+  return { verdicts, text: bits.join(' · ') };
+}
+
+function persistLockpickUi(
+  session: GameSession,
+  state: LockpickState,
+  verdicts: ('ok' | 'low' | 'high')[],
+  feedback: string,
+): void {
+  const progress = session.getSkillProgress();
+  if (!progress) return;
+  const ui: LockpickUiState = {
+    heights: [...state.heights],
+    verdicts,
+    feedback,
+    hinted: [...state.hinted],
+    selected: state.selected,
+  };
+  progress.lockpickUi = ui;
+}
+
+function applyHintIfNeeded(
+  session: GameSession,
+  state: LockpickState,
+  target: number[],
+): void {
+  const misses = session.getSkillProgress()?.misses ?? 0;
+  if (misses < 3) return;
+  const wrong = target
+    .map((_, i) => i)
+    .filter((i) => !state.hinted.has(i) && (state.heights[i] ?? 0) !== (target[i] ?? 0));
+  const idx = wrong[0];
+  if (idx === undefined) return;
+  state.hinted.add(idx);
+  state.heights[idx] = target[idx]!;
 }
 
 function bindLockpickTimer(
@@ -518,51 +599,65 @@ function bindLockpickTimer(
   }, 200);
 }
 
-function paintPinFeedback(
-  state: LockpickState,
-  target: number[],
-  feedback: HTMLElement,
-): void {
-  const bits: string[] = [];
-  state.labels.forEach((btn, i) => {
-    const h = state.heights[i] ?? 0;
-    const want = target[i] ?? 0;
-    const ok = h === want;
-    btn.classList.toggle('lockpick-pin-ok', ok);
-    btn.classList.toggle('lockpick-pin-bad', !ok);
-    if (ok) bits.push(tf('ui.skill.pinClick', { n: String(i + 1) }));
-    else if (h < want) bits.push(tf('ui.skill.pinLow', { n: String(i + 1) }));
-    else bits.push(tf('ui.skill.pinHigh', { n: String(i + 1) }));
-  });
-  feedback.textContent = bits.join(' · ');
+function clearLockpickUi(session: GameSession): void {
+  const p = session.getSkillProgress();
+  if (p) p.lockpickUi = undefined;
 }
 
-function bindLockpickPin(
+function submitLockpickGuess(
   state: LockpickState,
-  i: number,
-  submit: () => void,
-): HTMLButtonElement {
-  const btn = button(tf('ui.skill.pinBtn', { n: String(i + 1) }), () => {
-    if (state.expired || state.settled) return;
-    if (state.hidden === i) state.revealed.add(i);
-    state.heights[i] = ((state.heights[i] ?? 0) + 1) % LOCK_PIN_LEVELS;
-    refreshLockpick(state);
-  });
-  btn.classList.add('lockpick-pin');
-  btn.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.code === 'Enter') {
-      e.preventDefault();
-      e.stopPropagation();
-      submit();
-      return;
-    }
-    if (e.key === ' ' || e.code === 'Space') {
-      e.preventDefault();
-      e.stopPropagation();
-      btn.click();
-    }
-  });
-  return btn;
+  target: number[],
+  session: GameSession,
+  after: () => void,
+  cleanup: () => void,
+): void {
+  if (state.settled || state.expired) return;
+  const { verdicts, text } = lockpickVerdicts(state.heights, target);
+  state.feedback.textContent = text;
+  refreshLockpick(state, verdicts);
+  state.settled = true;
+  cleanup();
+  if (verdicts.every((v) => v === 'ok')) {
+    clearLockpickUi(session);
+    session.submitSkill(encodePins(state.heights));
+    after();
+    return;
+  }
+  session.submitSkill(encodePins(state.heights));
+  const next = session.getSkillProgress();
+  if (!next || next.done) {
+    after();
+    return;
+  }
+  applyHintIfNeeded(session, state, target);
+  const afterHint = lockpickVerdicts(state.heights, target);
+  let feedback = afterHint.text;
+  if (next.misses >= 3 && state.hinted.size > 0) {
+    const hi = [...state.hinted][0]!;
+    feedback = `${feedback} · ${tf('ui.skill.pinHint', {
+      n: String(hi + 1),
+      bars: pinBars(target[hi]!),
+    })}`;
+  }
+  persistLockpickUi(session, state, afterHint.verdicts, feedback);
+  after();
+}
+
+function makeLockpickState(target: number[], saved?: LockpickUiState): LockpickState {
+  return {
+    heights:
+      saved?.heights?.length === target.length ? [...saved.heights] : target.map(() => 0),
+    labels: [],
+    feedback: el(
+      'p',
+      'skill-clue skill-lockpick-feedback',
+      saved?.feedback ?? t('ui.skill.lockpickFeedbackIdle'),
+    ),
+    selected: saved?.selected ?? 0,
+    hinted: new Set(saved?.hinted ?? []),
+    expired: false,
+    settled: false,
+  };
 }
 
 function paintLockpickSkill(
@@ -573,55 +668,79 @@ function paintLockpickSkill(
   phase: SkillPhase,
   pickLeft?: number,
 ): void {
+  void pickLeft;
   const target = phasePins(phase);
-  const state: LockpickState = {
-    heights: target.map(() => 0),
-    revealed: new Set(),
-    hidden: phase.hiddenPin,
-    labels: [],
-    expired: false,
-    settled: false,
+  const saved = session.getSkillProgress()?.lockpickUi;
+  const state = makeLockpickState(target, saved);
+  body.appendChild(state.feedback);
+  const selectPin = (i: number): void => {
+    state.selected = Math.max(0, Math.min(target.length - 1, i));
+    refreshLockpick(state, saved?.verdicts);
+    state.labels[state.selected]?.focus();
   };
-  const row = el('div', 'lockpick-row');
-  const feedback = el('p', 'skill-clue skill-lockpick-feedback', '');
-  body.appendChild(feedback);
-  const submit = (): void => {
-    if (state.settled || state.expired) return;
-    paintPinFeedback(state, target, feedback);
-    const allOk = state.heights.every((h, i) => h === (target[i] ?? 0));
-    state.settled = true;
-    cleanup();
-    if (allOk) {
-      session.submitSkill(encodePins(state.heights));
-      after();
-      return;
+  const bumpPin = (i: number): void => {
+    if (state.expired || state.settled || state.hinted.has(i)) return;
+    state.heights[i] = ((state.heights[i] ?? 0) + 1) % LOCK_PIN_LEVELS;
+    refreshLockpick(state, saved?.verdicts);
+  };
+  let cleanup = (): void => undefined;
+  const submit = (): void => submitLockpickGuess(state, target, session, after, cleanup);
+  const onKey = (e: KeyboardEvent): boolean => {
+    if (state.settled || state.expired || !body.isConnected) return false;
+    if (e.key === 'Tab' || (isConfirmKey(e) && !e.repeat)) {
+      submit();
+      return true;
     }
-    // Playtest #31: linger so per-pin click/alto/baixo is readable (~2–4 tries).
-    window.setTimeout(() => {
-      session.submitSkill(encodePins(state.heights));
-      after();
-    }, 750);
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      selectPin(state.selected - 1);
+      return true;
+    }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+      selectPin(state.selected + 1);
+      return true;
+    }
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
+      bumpPin(state.selected);
+      return true;
+    }
+    return false;
   };
-  const onTab = (e: KeyboardEvent): void => {
-    if (e.key !== 'Tab' || state.settled || state.expired || !body.isConnected) return;
+  const keyHandler = (e: KeyboardEvent): void => {
+    if (!onKey(e)) return;
     e.preventDefault();
     e.stopPropagation();
-    submit();
   };
-  const cleanup = (): void => {
-    body.ownerDocument?.removeEventListener('keydown', onTab, true);
+  cleanup = (): void => {
+    body.ownerDocument?.removeEventListener('keydown', keyHandler, true);
   };
-  body.ownerDocument?.addEventListener('keydown', onTab, true);
-  target.forEach((_, i) => {
-    const btn = bindLockpickPin(state, i, submit);
+  body.ownerDocument?.addEventListener('keydown', keyHandler, true);
+  body.appendChild(buildLockpickRow(state, target.length, selectPin, bumpPin));
+  bindLockpickTimer(body, phase, target, state, { cleanup, session, after });
+  refreshLockpick(state, saved?.verdicts);
+  const submitBtn = button(t('ui.skill.submitLock'), submit);
+  bindEnterGate(submitBtn, submit);
+  actions.appendChild(submitBtn);
+  selectPin(state.selected);
+}
+
+function buildLockpickRow(
+  state: LockpickState,
+  count: number,
+  selectPin: (i: number) => void,
+  bumpPin: (i: number) => void,
+): HTMLElement {
+  const row = el('div', 'lockpick-row');
+  for (let i = 0; i < count; i += 1) {
+    const btn = button(tf('ui.skill.pinBtn', { n: String(i + 1) }), () => {
+      selectPin(i);
+      bumpPin(i);
+    });
+    btn.classList.add('lockpick-pin');
+    btn.dataset.skipNav = '1';
     state.labels.push(btn);
     row.appendChild(btn);
-  });
-  body.appendChild(row);
-  void pickLeft;
-  bindLockpickTimer(body, phase, target, state, { cleanup, session, after });
-  refreshLockpick(state);
-  actions.appendChild(button(t('ui.skill.submitLock'), submit));
+  }
+  return row;
 }
 
 function bindSequenceTimer(
@@ -928,12 +1047,15 @@ export function paintTravel(
   for (const d of DISTRICTS) {
     panel.appendChild(travelBtn(localizeDistrictName(d.id), d.id, session, after));
   }
-  panel.appendChild(
-    button(UI.close, () => {
-      if (!session.returnToMenu()) session.closeModal();
-      after();
-    }),
-  );
+  const close = button(UI.close, () => {
+    if (!session.returnToMenu()) session.closeModal();
+    after();
+  });
+  bindEnterGate(close, () => {
+    if (!session.returnToMenu()) session.closeModal();
+    after();
+  });
+  panel.appendChild(close);
 }
 
 function travelBtn(
@@ -943,13 +1065,14 @@ function travelBtn(
   after: () => void,
 ): HTMLButtonElement {
   const unlocked = session.world.isUnlocked(id);
-  const btn = button(unlocked ? name : `${name}${t('ui.travel.lockedSuffix')}`, () => {
-    if (unlocked) {
-      session.travelTo(id);
-      after();
-    }
-  });
+  const go = (): void => {
+    if (!unlocked) return;
+    session.travelTo(id);
+    after();
+  };
+  const btn = button(unlocked ? name : `${name}${t('ui.travel.lockedSuffix')}`, go);
   btn.disabled = !unlocked;
+  if (unlocked) bindEnterGate(btn, go);
   return btn;
 }
 
