@@ -6,6 +6,8 @@ Independent playtest #20 of v1.18.0 (art 8, fun 6) hit a **P0 softlock** after V
 
 `make check` + full e2e (**40/40**) green. Coverage branches **90%+**. P0 softlock fixed: VIP ↓ → lobby objective points at elevator ↑ → Augusto duel completes.
 
+CI (`26db882`): GitHub **quality** / **build** / **deploy (Pages)** all success.
+
 ## Bugs fixed
 
 | #   | Issue                                            | Result                                                                 |
@@ -52,4 +54,4 @@ Independent playtest #20 of v1.18.0 (art 8, fun 6) hit a **P0 softlock** after V
 
 ## Gaps
 
-- CI tip SHA noted after GitHub quality/build/deploy green.
+- Optional: further lobby FX budget if FPS dips again under heavier throttle.
