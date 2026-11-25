@@ -2,7 +2,9 @@
 
 Independent follow-up after v1.15.0 (5e3fa4f / user measured ~14 min). Goal: title build inject, Skip credits, epilogue line order, walk-in pads + pad spawn, label/prompt fixes, sequence Esc-only cancel, FPS fade/prewarm, lockpick tension, indirect clues, +2 beats (evade/negotiate), side quests woven, measured timing (no inflated estimate).
 
-## Verdict: PASS (pending CI green on push)
+## Verdict: PASS
+
+CI (`e30474b`): GitHub **quality** / **build** / **deploy (Pages)** all success.
 
 ## Bugs fixed
 
