@@ -1,10 +1,15 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
+const PKG_VERSION = JSON.parse(readFileSync(path.resolve('package.json'), 'utf8'))
+  .version as string;
 
 test.describe('House Edge core flows', () => {
   test('boots title screen and starts a new game', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'HOUSE EDGE' })).toBeVisible();
-    await expect(page.locator('.version')).toContainText('v1.12');
+    await expect(page.locator('.version')).toHaveText(`v${PKG_VERSION}`);
     await page.getByRole('button', { name: 'New Game' }).click();
     await expect(page.locator('.play-hud')).toBeVisible();
     await expect(page.locator('.stats')).toContainText('Credits');
