@@ -17,12 +17,15 @@ Independent playtest #25 of live v1.20.2: completed to credits, keyboard only (~
 
 ## Measured
 
-| Metric     | Value                                     |
-| ---------- | ----------------------------------------- |
-| Unit       | 253 tests; branches ≥90%                  |
-| E2e        | desktop+mobile full suite                 |
-| E2e:prod   | neon clear/done, prompt spawn, enter gate |
-| Story-walk | ~18s wall                                 |
+| Metric               | Value                          |
+| -------------------- | ------------------------------ |
+| Unit                 | 253 tests; branches 90.24%     |
+| E2e                  | 50/50 desktop+mobile           |
+| E2e:prod             | 6/6                            |
+| Story-walk           | ~18s wall                      |
+| Paced prod           | ~0.33 min (`v210-timing.json`) |
+| Neon Snap prod clear | ~5.7s real KeyD                |
+| Commit               | `9ed3d38`                      |
 
 ## Verification (real input)
 
