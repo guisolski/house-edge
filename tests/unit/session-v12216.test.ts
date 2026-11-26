@@ -36,4 +36,13 @@ describe('v1.22.16 dialogue arm — Antena / offer-bet', () => {
     setLocale('en');
     expect(t('ui.skill.resultWin')).toBe('Win · {credits} cr · {rep} rep');
   });
+
+  it('forceStorySkill opens antena-sinal skill without dialogue', () => {
+    const session = new GameSession();
+    session.startNew();
+    session.player.addCredits(100);
+    expect(session.forceStorySkill('antena-sinal')).toBe(true);
+    expect(session.ui.is('skill')).toBe(true);
+    expect(session.getSkillProgress()?.def.phases[0]?.kind).toBe('hack');
+  });
 });

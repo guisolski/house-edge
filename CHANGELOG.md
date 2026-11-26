@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.22.17] — 2026-11-26
+
+### Fixed
+
+- **Build / Pages**: e2e harness uses `forceStorySkill()` instead of an invalid cast on `pendingStoryBeat` (tsc Pages failure on 1.22.16).
+
 ## [1.22.16] — 2026-11-26
 
 ### Fixed

@@ -57,8 +57,8 @@ async function openSequenceBet(
         __HOUSE_EDGE__: {
           session: {
             player: { addCredits: (n: number) => void };
-            world: { unlock: (id: string) => boolean };
-            offerBet: (id: string) => boolean;
+            world: { unlock: (d: string) => boolean };
+            forceStorySkill: (betId: string) => boolean;
           };
           hud: { syncScreen: () => void };
         };
@@ -68,12 +68,7 @@ async function openSequenceBet(
     for (const d of ['feira-central', 'avenida-odds', 'torre-casa'] as const) {
       he.session.world.unlock(d);
     }
-    const s = he.session as {
-      pendingStoryBeat: string | null;
-      offerBet: (id: string) => boolean;
-    };
-    s.pendingStoryBeat = 'story-seq-test';
-    he.session.offerBet(id);
+    he.session.forceStorySkill(id);
     he.hud.syncScreen();
   }, betId);
   await expect(page.locator('.skill-pattern')).toBeVisible({ timeout: 8_000 });

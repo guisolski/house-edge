@@ -464,6 +464,15 @@ export class GameSession {
     return this.finishSkill(true);
   }
 
+  /**
+   * E2e / harness: open a story skill panel for `betId` without dialogue.
+   * Sets a pending story beat so offerBet skips the coin-flip stake panel.
+   */
+  forceStorySkill(betId: string): boolean {
+    this.pendingStoryBeat = 'e2e-skill';
+    return this.offerBet(betId);
+  }
+
   travelTo(districtId: DistrictId): boolean {
     if (!this.world.isUnlocked(districtId)) return false;
     const district = this.world.get(districtId);
