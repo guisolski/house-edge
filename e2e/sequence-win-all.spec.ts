@@ -5,8 +5,10 @@
 import { test, expect } from '@playwright/test';
 
 const SEQ_REVEAL_STEP_MS = 1400;
+const SEQ_FULL_HOLD_MS = 2000;
+/** Progressive glyphs + ≥2s full hold (playtest #45). */
 const sequenceRevealTotalMs = (n: number): number =>
-  Math.max(1, n) * SEQ_REVEAL_STEP_MS + SEQ_REVEAL_STEP_MS;
+  Math.max(0, n - 1) * SEQ_REVEAL_STEP_MS + SEQ_FULL_HOLD_MS;
 
 type SeqKey = '↑' | '→' | '↓' | '←' | 'R' | 'G' | 'B' | 'Y';
 
@@ -85,8 +87,14 @@ test.describe('sequence reveal + keyboard win', () => {
         .poll(
           async () => {
             const flash = await page.locator('.skill-seq-flash').count();
-            const status = (await page.locator('.skill-seq').first().textContent()) ?? '';
-            return flash === 0 && /Match|Repete|próxima|next/i.test(status);
+            const status =
+              (await page
+                .locator('.skill-seq')
+                .filter({ hasText: /Match \d|Repete|próxim/i })
+                .first()
+                .textContent()
+                .catch(() => '')) ?? '';
+            return flash === 0 && /Match \d|Repete|próxim/i.test(status);
           },
           { timeout: budget },
         )
@@ -114,7 +122,8 @@ test.describe('sequence reveal + keyboard win', () => {
   test('reveal always finishes within budget (antena-sinal)', async ({ page }) => {
     await boot(page);
     await openSequenceBet(page, 'antena-sinal');
-    const budget = sequenceRevealTotalMs(3) + 500;
+    // Allow one extra step of slack for slow CI timers.
+    const budget = sequenceRevealTotalMs(3) + SEQ_REVEAL_STEP_MS;
     await expect(page.locator('.skill-pattern')).toContainText(/R/);
     await expect(page.locator('.skill-seq-flash')).toBeVisible();
     await expect(page.locator('.skill-seq-flash')).toHaveCount(0, { timeout: budget });

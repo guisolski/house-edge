@@ -63,7 +63,7 @@ describe('v1.22.15 sequence memorize reveal', () => {
       const seq = phaseSequence(phase);
       expect(seq.length, id).toBeGreaterThan(0);
       expect(sequenceRevealMs(seq.length), id).toBeGreaterThanOrEqual(
-        seq.length * SEQ_REVEAL_STEP_MS,
+        Math.max(0, seq.length - 1) * SEQ_REVEAL_STEP_MS + 2000,
       );
     }
   });

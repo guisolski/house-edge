@@ -39,7 +39,11 @@ import {
   tickSequenceReveal,
 } from '../systems/sequence-reveal';
 import { canNeedleStop } from '../systems/session';
-import { formatSkillResultHeadline } from '../systems/skill-result-format';
+import {
+  formatLockpickPinVerdict,
+  formatLockpickVerdictLine,
+  formatSkillResultHeadline,
+} from '../systems/skill-result-format';
 
 export function button(label: string, onClick: () => void): HTMLButtonElement {
   const btn = el('button', 'btn', label);
@@ -363,31 +367,26 @@ export function paintSkill(
   const body = el('div', 'panel-body skill-body');
   const streak = session.getSkillStreak();
   const sideHustle = bet.id === 'agua-gelada' && session.story.getFlag('free_roam');
+  // Playtest #45: compact header — title + one meta line (stake/phase/combo).
+  const metaVars = {
+    stake: String(session.getPendingStake()),
+    current: String(progress.phaseIndex + 1),
+    total: String(progress.def.phases.length),
+    streak: String(streak),
+  };
+  const meta =
+    streak > 0 ? tf('ui.skill.metaCombo', metaVars) : tf('ui.skill.meta', metaVars);
   body.append(
-    el('h2', '', sideHustle ? t('ui.sideHustle.title') : localizedDef.title),
-    el('p', 'bet-desc', sideHustle ? t('ui.sideHustle.descSkill') : localizedDef.blurb),
-    el(
-      'p',
-      'stake-line',
-      tf('ui.stakeAtRisk', { stake: String(session.getPendingStake()) }),
-    ),
-    el(
-      'p',
-      'skill-phase',
-      tf('ui.skill.phase', {
-        current: String(progress.phaseIndex + 1),
-        total: String(progress.def.phases.length),
-        prompt: phase?.prompt ?? '',
-      }),
-    ),
+    el('h2', 'skill-title', sideHustle ? t('ui.sideHustle.title') : localizedDef.title),
+    el('p', 'skill-meta', meta),
   );
-  if (streak > 0) {
-    body.appendChild(
-      el('p', 'skill-streak', tf('ui.skill.combo', { streak: String(streak) })),
-    );
+  if (phase?.prompt) {
+    body.appendChild(el('p', 'skill-seq skill-prompt', phase.prompt));
   }
   if (phase?.clue) {
-    body.appendChild(el('p', 'skill-clue', tf('ui.skill.clue', { clue: phase.clue })));
+    body.appendChild(
+      el('p', 'skill-clue', tf('ui.skill.clueLabel', { clue: phase.clue })),
+    );
   }
   if (phase?.kind === 'lockpick' && progress.pickLeft !== undefined) {
     appendPickDurability(body, progress.pickLeft, panel);
@@ -828,11 +827,15 @@ function paintChoiceSkill(
 type LockpickState = {
   heights: number[];
   labels: HTMLButtonElement[];
+  /** Per-pin verdict chip under each pin (playtest #45). */
+  verdictEls: HTMLElement[];
   feedback: HTMLElement;
   selected: number;
   hinted: Set<number>;
   expired: boolean;
   settled: boolean;
+  /** Wall-clock start for the encounter timer (survives wrong tests). */
+  timerStartedAt: number;
 };
 
 function pinBars(h: number): string {
@@ -859,6 +862,8 @@ function refreshLockpick(
     btn.classList.toggle('lockpick-pin-low', v === 'low');
     btn.classList.toggle('lockpick-pin-high', v === 'high');
     btn.classList.toggle('lockpick-pin-bad', v === 'low' || v === 'high');
+    const chip = state.verdictEls[i];
+    if (chip) chip.textContent = formatLockpickPinVerdict(v);
   });
 }
 
@@ -867,21 +872,14 @@ function lockpickVerdicts(
   target: number[],
 ): { verdicts: ('ok' | 'low' | 'high')[]; text: string } {
   const verdicts: ('ok' | 'low' | 'high')[] = [];
-  const bits: string[] = [];
   heights.forEach((h, i) => {
     const want = target[i] ?? 0;
-    if (h === want) {
-      verdicts.push('ok');
-      bits.push(tf('ui.skill.pinClick', { n: String(i + 1) }));
-    } else if (h < want) {
-      verdicts.push('low');
-      bits.push(tf('ui.skill.pinLow', { n: String(i + 1) }));
-    } else {
-      verdicts.push('high');
-      bits.push(tf('ui.skill.pinHigh', { n: String(i + 1) }));
-    }
+    if (h === want) verdicts.push('ok');
+    else if (h < want) verdicts.push('low');
+    else verdicts.push('high');
   });
-  return { verdicts, text: bits.join(' · ') };
+  // Playtest #45: plain line — "Pino 1 baixo, Pino 2 certo".
+  return { verdicts, text: formatLockpickVerdictLine(verdicts) };
 }
 
 function persistLockpickUi(
@@ -889,6 +887,7 @@ function persistLockpickUi(
   state: LockpickState,
   verdicts: ('ok' | 'low' | 'high')[],
   feedback: string,
+  timerStartedAt?: number,
 ): void {
   const progress = session.getSkillProgress();
   if (!progress) return;
@@ -898,6 +897,7 @@ function persistLockpickUi(
     feedback,
     hinted: [...state.hinted],
     selected: state.selected,
+    timerStartedAt: timerStartedAt ?? progress.lockpickUi?.timerStartedAt ?? Date.now(),
   };
   progress.lockpickUi = ui;
 }
@@ -927,11 +927,24 @@ function bindLockpickTimer(
 ): void {
   if (!phase.timerMs) return;
   const timerEl = el('p', 'skill-seq skill-lockpick-timer', '');
-  // Playtest #43: timer above the pin row so sticky Testar cannot cover it.
   const row = body.querySelector('.lockpick-row');
   if (row?.parentElement === body) body.insertBefore(timerEl, row);
   else body.appendChild(timerEl);
-  const started = Date.now();
+  // Playtest #45: wrong tests remount the panel — keep the original start.
+  const started = state.timerStartedAt;
+  const progress = ctx.session.getSkillProgress();
+  if (progress) {
+    progress.lockpickUi = {
+      ...(progress.lockpickUi ?? {
+        heights: [...state.heights],
+        verdicts: [],
+        feedback: state.feedback.textContent ?? '',
+        hinted: [...state.hinted],
+        selected: state.selected,
+      }),
+      timerStartedAt: started,
+    };
+  }
   const ms = phase.timerMs;
   const tick = window.setInterval(() => {
     if (!body.isConnected) {
@@ -996,7 +1009,7 @@ function submitLockpickGuess(
       bars: pinBars(target[hi]!),
     })}`;
   }
-  persistLockpickUi(session, state, afterHint.verdicts, feedback);
+  persistLockpickUi(session, state, afterHint.verdicts, feedback, state.timerStartedAt);
   after();
 }
 
@@ -1006,11 +1019,13 @@ function makeLockpickState(target: number[], saved?: LockpickUiState): LockpickS
     heights:
       saved?.heights?.length === target.length ? [...saved.heights] : target.map(() => 0),
     labels: [],
+    verdictEls: [],
     feedback: el('p', 'skill-lockpick-feedback', saved?.feedback ?? ''),
     selected: saved?.selected ?? 0,
     hinted: new Set(saved?.hinted ?? []),
     expired: false,
     settled: false,
+    timerStartedAt: saved?.timerStartedAt ?? Date.now(),
   };
 }
 
@@ -1089,14 +1104,18 @@ function buildLockpickRow(
   const row = el('div', 'lockpick-row');
   for (let i = 0; i < count; i += 1) {
     const h = state.heights[i] ?? 0;
+    const slot = el('div', 'lockpick-slot');
     const btn = button(lockpickPinLabel(i + 1, h, state.hinted.has(i)), () => {
       selectPin(i);
       bumpPin(i);
     });
     btn.classList.add('lockpick-pin');
     btn.dataset.skipNav = '1';
+    const verdict = el('p', 'lockpick-pin-verdict', '');
     state.labels.push(btn);
-    row.appendChild(btn);
+    state.verdictEls.push(verdict);
+    slot.append(btn, verdict);
+    row.appendChild(slot);
   }
   return row;
 }
@@ -1146,24 +1165,32 @@ type SeqUi = {
   body: HTMLElement;
   pattern: HTMLElement;
   status: HTMLElement;
+  hint: HTMLElement;
   seq: SeqKey[];
   missCap: number | undefined;
   settled: { v: boolean };
   armed: { v: boolean };
+  /** Playtest #45: one free re-show per attempt. */
+  reshowUsed: { v: boolean };
   session: GameSession;
   after: () => void;
   startTimer?: () => void;
+  /** Invalidate an in-flight reveal when re-show / miss restarts. */
+  revealGen: { n: number };
 };
 
 /**
- * Playtest #42: clock-driven reveal on the skill panel (not the unmounted body).
+ * Playtest #42/#45: clock-driven reveal — progressive glyphs, then ≥2s full hold.
  * setInterval keeps ticking even if showSkill is called twice — callers must
  * skip repaint while the same phase signature is live (see hud showSkill).
  */
 function flashSequence(ui: SeqUi, index: number, panel: HTMLElement): void {
   ui.armed.v = false;
+  ui.revealGen.n += 1;
+  const gen = ui.revealGen.n;
   ui.pattern.classList.add('skill-seq-flash');
   ui.status.textContent = t('ui.skill.memorizeSeq');
+  updateSequenceHint(ui);
   let reveal = startSequenceReveal(ui.seq, Date.now());
   ui.pattern.textContent = tf('ui.skill.sequenceLabel', {
     seq: sequenceRevealGlyphs(reveal.seq, reveal.shown),
@@ -1174,29 +1201,21 @@ function flashSequence(ui: SeqUi, index: number, panel: HTMLElement): void {
     });
   };
   const finish = (): void => {
-    if (ui.settled.v) return;
+    if (ui.settled.v || gen !== ui.revealGen.n) return;
     ui.armed.v = true;
     ui.pattern.classList.remove('skill-seq-flash');
-    // Playtest #43: keep the full memorize string one beat, then mastermind dots.
-    ui.pattern.textContent = tf('ui.skill.sequenceLabel', {
-      seq: sequenceRevealGlyphs(ui.seq, ui.seq.length),
-    });
-    window.setTimeout(
-      () => {
-        if (!panel.isConnected || ui.settled.v || !ui.armed.v) return;
-        ui.pattern.textContent = seqRevealLabel(ui.seq, index);
-      },
-      Math.min(400, SEQ_REVEAL_STEP_MS / 3),
-    );
+    // Full sequence already held ≥2s during reveal; arm with mastermind dots.
+    ui.pattern.textContent = seqRevealLabel(ui.seq, index);
     ui.status.textContent =
       tf('ui.skill.matchNext', {
         current: String(index + 1),
         total: String(ui.seq.length),
       }) + (ui.missCap ? tf('ui.skill.missesFail', { n: String(ui.missCap) }) : '');
+    updateSequenceHint(ui);
     ui.startTimer?.();
   };
   const tick = window.setInterval(() => {
-    if (!panel.isConnected || ui.settled.v) {
+    if (!panel.isConnected || ui.settled.v || gen !== ui.revealGen.n) {
       window.clearInterval(tick);
       return;
     }
@@ -1205,13 +1224,42 @@ function flashSequence(ui: SeqUi, index: number, panel: HTMLElement): void {
     reveal = tickSequenceReveal(reveal, Date.now(), SEQ_REVEAL_STEP_MS);
     if (reveal.shown !== before || (reveal.done && !wasDone)) paint();
     if (reveal.done && !wasDone) {
-      // Ensure the final glyph paint lands before arming input.
       paint();
       window.clearInterval(tick);
       finish();
     }
   }, 50);
   onPanelDispose(panel, () => window.clearInterval(tick));
+}
+
+function updateSequenceHint(ui: SeqUi): void {
+  const base = t(sequenceHintKey(ui.seq));
+  if (ui.reshowUsed.v) {
+    ui.hint.textContent = base;
+    return;
+  }
+  ui.hint.textContent = `${base} · ${t('ui.skill.reshowHint')}`;
+}
+
+function tryReshowSequence(ui: SeqUi): boolean {
+  if (ui.settled.v || ui.reshowUsed.v || !ui.armed.v) return false;
+  ui.reshowUsed.v = true;
+  updateSequenceHint(ui);
+  const btn = ui.body
+    .closest('.skill-panel')
+    ?.querySelector('.skill-reshow-btn') as HTMLButtonElement | null;
+  if (btn) {
+    btn.disabled = true;
+    btn.hidden = true;
+  }
+  const progress = ui.session.getSkillProgress();
+  const index = progress?.seqIndex ?? 0;
+  const panel =
+    (ui.body.closest('.skill-panel') as HTMLElement | null) ??
+    (ui.body.closest('.panel') as HTMLElement | null) ??
+    ui.body;
+  flashSequence(ui, index, panel);
+  return true;
 }
 
 function onSequenceKey(ui: SeqUi, keyIndex: number): void {
@@ -1237,6 +1285,16 @@ function onSequenceKey(ui: SeqUi, keyIndex: number): void {
       total: String(ui.seq.length),
     }) + left;
   if (next.misses > beforeMiss) {
+    // New attempt → another free re-show.
+    ui.reshowUsed.v = false;
+    const btn = ui.body
+      .closest('.skill-panel')
+      ?.querySelector('.skill-reshow-btn') as HTMLButtonElement | null;
+    if (btn) {
+      btn.disabled = false;
+      btn.hidden = false;
+    }
+    updateSequenceHint(ui);
     const panel =
       (ui.body.closest('.skill-panel') as HTMLElement | null) ??
       (ui.body.closest('.panel') as HTMLElement | null) ??
@@ -1245,6 +1303,44 @@ function onSequenceKey(ui: SeqUi, keyIndex: number): void {
     return;
   }
   ui.pattern.textContent = seqRevealLabel(ui.seq, next.seqIndex);
+}
+
+function bindSequencePad(ui: SeqUi, actions: HTMLElement, session: GameSession): void {
+  const used = sequencePadKeys(ui.seq);
+  const rIsPad = used.includes('R');
+  const buffer = createSequenceKeyBuffer((keyIndex) => onSequenceKey(ui, keyIndex));
+  const onKey = (keyIndex: number): void => buffer.push(keyIndex);
+  const pad = el('div', 'skill-seq-pad');
+  for (const key of used) {
+    pad.appendChild(button(sequencePadLabel(key), () => onKey(SEQ_KEYS.indexOf(key))));
+  }
+  const reshowBtn = button(t('ui.skill.reshowBtn'), () => {
+    tryReshowSequence(ui);
+  });
+  reshowBtn.classList.add('skill-reshow-btn');
+  ui.body.append(pad, ui.hint);
+  actions.appendChild(reshowBtn);
+  panelKeyHook(actions, (ev) => {
+    if (ev.repeat) return;
+    if (ev.code === 'KeyR' && !rIsPad && tryReshowSequence(ui)) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      return;
+    }
+    if (!ui.armed.v) return;
+    const sym = SEQ_KEY_CODES[ev.code] as SeqKey | undefined;
+    if (!sym) return;
+    const progressNow = session.getSkillProgress();
+    const expected = progressNow
+      ? phaseSequence(progressNow.def.phases[progressNow.phaseIndex]!)[
+          progressNow.seqIndex
+        ]
+      : undefined;
+    if (!expected && !used.includes(sym)) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    onKey(expected ? sequenceInputIndex(sym, expected) : SEQ_KEYS.indexOf(sym));
+  });
 }
 
 function paintSequenceSkill(
@@ -1257,7 +1353,6 @@ function paintSequenceSkill(
   const phase = progress?.def.phases[progress.phaseIndex];
   if (!progress || !phase) return;
   const seq = phaseSequence(phase);
-  const missCap = phase.maxMisses;
   const status = el('p', 'skill-seq', t('ui.skill.memorizeSeq'));
   const pattern = el(
     'p',
@@ -1265,49 +1360,26 @@ function paintSequenceSkill(
     tf('ui.skill.sequenceLabel', { seq: sequenceRevealGlyphs(seq, 1) }),
   );
   const timerEl = el('p', 'skill-seq skill-seq-timer', '');
+  const hint = el('p', 'skill-seq skill-seq-hint', '');
   body.append(pattern, status, timerEl);
   const ui: SeqUi = {
     body,
     pattern,
     status,
+    hint,
     seq,
-    missCap,
+    missCap: phase.maxMisses,
     settled: { v: false },
     armed: { v: false },
+    reshowUsed: { v: false },
+    revealGen: { n: 0 },
     session,
     after,
   };
+  updateSequenceHint(ui);
   const inputMs = sequenceInputMs(seq.length, phase.timerMs);
-  if (inputMs > 0) {
-    ui.startTimer = bindSequenceTimer(ui, inputMs, timerEl);
-  }
-  const used = sequencePadKeys(seq);
-  const buffer = createSequenceKeyBuffer((keyIndex) => onSequenceKey(ui, keyIndex));
-  const onKey = (keyIndex: number): void => buffer.push(keyIndex);
-  const pad = el('div', 'skill-seq-pad');
-  for (const key of used) {
-    // Playtest #38: color chips show arrow equivalents (R ↑).
-    pad.appendChild(button(sequencePadLabel(key), () => onKey(SEQ_KEYS.indexOf(key))));
-  }
-  // Playtest #44: pad lives in body under the reserved pattern row — never overlays it.
-  body.append(pad, el('p', 'skill-seq skill-seq-hint', t(sequenceHintKey(seq))));
-  panelKeyHook(actions, (ev) => {
-    if (ev.repeat || !ui.armed.v) return;
-    const sym = SEQ_KEY_CODES[ev.code] as SeqKey | undefined;
-    if (!sym) return;
-    // Accept arrows even when the flash shows R/G/B/Y (and vice versa).
-    const progressNow = session.getSkillProgress();
-    const expected = progressNow
-      ? phaseSequence(progressNow.def.phases[progressNow.phaseIndex]!)[
-          progressNow.seqIndex
-        ]
-      : undefined;
-    if (!expected && !used.includes(sym)) return;
-    ev.preventDefault();
-    ev.stopPropagation();
-    onKey(expected ? sequenceInputIndex(sym, expected) : SEQ_KEYS.indexOf(sym));
-  });
-  // Start reveal after the skill panel owns body (paintSkill appends next).
+  if (inputMs > 0) ui.startTimer = bindSequenceTimer(ui, inputMs, timerEl);
+  bindSequencePad(ui, actions, session);
   queueMicrotask(() => {
     const panel =
       (body.closest('.skill-panel') as HTMLElement | null) ??

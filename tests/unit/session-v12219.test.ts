@@ -28,6 +28,7 @@ describe('v1.22.19 playtest #43', () => {
     expect(SEQ_INPUT_MS_PER_KEY).toBeGreaterThanOrEqual(2000);
     expect(sequenceInputMs(3, 5000)).toBe(6000);
     expect(sequenceInputMs(3, 12_000)).toBe(12_000);
+    // Playtest #45: full-hold replaces the old extra stepMs beat.
   });
 
   it('canNeedleStop stays false until ready', () => {

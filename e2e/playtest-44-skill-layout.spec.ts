@@ -5,7 +5,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 const VIEWPORTS = [
-  { width: 1280, height: 800 },
+  { width: 1280, height: 720 },
   { width: 390, height: 844 },
 ] as const;
 

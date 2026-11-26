@@ -88,8 +88,9 @@ test.describe('Playtest golden path', () => {
     await page.getByRole('button', { name: 'Take the bet', exact: true }).click();
     // Story gates open skill UI (not RNG bet panel).
     await expect(page.locator('.skill-panel')).toBeVisible();
-    await expect(page.locator('.skill-panel')).toContainText('Stake at risk');
-    await expect(page.locator('.skill-panel')).toContainText('Phase');
+    // Playtest #45: compact meta — "N cr · Phase 1/1" (no "Stake at risk" line).
+    await expect(page.locator('.skill-panel')).toContainText(/cr\s*·\s*Phase/i);
+    await expect(page.locator('.skill-panel')).toContainText(/Phase\s*1/i);
     await page.screenshot({ path: path.join(ART, '04-skill.png') });
     await page.evaluate(() => {
       (

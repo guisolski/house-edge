@@ -1,15 +1,20 @@
 /**
- * Playtest #42: pure sequence memorize reveal — clock-driven, no DOM.
- * Input stays locked until `done`; each step is visible ≥ SEQ_REVEAL_STEP_MS.
+ * Playtest #42/#45: pure sequence memorize reveal — clock-driven, no DOM.
+ * Progressive glyphs, then a ≥2s full-sequence hold before input arms.
  */
 
-import { SEQ_REVEAL_STEP_MS, sequenceRevealMs, type SeqKey } from './minigame';
+import {
+  SEQ_FULL_HOLD_MS,
+  SEQ_REVEAL_STEP_MS,
+  sequenceRevealMs,
+  type SeqKey,
+} from './minigame';
 
 export type SequenceRevealState = {
   seq: SeqKey[];
   /** Keys shown so far (1..seq.length during reveal; seq.length when holding full). */
   shown: number;
-  /** Epoch ms when the current step started. */
+  /** Epoch ms when the current step (or full hold) started. */
   stepStartedAt: number;
   /** True after the full hold beat — input may arm. */
   done: boolean;
@@ -29,9 +34,11 @@ export function tickSequenceReveal(
   state: SequenceRevealState,
   now: number,
   stepMs = SEQ_REVEAL_STEP_MS,
+  fullHoldMs = SEQ_FULL_HOLD_MS,
 ): SequenceRevealState {
   if (state.done || state.seq.length === 0) return { ...state, done: true };
-  if (now - state.stepStartedAt < stepMs) return state;
+  const need = state.shown < state.seq.length ? stepMs : fullHoldMs;
+  if (now - state.stepStartedAt < need) return state;
   if (state.shown < state.seq.length) {
     return {
       ...state,
@@ -39,7 +46,7 @@ export function tickSequenceReveal(
       stepStartedAt: now,
     };
   }
-  // Full sequence held one more beat → done.
+  // Full sequence held ≥ fullHoldMs → done.
   return { ...state, done: true, stepStartedAt: now };
 }
 
@@ -52,4 +59,4 @@ export function sequenceRevealTotalMs(seqLen: number): number {
   return sequenceRevealMs(seqLen);
 }
 
-export { SEQ_REVEAL_STEP_MS };
+export { SEQ_REVEAL_STEP_MS, SEQ_FULL_HOLD_MS };

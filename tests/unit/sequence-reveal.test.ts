@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  SEQ_FULL_HOLD_MS,
   SEQ_REVEAL_STEP_MS,
   sequenceRevealGlyphs,
   sequenceRevealTotalMs,
@@ -10,7 +11,7 @@ import { phaseSequence, isSequencePhase } from '../../src/systems/minigame';
 import { SKILL_PHASE_TABLE as TABLE } from '../../src/content/skill-phases';
 
 describe('sequence reveal state machine (fake clock)', () => {
-  it('antena R G B advances one glyph per step then done', () => {
+  it('antena R G B advances one glyph per step then full-hold done', () => {
     const seq = ['R', 'G', 'B'] as const;
     let t = 1000;
     let s = startSequenceReveal([...seq], t);
@@ -32,8 +33,11 @@ describe('sequence reveal state machine (fake clock)', () => {
     expect(sequenceRevealGlyphs(s.seq, s.shown)).toBe('R  G  B');
     expect(s.done).toBe(false);
 
-    // Full hold beat
-    t += SEQ_REVEAL_STEP_MS;
+    // Playtest #45: full sequence held ≥2s before input.
+    t += SEQ_FULL_HOLD_MS - 1;
+    s = tickSequenceReveal(s, t);
+    expect(s.done).toBe(false);
+    t += 1;
     s = tickSequenceReveal(s, t);
     expect(s.done).toBe(true);
   });

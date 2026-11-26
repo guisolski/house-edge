@@ -129,13 +129,13 @@ test('pirateiro reveals every glyph then shows result card', async ({ page }) =>
   expect(full).toMatch(/←/);
   expect(full).toMatch(/→/);
   expect(full).toMatch(/↑/);
-  // After full hold, input arms — play the sequence.
-  await expect(page.locator('.skill-seq').first()).toContainText(
-    /Match|Repete|próxim|next/i,
-    {
-      timeout: SEQ_STEP * 2,
-    },
-  );
+  // After full hold (≥2s), input arms — play the sequence.
+  await expect(page.locator('.skill-seq-flash')).toHaveCount(0, {
+    timeout: SEQ_STEP * 2 + 2500,
+  });
+  await expect(
+    page.locator('.skill-seq').filter({ hasText: /Match 1|Repete|próxim/i }),
+  ).toBeVisible();
   for (const key of ['ArrowLeft', 'ArrowRight', 'ArrowUp'] as const) {
     await page.keyboard.press(key);
     await page.waitForTimeout(80);

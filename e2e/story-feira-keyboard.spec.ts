@@ -4,8 +4,9 @@
 import { test, expect } from '@playwright/test';
 
 const SEQ_REVEAL_STEP_MS = 1400;
+const SEQ_FULL_HOLD_MS = 2000;
 const sequenceRevealTotalMs = (n: number): number =>
-  Math.max(1, n) * SEQ_REVEAL_STEP_MS + SEQ_REVEAL_STEP_MS;
+  Math.max(0, n - 1) * SEQ_REVEAL_STEP_MS + SEQ_FULL_HOLD_MS;
 
 const KEY: Record<string, string> = {
   '↑': 'ArrowUp',

@@ -1,8 +1,8 @@
 {
   "strip": "north",
   "holdMs": 4000,
-  "elapsedMs": 4010,
-  "endX": 11,
-  "endY": 9,
+  "elapsedMs": 4008,
+  "endX": 34,
+  "endY": 11,
   "won": false
 }

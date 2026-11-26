@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.22.21] — 2026-11-26
+
+### Fixed
+
+- **Skill panel (P0)**: taller (~85vh) and wider (≥520px desktop); compact title + one meta line; interactive content + actions fit without scrolling at 1280×720 and 390×844; lockpick pins stay one row with per-pin verdict chips.
+- **Sequence (P0)**: after progressive reveal, full sequence held ≥2s before input; free `R: rever sequência` once per attempt; fail always leaves a result card.
+- **Lockpick (P1)**: legible `Pista:` hint; timer persists across wrong tests (45s total); plain feedback (`Pino 1 baixo, Pino 2 certo`).
+- **Toast (P1)**: `?chapter=` / district jumps toast the live objective (not stale Find Nair).
+- **VIP (P1)**: Anfitrião objectives show `1/2` then `2/2` so progress is clear.
+- **Credits (P2)**: removed stray `—` line above the pixel/CC0 credit.
+
+### Tests
+
+- `session-v12221`, `playtest-45-skill-layout` (every kind × reveal/input/after-wrong/offer at 1280×720 and 390×844).
+
 ## [1.22.20] — 2026-11-26
 
 ### Fixed

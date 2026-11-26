@@ -252,7 +252,8 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     // Pins: mid / raised / sunk — left=shoulder mid, center=riser high, right=soft sunk.
     pins: [1, 2, 0],
     hiddenPin: 1,
-    timerMs: 32_000,
+    // Playtest #45: 45s total — wrong tests must not feel like a soft reset.
+    timerMs: 45_000,
     pickDurability: 4,
     // Playtest #30: clearer without naming heights — ~2–3 tries (≥3 hook words).
     clue:

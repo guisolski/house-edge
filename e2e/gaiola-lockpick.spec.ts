@@ -54,7 +54,11 @@ async function openGaiola(page: import('@playwright/test').Page): Promise<void> 
 function parseVerdicts(text: string, count: number): ('ok' | 'low' | 'high' | null)[] {
   const out: ('ok' | 'low' | 'high' | null)[] = Array.from({ length: count }, () => null);
   for (let i = 0; i < count; i += 1) {
-    const re = new RegExp(`(?:Pin|Pino)\\s*${i + 1}\\s*:\\s*([^·]+)`, 'i');
+    // Playtest #45 plain: "Pino 1 baixo" / "Pin 1 set" (optional colon still ok).
+    const re = new RegExp(
+      `(?:Pin|Pino)\\s*${i + 1}\\s*:?\\s*(certo|set|click|ok|baixo(?:\\s+demais)?|low(?:\\s+too)?|alto(?:\\s+demais)?|high(?:\\s+too)?)`,
+      'i',
+    );
     const m = text.match(re);
     if (!m) continue;
     const v = m[1]!.toLowerCase();

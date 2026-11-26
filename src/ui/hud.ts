@@ -421,9 +421,10 @@ function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
   art.getContext('2d')?.drawImage(src, 0, 0);
   const viewport = el('div', 'credits-viewport');
   const roll = el('div', 'credits-roll');
-  const creditLines = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) =>
-    el('p', 'credits-line', t(`ui.credits.line.${i}`)),
-  );
+  const creditLines = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    .map((i) => t(`ui.credits.line.${i}`).trim())
+    .filter((text) => text.length > 0 && text !== '—')
+    .map((text) => el('p', 'credits-line', text));
   roll.append(
     el('h2', '', UI.creditsTitle),
     ...creditLines.slice(0, 8),

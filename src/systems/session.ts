@@ -518,6 +518,11 @@ export class GameSession {
     }
     this.ui.go('play');
     this.persist();
+    // Playtest #45: chapter jumps must toast the live objective, not stale Find Nair.
+    this.bus.emit('ui:toast', {
+      message: this.objective().text,
+      kind: 'info',
+    });
     return true;
   }
 

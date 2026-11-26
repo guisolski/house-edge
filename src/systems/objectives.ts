@@ -212,11 +212,19 @@ function travelObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
   };
 }
 
+/** Playtest #45: two Anfitrião beats — show 1/2 then 2/2 so progress is clear. */
+function vipHostDetail(beatId: string, title: string): string {
+  if (beatId === 'torre-vip') return tf('ui.obj.vipStep', { title, step: '1' });
+  if (beatId === 'torre-negotiate') return tf('ui.obj.vipStep', { title, step: '2' });
+  return title;
+}
+
 function npcObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
   const title = t(`story.${next.id}.title`);
+  const detail = vipHostDetail(next.id, title);
   // Playtest #30: floor-hop first — never pin the VIP target while still in foyer.
   const floorHop = elevatorFloorObjective(ctx, next);
-  if (floorHop) return floorHop;
+  if (floorHop) return { ...floorHop, detail };
   const npc = beatNpc(ctx, next);
   if (npc) {
     const verb =
@@ -226,7 +234,7 @@ function npcObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
     const place = districtName(ctx.districtId);
     return {
       text: tf('ui.obj.actOn', { verb, name: localizedNpcName(npc), place }),
-      detail: title,
+      detail,
       targetName: npc.name,
       targetX: npc.x,
       targetY: npc.y,
@@ -236,7 +244,7 @@ function npcObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
   // Last resort: never surface a bug string to the player.
   return {
     text: tf('ui.obj.findLead', { place: districtName(ctx.districtId) }),
-    detail: title,
+    detail,
     districtId: ctx.districtId,
   };
 }

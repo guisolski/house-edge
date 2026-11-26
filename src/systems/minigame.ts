@@ -19,10 +19,13 @@ export const SEQ_KEYS = ['↑', '→', '↓', '←', 'R', 'G', 'B', 'Y'] as cons
 export type SeqKey = (typeof SEQ_KEYS)[number];
 
 /**
- * Playtest #41/#43: memorize reveal ≥1.4s per glyph, then a full-hold beat.
+ * Playtest #41/#43/#45: memorize reveal ≥1.4s per glyph, then full sequence ≥2s.
  * Input windows scale with length (≥2s per key) via sequenceInputMs().
  */
 export const SEQ_REVEAL_STEP_MS = 1400;
+
+/** Playtest #45: hold the complete sequence before input arms. */
+export const SEQ_FULL_HOLD_MS = 2000;
 
 /** Minimum input time per sequence key once memorize arms. */
 export const SEQ_INPUT_MS_PER_KEY = 2000;
@@ -30,7 +33,8 @@ export const SEQ_INPUT_MS_PER_KEY = 2000;
 /** Total memorize duration before input arms and the countdown starts. */
 export function sequenceRevealMs(seqLen: number): number {
   const n = Math.max(1, seqLen);
-  return n * SEQ_REVEAL_STEP_MS + SEQ_REVEAL_STEP_MS;
+  // Progressive: first glyph free at t0; each next costs stepMs; then full hold.
+  return (n - 1) * SEQ_REVEAL_STEP_MS + SEQ_FULL_HOLD_MS;
 }
 
 /** Input timer once reveal finishes — at least 2s per key. */
@@ -172,7 +176,7 @@ export type SkillAttempt = {
   value: number;
 };
 
-/** Persisted lockpick UI across soft retries (playtest #33). */
+/** Persisted lockpick UI across soft retries (playtest #33/#45). */
 export type LockpickUiState = {
   heights: number[];
   /** Per-pin verdict after last guess: ok | low | high. */
@@ -181,6 +185,8 @@ export type LockpickUiState = {
   /** Pin indices with correct height revealed as a hint. */
   hinted: number[];
   selected: number;
+  /** Playtest #45: wall-clock start — wrong tests must not reset the timer. */
+  timerStartedAt?: number;
 };
 
 export type SkillProgress = {

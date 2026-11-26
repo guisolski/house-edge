@@ -39,9 +39,9 @@ test('feira-radio shows memorize reveal before input (not only dots)', async ({
 }) => {
   await openFeiraRadio(page);
   const pattern = page.locator('.skill-pattern');
-  const status = page.locator('.skill-seq').first();
+  const status = page.locator('.skill-seq').filter({ hasText: /Memoriz|Memoriza/i });
   // Immediately after open: memorize copy + at least one real key visible.
-  await expect(status).toContainText(/Memoriz|Memoriza/i);
+  await expect(status.first()).toBeVisible();
   const early = await pattern.textContent();
   expect(early ?? '').toMatch(/[←→↑↓RGBY]/);
   expect(early ?? '').not.toMatch(/^Sequência:\s*(·\s*)+$/);
@@ -91,5 +91,10 @@ test('ATM sequence also reveals symbols before arming', async ({ page }) => {
   await expect(pattern).toBeVisible({ timeout: 8_000 });
   const text = await pattern.textContent();
   expect(text ?? '').toMatch(/[←→↑↓RGBY]/);
-  await expect(page.locator('.skill-seq').first()).toContainText(/Memoriz|Memoriza/i);
+  await expect(
+    page
+      .locator('.skill-seq')
+      .filter({ hasText: /Memoriz|Memoriza/i })
+      .first(),
+  ).toBeVisible();
 });
