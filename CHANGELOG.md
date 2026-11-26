@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.22.10] — 2026-11-26
+
+### Fixed
+
+- **Memory leak (P0)**: skill/tutorial/dialogue dispose intervals + window listeners on `clearNode`; travel/skill cycle unit + e2e assert bus/DOM/heap stay bounded.
+- **Sequence flash (P1)**: first memorize flash ≥2.8s before dots; ATM/Cam Tech no longer blind first try.
+- **i18n / Feira / FPS (P1)**: localized miss-hint speakers; Luna ball tip; pt-BR rewrites; elevator as system Painel; short E chip; Lavador/Pirateiro on plaza; dialogue cull; victory Space e2e.
+
 ## [1.22.9] — 2026-11-26
 
 ### Fixed

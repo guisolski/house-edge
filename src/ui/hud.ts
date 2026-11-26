@@ -1,4 +1,4 @@
-import { el, clearNode, setVisible } from './dom';
+import { el, clearNode, setVisible, onPanelDispose } from './dom';
 import { UI } from './strings';
 import type { GameSession } from '../systems/session';
 import type { DialogueLine } from '../core/types';
@@ -21,7 +21,6 @@ import { makeEndingScene } from '../rendering/pixel-gen';
 import type { FpsSample } from '../rendering/fps';
 import { resolveInteractPriority } from '../systems/interact-priority';
 import { getLocale, setLocale, t, tf, type LocaleCode } from '../i18n';
-import { localizedNpcName } from '../i18n/localize-npc';
 import { localizeDistrictName } from '../i18n/localize-district';
 import { isConfirmKey } from '../input/keyboard';
 import {
@@ -685,11 +684,9 @@ function paintTutorial(
   );
   p.tutorial.append(actions);
   // Tab / gamepad Y = next without stealing WASD/E from the world.
+  // Playtest #36: dispose on clearNode so step advances never stack listeners.
   const onKey = (ev: KeyboardEvent): void => {
-    if (!p.tutorial.isConnected || p.tutorial.hasAttribute('hidden')) {
-      window.removeEventListener('keydown', onKey, true);
-      return;
-    }
+    if (!p.tutorial.isConnected || p.tutorial.hasAttribute('hidden')) return;
     if (ev.key === 'Tab' || ev.code === 'Tab' || ev.code === 'KeyY') {
       ev.preventDefault();
       ev.stopPropagation();
@@ -697,6 +694,7 @@ function paintTutorial(
     }
   };
   window.addEventListener('keydown', onKey, true);
+  onPanelDispose(p.tutorial, () => window.removeEventListener('keydown', onKey, true));
   setVisible(p.tutorial, true);
   // Keep focus on the canvas so WASD/E reach the world; buttons stay clickable.
 }
@@ -782,9 +780,9 @@ function promptVerb(npc: { id: string; name: string }): string {
 
 function promptNamed(npc: { id: string; name: string }): string {
   const verb = promptVerb(npc);
+  // Playtest #36: nameplates already show the NPC — keep the E chip short.
   if (npc.id === 'elevator' || npc.id === 'elevator-vip') return verb;
-  const name = localizedNpcName(npc);
-  return name ? `${verb} (${name})` : verb;
+  return verb;
 }
 
 function promptLabel(
@@ -812,23 +810,19 @@ function placePrompt(prompt: HTMLElement, session: GameSession): void {
   const padTop = 110;
   const padBot = 96;
   setVisible(prompt, true);
-  if (a) {
-    // Measure after visible so Torre / long pt-BR prompts don't clip at the edge.
-    const pw = Math.max(prompt.offsetWidth || 0, 160);
-    const half = pw / 2;
-    const margin = 12;
-    const x = Math.min(vw - half - margin, Math.max(half + margin, Math.round(a.x)));
-    const y = Math.min(vh - padBot, Math.max(padTop, Math.round(a.y + 28)));
-    prompt.style.left = `${x}px`;
-    prompt.style.top = `${y}px`;
-    prompt.style.bottom = 'auto';
-    prompt.style.transform = 'translateX(-50%)';
-  } else {
-    prompt.style.left = '50%';
-    prompt.style.top = 'auto';
-    prompt.style.bottom = '18%';
-    prompt.style.transform = 'translateX(-50%)';
-  }
+  // Always follow the player anchor when present — never leave a second
+  // fixed chip at bottom-right while the live prompt sits on Rita (#36).
+  const ax = a?.x ?? vw / 2;
+  const ay = a?.y ?? vh * 0.55;
+  const pw = Math.max(prompt.offsetWidth || 0, 48);
+  const half = pw / 2;
+  const margin = 12;
+  const x = Math.min(vw - half - margin, Math.max(half + margin, Math.round(ax)));
+  const y = Math.min(vh - padBot, Math.max(padTop, Math.round(ay + 28)));
+  prompt.style.left = `${x}px`;
+  prompt.style.top = `${y}px`;
+  prompt.style.bottom = 'auto';
+  prompt.style.transform = 'translateX(-50%)';
 }
 
 function runFlash(node: HTMLElement, kind: string): void {

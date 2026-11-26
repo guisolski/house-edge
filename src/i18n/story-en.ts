@@ -91,10 +91,10 @@ export const storyEn: Record<string, string> = {
   'story.avenida-server.1.speaker': 'Rita Odds',
   'story.avenida-server.1.text':
     'Infiltration, not a coin flip. If I crack it, the ATM glitch gets a clean uplink.',
-  'story.avenida-server.2.choice.0.label': 'Pull the pit mirror files',
+  'story.avenida-server.2.choice.0.label': 'Copy the pit mirror files',
   'story.avenida-server.2.choice.0.reply':
     'Mirror the pit. Augusto’s private rake tables come with me.',
-  'story.avenida-server.2.choice.1.label': 'Plant a deadman’s beacon',
+  'story.avenida-server.2.choice.1.label': 'Plant a fake outage beacon',
   'story.avenida-server.2.choice.1.reply':
     'Beacon planted. If the hearing stalls, the feed still screams.',
   'story.avenida-server.2.speaker': 'Cage Runner',
@@ -193,7 +193,7 @@ export const storyEn: Record<string, string> = {
   'story.epilogue-laje.title': 'Epilogue on the laje',
   'story.feira-catador.0.speaker': 'Catador da Feira',
   'story.feira-catador.0.text':
-    'Corp bottle deposit pays pennies. I bet the sack weight — you help me sift the plaza before militia sweeps.',
+    'Corp bottle deposit pays pennies. I bet the haul weight — you help me sift the plaza before militia sweeps.',
   'story.feira-catador.1.speaker': 'Rita Odds',
   'story.feira-catador.1.text': 'Fine. If your pile hits quota, what do I get?',
   'story.feira-catador.2.speaker': 'Catador da Feira',
@@ -207,9 +207,9 @@ export const storyEn: Record<string, string> = {
   'story.feira-courier.1.text': 'Then I need a clean walk to her. Any cover?',
   'story.feira-courier.2.speaker': 'Lavador da Feira',
   'story.feira-courier.2.text':
-    'Stay on the asphalt strip mid-fair — cyan hair by the radio crates, same lane. Don’t climb the stalls.',
+    'Stay on the asphalt strip mid-fair — she wears cyan hair by the radio crates. Don’t climb the stalls.',
   'story.feira-courier.3.speaker': 'Rita Odds',
-  'story.feira-courier.3.text': 'Asphalt mid-fair, cyan hair. Got it.',
+  'story.feira-courier.3.text': 'Mid-fair strip, cyan hair. Got it.',
   'story.feira-courier.4.speaker': 'Lavador da Feira',
   'story.feira-courier.4.text':
     'When you’re done, the east exit on this same strip goes to Odds Avenue — once Luna’s file unlocks it.',
@@ -243,7 +243,7 @@ export const storyEn: Record<string, string> = {
     'Talk to the catador by the stalls. He sees everything tossed in the calçadão trash.',
   'story.feira-kiko.3.speaker': 'Rita Odds',
   'story.feira-kiko.3.text':
-    'Fair ground smells like oil and guaraná. Keep me pointed at the scavenger.',
+    'Fair ground smells like oil and guaraná. Point me toward the scavenger.',
   'story.feira-kiko.title': 'Sidewalk of odds',
   'story.feira-lockbox.0.speaker': 'Stage Hand',
   'story.feira-lockbox.0.text': 'Forró shook a Casa lockbox loose under the risers.',
@@ -260,7 +260,7 @@ export const storyEn: Record<string, string> = {
     'Leverage first. I’ll spend the chips when Augusto blinks.',
   'story.feira-lockbox.3.speaker': 'Stage Hand',
   'story.feira-lockbox.3.text':
-    'Ledger chips. Spare keycard. Scratched plate lies — timer’s real, pick can snap.',
+    'Ledger chips. Spare keycard. Hand-scratched plates — timer’s real, pick can snap.',
   'story.feira-lockbox.4.speaker': 'Stage Hand',
   'story.feira-lockbox.4.text':
     'Either score feeds the radio pirate next. Don’t trust the red sticker.',
@@ -311,10 +311,10 @@ export const storyEn: Record<string, string> = {
   'story.lobby-margin.title': 'Coffee with Dr. Margin',
   'story.luna-beco.0.speaker': 'Luna Pixel',
   'story.luna-beco.0.text':
-    'Rita… I pulled a slice of their algorithm. But Seu Zé only trades the pendrive if you beat the rooftop draw.',
+    'Rita… I pulled a slice of their algorithm. But Seu Zé only trades the pendrive if you win the raffle up on the laje.',
   'story.luna-beco.1.speaker': 'Rita Odds',
   'story.luna-beco.1.text':
-    'Street lotteries got wiped when the corps took over. Now even the laje plays by Casa rules.',
+    'Street raffles died when the corps took over. Now even the laje plays by Casa rules.',
   'story.luna-beco.2.speaker': 'Luna Pixel',
   'story.luna-beco.2.text':
     'Seu Zé’s booth sits east of the stairs. Don’t let Fio snatch the copper mid-hand — he runs the wires.',
@@ -333,7 +333,7 @@ export const storyEn: Record<string, string> = {
   'story.morro-antena.title': 'Jack the LED antenna',
   'story.morro-fios.0.speaker': 'Fio Ladrão',
   'story.morro-fios.0.text':
-    'Your chip’s on my line, oddsmom. I sprint the lajes faster than Casa billing.',
+    'Your chip’s on my line, Rita. I sprint the lajes faster than Casa billing.',
   'story.morro-fios.1.speaker': 'Rita Odds',
   'story.morro-fios.1.text':
     'Thief! Every meter of copper on this hill is community property.',
@@ -424,14 +424,14 @@ export const storyEn: Record<string, string> = {
   'story.side-torre-tip.1.speaker': 'Rita Odds',
   'story.side-torre-tip.1.text': 'Quiet hand, quiet exit. Let’s see.',
   'story.side-torre-tip.title': 'Dealer tip odd',
-  'story.torre-elevator.0.speaker': 'Elevator',
+  'story.torre-elevator.0.speaker': 'Panel',
   'story.torre-elevator.0.text':
-    'VIP’s upstairs. Time the express call — green zone — then I carry you up. No coin flip.',
+    'VIP upstairs. Time the express call in the green zone to release the car. No coin flip.',
   'story.torre-elevator.1.speaker': 'Rita Odds',
   'story.torre-elevator.1.text': 'I’ve climbed worse stairs. Call the car.',
-  'story.torre-elevator.2.speaker': 'Elevator',
+  'story.torre-elevator.2.speaker': 'Panel',
   'story.torre-elevator.2.text':
-    'Nail the timing and the doors open on chrome with a fade. Miss and you tip the stake — try again.',
+    'Nail the timing and the doors open on chrome with a fade. Miss and the stake resets — call the car again.',
   'story.torre-elevator.3.speaker': 'Rita Odds',
   'story.torre-elevator.3.text': 'Alright. Call the car — I’m going up either way.',
   'story.torre-elevator.title': 'Elevator call',

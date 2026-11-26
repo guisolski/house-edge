@@ -89,6 +89,8 @@ export const uiEn = {
     'Slip through drone cones in the blind spots. Cut when the light blinks.',
   'ui.minigameTip.choice':
     'Pick the line that fits the room — wrong tone burns the deal.',
+  'ui.minigameTip.lajeLottery':
+    'Take the ball that still smells like rooftop rain — tower varnish and VIP gold are bait.',
   'ui.minigameTip.puzzle':
     'Read the clue and mark what the street confirms — not the loudest option.',
   'ui.minigameTip.hack':
@@ -146,6 +148,7 @@ export const uiEn = {
   'ui.skill.missesFail': '{n} misses fail',
   'ui.skill.missesProgress': ' · misses {current}/{max}',
   'ui.skill.sequenceLabel': 'Sequence: {seq}',
+  'ui.skill.memorizeSeq': 'Memorize the sequence…',
   'ui.skill.escSeqHint': 'Esc cancels · arrows are sequence only',
   'ui.skill.pinHidden': 'Pin {n}: ???',
   'ui.skill.pinBtn': 'Pin {n}',
@@ -206,7 +209,7 @@ export const uiEn = {
   'ui.toast.missHint.dancer-tip': 'Sol: the cue is a shoulder, not the whole leap.',
   'ui.toast.missHint.pixo-challenge': 'Vespera: the spray frees mid-stroke.',
   'ui.toast.missHint.torre-elevator': 'Elevator: green blinks short — don’t jump early.',
-  'ui.toast.missHint.torre-vip': 'Host: the rake vanishes on the sweep — cut then.',
+  'ui.toast.missHint.torre-vip': 'VIP Host: the rake vanishes on the sweep — cut then.',
   'ui.toast.missHint.morro-return-nair': 'Nair: the toast warms — stop on hot.',
   'ui.toast.missHint.antena-sinal': 'Antena: the beep lies if you rush the jack.',
   'ui.toast.missHint.fio-corrida': 'Fio: the wire flees — copy the tile, not the gleam.',
@@ -214,7 +217,8 @@ export const uiEn = {
   'ui.toast.missHint.feira-radio': 'Pirate: three clicks — don’t invent a fourth.',
   'ui.toast.missHint.twist-vazamento': 'Mole: a twisted packet breaks if you guess.',
   'ui.toast.missHint.avenida-atm': 'Hacker: four digits — the till hates a wild guess.',
-  'ui.toast.missHint.avenida-stealth': 'Cam Tech: blind spot, not a hallway shortcut.',
+  'ui.toast.missHint.avenida-stealth':
+    'Lobby Cam Tech: blind spot, not a hallway shortcut.',
   'ui.toast.missHint.morro-return-fio': 'Fio: the ghost tone fades if you force it.',
   'ui.toast.missHint.avenida-drone':
     'Neon Snap: hug the shadow — the cone won’t forgive.',

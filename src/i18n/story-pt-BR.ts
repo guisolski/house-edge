@@ -92,10 +92,10 @@ export const storyPtBR: Record<string, string> = {
   'story.avenida-server.1.speaker': 'Rita Odds',
   'story.avenida-server.1.text':
     'Infiltração, não cara ou coroa. Se eu abrir, a trava do ATM ganha enlace limpo.',
-  'story.avenida-server.2.choice.0.label': 'Puxar os espelhos do salão',
+  'story.avenida-server.2.choice.0.label': 'Copiar os espelhos do salão',
   'story.avenida-server.2.choice.0.reply':
     'Levo o espelho do salão. As mesas privadas com comissão do Augusto vêm comigo.',
-  'story.avenida-server.2.choice.1.label': 'Plantar sinal falso do morto',
+  'story.avenida-server.2.choice.1.label': 'Plantar um sinal falso de falha',
   'story.avenida-server.2.choice.1.reply':
     'Sinal plantado. Se a audiência travar, a transmissão ainda grita.',
   'story.avenida-server.2.speaker': 'Corredor da Gaiola',
@@ -128,7 +128,7 @@ export const storyPtBR: Record<string, string> = {
     'Se for isca, eu ainda ando na avenida. Verdade ou armadilha — preciso de olho no checkpoint da Capitã.',
   'story.avenida-twist.4.speaker': 'Contato Vira-Casaca',
   'story.avenida-twist.4.text':
-    'Decide o que quiser, mas não conta pro influenciador. O brilho dele tá no folha da Casa.',
+    'Decide o que quiser, mas não conta pro influenciador. O brilho dele tá na folha da Casa.',
   'story.avenida-twist.title': 'Vazamento ou armadilha?',
   'story.bia-set.0.speaker': 'Bia Forró',
   'story.bia-set.0.text':
@@ -193,7 +193,7 @@ export const storyPtBR: Record<string, string> = {
   'story.epilogue-laje.title': 'Epílogo na laje',
   'story.feira-catador.0.speaker': 'Catador da Feira',
   'story.feira-catador.0.text':
-    'Depósito de garrafa da corp paga trocado. Aposto no peso do saco — me ajuda a peneirar a praça antes da milícia varrer.',
+    'Depósito de garrafa da corp paga trocado. Aposto no peso da coleta — me ajuda a peneirar a praça antes da milícia varrer.',
   'story.feira-catador.1.speaker': 'Rita Odds',
   'story.feira-catador.1.text': 'Beleza. Se sua pilha bater a cota, o que eu ganho?',
   'story.feira-catador.2.speaker': 'Catador da Feira',
@@ -207,9 +207,9 @@ export const storyPtBR: Record<string, string> = {
   'story.feira-courier.1.text': 'Preciso de um caminho limpo até ela. Tem cobertura?',
   'story.feira-courier.2.speaker': 'Lavador da Feira',
   'story.feira-courier.2.text':
-    'Fica na faixa de asfalto no meio da feira — cabelo ciano pelas caixas de rádio, mesma faixa. Não sobe nas barracas.',
+    'Fica na faixa de asfalto no meio da feira — ela usa cabelo ciano, junto das caixas de rádio. Não sobe nas barracas.',
   'story.feira-courier.3.speaker': 'Rita Odds',
-  'story.feira-courier.3.text': 'Asfalto no meio da feira, cabelo ciano. Fechou.',
+  'story.feira-courier.3.text': 'Faixa do meio, cabelo ciano. Fechou.',
   'story.feira-courier.4.speaker': 'Lavador da Feira',
   'story.feira-courier.4.text':
     'Quando terminar, a saída leste nessa mesma faixa vai pra Avenida Odds — quando o arquivo da Luna destravar.',
@@ -243,7 +243,7 @@ export const storyPtBR: Record<string, string> = {
     'Fala com o catador nas barracas. Ele vê tudo que cai no lixo do calçadão.',
   'story.feira-kiko.3.speaker': 'Rita Odds',
   'story.feira-kiko.3.text':
-    'A feira cheira a óleo e guaraná. Me mantém apontada pro catador.',
+    'A feira cheira a óleo e guaraná. Me mostra o caminho até o catador.',
   'story.feira-kiko.title': 'Calçadão das odds',
   'story.feira-lockbox.0.speaker': 'Maquinista',
   'story.feira-lockbox.0.text': 'O forró sacudiu um cofre da Casa embaixo do palco.',
@@ -260,7 +260,7 @@ export const storyPtBR: Record<string, string> = {
     'Pressão primeiro. Gasto as fichas quando o Augusto piscar.',
   'story.feira-lockbox.3.speaker': 'Maquinista',
   'story.feira-lockbox.3.text':
-    'Fichas do livro. Cartão reserva. Placa riscada mente — timer é real, gazua pode quebrar.',
+    'Fichas de contabilidade. Cartão reserva. Placas riscadas à mão — o timer é real, a gazua pode quebrar.',
   'story.feira-lockbox.4.speaker': 'Maquinista',
   'story.feira-lockbox.4.text':
     'Qualquer prêmio alimenta o rádio pirata depois. Não confia no adesivo vermelho.',
@@ -310,10 +310,10 @@ export const storyPtBR: Record<string, string> = {
   'story.lobby-margin.title': 'Café com o Dr. Margin',
   'story.luna-beco.0.speaker': 'Luna Pixel',
   'story.luna-beco.0.text':
-    'Rita… tirei um pedaço do algoritmo deles. Mas o Seu Zé só troca o pendrive se você ganhar o sorteio no telhado.',
+    'Rita… tirei um pedaço do algoritmo deles. Mas o Seu Zé só troca o pendrive se você ganhar a rifa lá em cima, na laje.',
   'story.luna-beco.1.speaker': 'Rita Odds',
   'story.luna-beco.1.text':
-    'Lotaria de rua morreu quando a corp tomou conta. Agora até a laje joga pelo regulamento da Casa.',
+    'Rifa de rua morreu quando a corp tomou conta. Agora até a laje joga no regulamento da Casa.',
   'story.luna-beco.2.speaker': 'Luna Pixel',
   'story.luna-beco.2.text':
     'A banca do Seu Zé fica depois da escada. Fala com o Catador pra pesar o cobre; o Fio cuida só da corrida nas lajes.',
@@ -333,7 +333,7 @@ export const storyPtBR: Record<string, string> = {
   'story.morro-antena.title': 'Desviar a antena LED',
   'story.morro-fios.0.speaker': 'Fio Ladrão',
   'story.morro-fios.0.text':
-    'Sua ficha tá na minha linha, mãe das odds. Eu corto as lajes mais rápido que a fatura da Casa.',
+    'Sua ficha tá na minha linha, Rita. Eu corto as lajes mais rápido que a fatura da Casa.',
   'story.morro-fios.1.speaker': 'Rita Odds',
   'story.morro-fios.1.text':
     'Ladrão! Cada metro de cobre nesse morro é patrimônio da comunidade.',
@@ -424,14 +424,14 @@ export const storyPtBR: Record<string, string> = {
   'story.side-torre-tip.1.speaker': 'Rita Odds',
   'story.side-torre-tip.1.text': 'Mão quieta, saída quieta. Vamos ver.',
   'story.side-torre-tip.title': 'Odd da gorjeta do dealer',
-  'story.torre-elevator.0.speaker': 'Elevador',
+  'story.torre-elevator.0.speaker': 'Painel',
   'story.torre-elevator.0.text':
-    'VIP tá lá em cima. Cronometra a chamada expressa — zona verde — aí eu te levo. Sem cara ou coroa.',
+    'VIP no topo. Cronometre a chamada expressa na zona verde para liberar o carro. Sem cara ou coroa.',
   'story.torre-elevator.1.speaker': 'Rita Odds',
   'story.torre-elevator.1.text': 'Já subi escada pior. Chama o carro.',
-  'story.torre-elevator.2.speaker': 'Elevador',
+  'story.torre-elevator.2.speaker': 'Painel',
   'story.torre-elevator.2.text':
-    'Acerta o timing e a porta abre no cromado com a luz baixando. Erra e vira a aposta — chama o carro outra vez.',
+    'Acerte o timing e a porta abre no cromado com a luz baixando. Erre e a aposta reinicia — chame o carro de novo.',
   'story.torre-elevator.3.speaker': 'Rita Odds',
   'story.torre-elevator.3.text': 'Beleza. Chama o carro — eu subo de qualquer jeito.',
   'story.torre-elevator.title': 'Chamada do elevador',

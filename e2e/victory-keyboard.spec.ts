@@ -44,3 +44,14 @@ test('victory Esc = Continuar explorando', async ({ page }) => {
   await expect(page.locator('.ending-panel')).toBeHidden({ timeout: 5_000 });
   await expect(page.locator('.play-hud')).toBeVisible();
 });
+
+test('victory Space dismisses Continuar explorando', async ({ page }) => {
+  await openVictory(page);
+  const cont = page.getByRole('button', {
+    name: /Continuar explorando|Continue exploring/i,
+  });
+  await expect(cont).toBeFocused();
+  await page.keyboard.press('Space');
+  await expect(page.locator('.ending-panel')).toBeHidden({ timeout: 5_000 });
+  await expect(page.locator('.play-hud')).toBeVisible();
+});

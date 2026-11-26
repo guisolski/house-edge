@@ -427,8 +427,8 @@ function paintOneNpcTag(o: {
   const nearMe = Math.hypot(o.row.npc.x - o.me.x, o.row.npc.y - o.me.y) < 1.35;
   const aside = nearMe ? (o.row.npc.x >= o.me.x ? 0.55 : -0.55) : 0;
   const px = (o.row.npc.x + aside) * TILE_PX + 16 - o.camX;
-  // Lift above CHAR_SCALE sprites (~108px); extra lift when overlapping Rita.
-  const tagLift = nearMe ? 96 : 78;
+  // Playtest #36: lift higher when Rita is close so the E chip doesn't cover the tag.
+  const tagLift = nearMe ? 124 : 78;
   let stack = o.i * -40;
   let py = o.row.npc.y * TILE_PX - tagLift - o.camY + avoid.dy + o.bob + stack;
   for (const p of o.placed) {
@@ -1055,8 +1055,8 @@ function pushNpcSorts(o: {
   for (const npc of o.session.floorNpcs()) {
     if (npc.districtId !== o.districtId) continue;
     const d = Math.hypot(npc.x - me.x, npc.y - me.y);
-    // Modal open: only draw nearby NPCs — biggest FPS win on Odds/VIP.
-    if (!o.playing && d > 8) continue;
+    // Modal open: tighter cull — dialogue open must not hitch (#36 Luna).
+    if (!o.playing && d > 5) continue;
     // Playtest #31: freeze idle bake under skill/dialogue — Augusto P3 FPS.
     const img = npcAnimSprite(o.baked, npc, o.playing ? timeS : 0);
     const near = o.playing && d < 1.35;

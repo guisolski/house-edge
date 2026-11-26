@@ -528,6 +528,19 @@ canvas.excalibur-game {
   line-height: 1.35;
 }
 
+.dialogue-body .dialogue-system {
+  color: #9ad7ff;
+  font-style: italic;
+  border-left: 2px solid #2bfff266;
+  padding-left: 0.5rem;
+}
+
+.skill-pattern.skill-seq-flash {
+  color: #ffdf00;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 8px #ffdf0088;
+}
+
 .dialogue-panel {
   display: flex;
   flex-direction: column;

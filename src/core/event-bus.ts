@@ -32,6 +32,13 @@ export class EventBus {
     return this.handlers.get(event)?.size ?? 0;
   }
 
+  /** Sum of handlers across all events (leak audits / soak tests). */
+  totalListeners(): number {
+    let n = 0;
+    for (const set of this.handlers.values()) n += set.size;
+    return n;
+  }
+
   private ensureSet(event: GameEventName): Set<EventHandler<GameEventName>> {
     const existing = this.handlers.get(event);
     if (existing) return existing;

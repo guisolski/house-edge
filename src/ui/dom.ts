@@ -10,14 +10,28 @@ export function el<K extends keyof HTMLElementTagNameMap>(
 }
 
 const PANEL_ABORT = '__heAbort';
+const PANEL_DISPOSE = '__heDispose';
 
-/** Abort prior panel key hooks when a panel is repainted (playtest #30 leaks). */
+type PanelBag = Record<string, AbortController | (() => void)[] | undefined>;
+
+/** Register cleanup that runs on the next clearNode (intervals, window listeners). */
+export function onPanelDispose(panel: HTMLElement, fn: () => void): void {
+  const bag = panel as unknown as PanelBag;
+  const list = (bag[PANEL_DISPOSE] as (() => void)[] | undefined) ?? [];
+  list.push(fn);
+  bag[PANEL_DISPOSE] = list;
+}
+
+/** Abort prior panel key hooks + dispose callbacks when a panel is repainted. */
 export function clearNode(node: HTMLElement): void {
-  const prev = (node as unknown as Record<string, AbortController | undefined>)[
-    PANEL_ABORT
-  ];
-  prev?.abort();
-  delete (node as unknown as Record<string, AbortController | undefined>)[PANEL_ABORT];
+  const bag = node as unknown as PanelBag;
+  (bag[PANEL_ABORT] as AbortController | undefined)?.abort();
+  delete bag[PANEL_ABORT];
+  const disposers = bag[PANEL_DISPOSE] as (() => void)[] | undefined;
+  if (disposers) {
+    for (const fn of disposers) fn();
+    delete bag[PANEL_DISPOSE];
+  }
   while (node.firstChild) node.removeChild(node.firstChild);
 }
 

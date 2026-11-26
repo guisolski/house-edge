@@ -91,6 +91,8 @@ export const uiPtBR = {
     'Desvie dos cones do drone nos pontos cegos. Corte quando a luz piscar.',
   'ui.minigameTip.choice':
     'Escolha a fala que cabe no ambiente — tom errado queima o acordo.',
+  'ui.minigameTip.lajeLottery':
+    'Pegue a bola que ainda cheira a chuva de laje — verniz de torre e VIP dourado são isca.',
   'ui.minigameTip.puzzle':
     'Leia a pista e marque a opção que a rua confirma — não a mais barulhenta.',
   'ui.minigameTip.hack':
@@ -147,6 +149,7 @@ export const uiPtBR = {
   'ui.skill.missesFail': '{n} erros falham',
   'ui.skill.missesProgress': ' · erros {current}/{max}',
   'ui.skill.sequenceLabel': 'Sequência: {seq}',
+  'ui.skill.memorizeSeq': 'Memorize a sequência…',
   'ui.skill.escSeqHint': 'Esc cancela · setas só na sequência',
   'ui.skill.pinHidden': 'Pino {n}: ???',
   'ui.skill.pinBtn': 'Pino {n}',
@@ -208,7 +211,8 @@ export const uiPtBR = {
   'ui.toast.missHint.dancer-tip': 'Sol: o sinal é um ombro, não o salto inteiro.',
   'ui.toast.missHint.pixo-challenge': 'Vespera: o spray solta no meio do traço.',
   'ui.toast.missHint.torre-elevator': 'Elevador: o verde pisca curto — não antecipa.',
-  'ui.toast.missHint.torre-vip': 'Host: a comissão some no sweep — corta na hora.',
+  'ui.toast.missHint.torre-vip':
+    'Anfitrião: a comissão some na varredura — corta na hora.',
   'ui.toast.missHint.morro-return-nair': 'Nair: o brinde esquenta — para no quente.',
   'ui.toast.missHint.antena-sinal': 'Antena: o bip mente se você apressa o jack.',
   'ui.toast.missHint.fio-corrida': 'Fio: o fio foge — copia o lajão, não o reflexo.',
@@ -216,7 +220,8 @@ export const uiPtBR = {
   'ui.toast.missHint.feira-radio': 'Pirateiro: três cliques, sem inventar quarto.',
   'ui.toast.missHint.twist-vazamento': 'Mole: o pacote torto quebra se você adivinha.',
   'ui.toast.missHint.avenida-atm': 'Hacker: quatro dígitos — o caixa odeia chute.',
-  'ui.toast.missHint.avenida-stealth': 'Cam Tech: ponto cego, não atalho de corredor.',
+  'ui.toast.missHint.avenida-stealth':
+    'Tech das Câmeras: ponto cego, não atalho de corredor.',
   'ui.toast.missHint.morro-return-fio': 'Fio: o tom fantasma some se você força.',
   'ui.toast.missHint.avenida-drone': 'Neon Snap: cola na sombra — o cone não perdoa.',
   'ui.toast.missHint.avenida-server':

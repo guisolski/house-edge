@@ -1,4 +1,4 @@
-import { el, clearNode, bindPanelKeydown } from './dom';
+import { el, clearNode, bindPanelKeydown, onPanelDispose } from './dom';
 import { UI } from './strings';
 import { t, tf } from '../i18n';
 import { localizePhase, localizeSkillDef } from '../i18n/localize-phase';
@@ -34,6 +34,19 @@ export function button(label: string, onClick: () => void): HTMLButtonElement {
   btn.type = 'button';
   btn.addEventListener('click', onClick);
   return btn;
+}
+
+/** Elevator / machine lines — no NPC name prefix (playtest #36). */
+function isSystemSpeaker(speaker: string): boolean {
+  const s = speaker.trim().toLowerCase();
+  return (
+    s === 'painel' ||
+    s === 'panel' ||
+    s === 'sistema' ||
+    s === 'system' ||
+    s === 'elevator panel' ||
+    s === 'painel do elevador'
+  );
 }
 
 export function focusFirst(panel: HTMLElement): void {
@@ -184,10 +197,15 @@ export function paintDialogue(
   let lastLine: HTMLElement | null = null;
   const visible = opts.closingLine ? lines : dialogueVisibleLines(lines);
   for (const line of visible) {
+    const system = isSystemSpeaker(line.speaker);
     const node = el(
       'p',
-      opts.closingLine ? 'line dialogue-closing-line' : 'line',
-      `${line.speaker}: ${line.text}`,
+      opts.closingLine
+        ? 'line dialogue-closing-line'
+        : system
+          ? 'line dialogue-system'
+          : 'line',
+      system ? line.text : `${line.speaker}: ${line.text}`,
     );
     body.appendChild(node);
     lastLine = node;
@@ -215,7 +233,7 @@ export function paintDialogue(
       ) as HTMLButtonElement | null;
       first?.focus();
     };
-    window.setTimeout(focusFirstChoice, delay);
+    const focusTimer = window.setTimeout(focusFirstChoice, delay);
     // If Interact was held through the arm, re-focus on first post-arm release.
     const onUp = (e: KeyboardEvent): void => {
       if (!isConfirmKey(e) && e.code !== 'KeyE') return;
@@ -224,7 +242,15 @@ export function paintDialogue(
       window.removeEventListener('keyup', onUp, true);
     };
     window.addEventListener('keyup', onUp, true);
-    window.setTimeout(() => window.removeEventListener('keyup', onUp, true), 4000);
+    const upTimer = window.setTimeout(
+      () => window.removeEventListener('keyup', onUp, true),
+      4000,
+    );
+    onPanelDispose(panel, () => {
+      window.clearTimeout(focusTimer);
+      window.clearTimeout(upTimer);
+      window.removeEventListener('keyup', onUp, true);
+    });
   } else if (primary) primary.focus();
   else focusFirst(panel);
   requestAnimationFrame(() => {
@@ -393,14 +419,38 @@ function paintTimingSkill(
   if ((session.getSkillProgress()?.misses ?? 0) > 0) {
     body.appendChild(el('p', 'skill-clue skill-miss-hint', needleMissLine(session)));
   }
+  const stopAt = bindNeedleRuntime(meter, needle, body, session, after, phase);
+  const stopBtn = button(t('ui.skill.stop'), () => stopAt());
+  stopBtn.classList.add('btn-needle-stop');
+  bindEnterGate(stopBtn, () => stopAt());
+  actions.appendChild(stopBtn);
+}
+
+/** Needle rAF + confirm key — disposed with the skill panel (playtest #36). */
+function bindNeedleRuntime(
+  meter: HTMLElement,
+  needle: HTMLElement,
+  body: HTMLElement,
+  session: GameSession,
+  after: () => void,
+  phase: SkillPhase,
+): () => void {
   let needlePos = 0;
   let settled = false;
   const step = Math.max(0.015, 0.028 * (phase.needleSpeed ?? 0.8));
-  // Playtest #33: rAF wrap — avoid stuck needle at 100% from interval drift.
   let raf = 0;
   let lastTs = performance.now();
+  let onKey: (e: KeyboardEvent) => void = () => undefined;
+  const dropNeedle = (): void => {
+    cancelAnimationFrame(raf);
+    window.removeEventListener('keydown', onKey, true);
+  };
   const tickNeedle = (ts: number): void => {
-    if (settled || !meter.isConnected) return;
+    if (settled) return;
+    if (!meter.isConnected) {
+      dropNeedle();
+      return;
+    }
     const dt = Math.min(48, Math.max(8, ts - lastTs));
     lastTs = ts;
     needlePos = (needlePos + step * (dt / 32)) % 1;
@@ -410,32 +460,25 @@ function paintTimingSkill(
   };
   raf = requestAnimationFrame(tickNeedle);
   meter.dataset.needleRaf = '1';
-  const sampleNeedle = (): number => needlePos % 1;
-  const dropNeedle = (): void => {
-    cancelAnimationFrame(raf);
-    window.removeEventListener('keydown', onKey, true);
-  };
-  const stopAt = (pos: number): void => {
+  const stopAt = (): void => {
     if (settled) return;
     settled = true;
     dropNeedle();
-    session.submitSkill(pos % 1);
+    session.submitSkill(needlePos % 1);
     after();
   };
-  const onKey = (e: KeyboardEvent): void => {
-    // clearNode/repaint must not leave a live Stop handler (playtest #35).
+  onKey = (e: KeyboardEvent): void => {
     if (!meter.isConnected) return dropNeedle();
     if (e.repeat) return;
     if (!isConfirmKey(e) && e.code !== 'KeyE') return;
     e.preventDefault();
     e.stopPropagation();
-    stopAt(sampleNeedle());
+    stopAt();
   };
   window.addEventListener('keydown', onKey, true);
-  const stopBtn = button(t('ui.skill.stop'), () => stopAt(sampleNeedle()));
-  stopBtn.classList.add('btn-needle-stop');
-  bindEnterGate(stopBtn, () => stopAt(sampleNeedle()));
-  actions.appendChild(stopBtn);
+  const skillPanel = body.closest('.skill-panel') ?? body;
+  onPanelDispose(skillPanel as HTMLElement, dropNeedle);
+  return stopAt;
 }
 
 type ChoiceSettle = {
@@ -556,6 +599,10 @@ function paintChoiceSkill(
   actions.prepend(timer);
   const started = Date.now();
   const tick = window.setInterval(() => {
+    if (!actions.isConnected) {
+      window.clearInterval(tick);
+      return;
+    }
     const left = Math.max(0, ms - (Date.now() - started));
     timer.textContent =
       left > 0
@@ -565,6 +612,8 @@ function paintChoiceSkill(
     window.clearInterval(tick);
     state.settle((phase?.target ?? 0) === 0 ? 1 : 0, true);
   }, 200);
+  const skillPanel = actions.closest('.skill-panel') ?? actions;
+  onPanelDispose(skillPanel as HTMLElement, () => window.clearInterval(tick));
 }
 
 type LockpickState = {
@@ -668,6 +717,10 @@ function bindLockpickTimer(
   const started = Date.now();
   const ms = phase.timerMs;
   const tick = window.setInterval(() => {
+    if (!body.isConnected) {
+      window.clearInterval(tick);
+      return;
+    }
     const left = Math.max(0, ms - (Date.now() - started));
     timerEl.textContent =
       left > 0
@@ -682,6 +735,8 @@ function bindLockpickTimer(
     ctx.session.submitSkill(encodePins(target.map((p) => (p + 1) % LOCK_PIN_LEVELS)));
     ctx.after();
   }, 200);
+  const skillPanel = body.closest('.skill-panel') ?? body;
+  onPanelDispose(skillPanel as HTMLElement, () => window.clearInterval(tick));
 }
 
 function clearLockpickUi(session: GameSession): void {
@@ -800,6 +855,8 @@ function paintLockpickSkill(
     body.ownerDocument?.removeEventListener('keydown', keyHandler, true);
   };
   body.ownerDocument?.addEventListener('keydown', keyHandler, true);
+  const skillPanel = body.closest('.skill-panel') ?? body;
+  onPanelDispose(skillPanel as HTMLElement, cleanup);
   body.appendChild(buildLockpickRow(state, target.length, selectPin, bumpPin));
   bindLockpickTimer(body, phase, target, state, { cleanup, session, after });
   refreshLockpick(state, saved?.verdicts);
@@ -841,6 +898,10 @@ function bindSequenceTimer(
   body.appendChild(timerEl);
   const started = Date.now();
   const tick = window.setInterval(() => {
+    if (!body.isConnected) {
+      window.clearInterval(tick);
+      return;
+    }
     const left = Math.max(0, timerMs - (Date.now() - started));
     timerEl.textContent =
       left > 0
@@ -856,6 +917,8 @@ function bindSequenceTimer(
     }
     after();
   }, 200);
+  const skillPanel = body.closest('.skill-panel') ?? body;
+  onPanelDispose(skillPanel as HTMLElement, () => window.clearInterval(tick));
 }
 
 /** Mastermind: reveal matched glyphs; · for remaining. */
@@ -881,12 +944,20 @@ function flashSequence(ui: SeqUi, index: number, ms: number): void {
   ui.armed.v = false;
   ui.pattern.classList.add('skill-seq-flash');
   ui.pattern.textContent = tf('ui.skill.sequenceLabel', { seq: ui.seq.join('  ') });
-  window.setTimeout(() => {
+  ui.status.textContent = t('ui.skill.memorizeSeq');
+  const hide = window.setTimeout(() => {
     if (!ui.body.isConnected || ui.settled.v) return;
     ui.armed.v = true;
     ui.pattern.classList.remove('skill-seq-flash');
     ui.pattern.textContent = seqRevealLabel(ui.seq, index);
+    ui.status.textContent =
+      tf('ui.skill.matchNext', {
+        current: String(index + 1),
+        total: String(ui.seq.length),
+      }) + (ui.missCap ? tf('ui.skill.missesFail', { n: String(ui.missCap) }) : '');
   }, ms);
+  const skillPanel = ui.body.closest('.skill-panel') ?? ui.body;
+  onPanelDispose(skillPanel as HTMLElement, () => window.clearTimeout(hide));
 }
 
 function onSequenceKey(ui: SeqUi, keyIndex: number): void {
@@ -929,8 +1000,9 @@ function paintSequenceSkill(
   if (!progress || !phase) return;
   const seq = phaseSequence(phase);
   const missCap = phase.maxMisses;
-  // Playtest #31: memory flash — longer after each miss (1.5s → 2.2s).
-  const flashMs = Math.min(2200, 1500 + progress.misses * 350);
+  // Playtest #36: first flash ≥2.8s so ATM/Cam Tech are never a blind first try.
+  const flashMs =
+    progress.misses === 0 ? 2800 : Math.min(2800, 1800 + progress.misses * 400);
   const status = el(
     'p',
     'skill-seq',

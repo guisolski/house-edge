@@ -223,8 +223,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'lavador-feira',
     name: englishNpcName('lavador-feira'),
     districtId: 'feira-central',
-    x: 14,
-    y: 16,
+    // Playtest #36: mid-plaza asphalt — not tucked behind south stalls.
+    x: 16,
+    y: 13,
     beatId: 'feira-courier',
     safeJobId: 'safe-feira-central',
     color: '#6ec8e8',
@@ -234,8 +235,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'radio-pirate',
     name: englishNpcName('radio-pirate'),
     districtId: 'feira-central',
-    x: 22,
-    y: 16,
+    // Playtest #36: open plaza east of Lavador, clear of stall lips.
+    x: 26,
+    y: 13,
     beatId: 'feira-radio',
     jobBetId: 'feira-radio',
     color: '#7bc96f',

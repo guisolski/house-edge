@@ -8,7 +8,15 @@ export type TutorialStepId = 'move' | 'interact' | 'objective' | 'bets' | 'credi
 export type TutorialAction = 'moved' | 'interacted' | 'sawObjective' | 'firstBet';
 
 export type MinigameTipId =
-  'timing' | 'lockpick' | 'choice' | 'puzzle' | 'hack' | 'negotiate' | 'stealth' | 'duel';
+  | 'timing'
+  | 'lockpick'
+  | 'choice'
+  | 'puzzle'
+  | 'hack'
+  | 'negotiate'
+  | 'stealth'
+  | 'duel'
+  | 'lajeLottery';
 
 const STEPS: TutorialStepId[] = ['move', 'interact', 'objective', 'bets', 'creditsRep'];
 
@@ -38,6 +46,7 @@ function tipFlags(flags?: Record<string, boolean>): Record<string, boolean> {
     'negotiate',
     'stealth',
     'duel',
+    'lajeLottery',
   ] as const;
   const seen: Record<string, boolean> = {};
   for (const k of keys) seen[k] = Boolean(flags?.[`tip_${k}`]);

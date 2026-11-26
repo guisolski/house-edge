@@ -261,7 +261,9 @@ export class GameSession {
 
   /** First-time tip for a minigame kind; null if already seen. */
   peekMinigameTip(kind: string): string | null {
-    const { state, tip } = consumeMinigameTip(this.tutorial, kind);
+    // Playtest #36: Luna ball uses a fair, clue-specific tip (not generic choice).
+    const tipKind = this.pendingBetId === 'laje-lottery' ? 'lajeLottery' : kind;
+    const { state, tip } = consumeMinigameTip(this.tutorial, tipKind);
     if (!tip) return null;
     this.tutorial = state;
     this.story.setFlag(`tip_${tip}`, true);
