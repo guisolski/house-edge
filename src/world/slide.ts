@@ -40,6 +40,46 @@ export function nearestWalkable(
   return null;
 }
 
+/**
+ * Playtest #38: after holding into a wall, nudge into an open neighbor
+ * (prefer sideways into the corridor, then forward-diagonal).
+ */
+export function unstuckAlongPush(
+  map: MapDef,
+  x: number,
+  y: number,
+  dx: number,
+  dy: number,
+): { x: number; y: number } | null {
+  const sx = Math.sign(dx);
+  const sy = Math.sign(dy);
+  // Prefer forward-diagonal into the open corridor before sideways retreat.
+  const candidates: [number, number][] = [];
+  if (sx !== 0) {
+    candidates.push(
+      [x + sx, y - 1],
+      [x + sx, y + 1],
+      [x, y - 1],
+      [x, y + 1],
+      [x + sx, y],
+    );
+  } else if (sy !== 0) {
+    candidates.push(
+      [x - 1, y + sy],
+      [x + 1, y + sy],
+      [x - 1, y],
+      [x + 1, y],
+      [x, y + sy],
+    );
+  }
+  for (const [tx, ty] of candidates) {
+    if (tx === x && ty === y) continue;
+    if (tx < 0 || ty < 0 || tx >= map.width || ty >= map.height) continue;
+    if (isWalkable(map, tx, ty)) return { x: tx, y: ty };
+  }
+  return nearestWalkable(map, x + sx, y + sy);
+}
+
 function walkableOnRing(
   map: MapDef,
   sx: number,
@@ -68,35 +108,19 @@ function slideAround(
   nx: number,
   ny: number,
 ): { x: number; y: number } | null {
+  // Diagonal: slide on one axis.
   if (sx !== 0 && sy !== 0) {
     if (nx !== x && isWalkable(map, nx, y)) return { x: nx, y };
     if (ny !== y && isWalkable(map, x, ny)) return { x, y: ny };
     return null;
   }
-  const slips: [number, number][] =
-    sx !== 0
-      ? [
-          [nx, y - 1],
-          [nx, y + 1],
-        ]
-      : [
-          [x - 1, ny],
-          [x + 1, ny],
-        ];
-  return firstOpen(map, x, y, slips);
-}
-
-function firstOpen(
-  map: MapDef,
-  x: number,
-  y: number,
-  cells: [number, number][],
-): { x: number; y: number } | null {
-  for (const [tx, ty] of cells) {
-    if (tx === x && ty === y) continue;
-    if (tx < 0 || ty < 0 || tx >= map.width || ty >= map.height) continue;
-    if (isWalkable(map, tx, ty)) return { x: tx, y: ty };
-  }
+  // Playtest #38: orthogonal into a wall stops (no Y-drift while holding D).
+  // Wall-push unstuck (>1s) nudges around instead of silent corner-slip.
+  void map;
+  void x;
+  void y;
+  void nx;
+  void ny;
   return null;
 }
 

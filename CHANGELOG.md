@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.22.12] — 2026-11-26
+
+### Fixed
+
+- **Avenida softlock (P0)**: wall-push unstuck after >1s against colliders; west NPC spacing; on-ramp into dual lanes.
+- **Sequence input (P0)**: arrows always accepted (color↔arrow aliases); hints/titles match symbols; ATM “setas” not “dígitos”.
+- **VIP needle / offer (P0/P1)**: ready countdown before Stop; E+Enter confirm; timeout toast + fail; stable focus.
+- **Influencer / credits / Torre (P1)**: skill body scroll; skip world draw on credits; orthogonal no Y-drift.
+
+### Tests
+
+- `session-v12212` wall-push coords + sequence hint/input match.
+
 ## [1.22.11] — 2026-11-26
 
 ### Fixed

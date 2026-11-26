@@ -259,7 +259,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'mole-contact',
     name: englishNpcName('mole-contact'),
     districtId: 'avenida-odds',
-    // Playtest #35: east of Fair exit stand so left-walk doesn't arm Viajar.
+    // Playtest #38: clear of Fair sign + corridor mouth; walkable 4-way.
     x: 10,
     y: 13,
     wanderRadius: 0,
@@ -273,9 +273,9 @@ const NPCS: readonly WorldNpc[] = [
     id: 'capita',
     name: englishNpcName('capita'),
     districtId: 'avenida-odds',
-    // Playtest #35: off Fair exit stand (2,12) + sign (2,10).
-    x: 9,
-    y: 11,
+    // Playtest #38: south of center lanes so east walks aren't visually fenced.
+    x: 7,
+    y: 12,
     wanderRadius: 0,
     beatId: 'avenida-checkpoint',
     jobBetId: 'pixo-challenge',
@@ -286,6 +286,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'courier-odds',
     name: englishNpcName('courier-odds'),
     districtId: 'avenida-odds',
+    // Playtest #38: off Fair stand + west of corridor mouth.
     x: 10,
     y: 10,
     wanderRadius: 0,
@@ -349,7 +350,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'cage-runner',
     name: englishNpcName('cage-runner'),
     districtId: 'avenida-odds',
-    // Clear of Fair pad (2,12) interact.
+    // Playtest #38: clear of Fair pad + signs; walkable 4-way.
     x: 6,
     y: 13,
     wanderRadius: 0,
@@ -362,8 +363,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'neon-snap',
     name: englishNpcName('neon-snap'),
     districtId: 'avenida-odds',
-    // Playtest #30/#31: off arrival east lane (10–11,12); 4-way near stealth start.
-    x: 11,
+    // Playtest #38: west of corridor mouth so (11,11) east-into-column stays clear.
+    x: 8,
     y: 11,
     wanderRadius: 0,
     beatId: 'avenida-drone',

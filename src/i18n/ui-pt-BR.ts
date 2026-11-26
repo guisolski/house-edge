@@ -151,6 +151,14 @@ export const uiPtBR = {
   'ui.skill.sequenceLabel': 'Sequência: {seq}',
   'ui.skill.memorizeSeq': 'Memorize a sequência…',
   'ui.skill.escSeqHint': 'Esc cancela · setas só na sequência',
+  'ui.skill.escSeqHint.arrows': 'Esc cancela · use setas / WASD / direcional',
+  'ui.skill.escSeqHint.colors':
+    'Esc cancela · R/G/B/Y ou setas equivalentes (R↑ G→ B↓ Y←)',
+  'ui.skill.escSeqHint.mixed': 'Esc cancela · letras e setas (setas = R↑ G→ B↓ Y←)',
+  'ui.skill.needleReady': 'Prepare-se…',
+  'ui.skill.needleCountdown': 'Em {n}…',
+  'ui.skill.needleGo': 'Já! Pare no verde',
+  'ui.skill.offerExpiredToast': 'Oferta expirou — o Anfitrião foi embora.',
   'ui.skill.pinHidden': 'Pino {n}: ???',
   'ui.skill.pinBtn': 'Pino {n}',
   'ui.skill.pinClick': 'Pino {n}: certo',
@@ -219,7 +227,7 @@ export const uiPtBR = {
   'ui.toast.missHint.corrida-moto': 'Seu Zé: a moto só passa limpa no segundo portão.',
   'ui.toast.missHint.feira-radio': 'Pirateiro: três cliques, sem inventar quarto.',
   'ui.toast.missHint.twist-vazamento': 'Mole: o pacote torto quebra se você adivinha.',
-  'ui.toast.missHint.avenida-atm': 'Hacker: quatro dígitos — o caixa odeia chute.',
+  'ui.toast.missHint.avenida-atm': 'Hacker: quatro setas — o caixa odeia chute.',
   'ui.toast.missHint.avenida-stealth':
     'Tech das Câmeras: ponto cego, não atalho de corredor.',
   'ui.toast.missHint.morro-return-fio': 'Fio: o tom fantasma some se você força.',

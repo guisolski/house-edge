@@ -15,7 +15,7 @@ export const skillEn = {
   'skill.audiencia-publica.option.1': 'Hill notebook',
   'skill.audiencia-publica.option.2': 'Empty threat',
   'skill.audiencia-publica.prompt': 'Which testimony sticks?',
-  'skill.avenida-atm.prompt': 'Glitch the ATM rounding — match 4 digits.',
+  'skill.avenida-atm.prompt': 'Glitch the ATM rounding — match 4 arrows.',
   'skill.avenida-betrayal.clue':
     'Luna fights in the open. Margin argues on paper. Whoever sold the bytes picks up a call that never leaves a name.',
   'skill.avenida-betrayal.option.0': 'Blame Luna',

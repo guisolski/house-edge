@@ -31,28 +31,13 @@ describe('slideStep', () => {
     expect(slideStep(neo, 2, 5, 1, -1)).toBeNull();
   });
 
-  it('corner-slips east around a blocked cell', () => {
-    // Default toy blocks (3,5); east from (2,5) slips to (3,4) or (3,6).
-    const step = slideStep(toy, 2, 5, 1, 0);
-    expect(step).toEqual({ x: 3, y: 4 });
+  it('orthogonal into a wall stops (no corner Y-drift)', () => {
+    // Playtest #38: east from (2,5) into blocked (3,5) must not slip to y=4/6.
+    expect(slideStep(toy, 2, 5, 1, 0)).toBeNull();
+    expect(slideStep(toy, 2, 5, 0, 1)).toEqual({ x: 2, y: 6 });
   });
 
-  it('corner-slips south around a blocked cell', () => {
-    const step = slideStep(toy, 2, 5, 0, 1);
-    expect(step).toEqual({ x: 2, y: 6 });
-  });
-
-  it('returns null when every slip is blocked', () => {
+  it('returns null on sealed west edge', () => {
     expect(slideStep(toy, 1, minY, -1, 0)).toBeNull();
-  });
-
-  it('skips out-of-bounds slip cells on west/north edges', () => {
-    const edge = toySlideMap();
-    // Block west target so slips try (nx, y±1) which may be OOB / blocked.
-    edge.tiles[5 * edge.width + 0] = 'blocked';
-    expect(slideStep(edge, 1, 5, -1, 0)).toBeNull();
-    // Vertical axis slip near left edge.
-    edge.tiles[6 * edge.width + 1] = 'blocked';
-    expect(slideStep(edge, 1, 5, 0, 1)?.x).toBeDefined();
   });
 });

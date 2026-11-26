@@ -209,7 +209,10 @@ function onTick(deps: TickDeps, delta: number): void {
     deps.world.invalidateMap();
   }
   deps.frame.n += 1;
-  deps.world.draw(deps.frame.n, performance.now());
+  // Playtest #38: credits roll is CSS-only — skip world draw to keep ~60 FPS.
+  if (!deps.session.ui.is('ending')) {
+    deps.world.draw(deps.frame.n, performance.now());
+  }
   if (deps.host.dataset.fps === '1') {
     deps.hud.setFps(deps.world.getFps());
   }

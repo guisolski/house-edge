@@ -624,6 +624,13 @@ function sealAvenidaLane(tiles: TileKind[], w: number, h: number): void {
   // Wide west + east plazas stay fully open (no shoulder walls).
   rect({ tiles, w, x0: 1, y0: 9, x1: 11, y1: 14, kind: 'asphalt' });
   rect({ tiles, w, x0: 35, y0: 9, x1: w - 2, y1: 14, kind: 'asphalt' });
+  // Playtest #38: taller west on-ramp into the dual lanes (x≈300px softlock).
+  // Keep Neon Snap columns 12/20/28/34 blocked on y10/y13 — open the approach only.
+  for (const y of [10, 11, 12, 13]) {
+    set(tiles, w, 11, y, 'asphalt');
+  }
+  set(tiles, w, 12, 11, 'asphalt');
+  set(tiles, w, 12, 12, 'asphalt');
 }
 
 function placeAvenidaTowers(
@@ -721,7 +728,7 @@ function buildTorre(): MapDef {
   const props: MapDef['props'] = [];
   seal(tiles, w, h);
   rect({ tiles, w, x0: 2, y0: 2, x1: w - 3, y1: h - 3, kind: 'interior' });
-  // Playtest #37: taller plaza strip so foyer walks don't snag on table corners.
+  // Playtest #37/#38: wide plaza highway — hold D stays on the striped floor.
   rect({ tiles, w, x0: 4, y0: 9, x1: 35, y1: 15, kind: 'plaza' });
   // South-west exit — clear of elevator (24,11) so west walks don't dump to Odds.
   paintExitPad(tiles, w, 5, 18);

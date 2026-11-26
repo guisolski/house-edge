@@ -127,7 +127,7 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
   },
   'avenida-atm': {
     kind: 'hack',
-    prompt: 'Glitch the ATM rounding — match 4 digits.',
+    prompt: 'Glitch the ATM rounding — match 4 arrows.',
     target: 0,
     steps: 4,
     sequence: ['↑', '↓', '←', '→'],

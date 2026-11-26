@@ -22,6 +22,9 @@ import {
   phasePins,
   phaseSequence,
   sequencePadKeys,
+  sequenceHintKey,
+  sequenceInputIndex,
+  sequencePadLabel,
   SEQ_KEYS,
   timingZone,
   type LockpickUiState,
@@ -420,10 +423,12 @@ function paintTimingSkill(
   if (misses > 0) {
     body.appendChild(el('p', 'skill-clue skill-miss-hint', needleMissLine(session)));
   }
-  const stopAt = bindNeedleRuntime(meter, needle, body, session, after, phase);
+  const readyLine = el('p', 'skill-seq skill-needle-ready', t('ui.skill.needleReady'));
+  body.appendChild(readyLine);
+  const stopAt = bindNeedleRuntime({ meter, needle, body, session, after, phase });
   const stopBtn = button(t('ui.skill.stop'), () => stopAt());
   stopBtn.classList.add('btn-needle-stop');
-  // Playtest #37: Enter/E Stop requires the same post-open key-up as choices.
+  // Playtest #37/#38: Stop needs arm + ready countdown.
   bindEnterGate(stopBtn, () => {
     if (!session.allowModalConfirm()) return;
     stopAt();
@@ -431,59 +436,76 @@ function paintTimingSkill(
   actions.appendChild(stopBtn);
 }
 
+type NeedleBind = {
+  meter: HTMLElement;
+  needle: HTMLElement;
+  body: HTMLElement;
+  session: GameSession;
+  after: () => void;
+  phase: SkillPhase;
+};
+
 /** Needle rAF + confirm key — disposed with the skill panel (playtest #36). */
-function bindNeedleRuntime(
-  meter: HTMLElement,
-  needle: HTMLElement,
-  body: HTMLElement,
-  session: GameSession,
-  after: () => void,
-  phase: SkillPhase,
-): () => void {
+function bindNeedleRuntime(o: NeedleBind): () => void {
   let needlePos = 0;
   let settled = false;
-  const step = Math.max(0.015, 0.028 * (phase.needleSpeed ?? 0.8));
+  // Playtest #38: ~1s ready before the needle runs / Stop counts.
+  const readyUntil = performance.now() + 1100;
+  let ready = false;
+  const step = Math.max(0.015, 0.028 * (o.phase.needleSpeed ?? 0.8));
   let raf = 0;
   let lastTs = performance.now();
   let onKey: (e: KeyboardEvent) => void = () => undefined;
+  const readyLine = o.body.querySelector('.skill-needle-ready') as HTMLElement | null;
   const dropNeedle = (): void => {
     cancelAnimationFrame(raf);
     window.removeEventListener('keydown', onKey, true);
   };
   const tickNeedle = (ts: number): void => {
     if (settled) return;
-    if (!meter.isConnected) {
-      dropNeedle();
+    if (!o.meter.isConnected) return dropNeedle();
+    if (ts < readyUntil) {
+      lastTs = ts;
+      const left = Math.max(1, Math.ceil((readyUntil - ts) / 1000));
+      if (readyLine) {
+        readyLine.textContent = tf('ui.skill.needleCountdown', { n: String(left) });
+      }
+      raf = requestAnimationFrame(tickNeedle);
       return;
+    }
+    if (!ready) {
+      ready = true;
+      if (readyLine) readyLine.textContent = t('ui.skill.needleGo');
     }
     const dt = Math.min(48, Math.max(8, ts - lastTs));
     lastTs = ts;
     needlePos = (needlePos + step * (dt / 32)) % 1;
     if (needlePos < 0) needlePos += 1;
-    needle.style.left = `${(needlePos * 100).toFixed(3)}%`;
+    o.needle.style.left = `${(needlePos * 100).toFixed(3)}%`;
     raf = requestAnimationFrame(tickNeedle);
   };
   raf = requestAnimationFrame(tickNeedle);
-  meter.dataset.needleRaf = '1';
+  o.meter.dataset.needleRaf = '1';
   const stopAt = (): void => {
-    if (settled) return;
+    if (settled || !ready || performance.now() < readyUntil) return;
+    if (!o.session.allowModalConfirm()) return;
     settled = true;
     dropNeedle();
-    session.submitSkill(needlePos % 1);
-    after();
+    o.session.submitSkill(needlePos % 1);
+    o.after();
   };
   onKey = (e: KeyboardEvent): void => {
-    if (!meter.isConnected) return dropNeedle();
+    if (!o.meter.isConnected) return dropNeedle();
     if (e.repeat) return;
     if (!isConfirmKey(e) && e.code !== 'KeyE') return;
-    // Playtest #37: Aceitar → skill must not Stop on the same/held key.
-    if (!session.allowModalConfirm()) return;
+    if (!o.session.allowModalConfirm()) return;
+    if (!ready || performance.now() < readyUntil) return;
     e.preventDefault();
     e.stopPropagation();
     stopAt();
   };
   window.addEventListener('keydown', onKey, true);
-  const skillPanel = body.closest('.skill-panel') ?? body;
+  const skillPanel = o.body.closest('.skill-panel') ?? o.body;
   onPanelDispose(skillPanel as HTMLElement, dropNeedle);
   return stopAt;
 }
@@ -561,7 +583,8 @@ function appendChoiceSkillButtons(
     btn.addEventListener(
       'keydown',
       (e) => {
-        if (!isConfirmKey(e)) return;
+        // Playtest #38: E and Enter/Space both confirm VIP offer choices.
+        if (!isConfirmKey(e) && e.code !== 'KeyE') return;
         e.preventDefault();
         e.stopPropagation();
         if (e.repeat) return;
@@ -584,23 +607,19 @@ function paintChoiceSkill(
 ): void {
   const state = makeChoiceSettle(options, session, after);
   appendChoiceSkillButtons(actions, options, state);
-  if (document.activeElement instanceof HTMLElement) {
-    document.activeElement.blur();
-  }
-  window.setTimeout(
-    () => {
-      if (!actions.isConnected || state.settled) return;
-      const ae = document.activeElement;
-      if (ae instanceof HTMLButtonElement && state.buttons.includes(ae)) return;
-      state.buttons[0]?.focus();
-    },
-    Math.max(0, state.armUntil - Date.now()) + 20,
-  );
+  // Playtest #38: keep focus on option 1 after arm — don't steal after wrong picks.
+  const focusFirstChoice = (): void => {
+    if (!actions.isConnected || state.settled) return;
+    const ae = document.activeElement;
+    if (ae instanceof HTMLButtonElement && state.buttons.includes(ae)) return;
+    state.buttons[0]?.focus({ preventScroll: true });
+  };
+  window.setTimeout(focusFirstChoice, Math.max(0, state.armUntil - Date.now()) + 20);
   const ms = phase?.timerMs;
   if (!ms || ms <= 0) return;
   const timer = el(
     'p',
-    'skill-seq',
+    'skill-seq skill-offer-timer',
     tf('ui.skill.offerExpires', { s: String(Math.ceil(ms / 1000)) }),
   );
   actions.prepend(timer);
@@ -611,13 +630,24 @@ function paintChoiceSkill(
       return;
     }
     const left = Math.max(0, ms - (Date.now() - started));
-    timer.textContent =
-      left > 0
-        ? tf('ui.skill.offerExpires', { s: String(Math.ceil(left / 1000)) })
-        : t('ui.skill.offerExpired');
-    if (left > 0) return;
+    if (left > 0) {
+      timer.textContent = tf('ui.skill.offerExpires', {
+        s: String(Math.ceil(left / 1000)),
+      });
+      return;
+    }
     window.clearInterval(tick);
-    state.settle((phase?.target ?? 0) === 0 ? 1 : 0, true);
+    // Playtest #38: audible timeout — never silent wrong-pick.
+    timer.textContent = t('ui.skill.offerExpired');
+    timer.classList.add('skill-offer-expired');
+    session.bus.emit('ui:toast', {
+      message: t('ui.skill.offerExpiredToast'),
+      kind: 'danger',
+    });
+    if (state.settled) return;
+    state.settled = true;
+    session.failSkillOffer();
+    after();
   }, 200);
   const skillPanel = actions.closest('.skill-panel') ?? actions;
   onPanelDispose(skillPanel as HTMLElement, () => window.clearInterval(tick));
@@ -1044,17 +1074,26 @@ function paintSequenceSkill(
   const onKey = (keyIndex: number): void => buffer.push(keyIndex);
   const pad = el('div', 'skill-seq-pad');
   for (const key of used) {
-    pad.appendChild(button(key, () => onKey(SEQ_KEYS.indexOf(key))));
+    // Playtest #38: color chips show arrow equivalents (R ↑).
+    pad.appendChild(button(sequencePadLabel(key), () => onKey(SEQ_KEYS.indexOf(key))));
   }
   actions.appendChild(pad);
-  actions.appendChild(el('p', 'skill-seq', t('ui.skill.escSeqHint')));
+  actions.appendChild(el('p', 'skill-seq', t(sequenceHintKey(seq))));
   panelKeyHook(actions, (ev) => {
     if (ev.repeat || !ui.armed.v) return;
-    const sym = SEQ_KEY_CODES[ev.code];
-    if (!sym || !used.includes(sym)) return;
+    const sym = SEQ_KEY_CODES[ev.code] as SeqKey | undefined;
+    if (!sym) return;
+    // Accept arrows even when the flash shows R/G/B/Y (and vice versa).
+    const progressNow = session.getSkillProgress();
+    const expected = progressNow
+      ? phaseSequence(progressNow.def.phases[progressNow.phaseIndex]!)[
+          progressNow.seqIndex
+        ]
+      : undefined;
+    if (!expected && !used.includes(sym)) return;
     ev.preventDefault();
     ev.stopPropagation();
-    onKey(SEQ_KEYS.indexOf(sym));
+    onKey(expected ? sequenceInputIndex(sym, expected) : SEQ_KEYS.indexOf(sym));
   });
 }
 

@@ -18,6 +18,64 @@ export type SkillKind =
 export const SEQ_KEYS = ['↑', '→', '↓', '←', 'R', 'G', 'B', 'Y'] as const;
 export type SeqKey = (typeof SEQ_KEYS)[number];
 
+/** Playtest #38: letters ↔ arrows so every sequence accepts arrow/WASD/dpad. */
+export const COLOR_TO_ARROW: Record<string, SeqKey> = {
+  R: '↑',
+  G: '→',
+  B: '↓',
+  Y: '←',
+};
+export const ARROW_TO_COLOR: Record<string, SeqKey> = {
+  '↑': 'R',
+  '→': 'G',
+  '↓': 'B',
+  '←': 'Y',
+};
+
+export function isColorSeqKey(k: SeqKey): boolean {
+  return k === 'R' || k === 'G' || k === 'B' || k === 'Y';
+}
+
+export function isArrowSeqKey(k: SeqKey): boolean {
+  return k === '↑' || k === '→' || k === '↓' || k === '←';
+}
+
+/** True when pressed matches expected, including color↔arrow aliases. */
+export function sequenceKeysMatch(pressed: SeqKey, expected: SeqKey): boolean {
+  if (pressed === expected) return true;
+  if (COLOR_TO_ARROW[pressed] === expected) return true;
+  if (ARROW_TO_COLOR[pressed] === expected) return true;
+  if (COLOR_TO_ARROW[expected] === pressed) return true;
+  if (ARROW_TO_COLOR[expected] === pressed) return true;
+  return false;
+}
+
+/** Map a physical key onto the SEQ_KEYS index the judge expects. */
+export function sequenceInputIndex(pressed: SeqKey, expected: SeqKey): number {
+  if (sequenceKeysMatch(pressed, expected)) return SEQ_KEYS.indexOf(expected);
+  return SEQ_KEYS.indexOf(pressed);
+}
+
+/** Hint catalog key for the symbols actually in `seq`. */
+export function sequenceHintKey(seq: SeqKey[]): string {
+  const colors = seq.some(isColorSeqKey);
+  const arrows = seq.some(isArrowSeqKey);
+  if (colors && arrows) return 'ui.skill.escSeqHint.mixed';
+  if (colors) return 'ui.skill.escSeqHint.colors';
+  return 'ui.skill.escSeqHint.arrows';
+}
+
+/** Pad label — colors show their arrow equivalent. */
+export function sequencePadLabel(key: SeqKey): string {
+  if (isColorSeqKey(key) && COLOR_TO_ARROW[key]) {
+    return `${key} ${COLOR_TO_ARROW[key]}`;
+  }
+  if (isArrowSeqKey(key) && ARROW_TO_COLOR[key]) {
+    return `${key}`;
+  }
+  return key;
+}
+
 /** Pin height levels for lockpick (0 = sunk, 2 = raised). */
 export const LOCK_PIN_LEVELS = 3;
 

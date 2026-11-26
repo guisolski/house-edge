@@ -28,7 +28,7 @@ import {
   type WorldNpc,
 } from './interaction';
 import { buildDistrictMap, buildTorreVip, type MapDef } from '../world/maps';
-import { nearestWalkable, slideStep } from '../world/slide';
+import { nearestWalkable, slideStep, unstuckAlongPush } from '../world/slide';
 import {
   currentObjective,
   nextBeat,
@@ -142,6 +142,8 @@ export class GameSession {
   private modalHeldThroughArm = false;
   /** Key-up arrived during the arm — apply when the arm expires. */
   private modalReleasePending = false;
+  /** Playtest #38: holding into a solid wall — nudge after >1s. */
+  private wallPush: { dx: number; dy: number; since: number } | null = null;
   /** New Game onboarding + first-time minigame tips. */
   private tutorial: TutorialState = createTutorialState();
 
@@ -318,14 +320,25 @@ export class GameSession {
     if (this.unstuckIfNeeded(map)) return true;
     const dest = slideStep(map, s.x, s.y, dx, dy);
     if (dest) {
+      this.wallPush = null;
       this.player.setFacing(dest.x - s.x || dx, dest.y - s.y || dy);
       // NPCs are non-blocking — walk-through keeps interaction from trapping the player.
       this.player.setPosition(dest.x, dest.y);
-    } else if (dx !== 0 || dy !== 0) {
+      this.refreshExitLatch();
+      return true;
+    }
+    if (dx !== 0 || dy !== 0) {
       this.player.setFacing(dx, dy);
+      // Playtest #38: pressed into a collider >1s → nudge to open corridor.
+      if (this.maybeWallPushUnstuck(map, dx, dy)) {
+        this.refreshExitLatch();
+        return true;
+      }
+    } else {
+      this.wallPush = null;
     }
     this.refreshExitLatch();
-    return Boolean(dest);
+    return false;
   }
 
   /** Nudge onto the nearest free tile when the avatar is inside a solid. */
@@ -333,8 +346,27 @@ export class GameSession {
     const s = this.player.getStats();
     const free = nearestWalkable(map, s.x, s.y);
     if (!free) return false;
+    this.wallPush = null;
     this.player.setPosition(free.x, free.y);
     this.refreshExitLatch();
+    return true;
+  }
+
+  /** Hold against a wall >1s → slide into the nearest open neighbor. */
+  maybeWallPushUnstuck(map: MapDef, dx: number, dy: number): boolean {
+    const now = Date.now();
+    const sx = Math.sign(dx);
+    const sy = Math.sign(dy);
+    if (!this.wallPush || this.wallPush.dx !== sx || this.wallPush.dy !== sy) {
+      this.wallPush = { dx: sx, dy: sy, since: now };
+      return false;
+    }
+    if (now - this.wallPush.since < 1000) return false;
+    const s = this.player.getStats();
+    const free = unstuckAlongPush(map, s.x, s.y, sx, sy);
+    if (!free) return false;
+    this.wallPush = null;
+    this.player.setPosition(free.x, free.y);
     return true;
   }
 
@@ -1146,6 +1178,12 @@ export class GameSession {
     // Force play even if a prior transition edge was odd — Esc must free WASD.
     this.ui.backToPlay();
     this.armInteractLock(this.interactKeyDown);
+  }
+
+  /** Playtest #38: negotiate/choice timer expired — lose the encounter (toast already shown). */
+  failSkillOffer(): boolean {
+    if (!this.skillProgress || !this.pendingBetId) return false;
+    return this.finishSkill(false);
   }
 
   /**

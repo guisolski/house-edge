@@ -20,7 +20,7 @@ export const skillPtBR = {
   'skill.audiencia-publica.option.1': 'Caderno do morro',
   'skill.audiencia-publica.option.2': 'Ameaça vazia',
   'skill.audiencia-publica.prompt': 'Qual depoimento prende?',
-  'skill.avenida-atm.prompt': 'Bug no arredondamento do caixa — repete 4 dígitos.',
+  'skill.avenida-atm.prompt': 'Bug no arredondamento do caixa — repete 4 setas.',
   'skill.avenida-betrayal.clue':
     'A Luna luta em aberto. O Margin discute no papel. Quem vendeu os bytes atende um toque que nunca deixa nome.',
   'skill.avenida-betrayal.option.0': 'Culpar a Luna',

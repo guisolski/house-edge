@@ -131,6 +131,9 @@ canvas.excalibur-game {
   gap: 0.55rem;
   /* Extra bottom pad so scrolling lines clear the action buttons. */
   padding: 3rem 0 12rem;
+  /* Playtest #38: compositor-only scroll (transform) — avoid layout thrash. */
+  will-change: transform;
+  contain: layout paint;
   animation: credits-scroll 26s linear infinite;
 }
 
@@ -653,13 +656,35 @@ canvas.excalibur-game {
   transform: translate(-50%, -50%);
   width: min(420px, 92vw);
   max-height: 80vh;
-  overflow: auto;
+  /* Playtest #38: body scrolls; actions stay pinned (Influencer clue). */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: #0c0c14f2;
   border: 2px solid var(--cyan);
   border-radius: 10px;
   padding: 1rem 1.1rem;
   z-index: 40;
   box-shadow: 0 0 28px #00277688;
+}
+
+.skill-panel .skill-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+}
+
+.skill-panel .skill-actions {
+  flex-shrink: 0;
+  margin-top: 0.65rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid #2bfff233;
+}
+
+.skill-offer-expired {
+  color: var(--danger, #ff3b5c);
+  font-weight: 600;
 }
 
 .skill-meter {

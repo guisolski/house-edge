@@ -150,6 +150,14 @@ export const uiEn = {
   'ui.skill.sequenceLabel': 'Sequence: {seq}',
   'ui.skill.memorizeSeq': 'Memorize the sequence…',
   'ui.skill.escSeqHint': 'Esc cancels · arrows are sequence only',
+  'ui.skill.escSeqHint.arrows': 'Esc cancels · use arrows / WASD / pad',
+  'ui.skill.escSeqHint.colors': 'Esc cancels · R/G/B/Y or matching arrows (R↑ G→ B↓ Y←)',
+  'ui.skill.escSeqHint.mixed':
+    'Esc cancels · letters and arrows (arrows match R↑ G→ B↓ Y←)',
+  'ui.skill.needleReady': 'Get ready…',
+  'ui.skill.needleCountdown': 'Ready in {n}…',
+  'ui.skill.needleGo': 'Go! Stop on green',
+  'ui.skill.offerExpiredToast': 'Offer expired — the Host walked.',
   'ui.skill.pinHidden': 'Pin {n}: ???',
   'ui.skill.pinBtn': 'Pin {n}',
   'ui.skill.pinClick': 'Pin {n}: set',
@@ -216,7 +224,7 @@ export const uiEn = {
   'ui.toast.missHint.corrida-moto': 'Seu Zé: the moto only clears the second gate clean.',
   'ui.toast.missHint.feira-radio': 'Pirate: three clicks — don’t invent a fourth.',
   'ui.toast.missHint.twist-vazamento': 'Mole: a twisted packet breaks if you guess.',
-  'ui.toast.missHint.avenida-atm': 'Hacker: four digits — the till hates a wild guess.',
+  'ui.toast.missHint.avenida-atm': 'Hacker: four arrows — the till hates a wild guess.',
   'ui.toast.missHint.avenida-stealth':
     'Lobby Cam Tech: blind spot, not a hallway shortcut.',
   'ui.toast.missHint.morro-return-fio': 'Fio: the ghost tone fades if you force it.',
