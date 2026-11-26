@@ -35,6 +35,20 @@ describe('v1.22.23 needle start outside zone', () => {
       expect(pos).toBeLessThan(1);
     }
   });
+
+  it('prefers the right side when the left has no room', () => {
+    // Zone hugging the left edge → only right escape is viable.
+    const zone = { lo: 0.02, hi: 0.2 };
+    const pos = needleStartOutsideZone(zone, 0.9);
+    expect(pos).toBeGreaterThan(zone.hi);
+    expect(judgeTimingStop(pos, zone)).toBe(false);
+  });
+
+  it('parks at 0.02 or 0.98 for a near-full-width zone', () => {
+    const zone = { lo: 0.01, hi: 0.99 };
+    expect(needleStartOutsideZone(zone, 0.1)).toBe(0.02);
+    expect(needleStartOutsideZone(zone, 0.9)).toBe(0.98);
+  });
 });
 
 describe('v1.22.23 sequence miss → fail card, not silent replay', () => {
@@ -106,6 +120,29 @@ describe('v1.22.23 QA sandbox + title nav helpers', () => {
     expect(tf('ui.skill.missSeqFeedback', { current: '1', max: '2' })).toMatch(
       /Errou|1\/2/i,
     );
+  });
+
+  it('leaveSkillMiss cancels the encounter after a soft miss', () => {
+    const session = new GameSession();
+    session.startNew();
+    session.player.addCredits(200);
+    expect(session.forceStorySkill('feira-radio')).toBe(true);
+    session.submitSkill(0);
+    expect(session.getSkillMissCard()).toBeTruthy();
+    session.leaveSkillMiss();
+    expect(session.getSkillMissCard()).toBeNull();
+    expect(session.getSkillProgress()).toBeNull();
+    expect(session.ui.is('play')).toBe(true);
+  });
+
+  it('startNew clears qaSandbox from a prior ?minigame open', () => {
+    const session = new GameSession();
+    session.startNew();
+    expect(session.debugOpenMinigame('quiz')).toBe(true);
+    expect(session.isQaSandbox()).toBe(true);
+    session.startNew();
+    expect(session.isQaSandbox()).toBe(false);
+    expect(session.getQaTimescale()).toBe(1);
   });
 });
 
