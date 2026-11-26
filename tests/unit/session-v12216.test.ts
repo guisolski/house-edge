@@ -29,6 +29,30 @@ describe('v1.22.16 dialogue arm — Antena / offer-bet', () => {
     expect(session.allowModalConfirm('Enter')).toBe(true);
   });
 
+  it('offer-bet time arm blocks Enter until expiry; fresh Enter after works', () => {
+    const session = new GameSession();
+    session.startNew();
+    // Simulate Take-bet panel opened with E already released.
+    session.noteModalOpened(false, []);
+    expect(session.allowModalConfirm('Enter')).toBe(false);
+    vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 300);
+    expect(session.allowModalConfirm('Enter')).toBe(true);
+    vi.restoreAllMocks();
+  });
+
+  it('completeSkillPerfect clears skill and leaves no orphan result', () => {
+    const session = new GameSession();
+    session.startNew();
+    session.player.addCredits(100);
+    expect(session.forceStorySkill('antena-sinal')).toBe(true);
+    expect(session.completeSkillPerfect()).toBe(true);
+    expect(session.getSkillResult()).toBeNull();
+    expect(session.getSkillProgress()).toBeNull();
+    expect(session.ui.is('play')).toBe(true);
+    // No live phase / result — safe no-op.
+    expect(session.completeSkillPerfect()).toBe(false);
+  });
+
   it('result copy formats a single plus sign', () => {
     setLocale('pt-BR');
     expect(t('ui.skill.resultWin')).toBe('Vitória · {credits} cr · {rep} rep');

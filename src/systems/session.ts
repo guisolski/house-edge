@@ -1104,7 +1104,14 @@ export class GameSession {
     if (this.stealthProgress && !this.stealthProgress.done) {
       return this.completeStealthPerfect();
     }
-    if (!this.skillProgress) return false;
+    // Orphan result banner (no live phase) — dismiss so walkers are not stuck.
+    if (!this.skillProgress) {
+      if (this.skillResult) {
+        this.dismissSkillResult();
+        return true;
+      }
+      return false;
+    }
     let p = this.skillProgress;
     let guard = 0;
     while (!p.done && guard < 64) {

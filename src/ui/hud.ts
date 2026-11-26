@@ -245,11 +245,12 @@ function showDialoguePanel(
     !offerBet &&
     lines.length > 0 &&
     lines.every((l) => /Saúde/i.test(l.text));
-  // Playtest #40/#42: arm only codes still held at paint — fresh Enter advances.
-  // Offer-bet (Antena Take bet) uses the same held-key arm as plain lines so
-  // Enter is never swallowed by a re-arm loop.
+  // Playtest #40/#42: choices + offer-bet use a short time arm so post-choice
+  // Enter / mash cannot auto-Take-bet. Plain Close uses held-key arm only.
+  // bumpModalConfirmArm no longer invents held Enter (empty-held early return),
+  // so Antena Take-bet still advances on the first fresh Enter after the arm.
   const heldCodes = session.heldInteractCodes();
-  if (hasChoice) {
+  if (hasChoice || offerBet) {
     session.noteModalOpened(session.isInteractHeld(), heldCodes);
   } else {
     session.armPlainDialogueAdvance(heldCodes);
@@ -260,7 +261,7 @@ function showDialoguePanel(
   const holdCloseUntil = closingOnly ? Date.now() + 400 : undefined;
   paintDialogue(p.dialogue, lines, {
     offerBet,
-    choiceArmAt: hasChoice ? choiceArmAt : 0,
+    choiceArmAt: hasChoice || offerBet ? choiceArmAt : 0,
     allowChoice: () => session.allowModalConfirm(),
     holdCloseUntil,
     closingLine: closingOnly,

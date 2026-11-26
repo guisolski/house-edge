@@ -40,6 +40,8 @@ test(
               acceptStoryBet: () => boolean;
               confirmBet: () => boolean;
               completeSkillPerfect: () => boolean;
+              getSkillResult: () => unknown;
+              dismissSkillResult: () => void;
               isStealthActive?: () => boolean;
               pickDialogueChoice: (flag?: string, reply?: string) => void;
               closeModal: () => void;
@@ -98,7 +100,8 @@ test(
       let steps = 0;
       let lastObj = '';
       let stuck = 0;
-      const MAX = 4000;
+      // Sequence reveal + result banners burn a few extra modal ticks per skill.
+      const MAX = 6000;
 
       const walkable = (x: number, y: number): boolean => {
         const m = he.session.getMap();
@@ -196,6 +199,12 @@ test(
         }
         if (he.session.ui.is('skill')) {
           grindIfBroke();
+          // Result banner with no live phase — dismiss before re-perfecting.
+          if (he.session.getSkillResult()) {
+            he.session.dismissSkillResult();
+            await sleep(20);
+            return;
+          }
           he.session.completeSkillPerfect();
           await sleep(20);
           return;

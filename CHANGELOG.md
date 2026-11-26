@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.22.18] — 2026-11-26
+
+### Fixed
+
+- **Enter arm regression (CI)**: offer-bet / Take bet keeps a short time arm + mash re-arm so post-choice Enter cannot auto-start the skill; `bumpModalConfirmArm` still refuses to invent a held Enter (Antena first-press).
+- **Skill harness**: `completeSkillPerfect` dismisses an orphan result banner so story-walk cannot soft-lock on `ui=skill` with no phase.
+
+### Tests
+
+- offer-bet arm unit; story-walk step budget for reveal/result ticks.
+
 ## [1.22.17] — 2026-11-26
 
 ### Fixed
