@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.22.20] — 2026-11-26
+
+### Fixed
+
+- **Skill panel overlap (P0)**: actions are no longer sticky — lockpick Testar no longer paints over Pino 1/2/3; sequence pattern row has reserved height and the arrow pad sits in body flow (no clip/shift).
+- **Lockpick heights (P1)**: pin bars + numeric height shown from the first paint, not only after Testar.
+- **Fail card (P1)**: never shows `— cr`; omits the credits segment when delta is 0, or shows a signed loss (e.g. `−40 cr`).
+- **District banner (P2)**: big centered zone-name banner ~1.5s after travel fade (Feira Central arrival included).
+
+### Added
+
+- **QA `?chapter=` (P2)**: `feira|avenida|torre|vip|epilogue` starts a new game at that beat with seeded credits/rep — see `docs/qa-chapter-jumps.md` and the playtest skill.
+- **E2e**: `playtest-44-skill-layout` opens every skill panel kind at 1280×800 and 390×844 and asserts no overlapping interactive/text rows.
+
+### Tests
+
+- `session-v12220`, `playtest-44-skill-layout`.
+
 ## [1.22.19] — 2026-11-26
 
 ### Fixed

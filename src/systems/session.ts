@@ -72,6 +72,7 @@ import {
 import { t, tf } from '../i18n';
 import { localizedNpcName } from '../i18n/localize-npc';
 import { localizeBeatDialogue, localizeHushLine } from '../i18n/localize-story';
+import { DEBUG_CHAPTERS, parseDebugChapter, type DebugChapterId } from './debug-chapter';
 
 const SAFE_JOB_COOLDOWN_MS = 10_000;
 const SAFE_JOB_CAP = 6;
@@ -476,6 +477,48 @@ export class GameSession {
   forceStorySkill(betId: string): boolean {
     this.pendingStoryBeat = 'e2e-skill';
     return this.offerBet(betId);
+  }
+
+  /**
+   * QA / playtest: `?chapter=feira|avenida|torre|vip|epilogue` — new game at that beat.
+   * Completes prior story beats, unlocks districts, seeds credits/rep.
+   */
+  debugStartChapter(raw: string): boolean {
+    const id = parseDebugChapter(raw);
+    if (!id) return false;
+    return this.applyDebugChapter(id);
+  }
+
+  private applyDebugChapter(id: DebugChapterId): boolean {
+    const preset = DEBUG_CHAPTERS[id];
+    this.startNew();
+    this.skipTutorialNow();
+    for (const beat of STORY_BEATS) {
+      if (preset.skipEndingBeat && beat.isEnding) continue;
+      this.story.completeBeat(beat.id);
+      if (beat.unlocksDistrict) this.world.unlock(beat.unlocksDistrict);
+      if (beat.id === preset.completeThrough) break;
+    }
+    for (const flag of preset.extraFlags ?? []) this.story.setFlag(flag, true);
+    const stats = this.player.getStats();
+    if (preset.credits > stats.credits)
+      this.player.addCredits(preset.credits - stats.credits);
+    if (preset.reputation > stats.reputation) {
+      this.player.addReputation(preset.reputation - stats.reputation);
+    }
+    this.world.unlock(preset.district);
+    if (!this.travelTo(preset.district)) {
+      this.player.setDistrict(preset.district);
+    }
+    if (preset.vipFloor) {
+      this.vipFloor = true;
+      this.player.setPosition(28, 11);
+      this.player.setFacing(1, 0);
+      this.bus.emit('district:entered', { districtId: 'torre-casa' });
+    }
+    this.ui.go('play');
+    this.persist();
+    return true;
   }
 
   travelTo(districtId: DistrictId): boolean {

@@ -176,12 +176,16 @@ canvas.excalibur-game {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+  position: relative;
+  flex-shrink: 0;
+  margin-bottom: 0.35rem;
 }
 
 .lockpick-pin {
   font-variant-numeric: tabular-nums;
-  min-width: 5.5rem;
-  font-size: 0.9rem;
+  min-width: 6.25rem;
+  flex: 1 1 auto;
+  font-size: 0.85rem;
 }
 
 .lockpick-hint {
@@ -241,10 +245,6 @@ canvas.excalibur-game {
   display: none;
 }
 
-.skill-panel:has(.lockpick-row) {
-  overflow: hidden;
-}
-
 .skill-panel:has(.lockpick-row) .skill-clue {
   font-size: 0.78rem;
   max-height: 2.6em;
@@ -256,13 +256,6 @@ canvas.excalibur-game {
 
 .skill-panel:has(.lockpick-row) .bet-desc {
   display: none;
-}
-
-.skill-panel:has(.lockpick-row) .skill-actions {
-  position: static;
-  background: transparent;
-  border-top: 1px solid #2bfff233;
-  margin-top: 0.4rem;
 }
 
 .skill-panel .skill-clue {
@@ -758,9 +751,9 @@ canvas.excalibur-game {
   top: 50%;
   transform: translate(-50%, -50%);
   width: min(420px, 92vw);
-  /* Playtest #41: fit lockpick at 1280×800 without losing timer/buttons. */
+  /* Playtest #41/#44: body scrolls; actions stay in normal flow (no sticky overlap). */
   max-height: min(78vh, 560px);
-  overflow: auto;
+  overflow: hidden;
   background: #0c0c14f2;
   border: 2px solid var(--cyan);
   border-radius: 10px;
@@ -769,20 +762,25 @@ canvas.excalibur-game {
   box-shadow: 0 0 28px #00277688;
   display: flex;
   flex-direction: column;
+  gap: 0.35rem;
 }
 
 .skill-panel .skill-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
   padding-right: 0.15rem;
 }
 
 .skill-panel .skill-actions {
-  position: sticky;
-  bottom: 0;
-  margin-top: 0.65rem;
+  /* Playtest #44: never sticky/absolute — sticky was painting Testar/pads over pins. */
+  position: static;
+  flex: 0 0 auto;
+  margin-top: 0.35rem;
   padding-top: 0.5rem;
   padding-bottom: 0.15rem;
   border-top: 1px solid #2bfff233;
-  background: linear-gradient(transparent, #0c0c14 28%);
+  background: #0c0c14;
 }
 
 .skill-offer-expired {
@@ -896,6 +894,14 @@ canvas.excalibur-game {
   font-weight: 700;
 }
 
+/* Playtest #44: reserve height so reveal → input never clips under the pad. */
+.skill-pattern {
+  min-height: 1.75em;
+  line-height: 1.35;
+  flex-shrink: 0;
+  margin: 0.15rem 0;
+}
+
 .skill-clue {
   color: var(--yellow);
   font-size: 0.95rem;
@@ -908,10 +914,12 @@ canvas.excalibur-game {
 }
 
 .skill-seq-pad {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin: 0.5rem 0;
+  flex-shrink: 0;
 }
 
 .skill-seq-pad .btn {
@@ -989,6 +997,51 @@ canvas.excalibur-game {
   z-index: 70;
   pointer-events: none;
   animation: fx-fade-in 0.18s ease-out;
+}
+
+/* Playtest #44: big centered district name after travel fade (~1.5s). */
+.district-zone-banner {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  z-index: 55;
+  pointer-events: none;
+  padding: 0.55rem 1.4rem;
+  font-size: clamp(1.35rem, 4.5vw, 2.1rem);
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #04140a;
+  background: #7dffb8ee;
+  border: 2px solid #f0fff8;
+  border-radius: 6px;
+  box-shadow: 0 0 28px #7dffb888;
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.district-zone-banner.district-zone-banner-show {
+  animation: district-zone-banner-pop 1.5s ease-out;
+}
+
+@keyframes district-zone-banner-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -40%) scale(0.92);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.04);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -58%) scale(0.98);
+  }
 }
 
 .fx-fade {

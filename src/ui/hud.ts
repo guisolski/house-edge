@@ -53,6 +53,8 @@ export type HudHandles = {
   flash: (kind: string) => void;
   creditPopup: (delta: number) => void;
   playTransition: (kind: string, label?: string) => void;
+  /** Playtest #44: big centered district name for ~1.5s after fade. */
+  showDistrictBanner: (districtId: string) => void;
 };
 
 type Parts = {
@@ -78,6 +80,7 @@ type Parts = {
   creditsFx: HTMLElement;
   transition: HTMLElement;
   tutorial: HTMLElement;
+  districtBanner: HTMLElement;
 };
 
 export function createHud(session: GameSession, mount: HTMLElement): HudHandles {
@@ -122,6 +125,7 @@ function emptyParts(): Parts {
     creditsFx: el('div', 'fx-credits'),
     transition: el('div', 'fx-transition'),
     tutorial: el('div', 'tutorial-panel'),
+    districtBanner: el('div', 'district-zone-banner', ''),
   };
 }
 
@@ -131,6 +135,7 @@ function wireDom(session: GameSession, p: Parts, h: HudHandles): void {
   setVisible(p.flash, false);
   setVisible(p.creditsFx, false);
   setVisible(p.transition, false);
+  setVisible(p.districtBanner, false);
   p.root.appendChild(p.fps);
   fillTitle(p.title, session);
   fillMenu(p.menu, session, h);
@@ -167,6 +172,7 @@ function appendAll(p: Parts): void {
     p.flash,
     p.creditsFx,
     p.transition,
+    p.districtBanner,
   );
   setVisible(p.tutorial, false);
 }
@@ -205,6 +211,7 @@ function baseShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudHa
     flash: (kind) => runFlash(p.flash, kind),
     creditPopup: (delta) => runCreditPopup(p.creditsFx, delta),
     playTransition: (kind, label) => runTransition(p.transition, kind, label),
+    showDistrictBanner: (districtId) => runDistrictBanner(p.districtBanner, districtId),
     showTutorial: (active) => paintTutorial(p, session, h, active),
   };
 }
@@ -898,6 +905,18 @@ function runTransition(node: HTMLElement, kind: string, label?: string): void {
   // ~1.2s visible ride with floor indicator (matches session hold).
   const ms = kind === 'elevator' ? 1200 : 720;
   window.setTimeout(() => setVisible(node, false), ms);
+}
+
+/** Playtest #44: big centered zone-name banner after district fade (~1.5s). */
+function runDistrictBanner(node: HTMLElement, districtId: string): void {
+  const name = localizeDistrictName(districtId);
+  node.className = 'district-zone-banner district-zone-banner-show';
+  node.textContent = name;
+  setVisible(node, true);
+  window.setTimeout(() => {
+    setVisible(node, false);
+    node.classList.remove('district-zone-banner-show');
+  }, 1500);
 }
 
 function paintToast(toast: HTMLElement, message: string, kind: string): void {

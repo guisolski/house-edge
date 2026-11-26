@@ -136,11 +136,13 @@ function wirePlayer(session: GameSession, hud: HudHandles): void {
       session.noteTutorialProgress('sawObjective');
     }
   });
-  session.bus.on('district:entered', () => {
+  session.bus.on('district:entered', (p) => {
     // Elevator ride ends on VIP — force-clear any leftover skill success panel.
     if (session.ui.is('play')) hud.showHud();
     hud.updateStats();
     hud.updatePrompt();
+    // Playtest #44: big centered district name after the travel fade.
+    hud.showDistrictBanner(p.districtId);
   });
 }
 

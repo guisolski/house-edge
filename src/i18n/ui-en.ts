@@ -171,6 +171,7 @@ export const uiEn = {
   'ui.skill.submitLock': 'Test',
   'ui.skill.resultWin': 'Win · {credits} cr · {rep} rep',
   'ui.skill.resultLose': 'Failed · {credits} cr · {rep} rep',
+  'ui.skill.resultLoseNoCredits': 'Failed · {rep} rep',
   'ui.skill.resultHint': 'Enter · Continue',
   'ui.elevatorCard.foyer': '▼ Elevator / Pit Foyer · Floor 1',
   'ui.elevatorCard.vip': '▲ Elevator / VIP Salon · Floor 42',

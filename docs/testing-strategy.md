@@ -36,3 +36,7 @@ make e2e
 make mutation
 make lint
 ```
+
+## Late-content QA jumps
+
+Use `/?chapter=feira|avenida|torre|vip|epilogue` to start a new game at that story beat with seeded credits/rep. Details: [`qa-chapter-jumps.md`](./qa-chapter-jumps.md).

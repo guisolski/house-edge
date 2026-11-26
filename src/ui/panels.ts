@@ -39,6 +39,7 @@ import {
   tickSequenceReveal,
 } from '../systems/sequence-reveal';
 import { canNeedleStop } from '../systems/session';
+import { formatSkillResultHeadline } from '../systems/skill-result-format';
 
 export function button(label: string, onClick: () => void): HTMLButtonElement {
   const btn = el('button', 'btn', label);
@@ -299,25 +300,11 @@ function paintSkillResult(
   if (!result) return;
   panel.classList.add('skill-result-panel');
   const body = el('div', 'panel-body skill-body skill-result-body');
-  // Playtest #42: format the sign once (i18n has no leading +).
-  const credits =
-    result.creditsDelta > 0
-      ? `+${result.creditsDelta}`
-      : result.creditsDelta === 0
-        ? '0'
-        : String(result.creditsDelta);
-  const rep =
-    result.repDelta > 0
-      ? `+${result.repDelta}`
-      : result.repDelta === 0
-        ? '0'
-        : String(result.repDelta);
-  const headline = result.won
-    ? tf('ui.skill.resultWin', { credits, rep })
-    : tf('ui.skill.resultLose', {
-        credits: result.creditsDelta === 0 ? '—' : credits,
-        rep,
-      });
+  const headline = formatSkillResultHeadline(
+    result.won,
+    result.creditsDelta,
+    result.repDelta,
+  );
   body.append(
     el('h2', result.won ? 'skill-result-win' : 'skill-result-lose', headline),
     el('p', 'skill-seq', t('ui.skill.resultHint')),
@@ -852,14 +839,19 @@ function pinBars(h: number): string {
   return `${'▮'.repeat(h + 1)}${'▯'.repeat(LOCK_PIN_LEVELS - 1 - h)}`;
 }
 
+/** Playtest #44: heights visible from first paint (bars + number), not only after Test. */
+function lockpickPinLabel(n: number, h: number, hinted: boolean): string {
+  const hint = hinted ? ' ★' : '';
+  return `${tf('ui.skill.pinBtn', { n: String(n) })}: ${pinBars(h)} (${h})${hint}`;
+}
+
 function refreshLockpick(
   state: LockpickState,
   verdicts?: ('ok' | 'low' | 'high')[],
 ): void {
   state.labels.forEach((btn, i) => {
     const h = state.heights[i] ?? 0;
-    const hint = state.hinted.has(i) ? ` ★` : '';
-    btn.textContent = `${tf('ui.skill.pinBtn', { n: String(i + 1) })}: ${pinBars(h)}${hint}`;
+    btn.textContent = lockpickPinLabel(i + 1, h, state.hinted.has(i));
     btn.classList.toggle('lockpick-pin-selected', i === state.selected);
     btn.setAttribute('aria-current', i === state.selected ? 'true' : 'false');
     const v = verdicts?.[i];
@@ -1096,7 +1088,8 @@ function buildLockpickRow(
 ): HTMLElement {
   const row = el('div', 'lockpick-row');
   for (let i = 0; i < count; i += 1) {
-    const btn = button(tf('ui.skill.pinBtn', { n: String(i + 1) }), () => {
+    const h = state.heights[i] ?? 0;
+    const btn = button(lockpickPinLabel(i + 1, h, state.hinted.has(i)), () => {
       selectPin(i);
       bumpPin(i);
     });
@@ -1296,8 +1289,8 @@ function paintSequenceSkill(
     // Playtest #38: color chips show arrow equivalents (R ↑).
     pad.appendChild(button(sequencePadLabel(key), () => onKey(SEQ_KEYS.indexOf(key))));
   }
-  actions.appendChild(pad);
-  actions.appendChild(el('p', 'skill-seq', t(sequenceHintKey(seq))));
+  // Playtest #44: pad lives in body under the reserved pattern row — never overlays it.
+  body.append(pad, el('p', 'skill-seq skill-seq-hint', t(sequenceHintKey(seq))));
   panelKeyHook(actions, (ev) => {
     if (ev.repeat || !ui.armed.v) return;
     const sym = SEQ_KEY_CODES[ev.code] as SeqKey | undefined;

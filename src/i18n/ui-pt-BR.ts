@@ -172,6 +172,7 @@ export const uiPtBR = {
   'ui.skill.submitLock': 'Testar',
   'ui.skill.resultWin': 'Vitória · {credits} cr · {rep} rep',
   'ui.skill.resultLose': 'Falhou · {credits} cr · {rep} rep',
+  'ui.skill.resultLoseNoCredits': 'Falhou · {rep} rep',
   'ui.skill.resultHint': 'Enter · Continuar',
   'ui.elevatorCard.foyer': '▼ Elevador / Foyer do pit',
   'ui.elevatorCard.vip': '▲ Elevador / Salão VIP · Andar 42',

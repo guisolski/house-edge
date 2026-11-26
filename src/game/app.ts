@@ -15,6 +15,7 @@ import { countNpcLabels } from '../systems/label-policy';
 import { wireSessionEvents } from './wiring';
 import type { HudHandles } from '../ui/hud';
 import type { FpsSample } from '../rendering/fps';
+import { parseDebugChapter } from '../systems/debug-chapter';
 
 export type GameApp = {
   engine: ex.Engine;
@@ -73,7 +74,20 @@ export function createGameApp(host: HTMLElement): GameApp {
   engine.on('postupdate', (ev) => onTick(deps, ev.elapsed));
   hud.showTitle(loadFromStorage() !== null);
   exposeHarness(session, modes, hud, world);
+  applyChapterQueryParam(session, hud);
   return { engine, session, start: () => engine.start() };
+}
+
+/** Playtest #44 QA: `?chapter=feira|avenida|torre|vip|epilogue` skips to that beat. */
+function applyChapterQueryParam(session: GameSession, hud: HudHandles): void {
+  if (typeof window === 'undefined') return;
+  const chapter = parseDebugChapter(
+    new URLSearchParams(window.location.search).get('chapter'),
+  );
+  if (!chapter) return;
+  if (!session.debugStartChapter(chapter)) return;
+  hud.showHud();
+  hud.syncScreen();
 }
 
 function bindInputs(

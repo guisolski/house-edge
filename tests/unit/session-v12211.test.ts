@@ -131,11 +131,9 @@ describe('v1.22.11 needle first-try window + VIP confirm arm', () => {
     // Simulate showSkill arm (held Interact across Aceitar).
     session.noteModalOpened(true);
     expect(session.allowModalConfirm()).toBe(false);
-    // Expire arm, then key-up + quiet period (held-through-arm).
+    // Playtest #43: open no longer marks heldThroughArm — after arm expiry, release is free.
     vi.spyOn(Date, 'now').mockReturnValue(t0 + 450);
     session.noteInteractRelease();
-    expect(session.allowModalConfirm()).toBe(false);
-    vi.spyOn(Date, 'now').mockReturnValue(t0 + 900);
     expect(session.allowModalConfirm()).toBe(true);
   });
 });

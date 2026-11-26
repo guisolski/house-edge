@@ -126,7 +126,7 @@ describe('v1.21.0 interact gate — held-key only + short arm', () => {
     vi.spyOn(Date, 'now').mockRestore();
   });
 
-  it('modal confirm ignores Interact held at open; quiet period after post-arm release', () => {
+  it('modal confirm ignores Interact held at open; mash-during-arm still quiets', () => {
     const session = new GameSession(213);
     session.startNew();
     session.runStoryBeat('boteco-nair');
@@ -135,11 +135,11 @@ describe('v1.21.0 interact gate — held-key only + short arm', () => {
     session.noteInteractPressed('Enter');
     session.noteModalOpened(true);
     expect(session.allowModalConfirm()).toBe(false);
-    // Still held through the arm.
-    vi.spyOn(Date, 'now').mockReturnValue(t0 + 420);
-    expect(session.allowModalConfirm()).toBe(false);
-    // Post-arm release starts a quiet period.
+    // Playtest #43: mash during the arm marks heldThroughArm → quiet after release.
+    vi.spyOn(Date, 'now').mockReturnValue(t0 + 80);
+    session.noteInteractPressed('Enter');
     session.noteInteractRelease();
+    vi.spyOn(Date, 'now').mockReturnValue(t0 + 420);
     expect(session.allowModalConfirm()).toBe(false);
     vi.spyOn(Date, 'now').mockReturnValue(t0 + 840);
     expect(session.allowModalConfirm()).toBe(true);

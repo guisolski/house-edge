@@ -40,6 +40,14 @@ make check             # lint + typecheck + unit tests — required before every
 npm run format:playtest-report   # prettier --write artifacts/playtest/REPORT.md
 ```
 
+## Late-content QA (`?chapter=`)
+
+To playtest Fair / Avenue / Tower / VIP / epilogue without a 40‑minute setup, open:
+
+`/?chapter=feira|avenida|torre|vip|epilogue`
+
+See `docs/qa-chapter-jumps.md`. Harness: `session.debugStartChapter('feira')`.
+
 ## Performance (mandatory)
 
 1. Toggle FPS overlay with **F3** (or `setShowFps(true)` in the harness).
