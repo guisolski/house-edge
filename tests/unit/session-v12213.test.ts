@@ -72,10 +72,12 @@ describe('v1.22.13 plain dialogue + Torre unlock copy', () => {
   it('plain dialogue arm needs key-up only (no 400ms mash quiet)', () => {
     const session = new GameSession();
     session.startNew();
+    session.noteInteractPressed('KeyE');
     session.armPlainDialogueAdvance(true);
-    expect(session.allowModalConfirm()).toBe(false);
-    session.noteInteractRelease();
-    expect(session.allowModalConfirm()).toBe(true);
+    expect(session.allowModalConfirm('KeyE')).toBe(false);
+    expect(session.allowModalConfirm('Enter')).toBe(true);
+    session.noteInteractRelease('KeyE');
+    expect(session.allowModalConfirm('KeyE')).toBe(true);
   });
 
   it('Torre unlock detail names Margin, not a vague current bet', () => {

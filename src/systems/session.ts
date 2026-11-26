@@ -78,6 +78,19 @@ const SAFE_JOB_CAP = 6;
 /** Soft floor matching common story/grind stakes (e.g. água gelada). */
 const BROKE_STAKE_FLOOR = 8;
 
+/** Align with keyboard.ts normalizeKeyCode for Interact keys. */
+export function normInteractCode(code: string | null | undefined): string | null {
+  if (!code) return null;
+  if (code === 'Enter' || code === 'NumpadEnter') return 'Enter';
+  if (code === 'Space') return 'Space';
+  return code;
+}
+
+/** Playtest #40: Stop / E only counts once the ready countdown has elapsed. */
+export function canNeedleStop(ready: boolean, now: number, readyUntil: number): boolean {
+  return ready && now >= readyUntil;
+}
+
 export class GameSession {
   readonly bus: EventBus;
   readonly player: PlayerSystem;
@@ -142,6 +155,11 @@ export class GameSession {
   private modalHeldThroughArm = false;
   /** Key-up arrived during the arm — apply when the arm expires. */
   private modalReleasePending = false;
+  /**
+   * Playtest #40: Interact codes held when the modal opened. A fresh keydown of a
+   * code not in this set advances — we must not require a keyup we never saw.
+   */
+  private modalHeldCodes = new Set<string>();
   /** Playtest #38: holding into a solid wall — nudge after >1s. */
   private wallPush: {
     dx: number;
@@ -752,20 +770,35 @@ export class GameSession {
   noteInteractPressed(code?: string): void {
     this.interactKeyDown = true;
     this.lastInteractCode = code ?? null;
+    const norm = normInteractCode(code);
     // Mash during the modal arm → require post-arm release + quiet period.
     if (Date.now() < this.modalConfirmArmUntil) {
       this.modalConfirmNeedsRelease = true;
       this.modalHeldThroughArm = true;
+      if (norm) this.modalHeldCodes.add(norm);
     }
   }
 
   /**
-   * Modal confirm gate: arm ≥400ms, and if Enter was mashed/held during the arm
-   * require a post-arm key-up plus a quiet period (playtest #31).
+   * Modal confirm gate. Optional `code` = the key being pressed now (playtest #40):
+   * a fresh key that was not held at open is allowed once the time arm expires.
    */
-  allowModalConfirm(): boolean {
+  allowModalConfirm(code?: string): boolean {
     this.flushModalReleasePending();
     if (Date.now() < this.modalConfirmArmUntil) return false;
+    const want = normInteractCode(code);
+    if (want) {
+      // Key still marked held-from-open → need its key-up first.
+      if (this.modalHeldCodes.has(want)) return false;
+      // Stuck needsRelease with no tracked key (keyup raced the arm) — heal.
+      if (this.modalConfirmNeedsRelease && this.modalHeldCodes.size === 0) {
+        this.modalConfirmNeedsRelease = false;
+        this.modalHeldThroughArm = false;
+      }
+      // Fresh key (e.g. Enter after opening with E) → advance.
+      return true;
+    }
+    if (this.modalHeldCodes.size > 0) return false;
     if (this.modalConfirmNeedsRelease) return false;
     return true;
   }
@@ -775,11 +808,27 @@ export class GameSession {
     return this.interactKeyDown;
   }
 
+  /** Last Interact key code (KeyE / Enter / Space) — for confirm gating. */
+  getLastInteractCode(): string | null {
+    return this.lastInteractCode;
+  }
+
+  /** Interact codes currently held (for dialog open arming). */
+  heldInteractCodes(): string[] {
+    if (!this.interactKeyDown) return [];
+    const c = normInteractCode(this.lastInteractCode);
+    return c ? [c] : ['KeyE'];
+  }
+
   /** Call when dialogue/skill/bet opens. `interactHeld` = Interact down at open. */
-  noteModalOpened(interactHeld: boolean): void {
-    // Playtest #28/#31: 400ms arm; key-up only required if held/mashed during arm.
-    this.modalConfirmArmUntil = Date.now() + 400;
-    this.modalConfirmNeedsRelease = interactHeld || this.interactKeyDown;
+  noteModalOpened(interactHeld: boolean, heldCodes?: string[]): void {
+    // Playtest #28/#31: short arm; key-up only required for codes held at open.
+    this.modalConfirmArmUntil = Date.now() + 250;
+    const codes =
+      heldCodes ?? (interactHeld || this.interactKeyDown ? this.heldInteractCodes() : []);
+    this.modalHeldCodes = new Set(codes.map((c) => normInteractCode(c) ?? c));
+    this.modalConfirmNeedsRelease =
+      this.modalHeldCodes.size > 0 || interactHeld || this.interactKeyDown;
     this.modalHeldThroughArm = this.modalConfirmNeedsRelease;
     this.modalReleasePending = false;
   }
@@ -790,15 +839,24 @@ export class GameSession {
     this.modalConfirmNeedsRelease = false;
     this.modalHeldThroughArm = false;
     this.modalReleasePending = false;
+    this.modalHeldCodes.clear();
   }
 
   /**
-   * Playtest #39: plain dialogue (no choices) — no time arm / quiet mash period.
-   * If Interact was held at open, wait for a key-up then the next fresh keydown.
+   * Playtest #40: plain dialogue — no time arm. Only block keys held at open;
+   * a fresh keydown of any other confirm key advances immediately.
    */
-  armPlainDialogueAdvance(interactHeld: boolean): void {
+  armPlainDialogueAdvance(interactHeld: boolean | string[] = false): void {
+    const codes = Array.isArray(interactHeld)
+      ? interactHeld
+      : interactHeld || this.interactKeyDown
+        ? this.heldInteractCodes()
+        : [];
     this.modalConfirmArmUntil = 0;
-    this.modalConfirmNeedsRelease = interactHeld || this.interactKeyDown;
+    this.modalHeldCodes = new Set(
+      codes.map((c) => normInteractCode(c)).filter((c): c is string => Boolean(c)),
+    );
+    this.modalConfirmNeedsRelease = this.modalHeldCodes.size > 0;
     this.modalHeldThroughArm = false;
     this.modalReleasePending = false;
   }
@@ -814,6 +872,8 @@ export class GameSession {
     this.modalConfirmNeedsRelease = true;
     this.modalHeldThroughArm = true;
     this.modalReleasePending = false;
+    const c = normInteractCode(this.lastInteractCode);
+    if (c) this.modalHeldCodes.add(c);
   }
 
   private flushModalReleasePending(): void {
@@ -821,7 +881,7 @@ export class GameSession {
     if (Date.now() < this.modalConfirmArmUntil) return;
     if (this.interactKeyDown) return;
     this.modalReleasePending = false;
-    this.modalConfirmNeedsRelease = false;
+    if (this.modalHeldCodes.size === 0) this.modalConfirmNeedsRelease = false;
     // Release-during-arm: quiet starts at arm expiry (not at this flush),
     // so a late first Enter after a slow open can't auto-pick.
     if (this.modalHeldThroughArm) {
@@ -1427,12 +1487,14 @@ export class GameSession {
   }
 
   /** Call on Interact key-up so a held Enter can't chain rematch dialogs. */
-  noteInteractRelease(): void {
+  noteInteractRelease(code?: string): void {
     this.interactKeyDown = false;
+    const released = normInteractCode(code ?? this.lastInteractCode);
+    if (released) this.modalHeldCodes.delete(released);
     // Key-up during the modal arm — apply once the arm expires (flush on allow).
     if (Date.now() < this.modalConfirmArmUntil) {
       this.modalReleasePending = true;
-    } else if (this.modalConfirmNeedsRelease) {
+    } else if (this.modalConfirmNeedsRelease && this.modalHeldCodes.size === 0) {
       this.modalConfirmNeedsRelease = false;
       // Hold-through-arm / mash: quiet period so the next keydown can't auto-pick.
       if (this.modalHeldThroughArm) {

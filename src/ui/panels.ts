@@ -31,6 +31,7 @@ import {
   type SeqKey,
   type SkillPhase,
 } from '../systems/minigame';
+import { canNeedleStop } from '../systems/session';
 
 export function button(label: string, onClick: () => void): HTMLButtonElement {
   const btn = el('button', 'btn', label);
@@ -420,17 +421,30 @@ function paintTimingSkill(
       }),
     ),
   );
-  if (misses > 0) {
-    body.appendChild(el('p', 'skill-clue skill-miss-hint', needleMissLine(session)));
+  // Playtest #40: defer miss hint until Já! so countdown restart clears "Errou…".
+  const missHint =
+    misses > 0 ? el('p', 'skill-clue skill-miss-hint', needleMissLine(session)) : null;
+  if (missHint) {
+    missHint.hidden = true;
+    body.appendChild(missHint);
   }
   const readyLine = el('p', 'skill-seq skill-needle-ready', t('ui.skill.needleReady'));
   body.appendChild(readyLine);
-  const stopAt = bindNeedleRuntime({ meter, needle, body, session, after, phase });
+  const stopAt = bindNeedleRuntime({
+    meter,
+    needle,
+    body,
+    session,
+    after,
+    phase,
+    zoneEl,
+    missHint,
+  });
   // Mouse/touch: stop once ready (no mash arm). Keyboard stays gated.
   const stopBtn = button(t('ui.skill.stop'), () => stopAt(true));
   stopBtn.classList.add('btn-needle-stop');
   bindEnterGate(stopBtn, () => {
-    if (!session.allowModalConfirm()) return;
+    if (!session.allowModalConfirm(session.getLastInteractCode() ?? undefined)) return;
     stopAt(false);
   });
   actions.appendChild(stopBtn);
@@ -443,11 +457,14 @@ type NeedleBind = {
   session: GameSession;
   after: () => void;
   phase: SkillPhase;
+  zoneEl: HTMLElement;
+  missHint: HTMLElement | null;
 };
 
-/** Playtest #39: soft tick when the needle crosses into the green zone. */
+/** Playtest #39/#40: tick + visual pulse when the needle enters the green zone. */
 function noteNeedleZoneEnter(
   session: GameSession,
+  zoneEl: HTMLElement,
   pos: number,
   prev: number,
   zone: { lo: number; hi: number },
@@ -456,77 +473,132 @@ function noteNeedleZoneEnter(
   const inZone = pos >= zone.lo && pos <= zone.hi;
   if (inZone && !wasIn && prev <= zone.hi) {
     session.bus.emit('audio:play-sfx', { id: 'tick' });
+    zoneEl.classList.remove('skill-zone-pulse');
+    // Retrigger CSS animation.
+    void zoneEl.offsetWidth;
+    zoneEl.classList.add('skill-zone-pulse');
   }
   return inZone;
 }
 
+type NeedleMotion = {
+  pos: number;
+  ready: boolean;
+  wasInZone: boolean;
+  lastTs: number;
+};
+
+function paintNeedleCountdown(
+  o: NeedleBind,
+  readyLine: HTMLElement | null,
+  readyUntil: number,
+  ts: number,
+  motion: NeedleMotion,
+): void {
+  motion.lastTs = ts;
+  const left = Math.max(1, Math.ceil((readyUntil - ts) / 1000));
+  if (readyLine) {
+    readyLine.textContent = tf('ui.skill.needleCountdown', { n: String(left) });
+  }
+  o.needle.style.left = '0%';
+  if (o.missHint) o.missHint.hidden = true;
+}
+
+function stepNeedleMotion(
+  o: NeedleBind,
+  readyLine: HTMLElement | null,
+  zone: { lo: number; hi: number },
+  step: number,
+  ts: number,
+  motion: NeedleMotion,
+): void {
+  if (!motion.ready) {
+    motion.ready = true;
+    o.meter.dataset.needleReady = '1';
+    if (readyLine) readyLine.textContent = t('ui.skill.needleGo');
+    if (o.missHint) o.missHint.hidden = false;
+    motion.lastTs = ts;
+  }
+  const dt = Math.min(48, Math.max(8, ts - motion.lastTs));
+  motion.lastTs = ts;
+  const prev = motion.pos;
+  motion.pos = (motion.pos + step * (dt / 32)) % 1;
+  if (motion.pos < 0) motion.pos += 1;
+  o.needle.style.left = `${(motion.pos * 100).toFixed(3)}%`;
+  motion.wasInZone = noteNeedleZoneEnter(
+    o.session,
+    o.zoneEl,
+    motion.pos,
+    prev,
+    zone,
+    motion.wasInZone,
+  );
+}
+
 /** Needle rAF + confirm key — disposed with the skill panel (playtest #36). */
 function bindNeedleRuntime(o: NeedleBind): (fromPointer?: boolean) => void {
-  let needlePos = 0;
   let settled = false;
-  // Playtest #38: ~1s ready before the needle runs / Stop counts.
   const readyUntil = performance.now() + 1100;
-  let ready = false;
   const step = Math.max(0.015, 0.028 * (o.phase.needleSpeed ?? 0.8));
   let raf = 0;
-  let lastTs = performance.now();
   let onKey: (e: KeyboardEvent) => void = () => undefined;
   const readyLine = o.body.querySelector('.skill-needle-ready') as HTMLElement | null;
+  const motion: NeedleMotion = {
+    pos: 0,
+    ready: false,
+    wasInZone: false,
+    lastTs: performance.now(),
+  };
   const dropNeedle = (): void => {
     cancelAnimationFrame(raf);
     window.removeEventListener('keydown', onKey, true);
   };
   const zone = timingZone(o.phase, o.session.getSkillProgress()?.misses ?? 0);
-  let wasInZone = false;
+  o.needle.style.left = '0%';
+  o.meter.dataset.needleReady = '0';
   const tickNeedle = (ts: number): void => {
     if (settled) return;
     if (!o.meter.isConnected) return dropNeedle();
-    if (ts < readyUntil) {
-      lastTs = ts;
-      const left = Math.max(1, Math.ceil((readyUntil - ts) / 1000));
-      if (readyLine) {
-        readyLine.textContent = tf('ui.skill.needleCountdown', { n: String(left) });
-      }
+    if (!canNeedleStop(true, ts, readyUntil)) {
+      paintNeedleCountdown(o, readyLine, readyUntil, ts, motion);
       raf = requestAnimationFrame(tickNeedle);
       return;
     }
-    if (!ready) {
-      ready = true;
-      if (readyLine) readyLine.textContent = t('ui.skill.needleGo');
-    }
-    const dt = Math.min(48, Math.max(8, ts - lastTs));
-    lastTs = ts;
-    const prev = needlePos;
-    needlePos = (needlePos + step * (dt / 32)) % 1;
-    if (needlePos < 0) needlePos += 1;
-    o.needle.style.left = `${(needlePos * 100).toFixed(3)}%`;
-    wasInZone = noteNeedleZoneEnter(o.session, needlePos, prev, zone, wasInZone);
+    stepNeedleMotion(o, readyLine, zone, step, ts, motion);
     raf = requestAnimationFrame(tickNeedle);
   };
   raf = requestAnimationFrame(tickNeedle);
   o.meter.dataset.needleRaf = '1';
   const stopAt = (fromPointer = false): void => {
-    if (settled || !ready || performance.now() < readyUntil) return;
-    // Keyboard/E still needs the post-open arm; mouse/touch does not.
-    if (!fromPointer && !o.session.allowModalConfirm()) return;
+    if (settled) return;
+    if (!canNeedleStop(motion.ready, performance.now(), readyUntil)) return;
+    if (
+      !fromPointer &&
+      !o.session.allowModalConfirm(o.session.getLastInteractCode() ?? undefined)
+    ) {
+      return;
+    }
     settled = true;
     dropNeedle();
-    o.session.submitSkill(needlePos % 1);
+    o.session.submitSkill(motion.pos % 1);
     o.after();
   };
   onKey = (e: KeyboardEvent): void => {
     if (!o.meter.isConnected) return dropNeedle();
     if (e.repeat) return;
     if (!isConfirmKey(e) && e.code !== 'KeyE') return;
-    if (!o.session.allowModalConfirm()) return;
-    if (!ready || performance.now() < readyUntil) return;
+    if (!canNeedleStop(motion.ready, performance.now(), readyUntil)) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    if (!o.session.allowModalConfirm(e.code)) return;
     e.preventDefault();
     e.stopPropagation();
     stopAt(false);
   };
   window.addEventListener('keydown', onKey, true);
-  const skillPanel = o.body.closest('.skill-panel') ?? o.body;
-  onPanelDispose(skillPanel as HTMLElement, dropNeedle);
+  onPanelDispose((o.body.closest('.skill-panel') ?? o.body) as HTMLElement, dropNeedle);
   return stopAt;
 }
 

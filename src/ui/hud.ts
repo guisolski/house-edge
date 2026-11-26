@@ -233,16 +233,17 @@ function showDialoguePanel(
     !offerBet &&
     lines.length > 0 &&
     lines.every((l) => /Saúde/i.test(l.text));
-  // Playtest #39: mash arm only for choice / offer-bet panels.
-  // Plain dialogue advances on the next fresh keydown after a key-up.
+  // Playtest #40: arm only codes still held at paint — fresh Enter advances.
+  const heldCodes = session.heldInteractCodes();
   if (hasChoice || offerBet) {
-    session.noteModalOpened(session.isInteractHeld());
+    session.noteModalOpened(session.isInteractHeld(), heldCodes);
   } else {
-    session.armPlainDialogueAdvance(session.isInteractHeld());
+    session.armPlainDialogueAdvance(heldCodes);
   }
-  // Playtest #28/#31: arm ≥400ms so held/rapid Enter can't auto-pick choices.
-  const choiceArmAt = Date.now() + (epi && hasChoice ? 600 : 400);
-  const holdCloseUntil = closingOnly ? Date.now() + 3000 : undefined;
+  // Choice mash arm short enough that a 300ms e2e wait then Enter advances.
+  const choiceArmAt = Date.now() + (epi && hasChoice ? 500 : 250);
+  // Playtest #40: epilogue Fechar — brief hold, not a 3s swallow.
+  const holdCloseUntil = closingOnly ? Date.now() + 400 : undefined;
   paintDialogue(p.dialogue, lines, {
     offerBet,
     choiceArmAt: hasChoice || offerBet ? choiceArmAt : 0,
@@ -298,8 +299,8 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
       // Playtest #35: paintSkill owns focus for choice/puzzle/negotiate (mash-safe).
       // Never focusFirst here — that made option 1 Enter-pickable during bursts.
       paintSkill(p.skill, session, () => h.syncScreen());
-      // Always require a post-open key-up before confirm (Contato 60ms mash).
-      session.noteModalOpened(true);
+      // Playtest #40: mark only keys still held — don't force a ghost needsRelease.
+      session.noteModalOpened(session.isInteractHeld(), session.heldInteractCodes());
     },
     showTravel: () => {
       only(p, 'travel');
@@ -909,7 +910,7 @@ function navModal(
   if (dir === 'up') focusPrev(panel);
   if (dir === 'down') focusNext(panel);
   if (dir === 'confirm') {
-    if (!session.allowModalConfirm()) return;
+    if (!session.allowModalConfirm(session.getLastInteractCode() ?? undefined)) return;
     activateFocused(panel);
   }
   if (dir === 'back') {

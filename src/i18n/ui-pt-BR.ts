@@ -51,8 +51,7 @@ export const uiPtBR = {
   'ui.promptExit': 'E — Viajar',
   'ui.promptBet': 'F / B — Aposta',
   'ui.promptPathLocked': 'E — Caminho travado',
-  'ui.lockpickHintKeyboard':
-    '←→ trocar pinos · ↑ / Espaço / clique erguer · Enter / Tab Enviar · Esc cancelar',
+  'ui.lockpickHintKeyboard': '←→ escolher pino · ↑ erguer · Enter testar · Esc sair',
   'ui.lockpickHintGamepad': 'D-pad pinos · A erguer · Y Enviar · B cancelar',
   'ui.lockpickHintTouch': 'Toque num pino para erguer · Enviar fechadura · Cancelar',
   'ui.needleMissHint': 'Errou — para na zona. Na próxima ela abre um pouco.',

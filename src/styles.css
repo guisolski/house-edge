@@ -444,6 +444,8 @@ canvas.excalibur-game {
 }
 
 .input-hints {
+  flex: 1 1 100%;
+  margin-top: 0.55rem;
   font-size: 0.85rem;
   opacity: 0.9;
   color: var(--cyan);
@@ -702,6 +704,22 @@ canvas.excalibur-game {
   top: 0;
   bottom: 0;
   background: #009c3b88;
+}
+
+/* Playtest #40: brief flash when the needle enters the green zone. */
+.skill-zone-pulse {
+  animation: skill-zone-flash 0.35s ease-out;
+}
+
+@keyframes skill-zone-flash {
+  0% {
+    background: #5cff9acc;
+    box-shadow: inset 0 0 0 1px #b8ffd8;
+  }
+  100% {
+    background: #009c3b88;
+    box-shadow: none;
+  }
 }
 
 .skill-needle {

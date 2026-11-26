@@ -58,13 +58,13 @@ function routeInputAction(
   code?: string,
 ): void {
   if (action === 'interact' && !pressed) {
-    session.noteInteractRelease();
+    session.noteInteractRelease(code);
     return;
   }
   if (action === 'interact' && pressed) session.noteInteractPressed(code);
-  if (action === 'interact' && pressed && !gateInteract(session)) {
+  if (action === 'interact' && pressed && !gateInteract(session, code)) {
     // 60ms bursts / held Enter: each blocked confirm re-arms the quiet period.
-    // Playtest #39: plain dialogue advance keeps anti-mash off — don't re-arm.
+    // Playtest #39/#40: plain dialogue — don't re-arm; fresh keys advance.
     const plainDialogue =
       session.ui.is('dialogue') &&
       !session.dialogueHasChoices() &&
@@ -86,10 +86,10 @@ function routeInputAction(
 }
 
 /** Play rematch arm + modal confirm arm for Interact. */
-function gateInteract(session: GameSession): boolean {
+function gateInteract(session: GameSession, code?: string): boolean {
   if (session.ui.is('play')) return session.allowInteractInput();
   if (session.ui.is('title')) return true;
-  return session.allowModalConfirm();
+  return session.allowModalConfirm(code);
 }
 
 /** Playtest #33/#34: menu/Viajar/ending must not inherit mash arm from Enter. */
@@ -105,16 +105,19 @@ function armAfterModalOpen(session: GameSession, after: string): void {
     session.clearModalConfirmGate();
     return;
   }
-  // Playtest #39: plain dialogue — key-up then fresh keydown, no 400ms mash arm.
+  // Playtest #40: mark only keys still held — never force needsRelease after a
+  // keyup that already landed before this arm ran.
+  const held = session.isInteractHeld();
+  const codes = session.heldInteractCodes();
   if (
     after === 'dialogue' &&
     !session.dialogueHasChoices() &&
     !session.hasPendingStoryBet()
   ) {
-    session.armPlainDialogueAdvance(true);
+    session.armPlainDialogueAdvance(codes);
     return;
   }
-  session.noteModalOpened(true);
+  session.noteModalOpened(held, codes);
 }
 
 function wirePlayer(session: GameSession, hud: HudHandles): void {
@@ -278,9 +281,10 @@ function handleEscModal(session: GameSession, hud: HudHandles): boolean {
 
 function handleModalNav(session: GameSession, hud: HudHandles, action: string): boolean {
   if (session.ui.is('play') || session.ui.is('title')) return false;
+  const interactCode = session.getLastInteractCode() ?? undefined;
   // Playtest #30: Enter on bet panel always confirms — never Stake −/+.
   if (session.ui.is('bet') && action === 'interact') {
-    if (!session.allowModalConfirm()) return true;
+    if (!session.allowModalConfirm(interactCode)) return true;
     session.confirmBet();
     hud.syncScreen();
     hud.showHud();
@@ -288,7 +292,7 @@ function handleModalNav(session: GameSession, hud: HudHandles, action: string): 
   }
   // Playtest #31: dialogue choices — arrows move focus; Enter/confirm gated.
   if (session.ui.is('dialogue') && action === 'interact') {
-    if (!session.allowModalConfirm()) return true;
+    if (!session.allowModalConfirm(interactCode)) return true;
     hud.gamepadNav('confirm');
     return true;
   }
@@ -301,7 +305,7 @@ function handleModalNav(session: GameSession, hud: HudHandles, action: string): 
     return true;
   }
   if (action === 'interact') {
-    if (!session.allowModalConfirm()) return true;
+    if (!session.allowModalConfirm(interactCode)) return true;
     hud.gamepadNav('confirm');
     return true;
   }

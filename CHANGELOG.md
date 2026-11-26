@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.22.14] — 2026-11-26
+
+### Fixed
+
+- **Dialogue Enter (P0)**: arm only keys held at open; a fresh keydown (e.g. Enter after E) advances without needing a keyup we never saw; shorter choice arm; epilogue Fechar hold ~400ms.
+- **Needle countdown (P0)**: freeze needle + eat Stop/E until Já!; hide miss hint during countdown; unit gate `canNeedleStop`.
+- **Needle zone (P1)**: visual pulse on zone enter (with tick SFX).
+- **Torre HUD / lockpick (P1)**: more space under the objective; clear lockpick one-liner.
+
+### Tests
+
+- `session-v12214`, `e2e/dialogue-enter-advance` (DJ/Maquinista/Capitã/Anfitrião/epilogue).
+
 ## [1.22.13] — 2026-11-26
 
 ### Fixed

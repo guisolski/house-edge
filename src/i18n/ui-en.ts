@@ -50,8 +50,7 @@ export const uiEn = {
   'ui.promptExit': 'E — Travel',
   'ui.promptBet': 'F / B — Bet',
   'ui.promptPathLocked': 'E — Path locked',
-  'ui.lockpickHintKeyboard':
-    '←→ cycle pins · ↑ / Space / click raise · Enter / Tab Submit · Esc cancel',
+  'ui.lockpickHintKeyboard': '←→ choose pin · ↑ raise · Enter test · Esc quit',
   'ui.lockpickHintGamepad': 'D-pad cycle pins · A raise · Y Submit · B cancel',
   'ui.lockpickHintTouch': 'Tap a pin to raise · Submit lock · Cancel',
   'ui.needleMissHint': 'Miss — stop inside the green zone. Zone widened for the retry.',
