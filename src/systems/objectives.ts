@@ -201,9 +201,14 @@ function travelObjective(ctx: ObjectiveCtx, next: StoryBeat): Objective {
       districtId: next.districtId,
     };
   }
+  // Playtest #39: Torre unlocks after Margin's hearing — not Contato/Hacker.
+  const detail =
+    next.districtId === 'torre-casa'
+      ? t('ui.obj.unlockTorreDetail')
+      : t('ui.obj.unlockDetail');
   return {
     text: tf('ui.obj.unlockPath', { place }),
-    detail: t('ui.obj.unlockDetail'),
+    detail,
   };
 }
 

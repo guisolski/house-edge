@@ -163,13 +163,10 @@ describe('v1.22.5 minigame fairness', () => {
 describe('v1.22.5 Avenida shoulder + NPC spacing', () => {
   beforeEach(stubStorage);
 
-  it('south shoulder y=13 is continuous between column gates', () => {
+  it('south shoulder y=13 is continuous east-west (no pillar gates)', () => {
     const map = buildDistrictMap('avenida-odds');
-    for (const x of [14, 15, 16, 18, 22, 24, 26, 30, 32]) {
+    for (const x of [12, 14, 15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34]) {
       expect(isWalkable(map, x, 13), `y13 ${x}`).toBe(true);
-    }
-    for (const x of [12, 20, 28, 34]) {
-      expect(isWalkable(map, x, 13), `column ${x}`).toBe(false);
     }
   });
 

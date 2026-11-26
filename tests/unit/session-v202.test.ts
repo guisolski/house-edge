@@ -95,9 +95,10 @@ describe('v1.20.2 Neon Snap solvability', () => {
     expect(isWalkable(map, 20, 11)).toBe(true);
     expect(isWalkable(map, 20, 12)).toBe(true);
     expect(isWalkable(map, 20, 9)).toBe(false);
-    expect(isWalkable(map, 20, 10)).toBe(false);
-    expect(isWalkable(map, 20, 13)).toBe(false);
     expect(isWalkable(map, 20, 14)).toBe(false);
+    // Playtest #39: shoulders clear; approach strips still seal N/S bypass.
+    expect(isWalkable(map, 20, 10)).toBe(true);
+    expect(isWalkable(map, 20, 13)).toBe(true);
   });
 
   it('cover hides the player from cones; blocked map fails the walk solve', () => {

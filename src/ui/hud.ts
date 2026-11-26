@@ -233,15 +233,19 @@ function showDialoguePanel(
     !offerBet &&
     lines.length > 0 &&
     lines.every((l) => /Saúde/i.test(l.text));
-  // Playtest #30/#31: arm + key-up only when Interact is held at paint.
-  // (Mash during the arm still sets needsRelease via noteInteractPressed.)
-  session.noteModalOpened(session.isInteractHeld());
-  // Playtest #28/#31: arm ≥400ms so held/rapid Enter can't auto-pick.
+  // Playtest #39: mash arm only for choice / offer-bet panels.
+  // Plain dialogue advances on the next fresh keydown after a key-up.
+  if (hasChoice || offerBet) {
+    session.noteModalOpened(session.isInteractHeld());
+  } else {
+    session.armPlainDialogueAdvance(session.isInteractHeld());
+  }
+  // Playtest #28/#31: arm ≥400ms so held/rapid Enter can't auto-pick choices.
   const choiceArmAt = Date.now() + (epi && hasChoice ? 600 : 400);
   const holdCloseUntil = closingOnly ? Date.now() + 3000 : undefined;
   paintDialogue(p.dialogue, lines, {
     offerBet,
-    choiceArmAt,
+    choiceArmAt: hasChoice || offerBet ? choiceArmAt : 0,
     allowChoice: () => session.allowModalConfirm(),
     holdCloseUntil,
     closingLine: closingOnly,

@@ -445,6 +445,21 @@ type NeedleBind = {
   phase: SkillPhase;
 };
 
+/** Playtest #39: soft tick when the needle crosses into the green zone. */
+function noteNeedleZoneEnter(
+  session: GameSession,
+  pos: number,
+  prev: number,
+  zone: { lo: number; hi: number },
+  wasIn: boolean,
+): boolean {
+  const inZone = pos >= zone.lo && pos <= zone.hi;
+  if (inZone && !wasIn && prev <= zone.hi) {
+    session.bus.emit('audio:play-sfx', { id: 'tick' });
+  }
+  return inZone;
+}
+
 /** Needle rAF + confirm key — disposed with the skill panel (playtest #36). */
 function bindNeedleRuntime(o: NeedleBind): (fromPointer?: boolean) => void {
   let needlePos = 0;
@@ -461,6 +476,8 @@ function bindNeedleRuntime(o: NeedleBind): (fromPointer?: boolean) => void {
     cancelAnimationFrame(raf);
     window.removeEventListener('keydown', onKey, true);
   };
+  const zone = timingZone(o.phase, o.session.getSkillProgress()?.misses ?? 0);
+  let wasInZone = false;
   const tickNeedle = (ts: number): void => {
     if (settled) return;
     if (!o.meter.isConnected) return dropNeedle();
@@ -479,9 +496,11 @@ function bindNeedleRuntime(o: NeedleBind): (fromPointer?: boolean) => void {
     }
     const dt = Math.min(48, Math.max(8, ts - lastTs));
     lastTs = ts;
+    const prev = needlePos;
     needlePos = (needlePos + step * (dt / 32)) % 1;
     if (needlePos < 0) needlePos += 1;
     o.needle.style.left = `${(needlePos * 100).toFixed(3)}%`;
+    wasInZone = noteNeedleZoneEnter(o.session, needlePos, prev, zone, wasInZone);
     raf = requestAnimationFrame(tickNeedle);
   };
   raf = requestAnimationFrame(tickNeedle);

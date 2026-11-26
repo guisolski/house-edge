@@ -609,28 +609,17 @@ function sealAvenidaLane(tiles: TileKind[], w: number, h: number): void {
   rect({ tiles, w, x0: 1, y0: 15, x1: w - 2, y1: 19, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: 1, x1: w - 2, y1: 1, kind: 'blocked' });
   rect({ tiles, w, x0: 1, y0: h - 2, x1: w - 2, y1: h - 2, kind: 'blocked' });
-  rect({ tiles, w, x0: 12, y0: 9, x1: 34, y1: 10, kind: 'blocked' });
-  rect({ tiles, w, x0: 12, y0: 13, x1: 34, y1: 14, kind: 'blocked' });
-  // Playtest #29/#31: continuous shoulders between sealed columns (12/20/28/34).
-  // Columns stay blocked so Neon Snap can't bypass on the shoulder.
-  for (const x of [
-    13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 29, 30, 31, 32, 33,
-  ]) {
-    set(tiles, w, x, 10, 'asphalt');
-    set(tiles, w, x, 13, 'asphalt');
-  }
+  // Playtest #39: Neon Snap keeps sealed approach strips on y9/y14 only.
+  // Shoulder pillars on y10/y13 were building-base nubs that softlocked east walks.
+  rect({ tiles, w, x0: 12, y0: 9, x1: 34, y1: 9, kind: 'blocked' });
+  rect({ tiles, w, x0: 12, y0: 14, x1: 34, y1: 14, kind: 'blocked' });
+  // Clear continuous east-west walkway (shoulders + dual lanes).
+  rect({ tiles, w, x0: 12, y0: 10, x1: 34, y1: 13, kind: 'asphalt' });
   // Playtest #37: dual center lanes always open after tower footprints.
   rect({ tiles, w, x0: 1, y0: 11, x1: w - 2, y1: 12, kind: 'asphalt' });
   // Wide west + east plazas stay fully open (no shoulder walls).
   rect({ tiles, w, x0: 1, y0: 9, x1: 11, y1: 14, kind: 'asphalt' });
   rect({ tiles, w, x0: 35, y0: 9, x1: w - 2, y1: 14, kind: 'asphalt' });
-  // Playtest #38: taller west on-ramp into the dual lanes (x≈300px softlock).
-  // Keep Neon Snap columns 12/20/28/34 blocked on y10/y13 — open the approach only.
-  for (const y of [10, 11, 12, 13]) {
-    set(tiles, w, 11, y, 'asphalt');
-  }
-  set(tiles, w, 12, 11, 'asphalt');
-  set(tiles, w, 12, 12, 'asphalt');
 }
 
 function placeAvenidaTowers(
@@ -638,17 +627,18 @@ function placeAvenidaTowers(
   w: number,
   buildings: MapDef['buildings'],
 ): void {
+  // Playtest #39: shrink footprints to the visual base (stay inside N/S sealed bands).
   for (let x = 2; x <= 42; x += 4) {
     houseBlock({
       tiles,
       w,
       buildings,
       x,
-      y: 15,
+      y: 16,
       style: Math.floor(x / 4) % 8,
       kind: 'avenida',
       bw: 3,
-      bh: 3,
+      bh: 2,
     });
   }
   for (let x = 4; x <= 40; x += 5) {
@@ -660,8 +650,8 @@ function placeAvenidaTowers(
       y: 5,
       style: Math.floor(x / 5) % 5,
       kind: 'avenida',
-      bw: 4,
-      bh: 3,
+      bw: 3,
+      bh: 2,
     });
   }
 }

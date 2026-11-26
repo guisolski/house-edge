@@ -26,13 +26,14 @@ function stubStorage(): void {
 describe('v1.22.11 unstuck + Avenida + Torre aisles', () => {
   beforeEach(stubStorage);
 
-  it('nearestWalkable nudges out of a blocked Avenida column', () => {
+  it('nearestWalkable nudges out of a blocked Avenida approach strip', () => {
     const map = buildDistrictMap('avenida-odds');
-    expect(isWalkable(map, 20, 10)).toBe(false);
-    const free = nearestWalkable(map, 20, 10);
+    // Playtest #39: sealed approach is y9/y14 (shoulders y10/y13 are clear).
+    expect(isWalkable(map, 20, 9)).toBe(false);
+    const free = nearestWalkable(map, 20, 9);
     expect(free).not.toBeNull();
     expect(isWalkable(map, free!.x, free!.y)).toBe(true);
-    expect(Math.hypot(free!.x - 20, free!.y - 10)).toBeLessThanOrEqual(2);
+    expect(Math.hypot(free!.x - 20, free!.y - 9)).toBeLessThanOrEqual(2);
     // Already free → null; OOB clamps into a searchable ring.
     expect(nearestWalkable(map, 20, 11)).toBeNull();
     expect(nearestWalkable(map, -2, 10)).not.toBeNull();
@@ -44,7 +45,7 @@ describe('v1.22.11 unstuck + Avenida + Torre aisles', () => {
     session.world.unlock('avenida-odds');
     session.travelTo('avenida-odds');
     expect(session.unstuckIfNeeded()).toBe(false);
-    session.player.setPosition(20, 10);
+    session.player.setPosition(20, 9);
     expect(session.unstuckIfNeeded()).toBe(true);
     const s = session.player.getStats();
     expect(isWalkable(session.getMap(), s.x, s.y)).toBe(true);

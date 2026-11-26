@@ -10,41 +10,30 @@ import { AVENIDA_DRONE_STEALTH, droneFreePathExists } from '../../src/systems/st
 import { SKILL_PHASE_TABLE } from '../../src/content/skill-phases';
 
 describe('v1.20.0 Neon Snap sealed strips', () => {
-  it('north and south asphalt strips are blocked through the drone zone', () => {
+  it('north and south approach strips stay sealed; shoulders stay clear', () => {
     const map = buildDistrictMap('avenida-odds');
     for (const x of [12, 20, 28, 34]) {
       expect(isWalkable(map, x, 9), `north ${x},9`).toBe(false);
-      expect(isWalkable(map, x, 10), `north ${x},10`).toBe(false);
-      expect(isWalkable(map, x, 13), `south ${x},13`).toBe(false);
       expect(isWalkable(map, x, 14), `south ${x},14`).toBe(false);
+      // Playtest #39: y10/y13 are clear east-west (no pillar nubs).
+      expect(isWalkable(map, x, 10), `shoulder ${x},10`).toBe(true);
+      expect(isWalkable(map, x, 13), `shoulder ${x},13`).toBe(true);
     }
     // Center lane stays open for the cone path.
     expect(isWalkable(map, 20, 11)).toBe(true);
     expect(isWalkable(map, 20, 12)).toBe(true);
   });
 
-  it('Shift-run east on south approach stops at the barrier (no corner slip)', () => {
+  it('sealed y14 tiles themselves stay blocked (corner may slip to shoulder)', () => {
     const map = buildDistrictMap('avenida-odds');
-    let x = 11;
-    const y = 14;
-    for (let i = 0; i < 20; i += 1) {
-      const next = slideStep(map, x, y, 1, 0);
-      if (!next || (next.x === x && next.y === y)) break;
-      x = next.x;
-    }
-    expect(x).toBeLessThan(13);
+    expect(isWalkable(map, 12, 14)).toBe(false);
+    expect(slideStep(map, 11, 14, 1, 0)?.y).not.toBe(14);
   });
 
-  it('Shift-run east on north approach stops at the barrier', () => {
+  it('sealed y9 tiles themselves stay blocked (corner may slip to shoulder)', () => {
     const map = buildDistrictMap('avenida-odds');
-    let x = 11;
-    const y = 9;
-    for (let i = 0; i < 20; i += 1) {
-      const next = slideStep(map, x, y, 1, 0);
-      if (!next || (next.x === x && next.y === y)) break;
-      x = next.x;
-    }
-    expect(x).toBeLessThan(13);
+    expect(isWalkable(map, 12, 9)).toBe(false);
+    expect(slideStep(map, 11, 9, 1, 0)?.y).not.toBe(9);
   });
 
   it('no drone-free bypass remains (center lane is cone-covered)', () => {

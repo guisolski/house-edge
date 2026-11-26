@@ -81,6 +81,8 @@ function sfxFreq(id: string): { hz: number; dur: number; type: OscKind } {
     travel: { hz: 180, dur: 0.22, type: 'triangle' },
     skill: { hz: 440, dur: 0.09, type: 'square' },
     ui: { hz: 660, dur: 0.05, type: 'sine' },
+    // Playtest #39: soft accessibility tick when the needle enters the green zone.
+    tick: { hz: 880, dur: 0.035, type: 'sine' },
   };
   return table[id] ?? table.ui!;
 }

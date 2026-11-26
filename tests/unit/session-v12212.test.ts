@@ -35,33 +35,28 @@ function stubStorage(): void {
 describe('v1.22.12 Avenida wall-push softlock', () => {
   beforeEach(stubStorage);
 
-  it('west corridor mouth at world x≈300 (tile 11→12) opens after wall-push', () => {
+  it('west corridor mouth (tile 11→12 on y10) is a clear east walk', () => {
     const map = buildDistrictMap('avenida-odds');
-    // Softlock report: east at x≈300px (= tile ~6–11) between police + NPCs.
+    // Playtest #39: shoulder cleared — no pillar at (12,10).
     expect(isWalkable(map, 11, 10)).toBe(true);
-    expect(isWalkable(map, 12, 10)).toBe(false);
-    expect(slideStep(map, 11, 10, 1, 0)).toBeNull();
-    // Holding east nudges into the dual lane.
-    const nudged = unstuckAlongPush(map, 11, 10, 1, 0);
-    expect(nudged).not.toBeNull();
-    expect(isWalkable(map, nudged!.x, nudged!.y)).toBe(true);
-    expect(nudged!.y === 11 || nudged!.y === 12 || nudged!.x >= 11).toBe(true);
+    expect(isWalkable(map, 12, 10)).toBe(true);
+    expect(slideStep(map, 11, 10, 1, 0)).toEqual({ x: 12, y: 10 });
   });
 
-  it('session wall-push >1s frees east softlock at (11,10)', () => {
+  it('session wall-push >1s frees zero-displacement hold into a solid wall', () => {
     const session = new GameSession();
     session.startNew();
     session.world.unlock('avenida-odds');
     session.travelTo('avenida-odds');
-    session.player.setPosition(11, 10);
+    // Press north into the sealed building band (continuous wall).
+    session.player.setPosition(20, 10);
     const t0 = Date.now();
     vi.spyOn(Date, 'now').mockReturnValue(t0);
-    expect(session.move(1, 0)).toBe(false);
+    expect(session.move(0, -1)).toBe(false);
     vi.spyOn(Date, 'now').mockReturnValue(t0 + 1100);
-    expect(session.move(1, 0)).toBe(true);
+    expect(session.move(0, -1)).toBe(true);
     const s = session.player.getStats();
     expect(isWalkable(session.getMap(), s.x, s.y)).toBe(true);
-    expect(s.x > 11 || s.y === 11 || s.y === 12).toBe(true);
   });
 
   it('Torre plaza hold-east keeps y stable on the striped floor', () => {

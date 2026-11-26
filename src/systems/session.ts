@@ -143,7 +143,13 @@ export class GameSession {
   /** Key-up arrived during the arm — apply when the arm expires. */
   private modalReleasePending = false;
   /** Playtest #38: holding into a solid wall — nudge after >1s. */
-  private wallPush: { dx: number; dy: number; since: number } | null = null;
+  private wallPush: {
+    dx: number;
+    dy: number;
+    since: number;
+    x: number;
+    y: number;
+  } | null = null;
   /** New Game onboarding + first-time minigame tips. */
   private tutorial: TutorialState = createTutorialState();
 
@@ -352,17 +358,22 @@ export class GameSession {
     return true;
   }
 
-  /** Hold against a wall >1s → slide into the nearest open neighbor. */
+  /**
+   * Playtest #39: hold input >1s with ~zero displacement → nudge around the
+   * collider (not only when dest===null for a matching push vector).
+   */
   maybeWallPushUnstuck(map: MapDef, dx: number, dy: number): boolean {
     const now = Date.now();
     const sx = Math.sign(dx);
     const sy = Math.sign(dy);
-    if (!this.wallPush || this.wallPush.dx !== sx || this.wallPush.dy !== sy) {
-      this.wallPush = { dx: sx, dy: sy, since: now };
+    const s = this.player.getStats();
+    const sameDir = this.wallPush && this.wallPush.dx === sx && this.wallPush.dy === sy;
+    const sameTile = this.wallPush && this.wallPush.x === s.x && this.wallPush.y === s.y;
+    if (!sameDir || !sameTile) {
+      this.wallPush = { dx: sx, dy: sy, since: now, x: s.x, y: s.y };
       return false;
     }
-    if (now - this.wallPush.since < 1000) return false;
-    const s = this.player.getStats();
+    if (now - this.wallPush!.since < 1000) return false;
     const free = unstuckAlongPush(map, s.x, s.y, sx, sy);
     if (!free) return false;
     this.wallPush = null;
@@ -781,6 +792,22 @@ export class GameSession {
     this.modalReleasePending = false;
   }
 
+  /**
+   * Playtest #39: plain dialogue (no choices) — no time arm / quiet mash period.
+   * If Interact was held at open, wait for a key-up then the next fresh keydown.
+   */
+  armPlainDialogueAdvance(interactHeld: boolean): void {
+    this.modalConfirmArmUntil = 0;
+    this.modalConfirmNeedsRelease = interactHeld || this.interactKeyDown;
+    this.modalHeldThroughArm = false;
+    this.modalReleasePending = false;
+  }
+
+  /** True while the open dialogue has choice buttons (mash-sensitive). */
+  dialogueHasChoices(): boolean {
+    return this.lastDialogue.some((l) => Boolean(l.choices?.length));
+  }
+
   /** Mash during arm / blocked confirm: reset arm so 60ms bursts never clear. */
   bumpModalConfirmArm(): void {
     this.modalConfirmArmUntil = Date.now() + 400;
@@ -833,7 +860,12 @@ export class GameSession {
       return this.travelTo(exit.toDistrict);
     }
     if (kind === 'locked') {
-      this.bus.emit('ui:toast', { message: t('ui.toast.pathLocked'), kind: 'info' });
+      const lockedExit = this.nearbyLockedExit();
+      const msg =
+        lockedExit?.toDistrict === 'torre-casa'
+          ? t('ui.toast.pathLockedTorre')
+          : t('ui.toast.pathLocked');
+      this.bus.emit('ui:toast', { message: msg, kind: 'info' });
       return false;
     }
     this.bus.emit('ui:toast', { message: t('ui.toast.nobodyInRange'), kind: 'info' });

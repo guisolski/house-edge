@@ -114,13 +114,28 @@ function slideAround(
     if (ny !== y && isWalkable(map, x, ny)) return { x, y: ny };
     return null;
   }
-  // Playtest #38: orthogonal into a wall stops (no Y-drift while holding D).
-  // Wall-push unstuck (>1s) nudges around instead of silent corner-slip.
-  void map;
-  void x;
-  void y;
-  void nx;
-  void ny;
+  return cornerSlip(map, x, y, sx, sy, nx, ny);
+}
+
+/** Playtest #39: forward-diagonal only (no wall-face Y-drift). */
+function cornerSlip(
+  map: MapDef,
+  x: number,
+  y: number,
+  sx: number,
+  sy: number,
+  nx: number,
+  ny: number,
+): { x: number; y: number } | null {
+  if (sx !== 0) {
+    if (isWalkable(map, nx, y - 1)) return { x: nx, y: y - 1 };
+    if (isWalkable(map, nx, y + 1)) return { x: nx, y: y + 1 };
+    return null;
+  }
+  if (sy !== 0) {
+    if (isWalkable(map, x - 1, ny)) return { x: x - 1, y: ny };
+    if (isWalkable(map, x + 1, ny)) return { x: x + 1, y: ny };
+  }
   return null;
 }
 

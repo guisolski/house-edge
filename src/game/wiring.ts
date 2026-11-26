@@ -64,7 +64,12 @@ function routeInputAction(
   if (action === 'interact' && pressed) session.noteInteractPressed(code);
   if (action === 'interact' && pressed && !gateInteract(session)) {
     // 60ms bursts / held Enter: each blocked confirm re-arms the quiet period.
-    if (!session.ui.is('play') && !session.ui.is('title')) {
+    // Playtest #39: plain dialogue advance keeps anti-mash off — don't re-arm.
+    const plainDialogue =
+      session.ui.is('dialogue') &&
+      !session.dialogueHasChoices() &&
+      !session.hasPendingStoryBet();
+    if (!session.ui.is('play') && !session.ui.is('title') && !plainDialogue) {
       session.bumpModalConfirmArm();
     }
     return;
@@ -98,6 +103,15 @@ function armAfterModalOpen(session: GameSession, after: string): void {
     after === 'ending'
   ) {
     session.clearModalConfirmGate();
+    return;
+  }
+  // Playtest #39: plain dialogue — key-up then fresh keydown, no 400ms mash arm.
+  if (
+    after === 'dialogue' &&
+    !session.dialogueHasChoices() &&
+    !session.hasPendingStoryBet()
+  ) {
+    session.armPlainDialogueAdvance(true);
     return;
   }
   session.noteModalOpened(true);

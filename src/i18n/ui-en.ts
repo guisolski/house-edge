@@ -108,6 +108,8 @@ export const uiEn = {
   'ui.obj.travelMenu': 'Travel menu → {place}',
   'ui.obj.unlockPath': 'Unlock path to {place}',
   'ui.obj.unlockDetail': 'Finish the current bet.',
+  'ui.obj.unlockTorreDetail':
+    'Win Dr. Margin’s hearing on Odds Avenue — Contato/Hacker alone won’t open it.',
   'ui.obj.actOn': '{verb} {name} ({place})',
   'ui.obj.findLead': 'Find the next lead ({place})',
   'ui.obj.elevatorVip': 'Take the elevator to the VIP salon',
@@ -199,6 +201,8 @@ export const uiEn = {
   'ui.toast.continueFree':
     'Free roam — grind side jobs or explore. Epilogue waits on the hill with Nair.',
   'ui.toast.pathLocked': 'Path locked — finish the current bet first.',
+  'ui.toast.pathLockedTorre':
+    'Torre locked — win Dr. Margin’s hearing first (after Contato).',
   'ui.toast.nobodyInRange': 'Nobody in range.',
   'ui.toast.neonSnapDone':
     'Neon Snap: Already got your shot — cones stay lit without you.',

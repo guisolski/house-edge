@@ -31,10 +31,19 @@ describe('slideStep', () => {
     expect(slideStep(neo, 2, 5, 1, -1)).toBeNull();
   });
 
-  it('orthogonal into a wall stops (no corner Y-drift)', () => {
-    // Playtest #38: east from (2,5) into blocked (3,5) must not slip to y=4/6.
-    expect(slideStep(toy, 2, 5, 1, 0)).toBeNull();
+  it('orthogonal corner-slides around a single-tile protrusion', () => {
+    // Playtest #39: east from (2,5) into blocked (3,5) slips to forward-diagonal.
+    expect(slideStep(toy, 2, 5, 1, 0)).toEqual({ x: 3, y: 4 });
     expect(slideStep(toy, 2, 5, 0, 1)).toEqual({ x: 2, y: 6 });
+  });
+
+  it('orthogonal into a continuous wall does not Y-drift sideways', () => {
+    // Thick wall: forward + both forward-diagonals blocked → stop (Torre #38).
+    const wall = toySlideMap();
+    wall.tiles[4 * wall.width + 3] = 'blocked';
+    wall.tiles[5 * wall.width + 3] = 'blocked';
+    wall.tiles[6 * wall.width + 3] = 'blocked';
+    expect(slideStep(wall, 2, 5, 1, 0)).toBeNull();
   });
 
   it('returns null on sealed west edge', () => {

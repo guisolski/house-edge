@@ -110,6 +110,8 @@ export const uiPtBR = {
   'ui.obj.travelMenu': 'Menu Viajar → {place}',
   'ui.obj.unlockPath': 'Desbloqueie o caminho para {place}',
   'ui.obj.unlockDetail': 'Fecha a aposta atual primeiro.',
+  'ui.obj.unlockTorreDetail':
+    'Vença a audiência do Dr. Margin na Avenida Odds — Contato/Hacker sozinho não abre.',
   'ui.obj.actOn': '{verb} {name} ({place})',
   'ui.obj.findLead': 'Ache a próxima pista ({place})',
   'ui.obj.elevatorVip': 'Pegue o elevador para o salão VIP',
@@ -200,6 +202,8 @@ export const uiPtBR = {
   'ui.toast.continueFree':
     'Exploração livre — faz bicos ou explora. Epílogo espera no morro com a Nair.',
   'ui.toast.pathLocked': 'Caminho travado — fecha a aposta atual primeiro.',
+  'ui.toast.pathLockedTorre':
+    'Torre travada — vença a audiência do Dr. Margin primeiro (depois do Contato).',
   'ui.toast.nobodyInRange': 'Ninguém por perto.',
   'ui.toast.neonSnapDone':
     'Neon Snap: você já garantiu a foto — os cones ficam acesos sem você.',

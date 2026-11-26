@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.22.13] — 2026-11-26
+
+### Fixed
+
+- **Avenida collision (P0)**: clear east-west shoulders (no pillar nubs); shrink tower footprints; orthogonal corner-slide around protrusions; wall-push on >1s zero-displacement hold.
+- **Dialogue Enter (P1)**: plain lines advance on the next fresh keydown after key-up (mash arm stays on choices only).
+- **Torre unlock copy (P1)**: objective/toast name Margin’s hearing — Contato/Hacker alone does not open the tower.
+- **Needle accessibility (P1)**: soft tick when the needle enters the green zone.
+
+### Tests
+
+- `session-v12213`, `e2e/avenida-east-lane` hold-D past world x=750 on y10–13.
+
 ## [1.22.12] — 2026-11-26
 
 ### Fixed
