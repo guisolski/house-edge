@@ -18,6 +18,18 @@ export type SkillKind =
 export const SEQ_KEYS = ['↑', '→', '↓', '←', 'R', 'G', 'B', 'Y'] as const;
 export type SeqKey = (typeof SEQ_KEYS)[number];
 
+/**
+ * Playtest #41: memorize reveal shows each step ≥600ms before input/timer.
+ * Total reveal = seqLen steps (build-up) + one full-hold beat.
+ */
+export const SEQ_REVEAL_STEP_MS = 700;
+
+/** Total memorize duration before input arms and the countdown starts. */
+export function sequenceRevealMs(seqLen: number): number {
+  const n = Math.max(1, seqLen);
+  return n * SEQ_REVEAL_STEP_MS + SEQ_REVEAL_STEP_MS;
+}
+
 /** Playtest #38: letters ↔ arrows so every sequence accepts arrow/WASD/dpad. */
 export const COLOR_TO_ARROW: Record<string, SeqKey> = {
   R: '↑',

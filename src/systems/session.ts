@@ -91,6 +91,14 @@ export function canNeedleStop(ready: boolean, now: number, readyUntil: number): 
   return ready && now >= readyUntil;
 }
 
+/** Playtest #41: visible skill end banner before returning to play. */
+export type SkillResultBanner = {
+  won: boolean;
+  payout: number;
+  creditsDelta: number;
+  repDelta: number;
+};
+
 export class GameSession {
   readonly bus: EventBus;
   readonly player: PlayerSystem;
@@ -113,6 +121,8 @@ export class GameSession {
   private safeJobUses = 0;
   private lastSafeJobMs = 0;
   private skillProgress: SkillProgress | null = null;
+  /** Playtest #41: brief win/lose banner after a skill before returning to play. */
+  private skillResult: SkillResultBanner | null = null;
   private stealthProgress: StealthProgress | null = null;
   private elevating = false;
   /** After travel, ignore the arrival pad until leave CLEAR + cooldown. */
@@ -1017,6 +1027,18 @@ export class GameSession {
     return this.skillProgress;
   }
 
+  getSkillResult(): SkillResultBanner | null {
+    return this.skillResult;
+  }
+
+  /** Dismiss the post-skill banner and return to play. */
+  dismissSkillResult(): void {
+    if (!this.skillResult) return;
+    this.skillResult = null;
+    if (!this.elevating && !this.ui.is('ending')) this.ui.go('play');
+    this.setTutorialOverlay(false);
+  }
+
   /** Player attempt on the current skill phase. */
   submitSkill(value: number): boolean {
     if (!this.skillProgress || !this.pendingBetId) return false;
@@ -1080,7 +1102,10 @@ export class GameSession {
     }
     this.skillProgress = p;
     if (!p.done || !p.won) return false;
-    return this.finishSkill(true);
+    const ok = this.finishSkill(true);
+    // Harness / e2e: auto-clear the result banner so callers see play.
+    if (this.skillResult) this.dismissSkillResult();
+    return ok;
   }
 
   /**
@@ -1098,21 +1123,7 @@ export class GameSession {
       this.pendingStake || bet.stake,
       this.player.getStats().credits,
     );
-    let payout = 0;
-    let delta = 0;
-    if (won) {
-      this.player.addCredits(-stake);
-      payout = payoutForWin(stake, bet.odds);
-      this.skillStreak += 1;
-      if (this.skillStreak >= 2) {
-        payout += Math.min(40, 5 * this.skillStreak);
-      }
-      this.player.addCredits(payout);
-      delta = payout - stake;
-    } else {
-      // Story-critical: no stake loss on incomplete fail paths (cancel / abandon).
-      this.skillStreak = 0;
-    }
+    const { payout, delta } = this.applySkillPayout(won, stake, bet);
     const rep =
       (won ? bet.reputationDeltaWin : bet.reputationDeltaLose) +
       (won ? this.upgrades.fameBonus() : 0);
@@ -1129,27 +1140,45 @@ export class GameSession {
       payout: won ? payout : 0,
       stake: won ? stake : 0,
     });
-    if (!this.ui.is('ending')) {
-      this.afterSkillUi(won, payout, storyBeat);
-    }
     this.pendingBetId = null;
     this.pendingStake = 0;
     this.skillProgress = null;
     this.stealthProgress = null;
+    if (!this.ui.is('ending')) {
+      this.skillResult = { won, payout, creditsDelta: delta, repDelta: rep };
+      this.afterSkillUi(won, payout, storyBeat);
+    }
     return true;
   }
 
-  /** Clear skill HUD (unless elevating) and require a fresh KeyE to rematch. */
-  private afterSkillUi(won: boolean, payout: number, storyBeat: string | null): void {
+  private applySkillPayout(
+    won: boolean,
+    stake: number,
+    bet: BetDefinition,
+  ): { payout: number; delta: number } {
+    if (!won) {
+      this.skillStreak = 0;
+      return { payout: 0, delta: 0 };
+    }
+    this.player.addCredits(-stake);
+    let payout = payoutForWin(stake, bet.odds);
+    this.skillStreak += 1;
+    if (this.skillStreak >= 2) payout += Math.min(40, 5 * this.skillStreak);
+    this.player.addCredits(payout);
+    return { payout, delta: payout - stake };
+  }
+
+  /** Keep skill UI for the result banner (unless elevating); require fresh KeyE. */
+  private afterSkillUi(won: boolean, _payout: number, _storyBeat: string | null): void {
     if (!this.elevating) {
-      this.toastSkill(won, payout, storyBeat);
-      this.ui.go('play');
+      this.bus.emit('audio:play-sfx', { id: won ? 'win' : 'ui' });
+      this.ui.go('skill');
     }
     // Playtest #28: fresh KeyE after any skill — never Enter rematch (incl. VIP).
     this.rematchNeedsKeyE = true;
     this.armInteractLock(this.interactKeyDown, 400);
     if (won) this.noteTutorialProgress('firstBet');
-    this.setTutorialOverlay(false);
+    this.setTutorialOverlay(true);
   }
 
   /** Top up credits so a story skill stake is always payable. */
@@ -1157,16 +1186,6 @@ export class GameSession {
     if (!this.pendingStoryBeat) return;
     const need = Math.max(0, minStake - this.player.getStats().credits);
     if (need > 0) this.player.addCredits(need);
-  }
-
-  private toastSkill(won: boolean, payout: number, storyBeat: string | null): void {
-    const missHint =
-      storyBeat === 'boteco-nair' ? t('ui.toast.missedPour') : t('ui.toast.missedStory');
-    this.bus.emit('ui:toast', {
-      message: won ? tf('ui.toast.cleared', { payout: String(payout) }) : missHint,
-      kind: won ? 'success' : 'info',
-    });
-    this.bus.emit('audio:play-sfx', { id: won ? 'win' : 'ui' });
   }
 
   /** Per-NPC / per-bet miss line — never the generic “try again” alone. */
@@ -1266,6 +1285,7 @@ export class GameSession {
     this.pendingStoryBeat = null;
     this.pendingBetAfterDialogue = null;
     this.skillProgress = null;
+    this.skillResult = null;
     this.stealthProgress = null;
     // Force play even if a prior transition edge was odd — Esc must free WASD.
     this.ui.backToPlay();
@@ -1288,6 +1308,7 @@ export class GameSession {
     this.pendingBetAfterDialogue = null;
     this.pendingStoryBeat = null;
     this.skillProgress = null;
+    this.skillResult = null;
     this.stealthProgress = null;
     this.lastDialogue = [];
     this.ui.backToPlay();

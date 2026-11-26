@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.22.15] — 2026-11-26
+
+### Fixed
+
+- **Lockpick (P0)**: one short hint (testar/test) that fits without wrapping; legend `certo/baixo/alto`; button **Testar**/**Test**; panel fits at 1280×800.
+- **Sequence memorize (P0)**: step-by-step reveal (≥600ms each), input locked, timer starts only after reveal; e2e on Pirateiro + ATM.
+- **Skill result (P1)**: win/lose banner with credits/rep delta for ~1.2s or Enter.
+- **Tutorial (P1)**: panel moved bottom-left so it no longer overlaps top HUD.
+- **Edge objective (P2)**: directional edge arrow with NPC name + distance.
+
+### Tests
+
+- `session-v12215`, `e2e/sequence-reveal`.
+
 ## [1.22.14] — 2026-11-26
 
 ### Fixed

@@ -167,8 +167,10 @@ function wireUi(session: GameSession, hud: HudHandles, audio: AudioEngine): void
   });
   session.bus.on('bet:resolved', () => {
     hud.updateStats();
-    // Ending beats already switched UI — don't clobber the ending panel.
-    if (!session.ui.is('ending') && !session.ui.is('transition')) hud.showHud();
+    // Ending beats / skill result banner — don't clobber those panels.
+    if (session.ui.is('ending') || session.ui.is('transition')) return;
+    if (session.getSkillResult()) return;
+    hud.showHud();
   });
   session.bus.on('fx:flash', (p) => hud.flash(p.kind));
   session.bus.on('fx:credits', (p) => hud.creditPopup(p.delta));

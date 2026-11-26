@@ -51,9 +51,9 @@ export const uiPtBR = {
   'ui.promptExit': 'E — Viajar',
   'ui.promptBet': 'F / B — Aposta',
   'ui.promptPathLocked': 'E — Caminho travado',
-  'ui.lockpickHintKeyboard': '←→ escolher pino · ↑ erguer · Enter testar · Esc sair',
-  'ui.lockpickHintGamepad': 'D-pad pinos · A erguer · Y Enviar · B cancelar',
-  'ui.lockpickHintTouch': 'Toque num pino para erguer · Enviar fechadura · Cancelar',
+  'ui.lockpickHintKeyboard': '←→ pino · ↑ · Enter testar · Esc · certo/baixo/alto',
+  'ui.lockpickHintGamepad': 'D-pad pinos · A erguer · Y testar · B sair',
+  'ui.lockpickHintTouch': 'Toque pino · Testar · Cancelar',
   'ui.needleMissHint': 'Errou — para na zona. Na próxima ela abre um pouco.',
   'ui.language': 'Idioma',
   'ui.languageEn': 'English',
@@ -79,7 +79,7 @@ export const uiPtBR = {
   'ui.tutorial.creditsRep':
     'Créditos pagam apostas; reputação libera bicos e confiança nos distritos.',
   'ui.minigameTip.lockpick':
-    'Troque os pinos, erga cada um na altura certa e envie uma vez. Erros gastam a gazua.',
+    'Troque os pinos, erga cada um na altura certa e teste uma vez. Erros gastam a gazua.',
   'ui.minigameTip.needle':
     'Pare a agulha na zona verde. A zona pode alargar depois de um erro.',
   'ui.minigameTip.timing':
@@ -166,9 +166,11 @@ export const uiPtBR = {
   'ui.skill.pinLow': 'Pino {n}: baixo demais',
   'ui.skill.pinHigh': 'Pino {n}: alto demais',
   'ui.skill.pinHint': 'Dica — pino {n} = {bars}',
-  'ui.skill.lockpickFeedbackIdle':
-    'Ajuste cada pino (←→ escolher, ↑/Espaço erguer) e Enter/Tab Enviar. Depois de cada tentativa: certo / baixo / alto.',
-  'ui.skill.submitLock': 'Enviar fechadura',
+  'ui.skill.lockpickFeedbackIdle': 'certo / baixo / alto',
+  'ui.skill.submitLock': 'Testar',
+  'ui.skill.resultWin': 'Vitória · +{credits} cr · +{rep} rep',
+  'ui.skill.resultLose': 'Falhou · {credits} cr · {rep} rep',
+  'ui.skill.resultHint': 'Enter continua',
   'ui.elevatorCard.foyer': '▼ Elevador / Foyer do pit',
   'ui.elevatorCard.vip': '▲ Elevador / Salão VIP · Andar 42',
   'ui.elevatorCard.downMark': '▼ Elevador',

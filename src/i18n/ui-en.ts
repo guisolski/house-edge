@@ -50,9 +50,9 @@ export const uiEn = {
   'ui.promptExit': 'E — Travel',
   'ui.promptBet': 'F / B — Bet',
   'ui.promptPathLocked': 'E — Path locked',
-  'ui.lockpickHintKeyboard': '←→ choose pin · ↑ raise · Enter test · Esc quit',
-  'ui.lockpickHintGamepad': 'D-pad cycle pins · A raise · Y Submit · B cancel',
-  'ui.lockpickHintTouch': 'Tap a pin to raise · Submit lock · Cancel',
+  'ui.lockpickHintKeyboard': '←→ pin · ↑ raise · Enter test · Esc · set/low/high',
+  'ui.lockpickHintGamepad': 'D-pad pins · A raise · Y test · B quit',
+  'ui.lockpickHintTouch': 'Tap pin · Test · Cancel',
   'ui.needleMissHint': 'Miss — stop inside the green zone. Zone widened for the retry.',
   'ui.language': 'Language',
   'ui.languageEn': 'English',
@@ -77,7 +77,7 @@ export const uiEn = {
   'ui.tutorial.creditsRep':
     'Credits buy stakes; reputation unlocks side jobs and district trust.',
   'ui.minigameTip.lockpick':
-    'Cycle pins, raise each to the right height, then Submit once. Wrong guesses wear the pick.',
+    'Cycle pins, raise each to the right height, then Test once. Wrong guesses wear the pick.',
   'ui.minigameTip.needle':
     'Stop the needle in the green zone. The zone can widen after a miss.',
   'ui.minigameTip.timing':
@@ -165,9 +165,11 @@ export const uiEn = {
   'ui.skill.pinLow': 'Pin {n}: too low',
   'ui.skill.pinHigh': 'Pin {n}: too high',
   'ui.skill.pinHint': 'Hint — pin {n} = {bars}',
-  'ui.skill.lockpickFeedbackIdle':
-    'Set each pin (←→ select, ↑/Space raise) then Enter/Tab Submit. After each guess: set / too low / too high.',
-  'ui.skill.submitLock': 'Submit lock',
+  'ui.skill.lockpickFeedbackIdle': 'set / low / high',
+  'ui.skill.submitLock': 'Test',
+  'ui.skill.resultWin': 'Win · +{credits} cr · +{rep} rep',
+  'ui.skill.resultLose': 'Failed · {credits} cr · {rep} rep',
+  'ui.skill.resultHint': 'Enter to continue',
   'ui.elevatorCard.foyer': '▼ Elevator / Pit Foyer · Floor 1',
   'ui.elevatorCard.vip': '▲ Elevator / VIP Salon · Floor 42',
   'ui.elevatorCard.downMark': 'Elevator ▼',

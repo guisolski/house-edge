@@ -26,6 +26,7 @@ import {
   sequenceInputIndex,
   sequencePadLabel,
   SEQ_KEYS,
+  SEQ_REVEAL_STEP_MS,
   timingZone,
   type LockpickUiState,
   type SeqKey,
@@ -278,7 +279,64 @@ function appendPickDurability(
   const pickKey =
     pickLeft === 1 ? 'ui.skill.pickDurabilityOne' : 'ui.skill.pickDurabilityMany';
   body.appendChild(el('p', 'skill-seq', tf(pickKey, { n: String(pickLeft) })));
+  // Playtest #41: single compact hint (controls + legend) — no second yellow line.
   body.appendChild(el('p', 'skill-seq lockpick-hint', lockpickControlHint(panel)));
+}
+
+/** Playtest #41: win/lose banner with credits/rep delta (~1.2s or Enter). */
+function paintSkillResult(
+  panel: HTMLElement,
+  session: GameSession,
+  after: () => void,
+): void {
+  const result = session.getSkillResult();
+  if (!result) return;
+  panel.classList.add('skill-result-panel');
+  const body = el('div', 'panel-body skill-body skill-result-body');
+  const credits =
+    result.creditsDelta >= 0 ? `+${result.creditsDelta}` : String(result.creditsDelta);
+  const rep = result.repDelta >= 0 ? `+${result.repDelta}` : String(result.repDelta);
+  const headline = result.won
+    ? tf('ui.skill.resultWin', { credits, rep })
+    : tf('ui.skill.resultLose', {
+        credits: result.creditsDelta === 0 ? '—' : credits,
+        rep,
+      });
+  body.append(
+    el('h2', result.won ? 'skill-result-win' : 'skill-result-lose', headline),
+    el('p', 'skill-seq', t('ui.skill.resultHint')),
+  );
+  const dismiss = (): void => {
+    session.dismissSkillResult();
+    after();
+  };
+  const actions = el('div', 'panel-actions skill-actions');
+  const cont = button(
+    t('ui.skill.resultHint')
+      .replace(/Enter\s*/i, '')
+      .trim() || 'OK',
+    dismiss,
+  );
+  bindEnterGate(cont, dismiss);
+  actions.appendChild(cont);
+  panel.append(body, actions);
+  cont.focus();
+  const armUntil = Date.now() + 280;
+  const onKey = (ev: KeyboardEvent): void => {
+    if (!panel.isConnected) return;
+    if (!isConfirmKey(ev) || ev.repeat) return;
+    if (Date.now() < armUntil) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    dismiss();
+  };
+  window.addEventListener('keydown', onKey, true);
+  const auto = window.setTimeout(dismiss, 1200);
+  onPanelDispose(panel, () => {
+    window.clearTimeout(auto);
+    window.removeEventListener('keydown', onKey, true);
+    panel.classList.remove('skill-result-panel');
+  });
 }
 
 export function paintSkill(
@@ -287,6 +345,11 @@ export function paintSkill(
   after: () => void,
 ): void {
   clearNode(panel);
+  const result = session.getSkillResult();
+  if (result) {
+    paintSkillResult(panel, session, after);
+    return;
+  }
   const progress = session.getSkillProgress();
   const bet = session.getPendingBet();
   if (!progress || !bet) return;
@@ -913,15 +976,12 @@ function submitLockpickGuess(
 }
 
 function makeLockpickState(target: number[], saved?: LockpickUiState): LockpickState {
+  // Playtest #41: no idle yellow duplicate — legend lives on the cyan hint line.
   return {
     heights:
       saved?.heights?.length === target.length ? [...saved.heights] : target.map(() => 0),
     labels: [],
-    feedback: el(
-      'p',
-      'skill-clue skill-lockpick-feedback',
-      saved?.feedback ?? t('ui.skill.lockpickFeedbackIdle'),
-    ),
+    feedback: el('p', 'skill-lockpick-feedback', saved?.feedback ?? ''),
     selected: saved?.selected ?? 0,
     hinted: new Set(saved?.hinted ?? []),
     expired: false,
@@ -1015,45 +1075,51 @@ function buildLockpickRow(
   return row;
 }
 
-function bindSequenceTimer(
-  body: HTMLElement,
-  session: GameSession,
-  seq: SeqKey[],
-  timerMs: number,
-  settled: { v: boolean },
-  after: () => void,
-): void {
-  const timerEl = el('p', 'skill-seq', '');
-  body.appendChild(timerEl);
-  const started = Date.now();
-  const tick = window.setInterval(() => {
-    if (!body.isConnected) {
+function bindSequenceTimer(ui: SeqUi, timerMs: number, timerEl: HTMLElement): () => void {
+  const { body, seq, settled, session, after } = ui;
+  let started = 0;
+  let tick = 0;
+  const run = (): void => {
+    started = Date.now();
+    tick = window.setInterval(() => {
+      if (!body.isConnected) {
+        window.clearInterval(tick);
+        return;
+      }
+      const left = Math.max(0, timerMs - (Date.now() - started));
+      timerEl.textContent =
+        left > 0
+          ? tf('ui.skill.timer', { s: String(Math.ceil(left / 1000)) })
+          : t('ui.skill.timerExpiredSeq');
+      if (left > 0 || settled.v) return;
       window.clearInterval(tick);
-      return;
-    }
-    const left = Math.max(0, timerMs - (Date.now() - started));
-    timerEl.textContent =
-      left > 0
-        ? tf('ui.skill.timer', { s: String(Math.ceil(left / 1000)) })
-        : t('ui.skill.timerExpiredSeq');
-    if (left > 0 || settled.v) return;
-    window.clearInterval(tick);
-    settled.v = true;
-    let p = session.getSkillProgress();
-    while (p && !p.done) {
-      session.submitSkill((SEQ_KEYS.indexOf(seq[0]!) + 1) % SEQ_KEYS.length);
-      p = session.getSkillProgress();
-    }
-    after();
-  }, 200);
+      settled.v = true;
+      let p = session.getSkillProgress();
+      while (p && !p.done) {
+        session.submitSkill((SEQ_KEYS.indexOf(seq[0]!) + 1) % SEQ_KEYS.length);
+        p = session.getSkillProgress();
+      }
+      after();
+    }, 200);
+  };
   const skillPanel = body.closest('.skill-panel') ?? body;
-  onPanelDispose(skillPanel as HTMLElement, () => window.clearInterval(tick));
+  onPanelDispose(skillPanel as HTMLElement, () => {
+    if (tick) window.clearInterval(tick);
+  });
+  return run;
 }
 
 /** Mastermind: reveal matched glyphs; · for remaining. */
 function seqRevealLabel(seq: SeqKey[], index: number): string {
   return tf('ui.skill.sequenceLabel', {
     seq: seq.map((k, i) => (i < index ? k : '·')).join('  '),
+  });
+}
+
+/** Progressive memorize label — first `shown` keys visible, rest hidden as ·. */
+function seqMemorizeLabel(seq: SeqKey[], shown: number): string {
+  return tf('ui.skill.sequenceLabel', {
+    seq: seq.map((k, i) => (i < shown ? k : '·')).join('  '),
   });
 }
 
@@ -1067,14 +1133,21 @@ type SeqUi = {
   armed: { v: boolean };
   session: GameSession;
   after: () => void;
+  startTimer?: () => void;
 };
 
-function flashSequence(ui: SeqUi, index: number, ms: number): void {
+/**
+ * Playtest #41: step-by-step memorize (≥600ms each), input locked, then arm + timer.
+ */
+function flashSequence(ui: SeqUi, index: number): void {
   ui.armed.v = false;
   ui.pattern.classList.add('skill-seq-flash');
-  ui.pattern.textContent = tf('ui.skill.sequenceLabel', { seq: ui.seq.join('  ') });
   ui.status.textContent = t('ui.skill.memorizeSeq');
-  const hide = window.setTimeout(() => {
+  const timers: number[] = [];
+  const clearAll = (): void => {
+    for (const id of timers) window.clearTimeout(id);
+  };
+  const finish = (): void => {
     if (!ui.body.isConnected || ui.settled.v) return;
     ui.armed.v = true;
     ui.pattern.classList.remove('skill-seq-flash');
@@ -1084,9 +1157,21 @@ function flashSequence(ui: SeqUi, index: number, ms: number): void {
         current: String(index + 1),
         total: String(ui.seq.length),
       }) + (ui.missCap ? tf('ui.skill.missesFail', { n: String(ui.missCap) }) : '');
-  }, ms);
+    ui.startTimer?.();
+  };
+  const showStep = (shown: number): void => {
+    if (!ui.body.isConnected || ui.settled.v) return;
+    ui.pattern.textContent = seqMemorizeLabel(ui.seq, shown);
+    if (shown < ui.seq.length) {
+      timers.push(window.setTimeout(() => showStep(shown + 1), SEQ_REVEAL_STEP_MS));
+      return;
+    }
+    // Full sequence held one more beat, then hide and arm input.
+    timers.push(window.setTimeout(finish, SEQ_REVEAL_STEP_MS));
+  };
+  showStep(1);
   const skillPanel = ui.body.closest('.skill-panel') ?? ui.body;
-  onPanelDispose(skillPanel as HTMLElement, () => window.clearTimeout(hide));
+  onPanelDispose(skillPanel as HTMLElement, clearAll);
 }
 
 function onSequenceKey(ui: SeqUi, keyIndex: number): void {
@@ -1112,7 +1197,7 @@ function onSequenceKey(ui: SeqUi, keyIndex: number): void {
       total: String(ui.seq.length),
     }) + left;
   if (next.misses > beforeMiss) {
-    flashSequence(ui, next.seqIndex, Math.min(2200, 1500 + next.misses * 350));
+    flashSequence(ui, next.seqIndex);
     return;
   }
   ui.pattern.textContent = seqRevealLabel(ui.seq, next.seqIndex);
@@ -1129,23 +1214,10 @@ function paintSequenceSkill(
   if (!progress || !phase) return;
   const seq = phaseSequence(phase);
   const missCap = phase.maxMisses;
-  // Playtest #36: first flash ≥2.8s so ATM/Cam Tech are never a blind first try.
-  const flashMs =
-    progress.misses === 0 ? 2800 : Math.min(2800, 1800 + progress.misses * 400);
-  const status = el(
-    'p',
-    'skill-seq',
-    tf('ui.skill.matchNext', {
-      current: String(progress.seqIndex + 1),
-      total: String(seq.length),
-    }) + (missCap ? tf('ui.skill.missesFail', { n: String(missCap) }) : ''),
-  );
-  const pattern = el(
-    'p',
-    'skill-pattern skill-seq-flash',
-    tf('ui.skill.sequenceLabel', { seq: seq.join('  ') }),
-  );
-  body.append(pattern, status);
+  const status = el('p', 'skill-seq', t('ui.skill.memorizeSeq'));
+  const pattern = el('p', 'skill-pattern skill-seq-flash', seqMemorizeLabel(seq, 1));
+  const timerEl = el('p', 'skill-seq skill-seq-timer', '');
+  body.append(pattern, status, timerEl);
   const ui: SeqUi = {
     body,
     pattern,
@@ -1157,10 +1229,10 @@ function paintSequenceSkill(
     session,
     after,
   };
-  flashSequence(ui, progress.seqIndex, flashMs);
   if (phase.timerMs && phase.timerMs > 0) {
-    bindSequenceTimer(body, session, seq, phase.timerMs + flashMs, ui.settled, after);
+    ui.startTimer = bindSequenceTimer(ui, phase.timerMs, timerEl);
   }
+  flashSequence(ui, progress.seqIndex);
   const used = sequencePadKeys(seq);
   const buffer = createSequenceKeyBuffer((keyIndex) => onSequenceKey(ui, keyIndex));
   const onKey = (keyIndex: number): void => buffer.push(keyIndex);

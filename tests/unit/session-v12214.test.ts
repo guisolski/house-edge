@@ -99,10 +99,10 @@ describe('v1.22.14 needle countdown gate', () => {
 
   it('lockpick hint is a clear one-liner', () => {
     setLocale('pt-BR');
-    expect(t('ui.lockpickHintKeyboard')).toMatch(/escolher pino/);
+    expect(t('ui.lockpickHintKeyboard')).toMatch(/pino/);
     expect(t('ui.lockpickHintKeyboard')).toMatch(/Enter testar/);
     setLocale('en');
-    expect(t('ui.lockpickHintKeyboard')).toMatch(/choose pin/i);
+    expect(t('ui.lockpickHintKeyboard')).toMatch(/pin/i);
   });
 
   it('getLastInteractCode and bumpModalConfirmArm track Enter', () => {

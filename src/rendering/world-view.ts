@@ -1482,21 +1482,29 @@ type ObjectiveMark = {
 };
 
 /**
- * Playtest #26: never print a second nameplate on the quest arrow.
- * NPC names live only on sprite-attached tags; pads/waypoints stay arrow-only.
+ * Playtest #26: never print a second nameplate on the quest arrow on-screen.
+ * Playtest #41: off-screen edge always shows NPC name + distance.
  */
 function objectiveArrowLabel(m: ObjectiveMark & { onScreen: boolean }): string | null {
-  if (!m.label || m.arrowOnly) return null;
-  if (/Fair|Avenue|Tower|Morro Neon|Elevator|Feira|Avenida|Torre|Elevador/i.test(m.label))
+  if (!m.label) return null;
+  if (m.arrowOnly) {
+    if (!m.onScreen) return `${m.distTiles}m`;
     return null;
-  // Sprite nameplate owns the name — arrow is pointer-only.
-  if (m.npcNameplateOwns) return null;
-  // Off-screen edge pointer may keep a destination hint for non-NPC targets.
+  }
+  if (
+    /Fair|Avenue|Tower|Morro Neon|Elevator|Feira|Avenida|Torre|Elevador/i.test(m.label)
+  ) {
+    if (!m.onScreen) return `${m.label} · ${m.distTiles}m`;
+    return null;
+  }
+  // Off-screen: always name + distance (even when a sprite nameplate owns on-screen).
   if (!m.onScreen) return `${m.label} · ${m.distTiles}m`;
+  // On-screen NPC: sprite nameplate owns the name — arrow is pointer-only.
+  if (m.npcNameplateOwns) return null;
   return null;
 }
 
-/** Large bouncing yellow arrow; name only when no sprite nameplate owns it. */
+/** Large bouncing yellow arrow; off-screen edge aims toward the target. */
 function paintObjectiveMarker(m: ObjectiveMark): void {
   const bob = Math.sin(m.frame / 8) * 6;
   const avoid = labelOffsetForSigns({
@@ -1517,8 +1525,9 @@ function paintObjectiveMarker(m: ObjectiveMark): void {
   }
   const px = clamp(rawX, margin, m.viewW - margin);
   const py = clamp(rawY, 120, m.viewH - margin);
-  paintBigArrow(m.ctx, px, py, Palette.brasilYellow);
-  if (label) paintMarkerLabel(m.ctx, px, py - 22, label, m.viewW);
+  const angle = Math.atan2(rawY - py, rawX - px);
+  paintEdgeArrow(m.ctx, px, py, angle, Palette.brasilYellow);
+  if (label) paintMarkerLabel(m.ctx, px, py - 28, label, m.viewW);
 }
 
 function paintBigArrow(
@@ -1541,6 +1550,33 @@ function paintBigArrow(
   ctx.fill();
   // Stem so it reads as a big quest marker, not a tiny chevron.
   ctx.fillRect(px - 4, py - 48, 8, 16);
+}
+
+/** Playtest #41: edge chevron that points toward the off-screen objective. */
+function paintEdgeArrow(
+  ctx: CanvasRenderingContext2D,
+  px: number,
+  py: number,
+  angle: number,
+  color: string,
+): void {
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.rotate(angle);
+  ctx.fillStyle = '#00000099';
+  ctx.beginPath();
+  ctx.moveTo(22, 0);
+  ctx.lineTo(-10, -16);
+  ctx.lineTo(-10, 16);
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(18, 0);
+  ctx.lineTo(-8, -13);
+  ctx.lineTo(-8, 13);
+  ctx.fill();
+  ctx.fillRect(-22, -4, 14, 8);
+  ctx.restore();
 }
 
 function paintMarkerLabel(

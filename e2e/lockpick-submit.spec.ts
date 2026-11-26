@@ -2,11 +2,11 @@ import { test, expect } from '@playwright/test';
 
 async function openFeiraLockbox(page: import('@playwright/test').Page): Promise<void> {
   await page.goto('/');
-  await page.getByRole('button', { name: 'New Game' }).click();
+  await page.getByRole('button', { name: /New Game|Novo jogo/i }).click();
   await expect(page.locator('.play-hud')).toBeVisible();
 
   await page.evaluate(() => {
-    const s = (
+    const he = (
       window as unknown as {
         __HOUSE_EDGE__: {
           session: {
@@ -17,28 +17,37 @@ async function openFeiraLockbox(page: import('@playwright/test').Page): Promise<
             pickDialogueChoice: (id: string, label: string) => void;
             acceptStoryBet: () => boolean;
             player: { addCredits: (n: number) => void };
+            skipTutorialNow: () => void;
           };
+          hud: { syncScreen: () => void };
         };
       }
-    ).__HOUSE_EDGE__.session;
-    s.player.addCredits(200);
-    s.world.unlock('feira-central');
-    s.travelTo('feira-central');
-    s.story.setFlag('forro_ok', true);
-    s.runStoryBeat('feira-lockbox');
-    s.pickDialogueChoice('lockbox_for_hill', 'ok');
-    s.acceptStoryBet();
+    ).__HOUSE_EDGE__;
+    he.session.skipTutorialNow();
+    he.session.player.addCredits(200);
+    he.session.world.unlock('feira-central');
+    he.session.travelTo('feira-central');
+    he.session.story.setFlag('forro_ok', true);
+    he.session.runStoryBeat('feira-lockbox');
+    he.session.pickDialogueChoice('lockbox_for_hill', 'ok');
+    he.session.acceptStoryBet();
+    he.hud.syncScreen();
   });
 
   await expect(page.locator('.lockpick-pin').first()).toBeVisible({ timeout: 8_000 });
+  // Keep touch chrome from eating pin clicks on some viewports.
+  await page.evaluate(() => {
+    const touch = document.querySelector('.touch-controls') as HTMLElement | null;
+    if (touch) touch.style.display = 'none';
+  });
 }
 
 /** Pins for feira-lockbox: [1, 2, 0] — raise left once, middle twice. */
 async function setCorrectPins(page: import('@playwright/test').Page): Promise<void> {
   const pins = page.locator('.lockpick-pin');
-  await pins.nth(0).click();
-  await pins.nth(1).click();
-  await pins.nth(1).click();
+  await pins.nth(0).click({ force: true });
+  await pins.nth(1).click({ force: true });
+  await pins.nth(1).click({ force: true });
 }
 
 /** Playtest #21: keyboard-only lockpick submit (Enter on pin / Tab). */

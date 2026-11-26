@@ -66,7 +66,7 @@ function parseVerdicts(text: string, count: number): ('ok' | 'low' | 'high' | nu
 }
 
 async function submitLock(page: import('@playwright/test').Page): Promise<void> {
-  const submit = page.getByRole('button', { name: /Submit lock|Enviar fechadura/i });
+  const submit = page.getByRole('button', { name: /^(Test|Testar)$/i });
   await submit.click(tap);
 }
 

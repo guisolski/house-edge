@@ -158,6 +158,10 @@ describe('v1.22.12 sequence hints match accepted input', () => {
     session.acceptStoryBet();
     expect(session.ui.is('skill')).toBe(true);
     expect(session.failSkillOffer()).toBe(true);
+    // Playtest #41: result banner holds skill UI until dismiss.
+    expect(session.getSkillResult()?.won).toBe(false);
+    expect(session.ui.is('skill')).toBe(true);
+    session.dismissSkillResult();
     expect(session.ui.is('play')).toBe(true);
   });
 
