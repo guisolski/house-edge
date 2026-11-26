@@ -11,7 +11,7 @@ export const storyEn: Record<string, string> = {
   'story.avenida-atm.title': 'ATM glitch hunt',
   'story.avenida-betrayal.0.speaker': 'Mole Contact',
   'story.avenida-betrayal.0.text':
-    'Stop. The “leak” was never Luna’s alone — I sold a slice back to Casa for a clean exit. Your hill bytes have a mole scar.',
+    'Stop. The “leak” was never Luna’s alone — I sold a slice back to Casa for a clean exit. Our fingerprints are on the packets they bought.',
   'story.avenida-betrayal.1.speaker': 'Rita Odds',
   'story.avenida-betrayal.1.text':
     'You used us. The antenna, the pendrive, the fair — all so Augusto could watch the script?',
@@ -301,7 +301,7 @@ export const storyEn: Record<string, string> = {
     'Regulation is just another table. Want a public hearing? Pick the testimony that sticks — skill read.',
   'story.lobby-margin.1.speaker': 'Rita Odds',
   'story.lobby-margin.1.text':
-    'People will see the house edge eating schools, hospitals, and water. And the mole scar on our own bytes.',
+    'People will see the house edge eating schools, hospitals, and water — and our own fingerprint sold cheap in the packet.',
   'story.lobby-margin.2.speaker': 'Dr. Margin',
   'story.lobby-margin.2.text':
     'The hearing decides everything. Place your chips — win, and the scandal trends citywide.',
@@ -433,7 +433,7 @@ export const storyEn: Record<string, string> = {
   'story.torre-elevator.2.text':
     'Nail the timing and the doors open on chrome with a fade. Miss and you tip the stake — try again.',
   'story.torre-elevator.3.speaker': 'Rita Odds',
-  'story.torre-elevator.3.text': 'Chrome or retry — I’m going up. Call it.',
+  'story.torre-elevator.3.text': 'Alright. Call the car — I’m going up either way.',
   'story.torre-elevator.title': 'Elevator call',
   'story.torre-final.0.speaker': 'Augusto Casa',
   'story.torre-final.0.text': 'All of Brazil is my casino. You’re just another chip.',
@@ -487,7 +487,7 @@ export const storyEn: Record<string, string> = {
   'story.torre-pit.2.text':
     'Cards are marked in three places. Bet you spot the real deck before the floor manager does.',
   'story.torre-pit.3.speaker': 'Rita Odds',
-  'story.torre-pit.3.text': 'I grew up reading marked asphalt. Deal.',
+  'story.torre-pit.3.text': 'Marked decks I can read with my eyes shut. Deal.',
   'story.torre-pit.title': 'Pit floor warm-up',
   'story.torre-vip.0.speaker': 'VIP Host',
   'story.torre-vip.0.text': 'Elevator spit you out clean. High rollers want a show.',

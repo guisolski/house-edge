@@ -52,7 +52,7 @@ export const uiPtBR = {
   'ui.promptBet': 'F / B — Aposta',
   'ui.promptPathLocked': 'E — Caminho travado',
   'ui.lockpickHintKeyboard':
-    '←→ trocar pinos · Espaço / clique erguer · Enter / Tab Enviar · Esc cancelar',
+    '←→ trocar pinos · ↑ / Espaço / clique erguer · Enter / Tab Enviar · Esc cancelar',
   'ui.lockpickHintGamepad': 'D-pad pinos · A erguer · Y Enviar · B cancelar',
   'ui.lockpickHintTouch': 'Toque num pino para erguer · Enviar fechadura · Cancelar',
   'ui.needleMissHint': 'Errou — para na zona. Na próxima ela abre um pouco.',
@@ -155,7 +155,7 @@ export const uiPtBR = {
   'ui.skill.pinHigh': 'Pino {n}: alto demais',
   'ui.skill.pinHint': 'Dica — pino {n} = {bars}',
   'ui.skill.lockpickFeedbackIdle':
-    'Ajuste cada pino (←→ escolher, Espaço erguer) e Enviar. Depois de cada tentativa: certo / baixo / alto.',
+    'Ajuste cada pino (←→ escolher, ↑/Espaço erguer) e Enter/Tab Enviar. Depois de cada tentativa: certo / baixo / alto.',
   'ui.skill.submitLock': 'Enviar fechadura',
   'ui.elevatorCard.foyer': '▼ Elevador / Foyer do pit',
   'ui.elevatorCard.vip': '▲ Elevador / Salão VIP · Andar 42',

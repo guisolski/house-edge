@@ -411,15 +411,20 @@ function paintTimingSkill(
   raf = requestAnimationFrame(tickNeedle);
   meter.dataset.needleRaf = '1';
   const sampleNeedle = (): number => needlePos % 1;
+  const dropNeedle = (): void => {
+    cancelAnimationFrame(raf);
+    window.removeEventListener('keydown', onKey, true);
+  };
   const stopAt = (pos: number): void => {
     if (settled) return;
     settled = true;
-    cancelAnimationFrame(raf);
-    window.removeEventListener('keydown', onKey, true);
+    dropNeedle();
     session.submitSkill(pos % 1);
     after();
   };
   const onKey = (e: KeyboardEvent): void => {
+    // clearNode/repaint must not leave a live Stop handler (playtest #35).
+    if (!meter.isConnected) return dropNeedle();
     if (e.repeat) return;
     if (!isConfirmKey(e) && e.code !== 'KeyE') return;
     e.preventDefault();
@@ -433,6 +438,93 @@ function paintTimingSkill(
   actions.appendChild(stopBtn);
 }
 
+type ChoiceSettle = {
+  settled: boolean;
+  armUntil: number;
+  buttons: HTMLButtonElement[];
+  settle: (i: number, fromPointer: boolean) => void;
+  settleFocused: () => void;
+};
+
+function makeChoiceSettle(
+  options: string[],
+  session: GameSession,
+  after: () => void,
+): ChoiceSettle {
+  const state: ChoiceSettle = {
+    settled: false,
+    armUntil: Date.now() + 450,
+    buttons: [],
+    settle: () => undefined,
+    settleFocused: () => undefined,
+  };
+  state.settle = (i, fromPointer) => {
+    if (state.settled || Date.now() < state.armUntil) return;
+    if (!fromPointer && !session.allowModalConfirm()) return;
+    if (i < 0 || i >= options.length) return;
+    state.settled = true;
+    session.submitSkill(i);
+    after();
+  };
+  state.settleFocused = () => {
+    const ae = document.activeElement;
+    if (!(ae instanceof HTMLButtonElement)) return;
+    if (!ae.classList.contains('skill-choice')) return;
+    // Playtest #35: derive index from the focused control, never a stale closure.
+    const i = Number(ae.dataset.choiceIndex);
+    if (!Number.isFinite(i) || i < 0) return;
+    state.settle(i, false);
+  };
+  return state;
+}
+
+function choiceIndexFromEvent(e: Event): number {
+  const t = e.currentTarget;
+  if (!(t instanceof HTMLButtonElement)) return -1;
+  if (!t.classList.contains('skill-choice')) return -1;
+  const i = Number(t.dataset.choiceIndex);
+  return Number.isFinite(i) && i >= 0 ? i : -1;
+}
+
+function appendChoiceSkillButtons(
+  actions: HTMLElement,
+  options: string[],
+  state: ChoiceSettle,
+): void {
+  options.forEach((label, i) => {
+    const btn = button(label, () => {
+      /* pointer / synthetic click */
+    });
+    btn.classList.add('skill-choice');
+    btn.dataset.choiceIndex = String(i);
+    btn.addEventListener('pointerup', (e) => {
+      if (e.button === 0) state.settle(choiceIndexFromEvent(e), true);
+    });
+    btn.addEventListener('click', (e) => {
+      // Gamepad/ActionState activateFocused() synthesizes click (detail 0).
+      if (e.detail !== 0) return;
+      state.settle(choiceIndexFromEvent(e), false);
+    });
+    // Capture + stopPropagation: prevent window ActionState from also
+    // activateFocused() after settle paints the next phase (needle Stop miss).
+    // Settle from the key target (not activeElement) so focus/selection can't desync.
+    btn.addEventListener(
+      'keydown',
+      (e) => {
+        if (!isConfirmKey(e)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.repeat) return;
+        if (Date.now() < state.armUntil) return;
+        state.settle(choiceIndexFromEvent(e), false);
+      },
+      true,
+    );
+    state.buttons.push(btn);
+    actions.appendChild(btn);
+  });
+}
+
 function paintChoiceSkill(
   actions: HTMLElement,
   options: string[],
@@ -440,58 +532,39 @@ function paintChoiceSkill(
   after: () => void,
   phase?: SkillPhase,
 ): void {
-  let settled = false;
-  // Arm 450ms so leftover Enter from Take bet / dialogue can't pick option 0.
-  const armUntil = Date.now() + 450;
-  const settle = (i: number): void => {
-    if (settled || Date.now() < armUntil) return;
-    settled = true;
-    session.submitSkill(i);
-    after();
-  };
-  options.forEach((label, i) => {
-    const btn = button(label, () => settle(i));
-    btn.classList.add('skill-choice');
-    bindEnterGate(btn, () => settle(i));
-    btn.addEventListener(
-      'keydown',
-      (e) => {
-        if (Date.now() >= armUntil) return;
-        if (isConfirmKey(e)) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      },
-      true,
-    );
-    actions.appendChild(btn);
-  });
-  // Playtest #32: no default focus — arrow onto an offer before Enter.
+  const state = makeChoiceSettle(options, session, after);
+  appendChoiceSkillButtons(actions, options, state);
   if (document.activeElement instanceof HTMLElement) {
     document.activeElement.blur();
   }
+  window.setTimeout(
+    () => {
+      if (!actions.isConnected || state.settled) return;
+      const ae = document.activeElement;
+      if (ae instanceof HTMLButtonElement && state.buttons.includes(ae)) return;
+      state.buttons[0]?.focus();
+    },
+    Math.max(0, state.armUntil - Date.now()) + 20,
+  );
   const ms = phase?.timerMs;
-  if (ms && ms > 0) {
-    const timer = el(
-      'p',
-      'skill-seq',
-      tf('ui.skill.offerExpires', { s: String(Math.ceil(ms / 1000)) }),
-    );
-    actions.prepend(timer);
-    const started = Date.now();
-    const tick = window.setInterval(() => {
-      const left = Math.max(0, ms - (Date.now() - started));
-      timer.textContent =
-        left > 0
-          ? tf('ui.skill.offerExpires', { s: String(Math.ceil(left / 1000)) })
-          : t('ui.skill.offerExpired');
-      if (left <= 0) {
-        window.clearInterval(tick);
-        // Wrong answer on timeout — miss, then UI refreshes via after.
-        settle((phase?.target ?? 0) === 0 ? 1 : 0);
-      }
-    }, 200);
-  }
+  if (!ms || ms <= 0) return;
+  const timer = el(
+    'p',
+    'skill-seq',
+    tf('ui.skill.offerExpires', { s: String(Math.ceil(ms / 1000)) }),
+  );
+  actions.prepend(timer);
+  const started = Date.now();
+  const tick = window.setInterval(() => {
+    const left = Math.max(0, ms - (Date.now() - started));
+    timer.textContent =
+      left > 0
+        ? tf('ui.skill.offerExpires', { s: String(Math.ceil(left / 1000)) })
+        : t('ui.skill.offerExpired');
+    if (left > 0) return;
+    window.clearInterval(tick);
+    state.settle((phase?.target ?? 0) === 0 ? 1 : 0, true);
+  }, 200);
 }
 
 type LockpickState = {
@@ -699,10 +772,7 @@ function paintLockpickSkill(
   const submit = (): void => submitLockpickGuess(state, target, session, after, cleanup);
   const onKey = (e: KeyboardEvent): boolean => {
     if (state.settled || state.expired || !body.isConnected) return false;
-    if (e.key === 'Tab' || (isConfirmKey(e) && !e.repeat)) {
-      submit();
-      return true;
-    }
+    // Playtest #35: Space raises (with ↑/W); Enter/Tab submit — match on-screen hints.
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
       selectPin(state.selected - 1);
       return true;
@@ -713,6 +783,10 @@ function paintLockpickSkill(
     }
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
       bumpPin(state.selected);
+      return true;
+    }
+    if (e.key === 'Tab' || (e.key === 'Enter' && !e.repeat)) {
+      submit();
       return true;
     }
     return false;

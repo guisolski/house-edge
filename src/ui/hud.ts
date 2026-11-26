@@ -292,9 +292,11 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
     },
     showSkill: () => {
       only(p, 'skill');
+      // Playtest #35: paintSkill owns focus for choice/puzzle/negotiate (mash-safe).
+      // Never focusFirst here — that made option 1 Enter-pickable during bursts.
       paintSkill(p.skill, session, () => h.syncScreen());
-      if (!session.isSequenceSkillActive()) focusFirst(p.skill);
-      session.noteModalOpened(session.isInteractHeld());
+      // Always require a post-open key-up before confirm (Contato 60ms mash).
+      session.noteModalOpened(true);
     },
     showTravel: () => {
       only(p, 'travel');

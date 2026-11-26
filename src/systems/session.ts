@@ -1325,13 +1325,18 @@ export class GameSession {
   }
 
   /**
-   * After Close/skill: rematch arm + require a fresh key-up after the arm
-   * (4× Enter @80ms stays safe; release during the arm does not clear the gate).
-   * Skill finish uses rematchNeedsKeyE + short arm so Enter never rematches.
+   * After Close/skill: if the closing key is still held, ignore that key until
+   * key-up (playtest #35 — never blanket-swallow the next fresh E/Enter).
+   * Skill finish still sets rematchNeedsKeyE so Enter never rematches.
    */
   private armInteractLock(interactHeld = true, ms = 500): void {
-    this.interactLockUntil = Date.now() + ms;
-    this.interactNeedsRelease = interactHeld;
+    if (interactHeld) {
+      this.interactLockUntil = Date.now() + ms;
+      this.interactNeedsRelease = true;
+    } else {
+      this.interactLockUntil = 0;
+      this.interactNeedsRelease = false;
+    }
     this.interactReleasePending = false;
   }
 

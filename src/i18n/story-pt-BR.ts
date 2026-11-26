@@ -11,7 +11,7 @@ export const storyPtBR: Record<string, string> = {
   'story.avenida-atm.title': 'Caçada à trava do ATM',
   'story.avenida-betrayal.0.speaker': 'Contato Vira-Casaca',
   'story.avenida-betrayal.0.text':
-    'Para. O "vazamento" nunca foi só da Luna — vendi um pedaço de volta pra Casa numa saída limpa. Os bytes do morro têm cicatriz de dedo-duro.',
+    'Para. O "vazamento" nunca foi só da Luna — eu vendi um pedaço pra Casa numa saída limpa. Tem digital nossa nos pacotes que eles compraram.',
   'story.avenida-betrayal.1.speaker': 'Rita Odds',
   'story.avenida-betrayal.1.text':
     'Você usou a gente. A antena, o pendrive, a feira — tudo pra Augusto assistir o roteiro?',
@@ -300,7 +300,7 @@ export const storyPtBR: Record<string, string> = {
     'Regulamento é só mais uma mesa. Quer audiência pública? Escolhe o depoimento que gruda — leitura afiada.',
   'story.lobby-margin.1.speaker': 'Rita Odds',
   'story.lobby-margin.1.text':
-    'O povo vai ver a vantagem da casa comendo escola, hospital e água. E a cicatriz de dedo-duro nos nossos próprios bytes.',
+    'O povo vai ver a vantagem da casa comendo escola, hospital e água — e a nossa digital vendida barato no pacote.',
   'story.lobby-margin.2.speaker': 'Dr. Margin',
   'story.lobby-margin.2.text':
     'A audiência decide tudo. Coloca as fichas — ganha, e o escândalo viraliza na cidade.',
@@ -433,7 +433,7 @@ export const storyPtBR: Record<string, string> = {
   'story.torre-elevator.2.text':
     'Acerta o timing e a porta abre no cromado com a luz baixando. Erra e vira a aposta — chama o carro outra vez.',
   'story.torre-elevator.3.speaker': 'Rita Odds',
-  'story.torre-elevator.3.text': 'Cromado ou de novo — vou subir. Chama.',
+  'story.torre-elevator.3.text': 'Beleza. Chama o carro — eu subo de qualquer jeito.',
   'story.torre-elevator.title': 'Chamada do elevador',
   'story.torre-final.0.speaker': 'Augusto Casa',
   'story.torre-final.0.text': 'O Brasil inteiro é meu cassino. Você é só mais uma ficha.',
@@ -487,7 +487,7 @@ export const storyPtBR: Record<string, string> = {
   'story.torre-pit.2.text':
     'Carta marcada em três pontos. Aposta que você acha o baralho real antes do gerente.',
   'story.torre-pit.3.speaker': 'Rita Odds',
-  'story.torre-pit.3.text': 'Cresci lendo asfalto marcado. Fechado.',
+  'story.torre-pit.3.text': 'Baralho marcado eu leio de olhos fechados. Manda ver.',
   'story.torre-pit.title': 'Aquecimento no salão',
   'story.torre-vip.0.speaker': 'Anfitrião VIP',
   'story.torre-vip.0.text': 'O elevador cuspiu você limpo. Tubarões querem show.',

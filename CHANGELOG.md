@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.22.9] — 2026-11-26
+
+### Fixed
+
+- **Contato mash (P0)**: skill choices no longer focusFirst on open; confirm requires allowModalConfirm + post-open key-up; 60ms-burst e2e on Contato.
+- **Augusto Fase 2 (P0)**: Enter submits the key target’s `data-choice-index` (not activeElement / stale closure); timing Stop listener dies on repaint; e2e + unit.
+- **Lockpick / input / world (P1)**: Space raises, Enter/Tab submit + matching hints; post-modal swallow only while the closing key is held; Feira stalls bh=1; rain/steam skip on slow frames; pt-BR polish; Odds NPCs off Fair exit stand.
+
 ## [1.22.8] — 2026-11-25
 
 ### Fixed

@@ -539,17 +539,18 @@ function buildFeira(): MapDef {
   paintExitPad(tiles, w, 3, 12);
   paintExitPad(tiles, w, 38, 13);
 
+  // Playtest #35: bh=1 stalls — fewer corner pockets that trap WASD against the lip.
   const stalls: { x: number; y: number; style: number; bw: number }[] = [
     { x: 8, y: 4, style: 0, bw: 3 },
-    { x: 13, y: 5, style: 1, bw: 4 },
+    { x: 13, y: 4, style: 1, bw: 4 },
     { x: 19, y: 4, style: 2, bw: 3 },
-    { x: 24, y: 5, style: 3, bw: 3 },
+    { x: 24, y: 4, style: 3, bw: 3 },
     { x: 29, y: 4, style: 4, bw: 4 },
-    { x: 8, y: 18, style: 7, bw: 3 },
+    { x: 8, y: 19, style: 7, bw: 3 },
     { x: 13, y: 19, style: 0, bw: 4 },
-    { x: 19, y: 18, style: 2, bw: 3 },
+    { x: 19, y: 19, style: 2, bw: 3 },
     { x: 24, y: 19, style: 3, bw: 3 },
-    { x: 29, y: 18, style: 5, bw: 4 },
+    { x: 29, y: 19, style: 5, bw: 4 },
   ];
   for (const s of stalls) {
     houseBlock({
@@ -561,7 +562,7 @@ function buildFeira(): MapDef {
       style: s.style,
       kind: 'feira',
       bw: s.bw,
-      bh: 2,
+      bh: 1,
     });
   }
   fillFeiraProps(props);

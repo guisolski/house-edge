@@ -587,8 +587,12 @@ function paintPlayOverlays(o: {
   if ((o.frame & lightMask) === 0) {
     drawFewLights(o.ctx, o.state, o.px, o.py, o.camX, o.camY);
   }
-  if (!indoor && (o.frame & 3) === 0) drawRain(o.ctx, o.frame);
-  if (!indoor && (o.frame & 3) === 0) drawSteam(o.ctx, o.state, o.camX, o.camY, o.frame);
+  // Playtest #35: drop rain/steam on a slow frame so a hitch doesn't cascade to ~30 FPS.
+  const slow = (o.state.lastSample?.frameMs ?? 16) > 22;
+  if (!indoor && !slow && (o.frame & 3) === 0) drawRain(o.ctx, o.frame);
+  if (!indoor && !slow && (o.frame & 3) === 0) {
+    drawSteam(o.ctx, o.state, o.camX, o.camY, o.frame);
+  }
 }
 
 function mapCacheKey(session: GameSession, map: MapDef): string {

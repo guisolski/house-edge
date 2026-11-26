@@ -51,7 +51,7 @@ export const uiEn = {
   'ui.promptBet': 'F / B — Bet',
   'ui.promptPathLocked': 'E — Path locked',
   'ui.lockpickHintKeyboard':
-    '←→ cycle pins · Space / click raise · Enter / Tab Submit · Esc cancel',
+    '←→ cycle pins · ↑ / Space / click raise · Enter / Tab Submit · Esc cancel',
   'ui.lockpickHintGamepad': 'D-pad cycle pins · A raise · Y Submit · B cancel',
   'ui.lockpickHintTouch': 'Tap a pin to raise · Submit lock · Cancel',
   'ui.needleMissHint': 'Miss — stop inside the green zone. Zone widened for the retry.',
@@ -154,7 +154,7 @@ export const uiEn = {
   'ui.skill.pinHigh': 'Pin {n}: too high',
   'ui.skill.pinHint': 'Hint — pin {n} = {bars}',
   'ui.skill.lockpickFeedbackIdle':
-    'Set each pin (←→ select, Space raise) then Submit. After each guess: set / too low / too high.',
+    'Set each pin (←→ select, ↑/Space raise) then Enter/Tab Submit. After each guess: set / too low / too high.',
   'ui.skill.submitLock': 'Submit lock',
   'ui.elevatorCard.foyer': '▼ Elevator / Pit Foyer · Floor 1',
   'ui.elevatorCard.vip': '▲ Elevator / VIP Salon · Floor 42',

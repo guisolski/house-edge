@@ -257,7 +257,7 @@ const NPCS: readonly WorldNpc[] = [
     id: 'mole-contact',
     name: englishNpcName('mole-contact'),
     districtId: 'avenida-odds',
-    // Playtest #34: south of courier, clear of Fair sign (2,10) + east arrival lane.
+    // Playtest #35: east of Fair exit stand so left-walk doesn't arm Viajar.
     x: 10,
     y: 13,
     wanderRadius: 0,
@@ -271,8 +271,8 @@ const NPCS: readonly WorldNpc[] = [
     id: 'capita',
     name: englishNpcName('capita'),
     districtId: 'avenida-odds',
-    // Clear of Fair sign (2,10) sprite box + Fair pad interact.
-    x: 8,
+    // Playtest #35: off Fair exit stand (2,12) + sign (2,10).
+    x: 9,
     y: 11,
     wanderRadius: 0,
     beatId: 'avenida-checkpoint',
