@@ -878,12 +878,19 @@ export class GameSession {
 
   /** Mash during arm / blocked confirm: reset arm so 60ms bursts never clear. */
   bumpModalConfirmArm(): void {
+    // Playtest #42: if nothing was held at open, do not extend the arm or add
+    // the fresh key — that swallowed Antena Tech Take-bet Enter 2–3 times.
+    if (this.modalHeldCodes.size === 0) {
+      this.modalConfirmArmUntil = 0;
+      this.modalConfirmNeedsRelease = false;
+      this.modalHeldThroughArm = false;
+      this.modalReleasePending = false;
+      return;
+    }
     this.modalConfirmArmUntil = Date.now() + 400;
     this.modalConfirmNeedsRelease = true;
     this.modalHeldThroughArm = true;
     this.modalReleasePending = false;
-    const c = normInteractCode(this.lastInteractCode);
-    if (c) this.modalHeldCodes.add(c);
   }
 
   private flushModalReleasePending(): void {

@@ -65,11 +65,10 @@ function routeInputAction(
   if (action === 'interact' && pressed && !gateInteract(session, code)) {
     // 60ms bursts / held Enter: each blocked confirm re-arms the quiet period.
     // Playtest #39/#40: plain dialogue — don't re-arm; fresh keys advance.
-    const plainDialogue =
-      session.ui.is('dialogue') &&
-      !session.dialogueHasChoices() &&
-      !session.hasPendingStoryBet();
-    if (!session.ui.is('play') && !session.ui.is('title') && !plainDialogue) {
+    // Playtest #42: never re-arm plain OR offer-bet dialogue (Take bet) —
+    // bumping used to swallow the first Enter after E opened Antena Tech.
+    const dialogueNoChoice = session.ui.is('dialogue') && !session.dialogueHasChoices();
+    if (!session.ui.is('play') && !session.ui.is('title') && !dialogueNoChoice) {
       session.bumpModalConfirmArm();
     }
     return;

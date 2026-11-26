@@ -167,7 +167,7 @@ export const uiEn = {
   'ui.skill.pinHint': 'Hint — pin {n} = {bars}',
   'ui.skill.lockpickFeedbackIdle': 'set / low / high',
   'ui.skill.submitLock': 'Test',
-  'ui.skill.resultWin': 'Win · +{credits} cr · +{rep} rep',
+  'ui.skill.resultWin': 'Win · {credits} cr · {rep} rep',
   'ui.skill.resultLose': 'Failed · {credits} cr · {rep} rep',
   'ui.skill.resultHint': 'Enter to continue',
   'ui.elevatorCard.foyer': '▼ Elevator / Pit Foyer · Floor 1',

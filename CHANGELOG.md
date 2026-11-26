@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.22.16] — 2026-11-26
+
+### Fixed
+
+- **Sequence reveal (P0 BLOCKER)**: remounting the skill panel orphaned memorize timers (`!isConnected` forever). Clock-driven reveal + skip remount while the same phase is live; every sequence minigame arms input after reveal.
+- **Antena dialogue Enter (P0)**: offer-bet / Take bet no longer re-arms on blocked Enter; bump never adds fresh keys to the held set.
+- **Result card (P1)**: single `+` on credits/rep; suppress floating `+N cr` while the card is up.
+- **Edge objective (P1)**: invalidate marker when the objective changes; off-screen shows name + distance (`42 m`).
+
+### Tests
+
+- `sequence-reveal` unit (fake clock), `e2e/sequence-win-all`, `e2e/story-feira-keyboard`, Antena dialogue Enter.
+
 ## [1.22.15] — 2026-11-26
 
 ### Fixed

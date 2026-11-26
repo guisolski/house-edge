@@ -26,12 +26,17 @@ import {
   sequenceInputIndex,
   sequencePadLabel,
   SEQ_KEYS,
-  SEQ_REVEAL_STEP_MS,
   timingZone,
   type LockpickUiState,
   type SeqKey,
   type SkillPhase,
 } from '../systems/minigame';
+import {
+  SEQ_REVEAL_STEP_MS,
+  sequenceRevealGlyphs,
+  startSequenceReveal,
+  tickSequenceReveal,
+} from '../systems/sequence-reveal';
 import { canNeedleStop } from '../systems/session';
 
 export function button(label: string, onClick: () => void): HTMLButtonElement {
@@ -293,9 +298,19 @@ function paintSkillResult(
   if (!result) return;
   panel.classList.add('skill-result-panel');
   const body = el('div', 'panel-body skill-body skill-result-body');
+  // Playtest #42: format the sign once (i18n has no leading +).
   const credits =
-    result.creditsDelta >= 0 ? `+${result.creditsDelta}` : String(result.creditsDelta);
-  const rep = result.repDelta >= 0 ? `+${result.repDelta}` : String(result.repDelta);
+    result.creditsDelta > 0
+      ? `+${result.creditsDelta}`
+      : result.creditsDelta === 0
+        ? '0'
+        : String(result.creditsDelta);
+  const rep =
+    result.repDelta > 0
+      ? `+${result.repDelta}`
+      : result.repDelta === 0
+        ? '0'
+        : String(result.repDelta);
   const headline = result.won
     ? tf('ui.skill.resultWin', { credits, rep })
     : tf('ui.skill.resultLose', {
@@ -1116,13 +1131,6 @@ function seqRevealLabel(seq: SeqKey[], index: number): string {
   });
 }
 
-/** Progressive memorize label — first `shown` keys visible, rest hidden as ·. */
-function seqMemorizeLabel(seq: SeqKey[], shown: number): string {
-  return tf('ui.skill.sequenceLabel', {
-    seq: seq.map((k, i) => (i < shown ? k : '·')).join('  '),
-  });
-}
-
 type SeqUi = {
   body: HTMLElement;
   pattern: HTMLElement;
@@ -1137,18 +1145,25 @@ type SeqUi = {
 };
 
 /**
- * Playtest #41: step-by-step memorize (≥600ms each), input locked, then arm + timer.
+ * Playtest #42: clock-driven reveal on the skill panel (not the unmounted body).
+ * setInterval keeps ticking even if showSkill is called twice — callers must
+ * skip repaint while the same phase signature is live (see hud showSkill).
  */
-function flashSequence(ui: SeqUi, index: number): void {
+function flashSequence(ui: SeqUi, index: number, panel: HTMLElement): void {
   ui.armed.v = false;
   ui.pattern.classList.add('skill-seq-flash');
   ui.status.textContent = t('ui.skill.memorizeSeq');
-  const timers: number[] = [];
-  const clearAll = (): void => {
-    for (const id of timers) window.clearTimeout(id);
+  let reveal = startSequenceReveal(ui.seq, Date.now());
+  ui.pattern.textContent = tf('ui.skill.sequenceLabel', {
+    seq: sequenceRevealGlyphs(reveal.seq, reveal.shown),
+  });
+  const paint = (): void => {
+    ui.pattern.textContent = tf('ui.skill.sequenceLabel', {
+      seq: sequenceRevealGlyphs(reveal.seq, reveal.shown),
+    });
   };
   const finish = (): void => {
-    if (!ui.body.isConnected || ui.settled.v) return;
+    if (ui.settled.v) return;
     ui.armed.v = true;
     ui.pattern.classList.remove('skill-seq-flash');
     ui.pattern.textContent = seqRevealLabel(ui.seq, index);
@@ -1159,19 +1174,21 @@ function flashSequence(ui: SeqUi, index: number): void {
       }) + (ui.missCap ? tf('ui.skill.missesFail', { n: String(ui.missCap) }) : '');
     ui.startTimer?.();
   };
-  const showStep = (shown: number): void => {
-    if (!ui.body.isConnected || ui.settled.v) return;
-    ui.pattern.textContent = seqMemorizeLabel(ui.seq, shown);
-    if (shown < ui.seq.length) {
-      timers.push(window.setTimeout(() => showStep(shown + 1), SEQ_REVEAL_STEP_MS));
+  const tick = window.setInterval(() => {
+    if (!panel.isConnected || ui.settled.v) {
+      window.clearInterval(tick);
       return;
     }
-    // Full sequence held one more beat, then hide and arm input.
-    timers.push(window.setTimeout(finish, SEQ_REVEAL_STEP_MS));
-  };
-  showStep(1);
-  const skillPanel = ui.body.closest('.skill-panel') ?? ui.body;
-  onPanelDispose(skillPanel as HTMLElement, clearAll);
+    const before = reveal.shown;
+    const wasDone = reveal.done;
+    reveal = tickSequenceReveal(reveal, Date.now(), SEQ_REVEAL_STEP_MS);
+    if (reveal.shown !== before) paint();
+    if (reveal.done && !wasDone) {
+      window.clearInterval(tick);
+      finish();
+    }
+  }, 50);
+  onPanelDispose(panel, () => window.clearInterval(tick));
 }
 
 function onSequenceKey(ui: SeqUi, keyIndex: number): void {
@@ -1197,7 +1214,11 @@ function onSequenceKey(ui: SeqUi, keyIndex: number): void {
       total: String(ui.seq.length),
     }) + left;
   if (next.misses > beforeMiss) {
-    flashSequence(ui, next.seqIndex);
+    const panel =
+      (ui.body.closest('.skill-panel') as HTMLElement | null) ??
+      (ui.body.closest('.panel') as HTMLElement | null) ??
+      ui.body;
+    flashSequence(ui, next.seqIndex, panel);
     return;
   }
   ui.pattern.textContent = seqRevealLabel(ui.seq, next.seqIndex);
@@ -1215,7 +1236,11 @@ function paintSequenceSkill(
   const seq = phaseSequence(phase);
   const missCap = phase.maxMisses;
   const status = el('p', 'skill-seq', t('ui.skill.memorizeSeq'));
-  const pattern = el('p', 'skill-pattern skill-seq-flash', seqMemorizeLabel(seq, 1));
+  const pattern = el(
+    'p',
+    'skill-pattern skill-seq-flash',
+    tf('ui.skill.sequenceLabel', { seq: sequenceRevealGlyphs(seq, 1) }),
+  );
   const timerEl = el('p', 'skill-seq skill-seq-timer', '');
   body.append(pattern, status, timerEl);
   const ui: SeqUi = {
@@ -1232,7 +1257,6 @@ function paintSequenceSkill(
   if (phase.timerMs && phase.timerMs > 0) {
     ui.startTimer = bindSequenceTimer(ui, phase.timerMs, timerEl);
   }
-  flashSequence(ui, progress.seqIndex);
   const used = sequencePadKeys(seq);
   const buffer = createSequenceKeyBuffer((keyIndex) => onSequenceKey(ui, keyIndex));
   const onKey = (keyIndex: number): void => buffer.push(keyIndex);
@@ -1258,6 +1282,15 @@ function paintSequenceSkill(
     ev.preventDefault();
     ev.stopPropagation();
     onKey(expected ? sequenceInputIndex(sym, expected) : SEQ_KEYS.indexOf(sym));
+  });
+  // Start reveal after the skill panel owns body (paintSkill appends next).
+  queueMicrotask(() => {
+    const panel =
+      (body.closest('.skill-panel') as HTMLElement | null) ??
+      (body.closest('.panel') as HTMLElement | null) ??
+      body;
+    if (!panel.isConnected || ui.settled.v) return;
+    flashSequence(ui, progress.seqIndex, panel);
   });
 }
 

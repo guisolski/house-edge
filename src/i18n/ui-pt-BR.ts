@@ -168,7 +168,7 @@ export const uiPtBR = {
   'ui.skill.pinHint': 'Dica — pino {n} = {bars}',
   'ui.skill.lockpickFeedbackIdle': 'certo / baixo / alto',
   'ui.skill.submitLock': 'Testar',
-  'ui.skill.resultWin': 'Vitória · +{credits} cr · +{rep} rep',
+  'ui.skill.resultWin': 'Vitória · {credits} cr · {rep} rep',
   'ui.skill.resultLose': 'Falhou · {credits} cr · {rep} rep',
   'ui.skill.resultHint': 'Enter continua',
   'ui.elevatorCard.foyer': '▼ Elevador / Foyer do pit',

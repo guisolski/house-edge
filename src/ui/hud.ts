@@ -217,6 +217,18 @@ function focusCanvasAfterClose(): void {
   canvas?.focus({ preventScroll: true });
 }
 
+/** Stable id for the live skill/result panel — used to avoid mid-reveal remounts. */
+function skillPanelSignature(session: GameSession): string {
+  const result = session.getSkillResult();
+  if (result) {
+    return `result:${result.won}:${result.creditsDelta}:${result.repDelta}`;
+  }
+  const progress = session.getSkillProgress();
+  const betId = session.getPendingBet()?.id ?? '';
+  if (!progress || !betId) return '';
+  return `${betId}:${progress.phaseIndex}:${progress.seqIndex}:${progress.misses}:${progress.cleared}`;
+}
+
 function showDialoguePanel(
   session: GameSession,
   p: Parts,
@@ -233,9 +245,11 @@ function showDialoguePanel(
     !offerBet &&
     lines.length > 0 &&
     lines.every((l) => /Saúde/i.test(l.text));
-  // Playtest #40: arm only codes still held at paint — fresh Enter advances.
+  // Playtest #40/#42: arm only codes still held at paint — fresh Enter advances.
+  // Offer-bet (Antena Take bet) uses the same held-key arm as plain lines so
+  // Enter is never swallowed by a re-arm loop.
   const heldCodes = session.heldInteractCodes();
-  if (hasChoice || offerBet) {
+  if (hasChoice) {
     session.noteModalOpened(session.isInteractHeld(), heldCodes);
   } else {
     session.armPlainDialogueAdvance(heldCodes);
@@ -246,7 +260,7 @@ function showDialoguePanel(
   const holdCloseUntil = closingOnly ? Date.now() + 400 : undefined;
   paintDialogue(p.dialogue, lines, {
     offerBet,
-    choiceArmAt: hasChoice || offerBet ? choiceArmAt : 0,
+    choiceArmAt: hasChoice ? choiceArmAt : 0,
     allowChoice: () => session.allowModalConfirm(),
     holdCloseUntil,
     closingLine: closingOnly,
@@ -296,8 +310,15 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
     },
     showSkill: () => {
       only(p, 'skill');
+      // Playtest #42: skip remount while the same phase/result is live — remounting
+      // orphaned sequence-reveal timers and left input locked forever.
+      const sig = skillPanelSignature(session);
+      if (sig && p.skill.dataset.heSkillSig === sig && p.skill.childElementCount > 0) {
+        return;
+      }
+      if (sig) p.skill.dataset.heSkillSig = sig;
+      else delete p.skill.dataset.heSkillSig;
       // Playtest #35: paintSkill owns focus for choice/puzzle/negotiate (mash-safe).
-      // Never focusFirst here — that made option 1 Enter-pickable during bursts.
       paintSkill(p.skill, session, () => h.syncScreen());
       // Playtest #40: mark only keys still held — don't force a ghost needsRelease.
       session.noteModalOpened(session.isInteractHeld(), session.heldInteractCodes());
@@ -853,6 +874,8 @@ function runFlash(node: HTMLElement, kind: string): void {
 }
 
 function runCreditPopup(node: HTMLElement, delta: number): void {
+  // Playtest #42: result card already shows the delta — skip the overlapping floater.
+  if (document.querySelector('.skill-result-panel, .skill-result-body')) return;
   const sign = delta >= 0 ? '+' : '';
   node.className = delta >= 0 ? 'fx-credits fx-credits-up' : 'fx-credits fx-credits-down';
   node.textContent = `${sign}${delta} cr`;

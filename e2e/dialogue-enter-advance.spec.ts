@@ -122,6 +122,31 @@ test('Maquinista: Enter advances after 300ms', async ({ page }) => {
   await enterAdvances(page, 300);
 });
 
+test('Antena Tech: Enter advances after E open (300ms / 1s)', async ({ page }) => {
+  await boot(page);
+  await prepNpc(page, {
+    npcId: 'antena-tech',
+    unlock: [],
+    flags: ['falou_nair', 'copper_weighed'],
+  });
+  await openWithE(page);
+  await enterAdvances(page, 300);
+});
+
+test('Antena Tech: single Enter after 1s advances Take bet', async ({ page }) => {
+  await boot(page);
+  await prepNpc(page, {
+    npcId: 'antena-tech',
+    unlock: [],
+    flags: ['falou_nair', 'copper_weighed'],
+    beatId: 'morro-antena',
+  });
+  await expect(page.locator('.btn-take-bet')).toBeVisible({ timeout: 5000 });
+  await page.waitForTimeout(1000);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.skill-pattern')).toBeVisible({ timeout: 5_000 });
+});
+
 test('Capitã Vespera: Enter advances after 1s (open via E)', async ({ page }) => {
   await boot(page);
   await prepNpc(page, {

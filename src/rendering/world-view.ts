@@ -1355,52 +1355,53 @@ function drawSteam(
   }
 }
 
-function refreshMarkerCache(state: ViewState, frame: number): void {
-  if (state.markerFrame >= 0 && frame - state.markerFrame < 8) return;
-  state.markerFrame = frame;
-  const obj = state.session.objective();
-  if (obj.targetX === undefined || obj.targetY === undefined) {
-    state.marker = null;
-    return;
-  }
+function objectiveMarkerKey(obj: {
+  districtId?: string;
+  targetX?: number;
+  targetY?: number;
+  targetName?: string;
+}): string {
+  return `${obj.districtId ?? ''}:${obj.targetX ?? ''}:${obj.targetY ?? ''}:${obj.targetName ?? ''}`;
+}
+
+function buildObjectiveMarker(
+  state: ViewState,
+  obj: ReturnType<ViewState['session']['objective']>,
+): NonNullable<ViewState['marker']> {
   const me = state.session.player.getStats();
+  const tx = obj.targetX!;
+  const ty = obj.targetY!;
   if (obj.districtId === me.districtId) {
-    const dist = Math.hypot(obj.targetX - me.x, obj.targetY - me.y);
-    // Same-room NPC / tower / short hop: pin arrow on the fixed target (no path wander).
+    const dist = Math.hypot(tx - me.x, ty - me.y);
     if (dist <= 10 || me.districtId === 'torre-casa') {
-      state.marker = {
-        x: obj.targetX,
-        y: obj.targetY,
+      return {
+        x: tx,
+        y: ty,
         districtId: obj.districtId ?? '',
-        // Name stays on the sprite nameplate — never float a second copy mid-path.
-        name: '',
+        name: obj.targetName ?? '',
         arrowOnly: true,
         npcOwns: Boolean(obj.targetName),
       };
-      return;
     }
-    const map = state.session.getMap();
     const wp = nextPathWaypoint(
-      map,
+      state.session.getMap(),
       { x: me.x, y: me.y },
-      { x: obj.targetX, y: obj.targetY },
+      { x: tx, y: ty },
       5,
     );
-    const atTarget = Math.hypot(wp.x - obj.targetX, wp.y - obj.targetY) < 0.6;
-    state.marker = {
+    const atTarget = Math.hypot(wp.x - tx, wp.y - ty) < 0.6;
+    return {
       x: wp.x,
       y: wp.y,
       districtId: obj.districtId ?? '',
-      // Path hops are arrow-only so "Mole Contact" never floats mid-asphalt.
       name: atTarget ? (obj.targetName ?? '') : '',
       arrowOnly: !atTarget,
       npcOwns: atTarget && Boolean(obj.targetName),
     };
-    return;
   }
-  state.marker = {
-    x: obj.targetX,
-    y: obj.targetY,
+  return {
+    x: tx,
+    y: ty,
     districtId: obj.districtId ?? '',
     name: obj.targetName ?? '',
     arrowOnly: /Fair|Avenue|Tower|Morro Neon|Elevator|Feira|Avenida|Torre|Elevador/i.test(
@@ -1408,6 +1409,24 @@ function refreshMarkerCache(state: ViewState, frame: number): void {
     ),
     npcOwns: false,
   };
+}
+
+function refreshMarkerCache(state: ViewState, frame: number): void {
+  const obj = state.session.objective();
+  // Playtest #42: invalidate when the objective target changes.
+  const bag = state as ViewState & { markerObjKey?: string };
+  const objKey = objectiveMarkerKey(obj);
+  if (bag.markerObjKey !== objKey) {
+    bag.markerObjKey = objKey;
+    state.markerFrame = -1;
+  }
+  if (state.markerFrame >= 0 && frame - state.markerFrame < 8) return;
+  state.markerFrame = frame;
+  if (obj.targetX === undefined || obj.targetY === undefined) {
+    state.marker = null;
+    return;
+  }
+  state.marker = buildObjectiveMarker(state, obj);
 }
 
 function drawMarker(
@@ -1422,6 +1441,10 @@ function drawMarker(
   const me = state.session.player.getStats();
   if (!m || m.districtId !== me.districtId) return;
   const map = state.session.getMap();
+  const obj = state.session.objective();
+  const distTiles = Math.round(
+    Math.hypot((obj.targetX ?? m.x) - me.x, (obj.targetY ?? m.y) - me.y),
+  );
   paintObjectiveMarker({
     ctx,
     tx: m.x,
@@ -1429,10 +1452,10 @@ function drawMarker(
     camX,
     camY,
     frame,
-    label: m.name,
+    label: m.name || obj.targetName || '',
     viewW: ctx.canvas.width,
     viewH: ctx.canvas.height,
-    distTiles: Math.round(Math.hypot(m.x - me.x, m.y - me.y)),
+    distTiles,
     signs: map.signs,
     npcNameplateOwns: m.npcOwns,
     arrowOnly: m.arrowOnly,
@@ -1486,19 +1509,14 @@ type ObjectiveMark = {
  * Playtest #41: off-screen edge always shows NPC name + distance.
  */
 function objectiveArrowLabel(m: ObjectiveMark & { onScreen: boolean }): string | null {
-  if (!m.label) return null;
-  if (m.arrowOnly) {
-    if (!m.onScreen) return `${m.distTiles}m`;
-    return null;
+  // Playtest #42: off-screen edge always shows name + distance (e.g. "42 m").
+  if (!m.onScreen) {
+    if (m.label) return `${m.label} · ${m.distTiles} m`;
+    return `${m.distTiles} m`;
   }
-  if (
-    /Fair|Avenue|Tower|Morro Neon|Elevator|Feira|Avenida|Torre|Elevador/i.test(m.label)
-  ) {
-    if (!m.onScreen) return `${m.label} · ${m.distTiles}m`;
+  if (!m.label || m.arrowOnly) return null;
+  if (/Fair|Avenue|Tower|Morro Neon|Elevator|Feira|Avenida|Torre|Elevador/i.test(m.label))
     return null;
-  }
-  // Off-screen: always name + distance (even when a sprite nameplate owns on-screen).
-  if (!m.onScreen) return `${m.label} · ${m.distTiles}m`;
   // On-screen NPC: sprite nameplate owns the name — arrow is pointer-only.
   if (m.npcNameplateOwns) return null;
   return null;

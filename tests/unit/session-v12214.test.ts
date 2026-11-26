@@ -110,6 +110,8 @@ describe('v1.22.14 needle countdown gate', () => {
     session.startNew();
     session.noteInteractPressed('Enter');
     expect(session.getLastInteractCode()).toBe('Enter');
+    // Held-at-open Enter can still be re-armed; fresh Enter with empty held set cannot.
+    session.noteModalOpened(true, ['Enter']);
     session.bumpModalConfirmArm();
     expect(session.allowModalConfirm('Enter')).toBe(false);
     session.clearModalConfirmGate();
