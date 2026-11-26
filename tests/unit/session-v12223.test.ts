@@ -38,14 +38,14 @@ describe('v1.22.23 needle start outside zone', () => {
 
   it('prefers the right side when the left has no room', () => {
     // Zone hugging the left edge → only right escape is viable.
-    const zone = { lo: 0.02, hi: 0.2 };
+    const zone = { lo: 0.02, hi: 0.2, target: 0.11, half: 0.09 };
     const pos = needleStartOutsideZone(zone, 0.9);
     expect(pos).toBeGreaterThan(zone.hi);
     expect(judgeTimingStop(pos, zone)).toBe(false);
   });
 
   it('parks at 0.02 or 0.98 for a near-full-width zone', () => {
-    const zone = { lo: 0.01, hi: 0.99 };
+    const zone = { lo: 0.01, hi: 0.99, target: 0.5, half: 0.49 };
     expect(needleStartOutsideZone(zone, 0.1)).toBe(0.02);
     expect(needleStartOutsideZone(zone, 0.9)).toBe(0.98);
   });
