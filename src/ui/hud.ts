@@ -230,6 +230,10 @@ function skillPanelSignature(session: GameSession): string {
   if (result) {
     return `result:${result.won}:${result.creditsDelta}:${result.repDelta}`;
   }
+  const miss = session.getSkillMissCard();
+  if (miss) {
+    return `miss:${miss.headline}:${miss.detail}`;
+  }
   const progress = session.getSkillProgress();
   const betId = session.getPendingBet()?.id ?? '';
   if (!progress || !betId) return '';
@@ -411,14 +415,7 @@ function showCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
   paintCreditsRoll(p, session, h);
 }
 
-function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
-  clearNode(p.ending);
-  p.ending.classList.add('ending-credits');
-  const art = el('canvas', 'ending-art') as HTMLCanvasElement;
-  const src = endingArt();
-  art.width = src.width;
-  art.height = src.height;
-  art.getContext('2d')?.drawImage(src, 0, 0);
+function buildCreditsRollBody(): { viewport: HTMLElement; roll: HTMLElement } {
   const viewport = el('div', 'credits-viewport');
   const roll = el('div', 'credits-roll');
   const creditLines = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -433,9 +430,43 @@ function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
     el('p', 'credits-thanks', t('ui.credits.skipHint')),
   );
   viewport.appendChild(roll);
+  return { viewport, roll };
+}
+
+function armCreditsLeaveButtons(
+  ending: HTMLElement,
+  session: GameSession,
+  btns: HTMLButtonElement[],
+  focusBtn: HTMLButtonElement,
+): void {
+  const armUntil = Date.now() + 900;
+  for (const b of btns) b.disabled = true;
+  ending.dataset.creditsArm = '0';
+  window.setTimeout(
+    () => {
+      ending.dataset.creditsArm = '1';
+      for (const b of btns) b.disabled = false;
+      focusBtn.focus();
+      session.clearModalConfirmGate();
+    },
+    Math.max(0, armUntil - Date.now()),
+  );
+}
+
+function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
+  clearNode(p.ending);
+  p.ending.classList.add('ending-credits');
+  const art = el('canvas', 'ending-art') as HTMLCanvasElement;
+  const src = endingArt();
+  art.width = src.width;
+  art.height = src.height;
+  art.getContext('2d')?.drawImage(src, 0, 0);
+  const { viewport, roll } = buildCreditsRollBody();
   p.ending.append(art, viewport);
   const actions = el('div', 'panel-actions ending-actions');
+  // Playtest #46: block ALL leave paths until arm — Fechar Enter must not skip credits.
   const leaveCredits = (): void => {
+    if (p.ending.dataset.creditsArm !== '1') return;
     blurActive();
     session.continueExploring();
     const canvas = document.querySelector(
@@ -445,11 +476,8 @@ function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
     h.syncScreen();
     h.showHud();
   };
-  // Playtest #31/#32: Skip armed ~900ms; Enter + NumpadEnter both work (event.key).
-  const skipArmUntil = Date.now() + 900;
-  let skipReady = false;
   const doSkip = (): void => {
-    if (Date.now() < skipArmUntil || !skipReady) return;
+    if (p.ending.dataset.creditsArm !== '1') return;
     roll.classList.add('credits-skipped');
     leaveCredits();
   };
@@ -457,30 +485,22 @@ function paintCreditsRoll(p: Parts, session: GameSession, h: HudHandles): void {
   skipBtn.addEventListener(
     'keydown',
     (e) => {
-      if (!isConfirmKey(e)) return;
+      if (!isConfirmKey(e) || e.repeat) return;
       e.preventDefault();
-      if (e.repeat) return;
       doSkip();
     },
     true,
   );
-  skipBtn.disabled = true;
-  window.setTimeout(
-    () => {
-      skipReady = true;
-      skipBtn.disabled = false;
-      skipBtn.focus();
-    },
-    Math.max(0, skipArmUntil - Date.now()),
-  );
-  actions.append(
-    skipBtn,
-    button(UI.continueExploring, leaveCredits),
-    // Playtest #33: wipe confirm (Esc = Voltar) — never startNew without asking.
-    button(UI.playAgain, () => paintEnding(p, session, h, UI.wonEnding, true)),
-  );
+  const contBtn = button(UI.continueExploring, leaveCredits);
+  contBtn.classList.add('btn-continue-exploring');
+  const againBtn = button(UI.playAgain, () => {
+    if (p.ending.dataset.creditsArm !== '1') return;
+    paintEnding(p, session, h, UI.wonEnding, true);
+  });
+  armCreditsLeaveButtons(p.ending, session, [skipBtn, contBtn, againBtn], skipBtn);
+  actions.append(skipBtn, contBtn, againBtn);
   p.ending.append(actions);
-  // Don't focus Skip while armed — Enter spam can't dismiss the roll.
+  session.noteModalOpened(true);
 }
 
 function paintEnding(
@@ -599,7 +619,7 @@ function hideAll(nodes: HTMLElement[]): void {
 
 function fillTitle(panel: HTMLElement, session: GameSession): void {
   clearNode(panel);
-  panel.append(
+  const kids: HTMLElement[] = [
     el('h1', 'logo', UI.title),
     el('p', 'tagline', UI.tagline),
     el('p', 'version', UI.version),
@@ -618,7 +638,36 @@ function fillTitle(panel: HTMLElement, session: GameSession): void {
         if (!session.tryLoad()) session.startNew();
       });
     }),
-  );
+  ];
+  // Playtest #46: Créditos once the story has completed (live session or save).
+  const saveAllowsCredits = (() => {
+    try {
+      const raw = localStorage.getItem('house-edge-save-v1');
+      if (!raw) return false;
+      const data = JSON.parse(raw) as { flags?: Record<string, boolean> };
+      return Boolean(data.flags?.epilogue_done || data.flags?.casa_quebrada);
+    } catch {
+      return false;
+    }
+  })();
+  if (session.canRewatchCredits() || saveAllowsCredits) {
+    kids.push(
+      button(UI.credits, () => {
+        blurActive();
+        queueMicrotask(() => {
+          if (!session.canRewatchCredits()) session.tryLoad();
+          if (!session.openCreditsRoll()) return;
+          const he = (
+            window as unknown as {
+              __HOUSE_EDGE__?: { hud?: HudHandles };
+            }
+          ).__HOUSE_EDGE__;
+          he?.hud?.syncScreen();
+        });
+      }),
+    );
+  }
+  panel.append(...kids);
   // Keyboard/gamepad can reach language → New Game without a prior click.
   focusFirst(panel);
 }
@@ -644,7 +693,7 @@ function langRow(onPick: (code: LocaleCode) => void): HTMLElement {
 function fillMenu(panel: HTMLElement, session: GameSession, h: HudHandles): void {
   clearNode(panel);
   delete panel.dataset.menuConfirm;
-  panel.append(
+  const items: HTMLElement[] = [
     el('h2', '', UI.menu),
     button(UI.resume, () => {
       session.closeModal();
@@ -653,6 +702,19 @@ function fillMenu(panel: HTMLElement, session: GameSession, h: HudHandles): void
     button(UI.travel, () => openFromMenu(session, h, 'travel')),
     button(UI.grind, () => openFromMenu(session, h, 'jobs')),
     button(UI.upgrades, () => openFromMenu(session, h, 'upgrades')),
+  ];
+  // Playtest #46: Esc menu Créditos after first completion.
+  if (session.canRewatchCredits()) {
+    items.push(
+      button(UI.credits, () => {
+        session.closeModal();
+        h.showMenu(false);
+        if (!session.openCreditsRoll()) return;
+        h.syncScreen();
+      }),
+    );
+  }
+  items.push(
     button(UI.settings, () => {
       clearNode(panel);
       delete panel.dataset.menuConfirm;
@@ -686,6 +748,8 @@ function fillMenu(panel: HTMLElement, session: GameSession, h: HudHandles): void
     button(UI.mute, () => session.setMuted(!session.getAudio().muted)),
     el('p', 'hint menu-hint', menuHintFor(panel)),
   );
+  panel.append(...items);
+  focusFirst(panel);
 }
 
 function paintTutorial(

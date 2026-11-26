@@ -35,9 +35,10 @@ test('Enter stops the needle after Take bet', async ({ page }) => {
   await expect(page.locator('.btn-needle-stop')).toBeVisible();
   // Playtest #38: wait ready countdown + arm before Enter Stop counts.
   await expect(page.locator('.skill-needle-ready')).toContainText(/Go|Já/i, {
-    timeout: 3000,
+    timeout: 5500,
   });
-  await page.waitForTimeout(450);
+  await expect(page.locator('.btn-needle-stop')).toBeEnabled({ timeout: 1000 });
+  await page.waitForTimeout(200);
   // Main Enter (not NumpadEnter) stops the needle.
   await page.keyboard.press('Enter');
   await page.waitForTimeout(400);

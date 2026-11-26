@@ -73,6 +73,13 @@ import { t, tf } from '../i18n';
 import { localizedNpcName } from '../i18n/localize-npc';
 import { localizeBeatDialogue, localizeHushLine } from '../i18n/localize-story';
 import { DEBUG_CHAPTERS, parseDebugChapter, type DebugChapterId } from './debug-chapter';
+import {
+  canNeedleInput,
+  markNeedleMotionStarted,
+  startNeedleArm,
+  type NeedleArmState,
+} from './needle-arm';
+import { DEBUG_MINIGAME_BETS, type DebugMinigameId } from './debug-qa';
 
 const SAFE_JOB_COOLDOWN_MS = 10_000;
 const SAFE_JOB_CAP = 6;
@@ -87,7 +94,10 @@ export function normInteractCode(code: string | null | undefined): string | null
   return code;
 }
 
-/** Playtest #40: Stop / E only counts once the ready countdown has elapsed. */
+/**
+ * Playtest #40/#46: Stop / E only after ready + arm time.
+ * Prefer `canNeedleInput(session.getNeedleArm(), now)` for new code.
+ */
 export function canNeedleStop(ready: boolean, now: number, readyUntil: number): boolean {
   return ready && now >= readyUntil;
 }
@@ -98,6 +108,12 @@ export type SkillResultBanner = {
   payout: number;
   creditsDelta: number;
   repDelta: number;
+};
+
+/** Playtest #46: soft-miss fail card (retry / leave) — not toast-only. */
+export type SkillMissCard = {
+  headline: string;
+  detail: string;
 };
 
 export class GameSession {
@@ -149,6 +165,14 @@ export class GameSession {
   private vipMap: MapDef = buildTorreVip();
   /** Ending panel shows the credits roll after the laje epilogue. */
   private creditsRoll = false;
+  /** Playtest #46: rewatch credits from menu after first completion. */
+  private creditsUnlocked = false;
+  /** Playtest #46: needle Stop/E gate (countdown + grace). */
+  private needleArm: NeedleArmState | null = null;
+  /** Playtest #46: soft-miss fail card while the encounter is still live. */
+  private skillMissCard: SkillMissCard | null = null;
+  /** QA `?timescale=` — slows minigame clocks (1 = realtime). */
+  private qaTimescale = 1;
   /** Rematch anti-spam after Close — short arm; held keys need release. */
   private interactLockUntil = 0;
   /** After a dialog closes/opens, require Interact key release if it was held. */
@@ -211,8 +235,80 @@ export class GameSession {
     return this.creditsRoll;
   }
 
+  /** True after the story credits have rolled once (menu rewatch). */
+  canRewatchCredits(): boolean {
+    return (
+      this.creditsUnlocked ||
+      this.story.getFlag('epilogue_done') ||
+      this.story.getFlag('casa_quebrada')
+    );
+  }
+
+  /** Esc / title: re-open the credits roll when the story is complete. */
+  openCreditsRoll(): boolean {
+    if (!this.canRewatchCredits()) return false;
+    this.creditsRoll = true;
+    this.creditsUnlocked = true;
+    this.ui.go('ending');
+    this.bus.emit('story:credits', {});
+    return true;
+  }
+
   getSkillStreak(): number {
     return this.skillStreak;
+  }
+
+  getNeedleArm(): NeedleArmState | null {
+    return this.needleArm;
+  }
+
+  /** Start Em 3…2…1 + grace gate for the live timing panel. */
+  beginNeedleArm(now = performance.now(), countdownMs?: number, graceMs?: number): void {
+    this.needleArm = startNeedleArm(now, countdownMs, graceMs);
+  }
+
+  markNeedleMotionStarted(now = performance.now()): void {
+    if (!this.needleArm) return;
+    this.needleArm = markNeedleMotionStarted(this.needleArm, now);
+  }
+
+  isNeedleInputArmed(now = performance.now()): boolean {
+    return canNeedleInput(this.needleArm, now);
+  }
+
+  clearNeedleArm(): void {
+    this.needleArm = null;
+  }
+
+  getSkillMissCard(): SkillMissCard | null {
+    return this.skillMissCard;
+  }
+
+  /** Soft-miss card → keep progress and remount the phase. */
+  retrySkillMiss(): void {
+    this.skillMissCard = null;
+  }
+
+  /** Soft-miss card → abandon the encounter. */
+  leaveSkillMiss(): void {
+    this.skillMissCard = null;
+    this.cancelBet();
+  }
+
+  getQaTimescale(): number {
+    return this.qaTimescale;
+  }
+
+  setQaTimescale(scale: number): void {
+    this.qaTimescale = scale > 0 && scale <= 1 ? scale : 1;
+  }
+
+  /** QA `?minigame=` — open a skill panel over the current scene. */
+  debugOpenMinigame(id: DebugMinigameId): boolean {
+    const betId = DEBUG_MINIGAME_BETS[id];
+    if (!betId) return false;
+    this.player.addCredits(500);
+    return this.forceStorySkill(betId);
   }
 
   startNew(): void {
@@ -739,6 +835,7 @@ export class GameSession {
     if (!this.ui.is('ending')) return false;
     const afterCredits = this.creditsRoll;
     this.creditsRoll = false;
+    if (afterCredits) this.creditsUnlocked = true;
     this.story.setFlag('free_roam', true);
     this.persist();
     if (!this.ui.go('play')) return false;
@@ -1114,6 +1211,11 @@ export class GameSession {
   /** Player attempt on the current skill phase. */
   submitSkill(value: number): boolean {
     if (!this.skillProgress || !this.pendingBetId) return false;
+    // Playtest #46: unarmed needle Stop/E is a hard no-op (never a miss).
+    const phaseLive = this.skillProgress.def.phases[this.skillProgress.phaseIndex];
+    if (phaseLive?.kind === 'timing' && this.needleArm) {
+      if (!this.isNeedleInputArmed()) return true;
+    }
     const beforeMisses = this.skillProgress.misses;
     const next = attemptSkill(this.skillProgress, {
       phaseIndex: this.skillProgress.phaseIndex,
@@ -1122,11 +1224,13 @@ export class GameSession {
     // Pick snap / full fail ends the encounter (do not treat as a soft retry).
     if (next.done) {
       this.skillProgress = next;
+      this.clearNeedleArm();
       return this.finishSkill(next.won);
     }
     if (next.justMissed || next.misses > beforeMisses) {
       // Retry current phase only — no stake drain, optional timing assist.
       this.skillProgress = assistAfterMiss(next);
+      this.clearNeedleArm();
       const phase = this.skillProgress.def.phases[this.skillProgress.phaseIndex];
       const pickLeft =
         phase?.kind === 'lockpick' && this.skillProgress.pickLeft !== undefined
@@ -1139,13 +1243,13 @@ export class GameSession {
         phase?.kind === 'timing' && this.skillProgress.misses >= 2
           ? tf('ui.toast.missedPhaseZoneWide', { hint: missHint })
           : `${tf('ui.toast.missedPhaseRetry', { hint: missHint })}${pickLeft}`;
-      this.bus.emit('ui:toast', {
-        message: tf('ui.toast.missedPhase', {
+      // Playtest #46: soft miss → fail card (retry/leave), not toast-only.
+      this.skillMissCard = {
+        headline: tf('ui.skill.missCardTitle', {
           phase: String(this.skillProgress.phaseIndex + 1),
-          detail,
         }),
-        kind: 'info',
-      });
+        detail: detail.trim() || t('ui.skill.missCardDetail'),
+      };
       this.bus.emit('audio:play-sfx', { id: 'lose' });
       this.bus.emit('fx:flash', { kind: 'lose' });
       return true;
@@ -1155,15 +1259,22 @@ export class GameSession {
     return true;
   }
 
-  /** Harness / e2e: auto-clear remaining skill phases with perfect play. */
-  completeSkillPerfect(): boolean {
+  /**
+   * Harness / e2e: auto-clear remaining skill phases with perfect play.
+   * Pass `keepBanner: true` to leave the win/lose result card painted.
+   */
+  completeSkillPerfect(opts?: { keepBanner?: boolean }): boolean {
+    const keepBanner = opts?.keepBanner === true;
     if (this.stealthProgress && !this.stealthProgress.done) {
       return this.completeStealthPerfect();
     }
+    // Soft-miss card — clear so perfect play can remount the phase.
+    if (this.skillMissCard) this.skillMissCard = null;
+    this.clearNeedleArm();
     // Orphan result banner (no live phase) — dismiss so walkers are not stuck.
     if (!this.skillProgress) {
       if (this.skillResult) {
-        this.dismissSkillResult();
+        if (!keepBanner) this.dismissSkillResult();
         return true;
       }
       return false;
@@ -1183,7 +1294,8 @@ export class GameSession {
     if (!p.done || !p.won) return false;
     const ok = this.finishSkill(true);
     // Harness / e2e: auto-clear the result banner so callers see play.
-    if (this.skillResult) this.dismissSkillResult();
+    // Panel screenshots pass keepBanner to capture the win card.
+    if (this.skillResult && !keepBanner) this.dismissSkillResult();
     return ok;
   }
 
@@ -1221,6 +1333,8 @@ export class GameSession {
     this.pendingBetId = null;
     this.pendingStake = 0;
     this.skillProgress = null;
+    this.skillMissCard = null;
+    this.clearNeedleArm();
     this.stealthProgress = null;
     if (!this.ui.is('ending')) {
       // Playtest #43: set result before credit floater so HUD can suppress it.
@@ -1368,6 +1482,8 @@ export class GameSession {
     this.pendingBetAfterDialogue = null;
     this.skillProgress = null;
     this.skillResult = null;
+    this.skillMissCard = null;
+    this.clearNeedleArm();
     this.stealthProgress = null;
     // Force play even if a prior transition edge was odd — Esc must free WASD.
     this.ui.backToPlay();
@@ -1394,6 +1510,8 @@ export class GameSession {
     this.pendingStoryBeat = null;
     this.skillProgress = null;
     this.skillResult = null;
+    this.skillMissCard = null;
+    this.clearNeedleArm();
     this.stealthProgress = null;
     this.lastDialogue = [];
     this.ui.backToPlay();
@@ -1886,7 +2004,9 @@ export class GameSession {
     if (beatId === 'torre-elevator') this.runElevatorRide();
     if (done?.isEnding) this.ui.go('ending');
     if (beatId === 'epilogue-laje') {
+      // Playtest #46: credits must roll on first completion (not toast-only free roam).
       this.creditsRoll = true;
+      this.creditsUnlocked = true;
       this.ui.go('ending');
       this.bus.emit('story:credits', {});
     }

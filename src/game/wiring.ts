@@ -235,6 +235,10 @@ function handleEndingEsc(session: GameSession, hud: HudHandles): boolean {
     hud.showEnding(UI.wonEnding);
     return true;
   }
+  // Playtest #46: Esc during armed credits wait is a no-op (keep the roll).
+  if (ending?.classList.contains('ending-credits') && ending.dataset.creditsArm !== '1') {
+    return true;
+  }
   // Playtest #34: Esc on victory = Continuar explorando (never soft-lock).
   if (ending && !ending.classList.contains('ending-credits')) {
     session.continueExploring();
@@ -287,29 +291,53 @@ function handleEscModal(session: GameSession, hud: HudHandles): boolean {
   return false;
 }
 
-/** Playtest #43: Stop / Enter ignored while Em 3…2…1 is showing. */
+/**
+ * Playtest #43/#46: Stop / Enter / Space / gamepad A ignored while countdown
+ * or grace — dataset.needleReady stays '0' until input is armed.
+ */
 function needleCountdownBlocksConfirm(): boolean {
   const meter = document.querySelector('.skill-meter') as HTMLElement | null;
-  return Boolean(meter && meter.dataset.needleReady !== '1');
+  if (!meter) return false;
+  if (meter.dataset.needleReady !== '1') return true;
+  const stop = document.querySelector('.btn-needle-stop') as HTMLButtonElement | null;
+  return Boolean(stop?.disabled);
 }
 
-function handleModalNav(session: GameSession, hud: HudHandles, action: string): boolean {
-  if (session.ui.is('play') || session.ui.is('title')) return false;
-  const interactCode = session.getLastInteractCode() ?? undefined;
-  // Playtest #30: Enter on bet panel always confirms — never Stake −/+.
-  if (session.ui.is('bet') && action === 'interact') {
+/** Playtest #46: credits leave buttons stay disabled until arm. */
+function creditsLeaveBlocked(): boolean {
+  const ending = document.querySelector('.ending-panel') as HTMLElement | null;
+  return Boolean(
+    ending?.classList.contains('ending-credits') && ending.dataset.creditsArm !== '1',
+  );
+}
+
+function handleModalConfirm(
+  session: GameSession,
+  hud: HudHandles,
+  interactCode: string | undefined,
+): boolean {
+  if (session.ui.is('bet')) {
     if (!session.allowModalConfirm(interactCode)) return true;
     session.confirmBet();
     hud.syncScreen();
     hud.showHud();
     return true;
   }
-  // Playtest #31: dialogue choices — arrows move focus; Enter/confirm gated.
-  if (session.ui.is('dialogue') && action === 'interact') {
+  if (session.ui.is('dialogue')) {
     if (!session.allowModalConfirm(interactCode)) return true;
     hud.gamepadNav('confirm');
     return true;
   }
+  if (!session.allowModalConfirm(interactCode)) return true;
+  if (session.ui.is('skill') && needleCountdownBlocksConfirm()) return true;
+  if (session.ui.is('ending') && creditsLeaveBlocked()) return true;
+  hud.gamepadNav('confirm');
+  return true;
+}
+
+function handleModalNav(session: GameSession, hud: HudHandles, action: string): boolean {
+  if (session.ui.is('play') || session.ui.is('title')) return false;
+  const interactCode = session.getLastInteractCode() ?? undefined;
   if (action === 'up' || action === 'left') {
     hud.gamepadNav('up');
     return true;
@@ -318,12 +346,7 @@ function handleModalNav(session: GameSession, hud: HudHandles, action: string): 
     hud.gamepadNav('down');
     return true;
   }
-  if (action === 'interact') {
-    if (!session.allowModalConfirm(interactCode)) return true;
-    if (session.ui.is('skill') && needleCountdownBlocksConfirm()) return true;
-    hud.gamepadNav('confirm');
-    return true;
-  }
+  if (action === 'interact') return handleModalConfirm(session, hud, interactCode);
   return false;
 }
 

@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.22.22] — 2026-11-26
+
+### Fixed
+
+- **Needle countdown (P0)**: Stop/E/Enter/Space/gamepad A/touch are structurally impossible during Em 3…2…1 — Parar stays disabled/greyed; input arms only after the first motion frame + ~150 ms grace. Soft-miss no longer races the countdown toast.
+- **Epilogue credits (P0)**: after Nair Fechar the credits roll reliably; Continue Exploring / Skip stay disarmed ~900 ms so Enter cannot flash-dismiss. Esc menu + title gain a **Créditos** entry once the story is complete.
+- **Fail card (P1)**: quiz wrong answers and needle soft misses show the same retry/leave fail card as lockpick (not toast-only).
+
+### Added
+
+- **QA sandbox (P1)**: `?minigame=lockpick|sequence|needle|offer|hack|quiz` opens that panel; `?timescale=0.33` slows minigame timers/reveals — see `docs/qa-chapter-jumps.md`.
+- **Panel screenshots**: `artifacts/panels-v1.22.22/` for every skill kind × phase at 1280×720 and 390×844.
+
+### Tests
+
+- `session-v12222`, `e2e/playtest-46` (countdown mash + CPU throttle, epilogue credits, fail card, QA screenshots).
+
+### Chore
+
+- Pruned stale `artifacts/playtest/*` from old versions; keep only the current panels set.
+
 ## [1.22.21] — 2026-11-26
 
 ### Fixed

@@ -50,6 +50,8 @@ test('Augusto Fase 2 Enter submits focused Livro nervoso / Ledger twitch', async
     s.runStoryBeat('torre-final');
     s.acceptStoryBet();
     // Clear phase 1 timing with a forced hit (listener must die on repaint).
+    // Playtest #46: drop needle arm so harness submitSkill is not a no-op.
+    (s as unknown as { clearNeedleArm?: () => void }).clearNeedleArm?.();
     s.submitSkill(0.5);
     he.hud.syncScreen();
   });

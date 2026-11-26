@@ -153,8 +153,28 @@ async function wrongLockpick(page: Page): Promise<void> {
   await page.waitForTimeout(120);
 }
 
+async function remountAfterMiss(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const he = (
+      window as unknown as {
+        __HOUSE_EDGE__: {
+          session: {
+            getSkillMissCard?: () => unknown;
+            retrySkillMiss?: () => void;
+          };
+          hud: { syncScreen: () => void; showSkill: () => void };
+        };
+      }
+    ).__HOUSE_EDGE__;
+    if (he.session.getSkillMissCard?.()) he.session.retrySkillMiss?.();
+    he.hud.syncScreen();
+    he.hud.showSkill();
+  });
+  await page.waitForTimeout(200);
+}
+
 async function wrongSequenceKey(page: Page): Promise<void> {
-  // Guaranteed soft miss via harness — one attempt only (avoid fail card).
+  // Guaranteed soft miss via harness — then remount past the fail card.
   await page.evaluate(() => {
     const he = (
       window as unknown as {
@@ -167,7 +187,7 @@ async function wrongSequenceKey(page: Page): Promise<void> {
             } | null;
             submitSkill: (v: number) => boolean;
           };
-          hud: { syncScreen: () => void; showSkill: () => void };
+          hud: { syncScreen: () => void };
         };
       }
     ).__HOUSE_EDGE__;
@@ -192,9 +212,8 @@ async function wrongSequenceKey(page: Page): Promise<void> {
     const wrong = keys.findIndex((k) => k !== want && k !== twin);
     he.session.submitSkill(wrong >= 0 ? wrong : 1);
     he.hud.syncScreen();
-    he.hud.showSkill();
   });
-  await page.waitForTimeout(200);
+  await remountAfterMiss(page);
 }
 
 async function waitRevealPhase(page: Page): Promise<void> {
@@ -245,6 +264,7 @@ for (const vp of VIEWPORTS) {
         if (kind === 'lockpick') {
           await assertLayout(page, kind, 'input');
           await wrongLockpick(page);
+          await remountAfterMiss(page);
           await expect(page.locator('.skill-panel:not([hidden])')).toBeVisible();
           await assertLayout(page, kind, 'after-wrong-attempt');
           continue;
@@ -274,11 +294,15 @@ for (const vp of VIEWPORTS) {
             const he = (
               window as unknown as {
                 __HOUSE_EDGE__: {
-                  session: { submitSkill: (v: number) => boolean };
+                  session: {
+                    submitSkill: (v: number) => boolean;
+                    clearNeedleArm?: () => void;
+                  };
                   hud: { syncScreen: () => void; showSkill: () => void };
                 };
               }
             ).__HOUSE_EDGE__;
+            he.session.clearNeedleArm?.();
             he.session.submitSkill(0.5);
             he.hud.syncScreen();
             he.hud.showSkill();

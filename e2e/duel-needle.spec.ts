@@ -67,9 +67,20 @@ async function missOutsideZone(page: Page): Promise<{
   misses: number | undefined;
   done: boolean | undefined;
 }> {
+  // Playtest #46: wait until Stop is armed — unarmed submitSkill is a no-op.
+  await expect(page.locator('.btn-needle-stop')).toBeEnabled({ timeout: 5500 });
   return page.evaluate(() => {
-    const session = (window as unknown as { __HOUSE_EDGE__: { session: HeSession } })
-      .__HOUSE_EDGE__.session;
+    const session = (
+      window as unknown as {
+        __HOUSE_EDGE__: {
+          session: HeSession & {
+            clearNeedleArm?: () => void;
+            retrySkillMiss?: () => void;
+          };
+        };
+      }
+    ).__HOUSE_EDGE__.session;
+    session.clearNeedleArm?.();
     const before = session.player.getStats().credits;
     session.submitSkill(0.05);
     const p = session.getSkillProgress();
@@ -90,15 +101,16 @@ async function missOutsideZone(page: Page): Promise<{
 async function stopWhenNeedleInDrawnZone(page: Page): Promise<boolean> {
   // Playtest #38: wait out the ready countdown before Stop can count.
   await expect(page.locator('.skill-needle-ready')).toContainText(/Go|Já/i, {
-    timeout: 3000,
+    timeout: 5500,
   });
+  await expect(page.locator('.btn-needle-stop')).toBeEnabled({ timeout: 1000 });
   return page.evaluate(async () => {
     const deadline = performance.now() + 12_000;
     while (performance.now() < deadline) {
       const zone = document.querySelector('.skill-zone') as HTMLElement | null;
       const needle = document.querySelector('.skill-needle') as HTMLElement | null;
       const btn = document.querySelector('.btn-needle-stop') as HTMLButtonElement | null;
-      if (zone && needle && btn) {
+      if (zone && needle && btn && !btn.disabled) {
         const left = parseFloat(zone.style.left);
         const width = parseFloat(zone.style.width);
         const at = parseFloat(needle.style.left);
@@ -141,9 +153,17 @@ test('duel needle Stop inside drawn zone advances phase', async ({ page }) => {
   expect(miss.done).toBe(false);
 
   await page.evaluate(() => {
-    (
-      window as unknown as { __HOUSE_EDGE__: { hud: { showSkill: () => void } } }
-    ).__HOUSE_EDGE__.hud.showSkill();
+    const he = (
+      window as unknown as {
+        __HOUSE_EDGE__: {
+          session: { retrySkillMiss?: () => void; getSkillMissCard?: () => unknown };
+          hud: { showSkill: () => void; syncScreen: () => void };
+        };
+      }
+    ).__HOUSE_EDGE__;
+    if (he.session.getSkillMissCard?.()) he.session.retrySkillMiss?.();
+    he.hud.syncScreen();
+    he.hud.showSkill();
   });
   await expect(page.locator('.skill-zone')).toBeVisible();
 

@@ -38,7 +38,13 @@ import {
   startSequenceReveal,
   tickSequenceReveal,
 } from '../systems/sequence-reveal';
-import { canNeedleStop } from '../systems/session';
+import {
+  needleCountdownSeconds,
+  needleInCountdown,
+  NEEDLE_COUNTDOWN_MS,
+  NEEDLE_ARM_GRACE_MS,
+} from '../systems/needle-arm';
+import { scaleQaMs } from '../systems/debug-qa';
 import {
   formatLockpickPinVerdict,
   formatLockpickVerdictLine,
@@ -342,6 +348,41 @@ function paintSkillResult(
   });
 }
 
+/** Playtest #46: soft-miss fail card — same shape as lockpick full-fail. */
+function paintSkillMissCard(
+  panel: HTMLElement,
+  session: GameSession,
+  after: () => void,
+): void {
+  const miss = session.getSkillMissCard();
+  if (!miss) return;
+  panel.classList.add('skill-result-panel', 'skill-miss-panel');
+  const body = el('div', 'panel-body skill-body skill-result-body');
+  body.append(
+    el('h2', 'skill-result-lose', miss.headline),
+    el('p', 'skill-seq', miss.detail),
+  );
+  const actions = el('div', 'panel-actions skill-actions');
+  const retry = (): void => {
+    session.retrySkillMiss();
+    after();
+  };
+  const leave = (): void => {
+    session.leaveSkillMiss();
+    after();
+  };
+  const retryBtn = button(t('ui.skill.missRetry'), retry);
+  const leaveBtn = button(t('ui.skill.missLeave'), leave);
+  bindEnterGate(retryBtn, retry);
+  actions.append(retryBtn, leaveBtn);
+  panel.append(body, actions);
+  retryBtn.focus();
+  session.noteModalOpened(session.isInteractHeld());
+  onPanelDispose(panel, () => {
+    panel.classList.remove('skill-result-panel', 'skill-miss-panel');
+  });
+}
+
 export function paintSkill(
   panel: HTMLElement,
   session: GameSession,
@@ -351,6 +392,10 @@ export function paintSkill(
   const result = session.getSkillResult();
   if (result) {
     paintSkillResult(panel, session, after);
+    return;
+  }
+  if (session.getSkillMissCard()) {
+    paintSkillMissCard(panel, session, after);
     return;
   }
   const progress = session.getSkillProgress();
@@ -501,10 +546,14 @@ function paintTimingSkill(
     zoneEl,
     missHint,
   });
-  // Mouse/touch: stop once ready (no mash arm). Keyboard stays gated.
+  // Playtest #46: Parar starts disabled/greyed; arms only after countdown + grace.
   const stopBtn = button(t('ui.skill.stop'), () => stopAt(true));
   stopBtn.classList.add('btn-needle-stop');
+  stopBtn.disabled = true;
+  stopBtn.setAttribute('aria-disabled', 'true');
   bindEnterGate(stopBtn, () => {
+    if (stopBtn.disabled) return;
+    if (!session.isNeedleInputArmed()) return;
     if (!session.allowModalConfirm(session.getLastInteractCode() ?? undefined)) return;
     stopAt(false);
   });
@@ -563,17 +612,25 @@ type NeedleMotion = {
 function paintNeedleCountdown(
   o: NeedleBind,
   readyLine: HTMLElement | null,
-  readyUntil: number,
   ts: number,
   motion: NeedleMotion,
 ): void {
   motion.lastTs = ts;
-  const left = Math.max(1, Math.ceil((readyUntil - ts) / 1000));
+  const arm = o.session.getNeedleArm();
+  const left = arm ? needleCountdownSeconds(arm, ts) : 3;
   if (readyLine) {
     readyLine.textContent = tf('ui.skill.needleCountdown', { n: String(left) });
   }
   o.needle.style.left = '0%';
   if (o.missHint) o.missHint.hidden = true;
+  o.meter.dataset.needleReady = '0';
+  const stop = o.body
+    .closest('.skill-panel')
+    ?.querySelector('.btn-needle-stop') as HTMLButtonElement | null;
+  if (stop) {
+    stop.disabled = true;
+    stop.setAttribute('aria-disabled', 'true');
+  }
 }
 
 function stepNeedleMotion(
@@ -586,10 +643,22 @@ function stepNeedleMotion(
 ): void {
   if (!motion.ready) {
     motion.ready = true;
-    o.meter.dataset.needleReady = '1';
+    o.session.markNeedleMotionStarted(ts);
+    o.meter.dataset.needleReady = '0'; // still in grace — not armed yet
     if (readyLine) readyLine.textContent = t('ui.skill.needleGo');
     if (o.missHint) o.missHint.hidden = false;
     motion.lastTs = ts;
+  }
+  // Playtest #46: arm Stop only after motion + grace.
+  if (o.session.isNeedleInputArmed(ts)) {
+    o.meter.dataset.needleReady = '1';
+    const stop = o.body
+      .closest('.skill-panel')
+      ?.querySelector('.btn-needle-stop') as HTMLButtonElement | null;
+    if (stop) {
+      stop.disabled = false;
+      stop.removeAttribute('aria-disabled');
+    }
   }
   const dt = Math.min(48, Math.max(8, ts - motion.lastTs));
   motion.lastTs = ts;
@@ -607,10 +676,20 @@ function stepNeedleMotion(
   );
 }
 
-/** Needle rAF + confirm key — disposed with the skill panel (playtest #36). */
+/** Needle rAF + confirm key — disposed with the skill panel (playtest #36/#46). */
+function needleArmedForStop(o: NeedleBind): boolean {
+  return o.meter.dataset.needleReady === '1' && o.session.isNeedleInputArmed();
+}
+
 function bindNeedleRuntime(o: NeedleBind): (fromPointer?: boolean) => void {
   let settled = false;
-  const readyUntil = performance.now() + 1100;
+  const scale = o.session.getQaTimescale();
+  const now0 = performance.now();
+  o.session.beginNeedleArm(
+    now0,
+    scaleQaMs(NEEDLE_COUNTDOWN_MS, scale),
+    scaleQaMs(NEEDLE_ARM_GRACE_MS, scale),
+  );
   const step = Math.max(0.015, 0.028 * (o.phase.needleSpeed ?? 0.8));
   let raf = 0;
   let onKey: (e: KeyboardEvent) => void = () => undefined;
@@ -619,7 +698,7 @@ function bindNeedleRuntime(o: NeedleBind): (fromPointer?: boolean) => void {
     pos: 0,
     ready: false,
     wasInZone: false,
-    lastTs: performance.now(),
+    lastTs: now0,
   };
   const dropNeedle = (): void => {
     cancelAnimationFrame(raf);
@@ -630,23 +709,19 @@ function bindNeedleRuntime(o: NeedleBind): (fromPointer?: boolean) => void {
   o.meter.dataset.needleReady = '0';
   const tickNeedle = (ts: number): void => {
     if (settled) return;
-    if (!o.meter.isConnected) return dropNeedle();
-    if (!canNeedleStop(true, ts, readyUntil)) {
-      paintNeedleCountdown(o, readyLine, readyUntil, ts, motion);
-      raf = requestAnimationFrame(tickNeedle);
+    if (!o.meter.isConnected) {
+      dropNeedle();
       return;
     }
-    stepNeedleMotion(o, readyLine, zone, step, ts, motion);
+    const arm = o.session.getNeedleArm();
+    if (arm && needleInCountdown(arm, ts)) paintNeedleCountdown(o, readyLine, ts, motion);
+    else stepNeedleMotion(o, readyLine, zone, step, ts, motion);
     raf = requestAnimationFrame(tickNeedle);
   };
   raf = requestAnimationFrame(tickNeedle);
   o.meter.dataset.needleRaf = '1';
   const stopAt = (fromPointer = false): void => {
-    if (settled) return;
-    // Playtest #43: hard-gate on dataset so wiring stop.click() during Em 3…2…1
-    // cannot miss — ready flag alone raced a frame with ActionState confirm.
-    if (o.meter.dataset.needleReady !== '1') return;
-    if (!canNeedleStop(motion.ready, performance.now(), readyUntil)) return;
+    if (settled || !needleArmedForStop(o)) return;
     if (
       !fromPointer &&
       !o.session.allowModalConfirm(o.session.getLastInteractCode() ?? undefined)
@@ -660,12 +735,8 @@ function bindNeedleRuntime(o: NeedleBind): (fromPointer?: boolean) => void {
   };
   onKey = (e: KeyboardEvent): void => {
     if (!o.meter.isConnected) return dropNeedle();
-    if (e.repeat) return;
-    if (!isConfirmKey(e) && e.code !== 'KeyE') return;
-    if (
-      o.meter.dataset.needleReady !== '1' ||
-      !canNeedleStop(motion.ready, performance.now(), readyUntil)
-    ) {
+    if (e.repeat || (!isConfirmKey(e) && e.code !== 'KeyE')) return;
+    if (!needleArmedForStop(o)) {
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
@@ -786,8 +857,9 @@ function paintChoiceSkill(
     state.buttons[0]?.focus({ preventScroll: true });
   };
   window.setTimeout(focusFirstChoice, Math.max(0, state.armUntil - Date.now()) + 20);
-  const ms = phase?.timerMs;
-  if (!ms || ms <= 0) return;
+  const rawMs = phase?.timerMs;
+  if (!rawMs || rawMs <= 0) return;
+  const ms = scaleQaMs(rawMs, session.getQaTimescale());
   const timer = el(
     'p',
     'skill-seq skill-offer-timer',
@@ -945,7 +1017,7 @@ function bindLockpickTimer(
       timerStartedAt: started,
     };
   }
-  const ms = phase.timerMs;
+  const ms = scaleQaMs(phase.timerMs, ctx.session.getQaTimescale());
   const tick = window.setInterval(() => {
     if (!body.isConnected) {
       window.clearInterval(tick);
@@ -1221,7 +1293,8 @@ function flashSequence(ui: SeqUi, index: number, panel: HTMLElement): void {
     }
     const before = reveal.shown;
     const wasDone = reveal.done;
-    reveal = tickSequenceReveal(reveal, Date.now(), SEQ_REVEAL_STEP_MS);
+    const stepMs = scaleQaMs(SEQ_REVEAL_STEP_MS, ui.session.getQaTimescale());
+    reveal = tickSequenceReveal(reveal, Date.now(), stepMs);
     if (reveal.shown !== before || (reveal.done && !wasDone)) paint();
     if (reveal.done && !wasDone) {
       paint();
@@ -1377,7 +1450,10 @@ function paintSequenceSkill(
     after,
   };
   updateSequenceHint(ui);
-  const inputMs = sequenceInputMs(seq.length, phase.timerMs);
+  const inputMs = scaleQaMs(
+    sequenceInputMs(seq.length, phase.timerMs),
+    session.getQaTimescale(),
+  );
   if (inputMs > 0) ui.startTimer = bindSequenceTimer(ui, inputMs, timerEl);
   bindSequencePad(ui, actions, session);
   queueMicrotask(() => {

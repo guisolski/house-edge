@@ -19,6 +19,10 @@ test('prod: Enter×4×2 after needle no bet; KeyE Nair done; Luna E works', asyn
   await expect(page.locator('.btn-take-bet')).toBeVisible();
   await page.locator('.btn-take-bet').click();
   await expect(page.locator('.btn-needle-stop')).toBeVisible({ timeout: 3000 });
+  await expect(page.locator('.skill-needle-ready')).toContainText(/Go|Já/i, {
+    timeout: 5500,
+  });
+  await expect(page.locator('.btn-needle-stop')).toBeEnabled({ timeout: 1000 });
   // rAF needle — Stop on the first frame the visible needle is in the drawn zone
   // (DOM style writes no longer drive sampleNeedle).
   const stopped = await page.evaluate(async () => {
@@ -27,7 +31,7 @@ test('prod: Enter×4×2 after needle no bet; KeyE Nair done; Luna E works', asyn
       const zone = document.querySelector('.skill-zone') as HTMLElement | null;
       const needle = document.querySelector('.skill-needle') as HTMLElement | null;
       const btn = document.querySelector('.btn-needle-stop') as HTMLButtonElement | null;
-      if (zone && needle && btn) {
+      if (zone && needle && btn && !btn.disabled) {
         const left = parseFloat(zone.style.left);
         const width = parseFloat(zone.style.width);
         const at = parseFloat(needle.style.left);
@@ -45,7 +49,8 @@ test('prod: Enter×4×2 after needle no bet; KeyE Nair done; Luna E works', asyn
     return false;
   });
   expect(stopped).toBe(true);
-  await expect(page.locator('.play-hud')).toBeVisible({ timeout: 5000 });
+  // Result card then play — wait for banner dismiss.
+  await expect(page.locator('.play-hud')).toBeVisible({ timeout: 8000 });
   for (let i = 0; i < 4; i += 1) {
     await page.keyboard.press('Enter');
     await page.waitForTimeout(80);
