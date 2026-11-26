@@ -853,7 +853,10 @@ export class GameSession {
     this.modalHeldCodes = new Set(codes.map((c) => normInteractCode(c) ?? c));
     this.modalConfirmNeedsRelease =
       this.modalHeldCodes.size > 0 || interactHeld || this.interactKeyDown;
-    this.modalHeldThroughArm = this.modalConfirmNeedsRelease;
+    // Playtest #43: do not mark heldThroughArm on open — that added a +400ms quiet
+    // after releasing the choice Enter and made Take-bet need a 2nd press.
+    // Mash during the arm still sets heldThroughArm via noteInteractPressed/bump.
+    this.modalHeldThroughArm = false;
     this.modalReleasePending = false;
   }
 

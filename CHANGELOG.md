@@ -6,7 +6,7 @@
 
 - **Needle gauge (P0)**: skill meter no longer flex-shrinks to ~2px — visible green zone + needle at 1280×800; E/Stop ignored during Em 3…2…1 (no miss toast).
 - **Pirateiro sequence (P0)**: reveal ≥1.4s/glyph with a guaranteed full-glyph paint before input; input timer ≥2s/key; win/lose result card always shown.
-- **Re-open Enter (P0)**: Esc-cancel clears modal arm so the first Enter on Take bet works after E → skill → Esc → E.
+- **Re-open Enter (P0)**: Esc-cancel clears modal arm so the first Enter on Take bet works after E → skill → Esc → E; `noteModalOpened` no longer starts a post-release quiet (choice→Take bet); empty-held bump does not clear the time arm.
 - **Lockpick (P1)**: timer above pins (no Testar overlap); hint at body text size.
 - **Credit floater (P1)**: suppressed while the result card owns the delta.
 - **Objective (P1)**: arrow label includes distance (`Antena Tech · 42 m`).
