@@ -84,17 +84,17 @@ export function buildTorreVip(): MapDef {
   const props: MapDef['props'] = [];
   seal(tiles, w, h);
   rect({ tiles, w, x0: 3, y0: 3, x1: w - 4, y1: h - 4, kind: 'interior' });
-  // Gold carpet aisle + private salons.
-  rect({ tiles, w, x0: 6, y0: 8, x1: 34, y1: 12, kind: 'plaza' });
+  // Gold carpet aisle + private salons (playtest #37: wider aisle, less snag).
+  rect({ tiles, w, x0: 6, y0: 7, x1: 34, y1: 13, kind: 'plaza' });
   rect({ tiles, w, x0: 16, y0: 4, x1: 24, y1: 7, kind: 'plaza' });
   const booths: { x: number; y: number; style: number; bw: number; bh: number }[] = [
-    { x: 6, y: 4, style: 3, bw: 4, bh: 2 },
-    { x: 28, y: 4, style: 4, bw: 4, bh: 2 },
-    { x: 8, y: 14, style: 5, bw: 3, bh: 2 },
-    { x: 14, y: 15, style: 6, bw: 4, bh: 2 },
-    { x: 22, y: 14, style: 7, bw: 3, bh: 2 },
-    { x: 28, y: 15, style: 0, bw: 4, bh: 2 },
-    { x: 18, y: 18, style: 1, bw: 5, bh: 2 },
+    { x: 6, y: 3, style: 3, bw: 4, bh: 2 },
+    { x: 28, y: 3, style: 4, bw: 4, bh: 2 },
+    { x: 8, y: 15, style: 5, bw: 3, bh: 2 },
+    { x: 14, y: 16, style: 6, bw: 4, bh: 2 },
+    { x: 22, y: 15, style: 7, bw: 3, bh: 2 },
+    { x: 28, y: 16, style: 0, bw: 4, bh: 2 },
+    { x: 18, y: 19, style: 1, bw: 5, bh: 2 },
   ];
   for (const b of booths) {
     houseBlock({
@@ -109,6 +109,9 @@ export function buildTorreVip(): MapDef {
       bh: b.bh,
     });
   }
+  // Re-assert carpet after booth footprints.
+  rect({ tiles, w, x0: 6, y0: 7, x1: 34, y1: 13, kind: 'plaza' });
+  rect({ tiles, w, x0: 16, y0: 4, x1: 24, y1: 7, kind: 'plaza' });
   for (let x = 8; x < 34; x += 4) props.push({ x, y: 10, kind: 'lamp' });
   props.push(
     { x: 12, y: 9, kind: 'crowd' },
@@ -609,13 +612,15 @@ function sealAvenidaLane(tiles: TileKind[], w: number, h: number): void {
   rect({ tiles, w, x0: 12, y0: 9, x1: 34, y1: 10, kind: 'blocked' });
   rect({ tiles, w, x0: 12, y0: 13, x1: 34, y1: 14, kind: 'blocked' });
   // Playtest #29/#31: continuous shoulders between sealed columns (12/20/28/34).
-  // Single-tile gaps felt like softlocks when walking west below the corridor.
+  // Columns stay blocked so Neon Snap can't bypass on the shoulder.
   for (const x of [
     13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 29, 30, 31, 32, 33,
   ]) {
     set(tiles, w, x, 10, 'asphalt');
     set(tiles, w, x, 13, 'asphalt');
   }
+  // Playtest #37: dual center lanes always open after tower footprints.
+  rect({ tiles, w, x0: 1, y0: 11, x1: w - 2, y1: 12, kind: 'asphalt' });
   // Wide west + east plazas stay fully open (no shoulder walls).
   rect({ tiles, w, x0: 1, y0: 9, x1: 11, y1: 14, kind: 'asphalt' });
   rect({ tiles, w, x0: 35, y0: 9, x1: w - 2, y1: 14, kind: 'asphalt' });
@@ -716,7 +721,8 @@ function buildTorre(): MapDef {
   const props: MapDef['props'] = [];
   seal(tiles, w, h);
   rect({ tiles, w, x0: 2, y0: 2, x1: w - 3, y1: h - 3, kind: 'interior' });
-  rect({ tiles, w, x0: 4, y0: 10, x1: 35, y1: 14, kind: 'plaza' });
+  // Playtest #37: taller plaza strip so foyer walks don't snag on table corners.
+  rect({ tiles, w, x0: 4, y0: 9, x1: 35, y1: 15, kind: 'plaza' });
   // South-west exit — clear of elevator (24,11) so west walks don't dump to Odds.
   paintExitPad(tiles, w, 5, 18);
   const tables: { x: number; y: number; style: number; bw: number; bh: number }[] = [
@@ -724,13 +730,14 @@ function buildTorre(): MapDef {
     { x: 14, y: 3, style: 1, bw: 4, bh: 2 },
     { x: 21, y: 3, style: 2, bw: 3, bh: 2 },
     { x: 28, y: 3, style: 3, bw: 4, bh: 2 },
-    { x: 10, y: 7, style: 4, bw: 3, bh: 2 },
-    { x: 18, y: 7, style: 5, bw: 3, bh: 2 },
-    { x: 26, y: 7, style: 6, bw: 3, bh: 2 },
-    { x: 8, y: 16, style: 7, bw: 3, bh: 2 },
-    { x: 15, y: 17, style: 0, bw: 4, bh: 2 },
-    { x: 23, y: 16, style: 1, bw: 3, bh: 2 },
-    { x: 30, y: 17, style: 2, bw: 3, bh: 2 },
+    // Mid-row tables sit above the plaza (y≤8) — was y=7 bh=2 pinching y=8.
+    { x: 10, y: 6, style: 4, bw: 3, bh: 2 },
+    { x: 18, y: 6, style: 5, bw: 3, bh: 2 },
+    { x: 26, y: 6, style: 6, bw: 3, bh: 2 },
+    { x: 8, y: 17, style: 7, bw: 3, bh: 2 },
+    { x: 15, y: 18, style: 0, bw: 4, bh: 2 },
+    { x: 23, y: 17, style: 1, bw: 3, bh: 2 },
+    { x: 30, y: 18, style: 2, bw: 3, bh: 2 },
   ];
   for (const b of tables) {
     houseBlock({
@@ -745,6 +752,9 @@ function buildTorre(): MapDef {
       bh: b.bh,
     });
   }
+  // Re-assert plaza after houseBlock so table footprints can't pinch the aisle.
+  rect({ tiles, w, x0: 4, y0: 9, x1: 35, y1: 15, kind: 'plaza' });
+  paintExitPad(tiles, w, 5, 18);
   for (let x = 8; x < 34; x += 5) props.push({ x, y: 11, kind: 'lamp' });
   props.push({ x: 18, y: 12, kind: 'crate' }, { x: 22, y: 13, kind: 'kiosk' });
   props.push({ x: 12, y: 12, kind: 'crowd' }, { x: 30, y: 12, kind: 'crowd' });

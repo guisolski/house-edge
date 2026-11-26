@@ -401,7 +401,8 @@ function paintTimingSkill(
   const meter = el('div', 'skill-meter');
   const needle = el('div', 'skill-needle');
   const zoneEl = el('div', 'skill-zone');
-  const zone = timingZone(phase);
+  const misses = session.getSkillProgress()?.misses ?? 0;
+  const zone = timingZone(phase, misses);
   zoneEl.style.left = `${zone.lo * 100}%`;
   zoneEl.style.width = `${(zone.hi - zone.lo) * 100}%`;
   meter.append(zoneEl, needle);
@@ -416,13 +417,17 @@ function paintTimingSkill(
       }),
     ),
   );
-  if ((session.getSkillProgress()?.misses ?? 0) > 0) {
+  if (misses > 0) {
     body.appendChild(el('p', 'skill-clue skill-miss-hint', needleMissLine(session)));
   }
   const stopAt = bindNeedleRuntime(meter, needle, body, session, after, phase);
   const stopBtn = button(t('ui.skill.stop'), () => stopAt());
   stopBtn.classList.add('btn-needle-stop');
-  bindEnterGate(stopBtn, () => stopAt());
+  // Playtest #37: Enter/E Stop requires the same post-open key-up as choices.
+  bindEnterGate(stopBtn, () => {
+    if (!session.allowModalConfirm()) return;
+    stopAt();
+  });
   actions.appendChild(stopBtn);
 }
 
@@ -471,6 +476,8 @@ function bindNeedleRuntime(
     if (!meter.isConnected) return dropNeedle();
     if (e.repeat) return;
     if (!isConfirmKey(e) && e.code !== 'KeyE') return;
+    // Playtest #37: Aceitar → skill must not Stop on the same/held key.
+    if (!session.allowModalConfirm()) return;
     e.preventDefault();
     e.stopPropagation();
     stopAt();
@@ -1229,8 +1236,16 @@ function travelBtn(
     after();
   };
   const btn = button(unlocked ? name : `${name}${t('ui.travel.lockedSuffix')}`, go);
+  btn.classList.add('travel-dest');
+  btn.dataset.district = id;
   btn.disabled = !unlocked;
-  if (unlocked) bindEnterGate(btn, go);
+  if (unlocked) {
+    bindEnterGate(btn, () => {
+      // Gate already cleared on open; still ignore held key from Viajar Enter.
+      if (!session.allowModalConfirm()) return;
+      go();
+    });
+  }
   return btn;
 }
 

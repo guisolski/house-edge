@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.22.11] — 2026-11-26
+
+### Fixed
+
+- **Avenida softlock (P0)**: unstuck nudge pushes out of solids; center lanes re-sealed after towers.
+- **Viajar Enter (P0)**: focus first destination on open; clear mash arm so Enter works without Esc/reopen.
+- **Anfitrião VIP (P0)**: needle Stop/E requires post-Aceitar key-up (same arm as choice minigames).
+- **Torre FPS / sticky / needle / memory (P1)**: prewarm backdrops + ease FX on enter; wider plaza aisles; first-try needle window; release scene scratch on travel.
+
+### Tests
+
+- `session-v12211`, travel-keyboard Enter-on-first-focus.
+
 ## [1.22.10] — 2026-11-26
 
 ### Fixed

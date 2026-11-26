@@ -28,7 +28,7 @@ import {
   type WorldNpc,
 } from './interaction';
 import { buildDistrictMap, buildTorreVip, type MapDef } from '../world/maps';
-import { slideStep } from '../world/slide';
+import { nearestWalkable, slideStep } from '../world/slide';
 import {
   currentObjective,
   nextBeat,
@@ -314,6 +314,8 @@ export class GameSession {
     // Playtest #29: exits are prompt + E only — never auto-travel on dwell/walk-in.
     const s = this.player.getStats();
     const map = this.getMap();
+    // Playtest #37: free softlocks when standing inside a collider.
+    if (this.unstuckIfNeeded(map)) return true;
     const dest = slideStep(map, s.x, s.y, dx, dy);
     if (dest) {
       this.player.setFacing(dest.x - s.x || dx, dest.y - s.y || dy);
@@ -324,6 +326,16 @@ export class GameSession {
     }
     this.refreshExitLatch();
     return Boolean(dest);
+  }
+
+  /** Nudge onto the nearest free tile when the avatar is inside a solid. */
+  unstuckIfNeeded(map = this.getMap()): boolean {
+    const s = this.player.getStats();
+    const free = nearestWalkable(map, s.x, s.y);
+    if (!free) return false;
+    this.player.setPosition(free.x, free.y);
+    this.refreshExitLatch();
+    return true;
   }
 
   private moveStealth(dx: number, dy: number): boolean {
@@ -413,6 +425,8 @@ export class GameSession {
     this.ui.go('play');
     // Playtest #30: only arm when Interact is held across travel (harness stays free).
     if (this.interactKeyDown) this.armInteractLock(true, 300);
+    // Playtest #37: arrival pad / spawn must never leave the avatar inside a solid.
+    this.unstuckIfNeeded();
     this.bus.emit('district:entered', { districtId });
     return true;
   }

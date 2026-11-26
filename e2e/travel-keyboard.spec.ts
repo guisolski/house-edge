@@ -1,5 +1,5 @@
 /**
- * Playtest #33: Esc → Viajar → district fully keyboard (arrows + Enter).
+ * Playtest #33/#37: Esc → Viajar → Enter on first destination (no Esc/reopen).
  */
 import { test, expect } from '@playwright/test';
 
@@ -30,10 +30,10 @@ test('Viajar travels with keyboard only', async ({ page }) => {
   await page.waitForTimeout(40);
   await page.keyboard.press('Enter');
   await expect(page.locator('.travel-panel')).toBeVisible();
-  // First unlocked destination (Morro or Feira).
-  await page.waitForTimeout(80);
-  await page.keyboard.press('ArrowDown');
-  await page.waitForTimeout(40);
+  // Playtest #37: focus lands on first destination — Enter works immediately.
+  const focused = page.locator('.travel-panel button.travel-dest:focus');
+  await expect(focused).toBeVisible({ timeout: 1000 });
+  await page.waitForTimeout(60);
   await page.keyboard.press('Enter');
   await expect(page.locator('.play-hud')).toBeVisible({ timeout: 3000 });
   const district = await page.evaluate(() => {

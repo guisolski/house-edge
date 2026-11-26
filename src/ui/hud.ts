@@ -300,8 +300,10 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
     showTravel: () => {
       only(p, 'travel');
       paintTravel(p.travel, session, () => h.syncScreen());
+      // Playtest #37: clear mash arm + land focus on first destination so
+      // Enter works on the first open (no Esc/reopen).
       session.clearModalConfirmGate();
-      focusFirst(p.travel);
+      focusTravelDest(p.travel);
     },
     showJobs: () => {
       only(p, 'jobs');
@@ -329,6 +331,7 @@ function toggleMenu(
   if (open && session && h) {
     fillMenu(p.menu, session, h);
     only(p, 'menu');
+    session.clearModalConfirmGate();
     focusFirst(p.menu);
     return;
   }
@@ -338,6 +341,19 @@ function toggleMenu(
     return;
   }
   only(p, 'play');
+}
+
+/** Focus first unlocked destination; re-assert after menu teardown blur. */
+function focusTravelDest(panel: HTMLElement): void {
+  const first = panel.querySelector(
+    'button.travel-dest:not([disabled]), button:not([disabled])',
+  ) as HTMLElement | null;
+  first?.focus({ preventScroll: true });
+  queueMicrotask(() => {
+    if (!panel.isConnected || panel.hidden) return;
+    if (panel.contains(document.activeElement)) return;
+    first?.focus({ preventScroll: true });
+  });
 }
 
 let endingArtCanvas: HTMLCanvasElement | null = null;

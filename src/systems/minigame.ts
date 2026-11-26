@@ -126,8 +126,13 @@ export type SkillProgress = {
 /** Inclusive green-zone bounds matching the drawn meter (target ± window). */
 export type TimingZone = { lo: number; hi: number; target: number; half: number };
 
-export function timingZone(phase: SkillPhase): TimingZone {
-  const half = phase.window ?? 0.12;
+/**
+ * Inclusive green zone. Pass `misses: 0` for the first-try bonus
+ * (+0.035 half-width, capped). Omit misses (or >0) for the base window.
+ */
+export function timingZone(phase: SkillPhase, misses?: number): TimingZone {
+  const base = phase.window ?? 0.12;
+  const half = misses === 0 ? Math.min(0.24, base + 0.035) : base;
   const target = phase.target;
   return {
     target,
@@ -185,7 +190,10 @@ export function attemptSkill(
   if (isSequencePhase(phase)) {
     return attemptSequence(progress, phase, attempt.value);
   }
-  const ok = judgePhase(phase, attempt.value);
+  const ok =
+    phase.kind === 'timing'
+      ? judgeTimingStop(attempt.value, timingZone(phase, progress.misses))
+      : judgePhase(phase, attempt.value);
   if (!ok) {
     const missed = phaseMiss(progress);
     if (phase.kind === 'lockpick' && missed.pickLeft !== undefined) {

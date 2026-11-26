@@ -134,6 +134,11 @@ export function createWorldView(session: GameSession): WorldView {
     state.resizeW = 0;
     state.resizeH = 0;
   });
+  session.bus.on('district:entered', () => {
+    // Playtest #37: drop prior-scene scratch so Avenida enter doesn't retain
+    // the previous district's transient canvases (+55MB step).
+    releaseSceneScratch(state);
+  });
   return {
     canvas: state.canvas,
     invalidateMap: () => {
@@ -205,6 +210,10 @@ type ViewState = {
   cam: ReturnType<typeof createCamera>;
   mapCache: MapCache | null;
   backdrop: BackdropCache | null;
+  /** Prewarmed skyline canvases keyed by districtId:WxH. */
+  backdrops: Map<string, HTMLCanvasElement>;
+  /** Frames to keep overlays light after a district swap (Torre hitch). */
+  enterEaseFrames: number;
   showFps: boolean;
   lastSample: FpsSample;
   resizeW: number;
@@ -235,6 +244,8 @@ function makeViewState(session: GameSession): ViewState {
     cam: createCamera(),
     mapCache: null,
     backdrop: null,
+    backdrops: new Map(),
+    enterEaseFrames: 0,
     showFps: false,
     lastSample: { fps: 60, frameMs: 16, avgFps: 60, avgFrameMs: 16 },
     resizeW: 0,
@@ -242,7 +253,20 @@ function makeViewState(session: GameSession): ViewState {
     marker: null,
     markerFrame: -1,
   };
+  prewarmBackdrops(state, canvas.width, canvas.height);
   return state;
+}
+
+/** Drop transient per-scene canvases; keep prewarmed map layers for hitch-free travel. */
+function releaseSceneScratch(state: ViewState): void {
+  state.mapCache = null;
+  state.backdrop = null;
+  state.marker = null;
+  state.markerFrame = -1;
+  state.enterEaseFrames = 45;
+  // Signs/glows are tiny; clear glow so color variants from prior neon don't stick.
+  state.baked.glow.clear();
+  state.baked.sign.clear();
 }
 
 function drawOnce(state: ViewState, frame: number, now: number): FpsSample {
@@ -582,6 +606,11 @@ function paintPlayOverlays(o: {
 }): void {
   if (!o.state.session.ui.is('play')) return;
   const indoor = o.state.session.player.getStats().districtId === 'torre-casa';
+  // Playtest #37: skip heavy FX for ~45 frames after travel so Torre stays ~60.
+  if (o.state.enterEaseFrames > 0) {
+    o.state.enterEaseFrames -= 1;
+    return;
+  }
   // Playtest #30: VIP/Anfitrião — lights every 8th frame indoors; skip steam on VIP.
   const lightMask = indoor ? 7 : 1;
   if ((o.frame & lightMask) === 0) {
@@ -624,6 +653,35 @@ function prewarmDistricts(session: GameSession, baked: Baked): void {
   }
 }
 
+function prewarmBackdrops(state: ViewState, w: number, h: number): void {
+  const ids: DistrictId[] = ['morro-neon', 'feira-central', 'avenida-odds', 'torre-casa'];
+  for (const id of ids) {
+    const key = `${id}:${w}x${h}`;
+    state.backdrops.set(key, makeBackdropCanvas(w, h, id));
+  }
+}
+
+function makeBackdropCanvas(
+  w: number,
+  h: number,
+  districtId: DistrictId,
+): HTMLCanvasElement {
+  const layer = document.createElement('canvas');
+  layer.width = w;
+  layer.height = h;
+  const bctx = layer.getContext('2d');
+  if (bctx) {
+    const grad = bctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, '#05040c');
+    grad.addColorStop(0.5, Palette.nightSky);
+    grad.addColorStop(1, '#0c1014');
+    bctx.fillStyle = grad;
+    bctx.fillRect(0, 0, w, h);
+    paintSceneryBand(bctx, w, h, districtId);
+  }
+  return layer;
+}
+
 function paintBackdrop(
   state: ViewState,
   ctx: CanvasRenderingContext2D,
@@ -633,18 +691,10 @@ function paintBackdrop(
 ): void {
   const key = `${districtId}:${w}x${h}`;
   if (!state.backdrop || state.backdrop.key !== key) {
-    const layer = document.createElement('canvas');
-    layer.width = w;
-    layer.height = h;
-    const bctx = layer.getContext('2d');
-    if (bctx) {
-      const grad = bctx.createLinearGradient(0, 0, 0, h);
-      grad.addColorStop(0, '#05040c');
-      grad.addColorStop(0.5, Palette.nightSky);
-      grad.addColorStop(1, '#0c1014');
-      bctx.fillStyle = grad;
-      bctx.fillRect(0, 0, w, h);
-      paintSceneryBand(bctx, w, h, districtId);
+    let layer = state.backdrops.get(key);
+    if (!layer) {
+      layer = makeBackdropCanvas(w, h, districtId);
+      state.backdrops.set(key, layer);
     }
     state.backdrop = { key, canvas: layer };
   }

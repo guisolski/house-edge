@@ -20,6 +20,45 @@ export function slideStep(
   return slideAround(map, x, y, sx, sy, nx, ny);
 }
 
+/**
+ * Playtest #37: if the avatar sits inside a blocked tile, push to the nearest
+ * walkable cell (BFS ring). Returns null when already free.
+ */
+export function nearestWalkable(
+  map: MapDef,
+  x: number,
+  y: number,
+): { x: number; y: number } | null {
+  const minY = minPlayerTileY(48);
+  const sx = clamp(Math.floor(x), 0, map.width - 1);
+  const sy = clamp(Math.floor(y), minY, map.height - 1);
+  if (isWalkable(map, sx, sy)) return null;
+  for (let r = 1; r <= 12; r += 1) {
+    const hit = walkableOnRing(map, sx, sy, r, minY);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+function walkableOnRing(
+  map: MapDef,
+  sx: number,
+  sy: number,
+  r: number,
+  minY: number,
+): { x: number; y: number } | null {
+  for (let dy = -r; dy <= r; dy += 1) {
+    for (let dx = -r; dx <= r; dx += 1) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+      const tx = sx + dx;
+      const ty = sy + dy;
+      if (tx < 0 || ty < minY || tx >= map.width || ty >= map.height) continue;
+      if (isWalkable(map, tx, ty)) return { x: tx, y: ty };
+    }
+  }
+  return null;
+}
+
 function slideAround(
   map: MapDef,
   x: number,
