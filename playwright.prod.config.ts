@@ -1,8 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /** Production-build e2e — vite preview of dist (BASE_PATH=/). */
-const PORT = 43126;
+const PORT = 43129;
 const BASE = `http://127.0.0.1:${PORT}`;
+
+/** Free the preview port if a prior run left it bound (CI cancel / retry). */
+const freePort = `sh -c 'for p in $(lsof -t -iTCP:${PORT} -sTCP:LISTEN 2>/dev/null); do kill -9 "$p"; done; true'`;
+const preview = `npx vite preview --host 127.0.0.1 --port ${PORT} --strictPort`;
+const buildIfNeeded = `test -d dist || BASE_PATH=/ npm run build`;
 
 export default defineConfig({
   testDir: './e2e',
@@ -23,7 +28,8 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: `BASE_PATH=/ npm run build && npx vite preview --host 127.0.0.1 --port ${PORT}`,
+    // CI already ran `npm run build`; only build locally when dist is missing.
+    command: `${freePort}; ${buildIfNeeded}; ${preview}`,
     url: BASE,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
