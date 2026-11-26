@@ -1,12 +1,12 @@
 /**
- * Playtest #47 / v1.22.23: panel screenshots at 1280×720 and 390×844.
+ * Playtest #47/#48 / v1.22.24: panel screenshots at 1280×720 and 390×844.
  * Desktop captures force keyboard mode (no touch chrome). Locale: Português.
  */
 import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import fs from 'node:fs';
 
-const ART = path.join('artifacts', 'panels-v1.22.23');
+const ART = path.join('artifacts', 'panels-v1.22.24');
 
 test.beforeAll(() => {
   fs.mkdirSync(ART, { recursive: true });
@@ -187,7 +187,7 @@ const viewports: Vp[] = [
 ];
 
 for (const vp of viewports) {
-  test.describe(`panels v1.22.23 ${vp.name}`, () => {
+  test.describe(`panels v1.22.24 ${vp.name}`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
     test.beforeEach(({ browserName }, testInfo) => {
       void browserName;

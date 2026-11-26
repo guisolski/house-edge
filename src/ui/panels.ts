@@ -33,8 +33,11 @@ import {
   type SkillPhase,
 } from '../systems/minigame';
 import {
+  SEQ_FULL_HOLD_MS,
   SEQ_REVEAL_STEP_MS,
+  sequenceHoldProgress,
   sequenceRevealGlyphs,
+  sequenceRevealPhase,
   startSequenceReveal,
   tickSequenceReveal,
 } from '../systems/sequence-reveal';
@@ -416,6 +419,12 @@ function paintSkillHeader(
     streak > 0 ? tf('ui.skill.metaCombo', metaVars) : tf('ui.skill.meta', metaVars);
   const titleText = sideHustle ? t('ui.sideHustle.title') : localizedDef.title;
   body.append(el('h2', 'skill-title', titleText), el('p', 'skill-meta', meta));
+  // Playtest #48: first-open howto line (one sentence how to win).
+  const tipId = session.getLastMinigameTip();
+  if (tipId) {
+    body.appendChild(el('p', 'skill-howto', t(`ui.minigameTip.${tipId}`)));
+    session.clearLastMinigameTip();
+  }
   // Playtest #47: never duplicate the title as a subtitle/prompt.
   if (phase?.prompt && phase.prompt.trim() !== titleText.trim()) {
     body.appendChild(el('p', 'skill-seq skill-prompt', phase.prompt));
@@ -1305,6 +1314,8 @@ type SeqUi = {
   pattern: HTMLElement;
   status: HTMLElement;
   hint: HTMLElement;
+  memorizeBar: HTMLElement;
+  memorizeFill: HTMLElement;
   seq: SeqKey[];
   missCap: number | undefined;
   settled: { v: boolean };
@@ -1320,10 +1331,53 @@ type SeqUi = {
   revealGen: { n: number };
 };
 
+function paintRevealFrame(
+  ui: SeqUi,
+  panel: HTMLElement,
+  reveal: ReturnType<typeof startSequenceReveal>,
+  now: number,
+): void {
+  // Hold phase always shows ALL glyphs (never dots).
+  const shown =
+    sequenceRevealPhase(reveal) === 'hold' || reveal.done
+      ? reveal.seq.length
+      : reveal.shown;
+  ui.pattern.textContent = tf('ui.skill.sequenceLabel', {
+    seq: sequenceRevealGlyphs(reveal.seq, shown),
+  });
+  const phase = sequenceRevealPhase(reveal);
+  panel.dataset.seqPhase = phase;
+  if (phase !== 'hold') return;
+  ui.status.textContent = t('ui.skill.memorizeHold');
+  const holdMs = scaleQaMs(SEQ_FULL_HOLD_MS, ui.session.getQaTimescale());
+  ui.memorizeFill.style.width = `${Math.round(sequenceHoldProgress(reveal, now, holdMs) * 100)}%`;
+}
+
+function armSequenceInput(
+  ui: SeqUi,
+  panel: HTMLElement,
+  index: number,
+  resumeTimer: boolean,
+): void {
+  ui.armed.v = true;
+  ui.pattern.classList.remove('skill-seq-flash');
+  ui.memorizeBar.hidden = true;
+  ui.memorizeFill.style.width = '100%';
+  panel.dataset.seqPhase = 'input';
+  ui.pattern.textContent = seqRevealLabel(ui.seq, index);
+  ui.status.textContent =
+    tf('ui.skill.matchNext', {
+      current: String(index + 1),
+      total: String(ui.seq.length),
+    }) + (ui.missCap ? tf('ui.skill.missesFail', { n: String(ui.missCap) }) : '');
+  updateSequenceHint(ui);
+  if (resumeTimer) ui.resumeTimer?.();
+  else ui.startTimer?.();
+}
+
 /**
- * Playtest #42/#45: clock-driven reveal — progressive glyphs, then ≥2s full hold.
- * setInterval keeps ticking even if showSkill is called twice — callers must
- * skip repaint while the same phase signature is live (see hud showSkill).
+ * Playtest #42/#45/#48: progressive reveal → explicit ≥2s hold (Memorize bar) →
+ * input. Hold duration scales with ?timescale. Timer starts only after hold.
  */
 function flashSequence(
   ui: SeqUi,
@@ -1336,31 +1390,12 @@ function flashSequence(
   const gen = ui.revealGen.n;
   ui.pattern.classList.add('skill-seq-flash');
   ui.status.textContent = t('ui.skill.memorizeSeq');
+  ui.memorizeBar.hidden = false;
+  ui.memorizeFill.style.width = '0%';
+  panel.dataset.seqPhase = 'reveal';
   updateSequenceHint(ui);
   let reveal = startSequenceReveal(ui.seq, Date.now());
-  ui.pattern.textContent = tf('ui.skill.sequenceLabel', {
-    seq: sequenceRevealGlyphs(reveal.seq, reveal.shown),
-  });
-  const paint = (): void => {
-    ui.pattern.textContent = tf('ui.skill.sequenceLabel', {
-      seq: sequenceRevealGlyphs(reveal.seq, reveal.shown),
-    });
-  };
-  const finish = (): void => {
-    if (ui.settled.v || gen !== ui.revealGen.n) return;
-    ui.armed.v = true;
-    ui.pattern.classList.remove('skill-seq-flash');
-    // Full sequence already held ≥2s during reveal; arm with mastermind dots.
-    ui.pattern.textContent = seqRevealLabel(ui.seq, index);
-    ui.status.textContent =
-      tf('ui.skill.matchNext', {
-        current: String(index + 1),
-        total: String(ui.seq.length),
-      }) + (ui.missCap ? tf('ui.skill.missesFail', { n: String(ui.missCap) }) : '');
-    updateSequenceHint(ui);
-    if (resumeTimer) ui.resumeTimer?.();
-    else ui.startTimer?.();
-  };
+  paintRevealFrame(ui, panel, reveal, Date.now());
   const tick = window.setInterval(() => {
     if (!panel.isConnected || ui.settled.v || gen !== ui.revealGen.n) {
       window.clearInterval(tick);
@@ -1368,13 +1403,25 @@ function flashSequence(
     }
     const before = reveal.shown;
     const wasDone = reveal.done;
-    const stepMs = scaleQaMs(SEQ_REVEAL_STEP_MS, ui.session.getQaTimescale());
-    reveal = tickSequenceReveal(reveal, Date.now(), stepMs);
-    if (reveal.shown !== before || (reveal.done && !wasDone)) paint();
+    const wasHold = sequenceRevealPhase(reveal) === 'hold';
+    const scale = ui.session.getQaTimescale();
+    const now = Date.now();
+    reveal = tickSequenceReveal(
+      reveal,
+      now,
+      scaleQaMs(SEQ_REVEAL_STEP_MS, scale),
+      scaleQaMs(SEQ_FULL_HOLD_MS, scale),
+    );
+    const nowHold = sequenceRevealPhase(reveal) === 'hold';
+    if (reveal.shown !== before || nowHold || wasHold || (reveal.done && !wasDone)) {
+      paintRevealFrame(ui, panel, reveal, now);
+    }
     if (reveal.done && !wasDone) {
-      paint();
+      paintRevealFrame(ui, panel, reveal, now);
       window.clearInterval(tick);
-      finish();
+      if (!ui.settled.v && gen === ui.revealGen.n) {
+        armSequenceInput(ui, panel, index, resumeTimer);
+      }
     }
   }, 50);
   onPanelDispose(panel, () => window.clearInterval(tick));
@@ -1497,20 +1544,27 @@ function paintSequenceSkill(
   if (!progress || !phase) return;
   const seq = phaseSequence(phase);
   const status = el('p', 'skill-seq skill-seq-status', t('ui.skill.memorizeSeq'));
-  // Playtest #47: fixed-height pattern slot so reveal → input does not shift layout.
+  // Playtest #47/#48: fixed-height pattern slot so reveal → hold → input does not shift.
   const pattern = el(
     'p',
     'skill-pattern skill-seq-flash skill-seq-slot',
     tf('ui.skill.sequenceLabel', { seq: sequenceRevealGlyphs(seq, 1) }),
   );
+  const memorizeFill = el('span', '');
+  const memorizeBar = el('div', 'skill-memorize-bar');
+  memorizeBar.setAttribute('role', 'progressbar');
+  memorizeBar.setAttribute('aria-label', t('ui.skill.memorizeSeq'));
+  memorizeBar.appendChild(memorizeFill);
   const timerEl = el('p', 'skill-seq skill-seq-timer', '');
   const hint = el('p', 'skill-seq skill-seq-hint', '');
-  body.append(pattern, status, timerEl);
+  body.append(pattern, memorizeBar, status, timerEl);
   const ui: SeqUi = {
     body,
     pattern,
     status,
     hint,
+    memorizeBar,
+    memorizeFill,
     seq,
     missCap: phase.maxMisses,
     settled: { v: false },

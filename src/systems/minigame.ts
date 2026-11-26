@@ -616,6 +616,8 @@ function duelSkill(betId: string): SkillDef {
         steps: 4,
         sequence: ['R', '↑', 'B', '↓'],
         maxMisses: 4,
+        // Playtest #48: input clock only after reveal+hold; give a fair window.
+        timerMs: 16_000,
       },
     ],
   };

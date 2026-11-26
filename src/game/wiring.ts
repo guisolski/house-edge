@@ -178,6 +178,10 @@ function wireUi(session: GameSession, hud: HudHandles, audio: AudioEngine): void
     if (session.getSkillResult()) return;
     hud.showHud();
   });
+  // Playtest #48: beat completion must refresh the objective immediately.
+  session.bus.on('story:beat-completed', () => {
+    hud.updateStats();
+  });
   session.bus.on('fx:flash', (p) => hud.flash(p.kind));
   session.bus.on('fx:credits', (p) => hud.creditPopup(p.delta));
   session.bus.on('world:transition', (p) => {

@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.22.24] — 2026-11-26
+
+### Fixed
+- **Panel readability (P0)**: viewport-clamped body/title fonts (≥15/20 rendered CSS px via computed × scale); layout e2e asserts at 1024×576, 1280×720, and 390×844; dialogue + HUD hints match.
+- **Sequence/hack hold (P0)**: after reveal, all glyphs stay full-size for 2.0s (× 1/timescale) with a visible Memorize bar; input timer starts only after hold; duel phase-3 hack uses the same reveal+hold + `timerMs`.
+- **Stale Anfitrião objective (P1)**: `story:beat-completed` refreshes the HUD objective immediately after the offer resolves.
+- **Needle feedback (P1)**: greener zone with stronger outline; tick + flash on zone enter kept.
+
+### Added
+- Per-minigame first-open howto line in the skill panel (one sentence how to win).
+- `artifacts/panels-v1.22.24/` (keyboard, Português) + hold-duration e2e.
+
 ## [1.22.23] — 2026-11-26
 
 ### Fixed

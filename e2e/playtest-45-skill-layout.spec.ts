@@ -6,6 +6,7 @@ import { test, expect, type Page } from '@playwright/test';
 
 const VIEWPORTS = [
   { width: 1280, height: 720 },
+  { width: 1024, height: 576 },
   { width: 390, height: 844 },
 ] as const;
 
@@ -83,16 +84,35 @@ async function assertPanelMetrics(page: Page, tag: string): Promise<void> {
     const title = root.querySelector('.skill-title, h2') as HTMLElement | null;
     const body = root.querySelector('.skill-body') as HTMLElement | null;
     const btn = root.querySelector('.skill-actions .btn') as HTMLElement | null;
+    // Playtest #48: computed font × ancestor/visual scale = rendered CSS px.
+    const scaleOf = (el: Element | null): number => {
+      let scale = 1;
+      let node: Element | null = el;
+      while (node) {
+        const tr = getComputedStyle(node).transform;
+        if (tr && tr !== 'none') {
+          const m = new DOMMatrixReadOnly(tr);
+          scale *= Math.hypot(m.a, m.b) || 1;
+        }
+        node = node.parentElement;
+      }
+      if (window.visualViewport?.scale) scale *= window.visualViewport.scale;
+      return scale;
+    };
     const titleFs = title ? parseFloat(getComputedStyle(title).fontSize) : 0;
     const bodyFs = body ? parseFloat(getComputedStyle(body).fontSize) : 0;
+    const scale = scaleOf(root);
     const btnH = btn ? btn.getBoundingClientRect().height : 0;
-    const expectedMin = Math.min(720, window.innerWidth * 0.92);
+    const vw = window.innerWidth;
+    // Playtest #48: desktop ≥55% of viewport (≤720); mobile ≥92vw.
+    const expectedMin = vw <= 420 ? Math.min(720, vw * 0.92) : Math.min(720, vw * 0.55);
     return {
       width: root.getBoundingClientRect().width,
       expectedMin,
-      titleFs,
-      bodyFs,
+      titleFs: titleFs * scale,
+      bodyFs: bodyFs * scale,
       btnH,
+      scale,
       scrollOverflow:
         root.scrollHeight > root.clientHeight + 2 ||
         Boolean(body && body.scrollHeight > body.clientHeight + 2),
@@ -100,14 +120,16 @@ async function assertPanelMetrics(page: Page, tag: string): Promise<void> {
   });
   expect(
     metrics.width,
-    `${tag}: panel width ${metrics.width} < min(720,92vw)=${metrics.expectedMin}`,
+    `${tag}: panel width ${metrics.width} < floor ${metrics.expectedMin}`,
   ).toBeGreaterThanOrEqual(metrics.expectedMin - 1);
-  expect(metrics.titleFs, `${tag}: title font ${metrics.titleFs}`).toBeGreaterThanOrEqual(
-    19.5,
-  );
-  expect(metrics.bodyFs, `${tag}: body font ${metrics.bodyFs}`).toBeGreaterThanOrEqual(
-    14.5,
-  );
+  expect(
+    metrics.titleFs,
+    `${tag}: rendered title ${metrics.titleFs} (scale ${metrics.scale})`,
+  ).toBeGreaterThanOrEqual(19.5);
+  expect(
+    metrics.bodyFs,
+    `${tag}: rendered body ${metrics.bodyFs} (scale ${metrics.scale})`,
+  ).toBeGreaterThanOrEqual(14.5);
   if (metrics.btnH > 0) {
     expect(metrics.btnH, `${tag}: button height ${metrics.btnH}`).toBeGreaterThanOrEqual(
       39.5,

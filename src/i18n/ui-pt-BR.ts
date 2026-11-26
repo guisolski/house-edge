@@ -151,6 +151,7 @@ export const uiPtBR = {
   'ui.skill.missesProgress': ' · erros {current}/{max}',
   'ui.skill.sequenceLabel': 'Sequência: {seq}',
   'ui.skill.memorizeSeq': 'Memorize a sequência…',
+  'ui.skill.memorizeHold': 'Memorize — sequência completa',
   'ui.skill.escSeqHint': 'Esc cancela · setas só na sequência',
   'ui.skill.escSeqHint.arrows': 'Esc cancela · use setas / WASD / direcional',
   'ui.skill.escSeqHint.colors':

@@ -1,12 +1,12 @@
 /**
- * Playtest #47: Augusto duel (needle + choice + hack) to the end at timescale 0.33.
- * Screenshots land in artifacts/panels-v1.22.23/ (keyboard mode, Português).
+ * Playtest #47/#48: Augusto duel (needle + choice + hack) to the end at timescale 0.33.
+ * Screenshots land in artifacts/panels-v1.22.24/ (keyboard mode, Português).
  */
 import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import fs from 'node:fs';
 
-const ART = path.join('artifacts', 'panels-v1.22.23');
+const ART = path.join('artifacts', 'panels-v1.22.24');
 const KEY: Record<string, string> = {
   R: 'KeyR',
   G: 'KeyG',
@@ -130,14 +130,15 @@ async function playHackPhase(page: Page): Promise<void> {
   await expect(page.locator('.skill-pattern')).toBeVisible({ timeout: 8000 });
   await page.waitForFunction(
     () => {
-      const el = document.querySelector(
-        '.skill-panel:not([hidden]) .skill-pattern.skill-seq-flash',
+      const panel = document.querySelector(
+        '.skill-panel:not([hidden])',
       ) as HTMLElement | null;
-      if (!el) return false;
-      const text = el.textContent ?? '';
+      if (!panel || panel.dataset.seqPhase !== 'hold') return false;
+      const el = panel.querySelector('.skill-pattern') as HTMLElement | null;
+      const text = el?.textContent ?? '';
       return text.length > 0 && !text.includes('·');
     },
-    { timeout: 30_000 },
+    { timeout: 45_000 },
   );
   await shot(page, 'augusto-duel-hack-hold.png');
   await page.waitForFunction(

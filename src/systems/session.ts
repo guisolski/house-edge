@@ -421,14 +421,28 @@ export class GameSession {
   }
 
   /** First-time tip for a minigame kind; null if already seen. */
+  /** Last first-open tip id shown this skill open (for in-panel howto line). */
+  private lastMinigameTip: string | null = null;
+
   peekMinigameTip(kind: string): string | null {
     // Playtest #36: Luna ball uses a fair, clue-specific tip (not generic choice).
     const tipKind = this.pendingBetId === 'laje-lottery' ? 'lajeLottery' : kind;
     const { state, tip } = consumeMinigameTip(this.tutorial, tipKind);
+    this.lastMinigameTip = tip;
     if (!tip) return null;
     this.tutorial = state;
     this.story.setFlag(`tip_${tip}`, true);
     return tip;
+  }
+
+  /** Playtest #48: one-sentence howto on first open of a minigame kind. */
+  getLastMinigameTip(): string | null {
+    return this.lastMinigameTip;
+  }
+
+  /** Consume the in-panel howto so phase remounts do not repeat it. */
+  clearLastMinigameTip(): void {
+    this.lastMinigameTip = null;
   }
 
   /** Harness / screenshots — reinstate onboarding without wiping the save. */

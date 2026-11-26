@@ -150,6 +150,7 @@ export const uiEn = {
   'ui.skill.missesProgress': ' · misses {current}/{max}',
   'ui.skill.sequenceLabel': 'Sequence: {seq}',
   'ui.skill.memorizeSeq': 'Memorize the sequence…',
+  'ui.skill.memorizeHold': 'Memorize — full sequence',
   'ui.skill.escSeqHint': 'Esc cancels · arrows are sequence only',
   'ui.skill.escSeqHint.arrows': 'Esc cancels · use arrows / WASD / pad',
   'ui.skill.escSeqHint.colors': 'Esc cancels · R/G/B/Y or matching arrows (R↑ G→ B↓ Y←)',
