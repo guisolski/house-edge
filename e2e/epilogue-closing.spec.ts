@@ -63,18 +63,17 @@ test('epilogue closing line is visible in the viewport before credits', async ({
   });
   expect(inView).toBe(true);
 
-  await page.waitForTimeout(200);
+  // Playtest #40: Fechar hold is ~400ms — assert disabled immediately, then enable.
+  const closeBtn = page.locator('.btn-closing-continue');
+  await expect(closeBtn).toBeDisabled();
+  await expect(page.locator('.credits-roll, .ending-panel .credits-line')).toHaveCount(0);
+
   await page.screenshot({
     path: path.join(ART, 'v201-epilogue-closing-line.png'),
     fullPage: true,
   });
 
-  // Close stays disabled until the hold ends — credits must NOT auto-open.
-  await page.waitForTimeout(500);
-  await expect(page.locator('.credits-roll, .ending-panel .credits-line')).toHaveCount(0);
-  const closeBtn = page.locator('.btn-closing-continue');
-  await expect(closeBtn).toBeDisabled();
-  await expect(closeBtn).toBeEnabled({ timeout: 4000 });
+  await expect(closeBtn).toBeEnabled({ timeout: 2000 });
   await closeBtn.click();
   await expect(page.locator('.credits-line').first()).toBeVisible({ timeout: 3000 });
 });
