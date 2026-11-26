@@ -426,12 +426,12 @@ function paintTimingSkill(
   const readyLine = el('p', 'skill-seq skill-needle-ready', t('ui.skill.needleReady'));
   body.appendChild(readyLine);
   const stopAt = bindNeedleRuntime({ meter, needle, body, session, after, phase });
-  const stopBtn = button(t('ui.skill.stop'), () => stopAt());
+  // Mouse/touch: stop once ready (no mash arm). Keyboard stays gated.
+  const stopBtn = button(t('ui.skill.stop'), () => stopAt(true));
   stopBtn.classList.add('btn-needle-stop');
-  // Playtest #37/#38: Stop needs arm + ready countdown.
   bindEnterGate(stopBtn, () => {
     if (!session.allowModalConfirm()) return;
-    stopAt();
+    stopAt(false);
   });
   actions.appendChild(stopBtn);
 }
@@ -446,7 +446,7 @@ type NeedleBind = {
 };
 
 /** Needle rAF + confirm key — disposed with the skill panel (playtest #36). */
-function bindNeedleRuntime(o: NeedleBind): () => void {
+function bindNeedleRuntime(o: NeedleBind): (fromPointer?: boolean) => void {
   let needlePos = 0;
   let settled = false;
   // Playtest #38: ~1s ready before the needle runs / Stop counts.
@@ -486,9 +486,10 @@ function bindNeedleRuntime(o: NeedleBind): () => void {
   };
   raf = requestAnimationFrame(tickNeedle);
   o.meter.dataset.needleRaf = '1';
-  const stopAt = (): void => {
+  const stopAt = (fromPointer = false): void => {
     if (settled || !ready || performance.now() < readyUntil) return;
-    if (!o.session.allowModalConfirm()) return;
+    // Keyboard/E still needs the post-open arm; mouse/touch does not.
+    if (!fromPointer && !o.session.allowModalConfirm()) return;
     settled = true;
     dropNeedle();
     o.session.submitSkill(needlePos % 1);
@@ -502,7 +503,7 @@ function bindNeedleRuntime(o: NeedleBind): () => void {
     if (!ready || performance.now() < readyUntil) return;
     e.preventDefault();
     e.stopPropagation();
-    stopAt();
+    stopAt(false);
   };
   window.addEventListener('keydown', onKey, true);
   const skillPanel = o.body.closest('.skill-panel') ?? o.body;

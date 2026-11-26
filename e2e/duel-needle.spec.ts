@@ -88,6 +88,10 @@ async function missOutsideZone(page: Page): Promise<{
  * No DOM mutation — samples player-visible styles, then clicks Stop same tick.
  */
 async function stopWhenNeedleInDrawnZone(page: Page): Promise<boolean> {
+  // Playtest #38: wait out the ready countdown before Stop can count.
+  await expect(page.locator('.skill-needle-ready')).toContainText(/Go|Já/i, {
+    timeout: 3000,
+  });
   return page.evaluate(async () => {
     const deadline = performance.now() + 12_000;
     while (performance.now() < deadline) {

@@ -656,10 +656,8 @@ canvas.excalibur-game {
   transform: translate(-50%, -50%);
   width: min(420px, 92vw);
   max-height: 80vh;
-  /* Playtest #38: body scrolls; actions stay pinned (Influencer clue). */
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  /* Playtest #38: scroll long clues; keep actions reachable (sticky). */
+  overflow: auto;
   background: #0c0c14f2;
   border: 2px solid var(--cyan);
   border-radius: 10px;
@@ -669,17 +667,17 @@ canvas.excalibur-game {
 }
 
 .skill-panel .skill-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
   padding-right: 0.15rem;
 }
 
 .skill-panel .skill-actions {
-  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
   margin-top: 0.65rem;
-  padding-top: 0.35rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.15rem;
   border-top: 1px solid #2bfff233;
+  background: linear-gradient(transparent, #0c0c14 28%);
 }
 
 .skill-offer-expired {
