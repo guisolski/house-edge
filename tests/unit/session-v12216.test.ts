@@ -29,6 +29,19 @@ describe('v1.22.16 dialogue arm — Antena / offer-bet', () => {
     expect(session.allowModalConfirm('Enter')).toBe(true);
   });
 
+  it('bump with empty held does not clear an active time arm', () => {
+    const session = new GameSession();
+    session.startNew();
+    session.noteModalOpened(false, []);
+    expect(session.allowModalConfirm('Enter')).toBe(false);
+    session.bumpModalConfirmArm();
+    // Still armed — first blocked Enter must not disarm for the second press.
+    expect(session.allowModalConfirm('Enter')).toBe(false);
+    vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 300);
+    expect(session.allowModalConfirm('Enter')).toBe(true);
+    vi.restoreAllMocks();
+  });
+
   it('offer-bet time arm blocks Enter until expiry; fresh Enter after works', () => {
     const session = new GameSession();
     session.startNew();

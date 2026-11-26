@@ -4,7 +4,7 @@
  */
 import { test, expect } from '@playwright/test';
 
-const SEQ_REVEAL_STEP_MS = 700;
+const SEQ_REVEAL_STEP_MS = 1400;
 const sequenceRevealTotalMs = (n: number): number =>
   Math.max(1, n) * SEQ_REVEAL_STEP_MS + SEQ_REVEAL_STEP_MS;
 

@@ -185,17 +185,30 @@ canvas.excalibur-game {
 }
 
 .lockpick-hint {
-  font-size: 0.78rem;
-  font-weight: 600;
+  /* Playtest #43: same size as other skill body text — still one line. */
+  font-size: 0.95rem;
+  font-weight: 700;
   white-space: nowrap;
   letter-spacing: -0.01em;
   margin: 0.15rem 0 0.35rem;
+  color: var(--cyan);
+}
+
+.skill-lockpick-timer {
+  flex-shrink: 0;
+  margin: 0.25rem 0 0;
+  font-weight: 800;
+}
+
+.skill-panel:has(.lockpick-row) .skill-body {
+  /* Keep timer above sticky Testar — no overlap at 1280×800. */
+  padding-bottom: 0.25rem;
 }
 
 @media (max-width: 480px) {
   .lockpick-hint {
-    font-size: 0.7rem;
-    letter-spacing: -0.02em;
+    font-size: 0.85rem;
+    letter-spacing: -0.015em;
   }
 }
 
@@ -557,6 +570,18 @@ canvas.excalibur-game {
   background: #002776ee;
 }
 
+/* Playtest #43: title/menu focus must read clearly without a prior click. */
+.title-screen .btn:focus,
+.title-screen .btn:focus-visible,
+.menu-panel .btn:focus,
+.menu-panel .btn:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 1px #000,
+    0 0 16px var(--yellow);
+}
+
 .btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -767,10 +792,13 @@ canvas.excalibur-game {
 
 .skill-meter {
   position: relative;
-  height: 28px;
+  /* Playtest #43: flex column was shrinking this to ~2px (border only). */
+  height: 36px;
+  min-height: 36px;
+  flex-shrink: 0;
   margin: 0.75rem 0 1rem;
   background: #1a1a28;
-  border: 1px solid #2bfff266;
+  border: 2px solid #2bfff288;
   border-radius: 6px;
   overflow: hidden;
 }
@@ -781,22 +809,72 @@ canvas.excalibur-game {
   width: 24%;
   top: 0;
   bottom: 0;
-  background: #009c3b88;
+  background: #009c3bcc;
+  box-shadow: inset 0 0 0 1px #7dffb8aa;
 }
 
-/* Playtest #40: brief flash when the needle enters the green zone. */
+/* Playtest #40/#43: obvious zone-enter pulse (~1.5s) + name banner. */
 .skill-zone-pulse {
-  animation: skill-zone-flash 0.35s ease-out;
+  animation: skill-zone-flash 1.5s ease-out;
+}
+
+.skill-zone-banner {
+  position: absolute;
+  left: 50%;
+  top: -1.35rem;
+  transform: translateX(-50%);
+  padding: 0.1rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #04140a;
+  background: #7dffb8;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 2;
+}
+
+.skill-zone-banner.skill-zone-banner-show {
+  animation: skill-zone-banner-pop 1.5s ease-out;
 }
 
 @keyframes skill-zone-flash {
   0% {
+    background: #b8ffd8;
+    box-shadow:
+      inset 0 0 0 2px #f0fff8,
+      0 0 18px #7dffb8cc;
+  }
+  35% {
     background: #5cff9acc;
-    box-shadow: inset 0 0 0 1px #b8ffd8;
+    box-shadow:
+      inset 0 0 0 1px #b8ffd8,
+      0 0 12px #7dffb888;
   }
   100% {
-    background: #009c3b88;
-    box-shadow: none;
+    background: #009c3bcc;
+    box-shadow: inset 0 0 0 1px #7dffb8aa;
+  }
+}
+
+@keyframes skill-zone-banner-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 6px) scale(0.9);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.05);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -4px) scale(1);
   }
 }
 
@@ -804,10 +882,11 @@ canvas.excalibur-game {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 3px;
+  width: 4px;
   left: 0;
   background: var(--yellow);
-  box-shadow: 0 0 8px var(--yellow);
+  box-shadow: 0 0 10px var(--yellow);
+  z-index: 1;
 }
 
 .skill-phase,

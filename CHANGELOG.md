@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.22.19] — 2026-11-26
+
+### Fixed
+
+- **Needle gauge (P0)**: skill meter no longer flex-shrinks to ~2px — visible green zone + needle at 1280×800; E/Stop ignored during Em 3…2…1 (no miss toast).
+- **Pirateiro sequence (P0)**: reveal ≥1.4s/glyph with a guaranteed full-glyph paint before input; input timer ≥2s/key; win/lose result card always shown.
+- **Re-open Enter (P0)**: Esc-cancel clears modal arm so the first Enter on Take bet works after E → skill → Esc → E.
+- **Lockpick (P1)**: timer above pins (no Testar overlap); hint at body text size.
+- **Credit floater (P1)**: suppressed while the result card owns the delta.
+- **Objective (P1)**: arrow label includes distance (`Antena Tech · 42 m`).
+- **Title keyboard (P1)**: clearer focus ring; Arrow/Enter e2e covered.
+- **Result Continuar (P2)** + **zone-enter pulse (P2)** ~1.5s with banner.
+
+### Tests
+
+- `e2e/playtest-43`, `session-v12219`, reveal step ≥1400.
+
 ## [1.22.18] — 2026-11-26
 
 ### Fixed

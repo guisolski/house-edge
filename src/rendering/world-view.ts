@@ -1506,20 +1506,25 @@ type ObjectiveMark = {
 
 /**
  * Playtest #26: never print a second nameplate on the quest arrow on-screen.
- * Playtest #41: off-screen edge always shows NPC name + distance.
+ * Playtest #41/#43: edge (and far on-screen) show NPC name + distance.
  */
 function objectiveArrowLabel(m: ObjectiveMark & { onScreen: boolean }): string | null {
-  // Playtest #42: off-screen edge always shows name + distance (e.g. "42 m").
+  const dist = `${m.distTiles} m`;
+  // Playtest #43: off-screen edge always shows "Antena Tech · 42 m".
   if (!m.onScreen) {
-    if (m.label) return `${m.label} · ${m.distTiles} m`;
-    return `${m.distTiles} m`;
+    if (m.label) return `${m.label} · ${dist}`;
+    return dist;
   }
-  if (!m.label || m.arrowOnly) return null;
-  if (/Fair|Avenue|Tower|Morro Neon|Elevator|Feira|Avenida|Torre|Elevador/i.test(m.label))
-    return null;
-  // On-screen NPC: sprite nameplate owns the name — arrow is pointer-only.
-  if (m.npcNameplateOwns) return null;
-  return null;
+  if (m.arrowOnly) return m.distTiles > 2 ? dist : null;
+  if (!m.label) return m.distTiles > 2 ? dist : null;
+  if (
+    /Fair|Avenue|Tower|Morro Neon|Elevator|Feira|Avenida|Torre|Elevador/i.test(m.label)
+  ) {
+    return m.distTiles > 2 ? `${m.label} · ${dist}` : null;
+  }
+  // On-screen NPC: nameplate owns the name — still show distance on the arrow.
+  if (m.npcNameplateOwns) return m.distTiles > 2 ? dist : null;
+  return m.distTiles > 2 ? `${m.label} · ${dist}` : null;
 }
 
 /** Large bouncing yellow arrow; off-screen edge aims toward the target. */

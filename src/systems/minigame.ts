@@ -19,15 +19,24 @@ export const SEQ_KEYS = ['↑', '→', '↓', '←', 'R', 'G', 'B', 'Y'] as cons
 export type SeqKey = (typeof SEQ_KEYS)[number];
 
 /**
- * Playtest #41: memorize reveal shows each step ≥600ms before input/timer.
- * Total reveal = seqLen steps (build-up) + one full-hold beat.
+ * Playtest #41/#43: memorize reveal ≥1.4s per glyph, then a full-hold beat.
+ * Input windows scale with length (≥2s per key) via sequenceInputMs().
  */
-export const SEQ_REVEAL_STEP_MS = 700;
+export const SEQ_REVEAL_STEP_MS = 1400;
+
+/** Minimum input time per sequence key once memorize arms. */
+export const SEQ_INPUT_MS_PER_KEY = 2000;
 
 /** Total memorize duration before input arms and the countdown starts. */
 export function sequenceRevealMs(seqLen: number): number {
   const n = Math.max(1, seqLen);
   return n * SEQ_REVEAL_STEP_MS + SEQ_REVEAL_STEP_MS;
+}
+
+/** Input timer once reveal finishes — at least 2s per key. */
+export function sequenceInputMs(seqLen: number, phaseTimerMs?: number): number {
+  const scaled = Math.max(1, seqLen) * SEQ_INPUT_MS_PER_KEY;
+  return Math.max(scaled, phaseTimerMs ?? 0);
 }
 
 /** Playtest #38: letters ↔ arrows so every sequence accepts arrow/WASD/dpad. */

@@ -107,14 +107,16 @@ function armAfterModalOpen(session: GameSession, after: string): void {
     session.clearModalConfirmGate();
     return;
   }
-  // Playtest #40: mark only keys still held — never force needsRelease after a
+  // Playtest #40/#43: mark only keys still held — never force needsRelease after a
   // keyup that already landed before this arm ran.
+  // Offer-bet opened from play (E) uses plain advance so first Enter Takes bet;
+  // choice follow-ups are not routed here (same ui mode) — hud showDialogue arms those.
   const held = session.isInteractHeld();
   const codes = session.heldInteractCodes();
   if (
     after === 'dialogue' &&
     !session.dialogueHasChoices() &&
-    !session.hasPendingStoryBet()
+    (session.isDialogueFromPlay() || !session.hasPendingStoryBet())
   ) {
     session.armPlainDialogueAdvance(codes);
     return;
@@ -283,6 +285,12 @@ function handleEscModal(session: GameSession, hud: HudHandles): boolean {
   return false;
 }
 
+/** Playtest #43: Stop / Enter ignored while Em 3…2…1 is showing. */
+function needleCountdownBlocksConfirm(): boolean {
+  const meter = document.querySelector('.skill-meter') as HTMLElement | null;
+  return Boolean(meter && meter.dataset.needleReady !== '1');
+}
+
 function handleModalNav(session: GameSession, hud: HudHandles, action: string): boolean {
   if (session.ui.is('play') || session.ui.is('title')) return false;
   const interactCode = session.getLastInteractCode() ?? undefined;
@@ -310,6 +318,7 @@ function handleModalNav(session: GameSession, hud: HudHandles, action: string): 
   }
   if (action === 'interact') {
     if (!session.allowModalConfirm(interactCode)) return true;
+    if (session.ui.is('skill') && needleCountdownBlocksConfirm()) return true;
     hud.gamepadNav('confirm');
     return true;
   }
@@ -358,6 +367,7 @@ function onInteract(session: GameSession, hud: HudHandles): void {
   if (session.ui.is('skill')) {
     const stop = document.querySelector('.btn-needle-stop') as HTMLButtonElement | null;
     if (stop) {
+      if (needleCountdownBlocksConfirm()) return;
       stop.click();
       return;
     }

@@ -117,6 +117,11 @@ export class GameSession {
   private pendingStoryBeat: string | null = null;
   private pendingBetAfterDialogue: string | null = null;
   private lastDialogue: import('../core/types').DialogueLine[] = [];
+  /**
+   * Playtest #43: true when dialogue was opened from play (E / beat start).
+   * False after a choice pick — offer-bet then needs a time arm against Enter leak.
+   */
+  private dialogueFromPlay = false;
   private lossesByBet = new Map<string, number>();
   private safeJobUses = 0;
   private lastSafeJobMs = 0;
@@ -885,17 +890,17 @@ export class GameSession {
     return this.lastDialogue.some((l) => Boolean(l.choices?.length));
   }
 
+  /** True when this dialogue line was opened from play (E), not a choice follow-up. */
+  isDialogueFromPlay(): boolean {
+    return this.dialogueFromPlay;
+  }
+
   /** Mash during arm / blocked confirm: reset arm so 60ms bursts never clear. */
   bumpModalConfirmArm(): void {
-    // Playtest #42: if nothing was held at open, do not extend the arm or add
-    // the fresh key — that swallowed Antena Tech Take-bet Enter 2–3 times.
-    if (this.modalHeldCodes.size === 0) {
-      this.modalConfirmArmUntil = 0;
-      this.modalConfirmNeedsRelease = false;
-      this.modalHeldThroughArm = false;
-      this.modalReleasePending = false;
-      return;
-    }
+    // Playtest #42/#43: if nothing was held at open, do not invent a held Enter.
+    // Also do NOT clear an active time/quiet arm — clearing made the first
+    // blocked Enter disarm the gate so only the 2nd Enter advanced (Esc→E→Enter).
+    if (this.modalHeldCodes.size === 0) return;
     this.modalConfirmArmUntil = Date.now() + 400;
     this.modalConfirmNeedsRelease = true;
     this.modalHeldThroughArm = true;
@@ -1155,7 +1160,6 @@ export class GameSession {
     const storyBeat = this.pendingStoryBeat;
     this.bus.emit('skill:resolved', { betId, won, phase });
     this.bus.emit('fx:flash', { kind: won ? 'win' : 'lose' });
-    this.bus.emit('fx:credits', { delta });
     this.afterBetResolved(bet, won);
     this.bus.emit('bet:resolved', {
       betId: bet.id,
@@ -1168,8 +1172,12 @@ export class GameSession {
     this.skillProgress = null;
     this.stealthProgress = null;
     if (!this.ui.is('ending')) {
+      // Playtest #43: set result before credit floater so HUD can suppress it.
       this.skillResult = { won, payout, creditsDelta: delta, repDelta: rep };
+      // Result card already shows the delta — skip overlapping +N cr floater.
       this.afterSkillUi(won, payout, storyBeat);
+    } else {
+      this.bus.emit('fx:credits', { delta });
     }
     return true;
   }
@@ -1313,6 +1321,9 @@ export class GameSession {
     // Force play even if a prior transition edge was odd — Esc must free WASD.
     this.ui.backToPlay();
     this.armInteractLock(this.interactKeyDown);
+    // Playtest #43: Esc-cancel must not leave Enter arming that swallows the
+    // first Enter when the NPC dialogue is re-opened.
+    this.clearModalConfirmGate();
   }
 
   /** Playtest #38: negotiate/choice timer expired — lose the encounter (toast already shown). */
@@ -1336,6 +1347,7 @@ export class GameSession {
     this.lastDialogue = [];
     this.ui.backToPlay();
     this.armInteractLock(this.interactKeyDown);
+    this.clearModalConfirmGate();
   }
 
   /**
@@ -1343,6 +1355,8 @@ export class GameSession {
    * `fails` (playtest #32): wrong Anfitrião offer — toast + abandon the beat.
    */
   pickDialogueChoice(setsFlag?: string, reply?: string, fails?: boolean): void {
+    // Follow-up Take-bet must time-arm against buffered Enter from the choice.
+    this.dialogueFromPlay = false;
     // Drop choice buttons from the transcript — pick once, then Continue / Take bet.
     this.lastDialogue = this.lastDialogue.map((line) =>
       line.choices ? { speaker: line.speaker, text: line.text } : line,
@@ -1661,6 +1675,7 @@ export class GameSession {
     this.pendingBetAfterDialogue = null;
     const speaker = localizedNpcName(npc);
     this.lastDialogue = [{ speaker, text }];
+    this.dialogueFromPlay = true;
     this.ui.go('dialogue');
     this.bus.emit('ui:dialogue', { speaker, text });
     return true;
@@ -1741,6 +1756,7 @@ export class GameSession {
     if (beatId === 'torre-final' && this.story.getFlag('neg_hush')) {
       this.lastDialogue = [localizeHushLine(), ...this.lastDialogue];
     }
+    this.dialogueFromPlay = true;
     this.ui.go('dialogue');
     for (const line of this.lastDialogue) {
       this.bus.emit('ui:dialogue', { speaker: line.speaker, text: line.text });

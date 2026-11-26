@@ -245,12 +245,12 @@ function showDialoguePanel(
     !offerBet &&
     lines.length > 0 &&
     lines.every((l) => /Saúde/i.test(l.text));
-  // Playtest #40/#42: choices + offer-bet use a short time arm so post-choice
-  // Enter / mash cannot auto-Take-bet. Plain Close uses held-key arm only.
-  // bumpModalConfirmArm no longer invents held Enter (empty-held early return),
-  // so Antena Take-bet still advances on the first fresh Enter after the arm.
+  // Playtest #40/#43: choices always time-arm. Offer-bet from a choice pick
+  // also time-arms (Enter leak). Offer-bet opened via E from play uses held-key
+  // arm only so the first fresh Enter Takes the bet (Antena / Esc re-open).
   const heldCodes = session.heldInteractCodes();
-  if (hasChoice || offerBet) {
+  const offerNeedsTimeArm = offerBet && !session.isDialogueFromPlay();
+  if (hasChoice || offerNeedsTimeArm) {
     session.noteModalOpened(session.isInteractHeld(), heldCodes);
   } else {
     session.armPlainDialogueAdvance(heldCodes);
@@ -261,7 +261,7 @@ function showDialoguePanel(
   const holdCloseUntil = closingOnly ? Date.now() + 400 : undefined;
   paintDialogue(p.dialogue, lines, {
     offerBet,
-    choiceArmAt: hasChoice || offerBet ? choiceArmAt : 0,
+    choiceArmAt: hasChoice || offerNeedsTimeArm ? choiceArmAt : 0,
     allowChoice: () => session.allowModalConfirm(),
     holdCloseUntil,
     closingLine: closingOnly,
@@ -875,8 +875,15 @@ function runFlash(node: HTMLElement, kind: string): void {
 }
 
 function runCreditPopup(node: HTMLElement, delta: number): void {
-  // Playtest #42: result card already shows the delta — skip the overlapping floater.
-  if (document.querySelector('.skill-result-panel, .skill-result-body')) return;
+  // Playtest #42/#43: result card owns the delta — never overlap the card.
+  if (
+    document.querySelector('.skill-result-panel, .skill-result-body') ||
+    document.querySelector(
+      '.skill-panel:not([hidden]) .skill-result-win, .skill-panel:not([hidden]) .skill-result-lose',
+    )
+  ) {
+    return;
+  }
   const sign = delta >= 0 ? '+' : '';
   node.className = delta >= 0 ? 'fx-credits fx-credits-up' : 'fx-credits fx-credits-down';
   node.textContent = `${sign}${delta} cr`;

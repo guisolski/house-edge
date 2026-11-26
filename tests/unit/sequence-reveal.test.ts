@@ -55,7 +55,7 @@ describe('sequence reveal state machine (fake clock)', () => {
     }
   });
 
-  it('step ms is ≥600', () => {
-    expect(SEQ_REVEAL_STEP_MS).toBeGreaterThanOrEqual(600);
+  it('step ms is ≥1400 (playtest #43)', () => {
+    expect(SEQ_REVEAL_STEP_MS).toBeGreaterThanOrEqual(1400);
   });
 });

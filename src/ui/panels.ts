@@ -26,6 +26,7 @@ import {
   sequenceInputIndex,
   sequencePadLabel,
   SEQ_KEYS,
+  sequenceInputMs,
   timingZone,
   type LockpickUiState,
   type SeqKey,
@@ -326,12 +327,8 @@ function paintSkillResult(
     after();
   };
   const actions = el('div', 'panel-actions skill-actions');
-  const cont = button(
-    t('ui.skill.resultHint')
-      .replace(/Enter\s*/i, '')
-      .trim() || 'OK',
-    dismiss,
-  );
+  // Playtest #43: capitalize Continuar / Continue (not lowercase "continua").
+  const cont = button(t('ui.skill.resultContinue'), dismiss);
   bindEnterGate(cont, dismiss);
   actions.appendChild(cont);
   panel.append(body, actions);
@@ -539,7 +536,7 @@ type NeedleBind = {
   missHint: HTMLElement | null;
 };
 
-/** Playtest #39/#40: tick + visual pulse when the needle enters the green zone. */
+/** Playtest #39/#40/#43: tick + obvious ~1.5s pulse/banner on zone enter. */
 function noteNeedleZoneEnter(
   session: GameSession,
   zoneEl: HTMLElement,
@@ -555,6 +552,17 @@ function noteNeedleZoneEnter(
     // Retrigger CSS animation.
     void zoneEl.offsetWidth;
     zoneEl.classList.add('skill-zone-pulse');
+    const meter = zoneEl.parentElement;
+    let banner = meter?.querySelector('.skill-zone-banner') as HTMLElement | null;
+    if (!banner && meter) {
+      banner = el('div', 'skill-zone-banner', t('ui.skill.zoneEnter'));
+      meter.appendChild(banner);
+    }
+    if (banner) {
+      banner.classList.remove('skill-zone-banner-show');
+      void banner.offsetWidth;
+      banner.classList.add('skill-zone-banner-show');
+    }
   }
   return inZone;
 }
@@ -649,6 +657,9 @@ function bindNeedleRuntime(o: NeedleBind): (fromPointer?: boolean) => void {
   o.meter.dataset.needleRaf = '1';
   const stopAt = (fromPointer = false): void => {
     if (settled) return;
+    // Playtest #43: hard-gate on dataset so wiring stop.click() during Em 3…2…1
+    // cannot miss — ready flag alone raced a frame with ActionState confirm.
+    if (o.meter.dataset.needleReady !== '1') return;
     if (!canNeedleStop(motion.ready, performance.now(), readyUntil)) return;
     if (
       !fromPointer &&
@@ -665,9 +676,13 @@ function bindNeedleRuntime(o: NeedleBind): (fromPointer?: boolean) => void {
     if (!o.meter.isConnected) return dropNeedle();
     if (e.repeat) return;
     if (!isConfirmKey(e) && e.code !== 'KeyE') return;
-    if (!canNeedleStop(motion.ready, performance.now(), readyUntil)) {
+    if (
+      o.meter.dataset.needleReady !== '1' ||
+      !canNeedleStop(motion.ready, performance.now(), readyUntil)
+    ) {
       e.preventDefault();
       e.stopPropagation();
+      e.stopImmediatePropagation();
       return;
     }
     if (!o.session.allowModalConfirm(e.code)) return;
@@ -919,8 +934,11 @@ function bindLockpickTimer(
   ctx: { cleanup: () => void; session: GameSession; after: () => void },
 ): void {
   if (!phase.timerMs) return;
-  const timerEl = el('p', 'skill-seq', '');
-  body.appendChild(timerEl);
+  const timerEl = el('p', 'skill-seq skill-lockpick-timer', '');
+  // Playtest #43: timer above the pin row so sticky Testar cannot cover it.
+  const row = body.querySelector('.lockpick-row');
+  if (row?.parentElement === body) body.insertBefore(timerEl, row);
+  else body.appendChild(timerEl);
   const started = Date.now();
   const ms = phase.timerMs;
   const tick = window.setInterval(() => {
@@ -1166,7 +1184,17 @@ function flashSequence(ui: SeqUi, index: number, panel: HTMLElement): void {
     if (ui.settled.v) return;
     ui.armed.v = true;
     ui.pattern.classList.remove('skill-seq-flash');
-    ui.pattern.textContent = seqRevealLabel(ui.seq, index);
+    // Playtest #43: keep the full memorize string one beat, then mastermind dots.
+    ui.pattern.textContent = tf('ui.skill.sequenceLabel', {
+      seq: sequenceRevealGlyphs(ui.seq, ui.seq.length),
+    });
+    window.setTimeout(
+      () => {
+        if (!panel.isConnected || ui.settled.v || !ui.armed.v) return;
+        ui.pattern.textContent = seqRevealLabel(ui.seq, index);
+      },
+      Math.min(400, SEQ_REVEAL_STEP_MS / 3),
+    );
     ui.status.textContent =
       tf('ui.skill.matchNext', {
         current: String(index + 1),
@@ -1182,8 +1210,10 @@ function flashSequence(ui: SeqUi, index: number, panel: HTMLElement): void {
     const before = reveal.shown;
     const wasDone = reveal.done;
     reveal = tickSequenceReveal(reveal, Date.now(), SEQ_REVEAL_STEP_MS);
-    if (reveal.shown !== before) paint();
+    if (reveal.shown !== before || (reveal.done && !wasDone)) paint();
     if (reveal.done && !wasDone) {
+      // Ensure the final glyph paint lands before arming input.
+      paint();
       window.clearInterval(tick);
       finish();
     }
@@ -1254,8 +1284,9 @@ function paintSequenceSkill(
     session,
     after,
   };
-  if (phase.timerMs && phase.timerMs > 0) {
-    ui.startTimer = bindSequenceTimer(ui, phase.timerMs, timerEl);
+  const inputMs = sequenceInputMs(seq.length, phase.timerMs);
+  if (inputMs > 0) {
+    ui.startTimer = bindSequenceTimer(ui, inputMs, timerEl);
   }
   const used = sequencePadKeys(seq);
   const buffer = createSequenceKeyBuffer((keyIndex) => onSequenceKey(ui, keyIndex));
