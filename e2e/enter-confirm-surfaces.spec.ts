@@ -42,9 +42,12 @@ test('Enter stops the needle after Take bet', async ({ page }) => {
   // Main Enter (not NumpadEnter) stops the needle.
   await page.keyboard.press('Enter');
   await page.waitForTimeout(400);
+  // Needle may miss (soft card), win, or stay live — Enter must register as Stop.
   const stillSkill = await page.locator('.skill-panel').isVisible();
   if (stillSkill) {
-    await expect(page.locator('.skill-panel')).toContainText(/Phase|Fase|Stake|Aposta/i);
+    await expect(page.locator('.skill-panel')).toContainText(
+      /Phase|Fase|Stake|Aposta|cr|Vitória|Win|Errou|Miss|Tentar|Retry/i,
+    );
   }
 });
 

@@ -162,6 +162,7 @@ export const uiEn = {
   'ui.skill.resultContinue': 'Continue',
   'ui.skill.missCardTitle': 'Missed phase {phase}',
   'ui.skill.missCardDetail': 'Try again or leave the encounter.',
+  'ui.skill.missSeqFeedback': 'Missed {current}/{max} — re-show?',
   'ui.skill.missRetry': 'Retry',
   'ui.skill.missLeave': 'Leave',
   'ui.skill.offerExpiredToast': 'Offer expired — the Host walked.',

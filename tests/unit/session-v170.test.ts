@@ -286,15 +286,16 @@ describe('v1.17.0 epilogue Saúde + sequence fail tension', () => {
     }
   });
 
-  it('sequence maxMisses fails the encounter', () => {
+  it('sequence maxMisses stays soft (UI miss card / timer resolves)', () => {
     const def = skillForBet('antena-sinal', 'hack')!;
     expect(def.phases[0]!.maxMisses).toBe(2);
     let p = startSkill(def);
     p = attemptSkill(p, { phaseIndex: 0, value: 0 }); // wrong
     expect(p.done).toBe(false);
     p = attemptSkill(p, { phaseIndex: 0, value: 0 });
-    expect(p.done).toBe(true);
-    expect(p.won).toBe(false);
+    // Playtest #47: never auto-finish on key misses — Retry/Leave or timer.
+    expect(p.done).toBe(false);
+    expect(p.misses).toBe(2);
   });
 });
 

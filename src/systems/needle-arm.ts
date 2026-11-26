@@ -74,3 +74,27 @@ export function needleInputArmAt(state: NeedleArmState): number {
   const motionAt = state.startedAt + state.countdownMs;
   return motionAt + state.graceMs;
 }
+
+/**
+ * Playtest #47: start the needle outside the green zone so the first armed E
+ * is not an instant win. `seed` picks left vs right of the zone.
+ */
+export function needleStartOutsideZone(
+  zone: { lo: number; hi: number },
+  seed = Math.random(),
+): number {
+  const pad = 0.06;
+  const left = Math.max(0, zone.lo - pad);
+  const right = Math.min(1, zone.hi + pad);
+  // Prefer a side that still has room; otherwise clamp to the far edge.
+  const canLeft = left > 0.02;
+  const canRight = right < 0.98;
+  if (canLeft && (!canRight || seed < 0.5)) {
+    return Math.max(0.01, left * (0.35 + (seed % 1) * 0.55));
+  }
+  if (canRight) {
+    return Math.min(0.99, right + (1 - right) * (0.25 + (seed % 1) * 0.6));
+  }
+  // Degenerate wide zone — park near 0 or 1.
+  return seed < 0.5 ? 0.02 : 0.98;
+}

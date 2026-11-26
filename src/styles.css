@@ -70,7 +70,6 @@ canvas.excalibur-game {
 
 .title-screen,
 .menu-panel,
-.dialogue-panel,
 .bet-panel,
 .travel-panel,
 .jobs-panel,
@@ -84,6 +83,24 @@ canvas.excalibur-game {
   width: min(520px, 92vw);
   max-height: 80vh;
   overflow: auto;
+  padding: 1.25rem 1.5rem;
+  background: var(--panel);
+  border: 2px solid var(--cyan);
+  box-shadow: 0 0 24px #2bfff266;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+/* Playtest #47: dialogue is sized separately — no nested scrollbar / clipped VIP text. */
+.dialogue-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(720px, 92vw);
+  max-height: min(85vh, 720px);
+  overflow: hidden;
   padding: 1.25rem 1.5rem;
   background: var(--panel);
   border: 2px solid var(--cyan);
@@ -270,9 +287,9 @@ canvas.excalibur-game {
   display: none;
 }
 
-/* Playtest #45: clue is body-size (not tiny); clamp to a few lines only. */
+/* Playtest #45/#47: clue/prompt are body-size (≥15px); clamp to a few lines. */
 .skill-panel .skill-clue {
-  font-size: 0.92rem;
+  font-size: 15px;
   line-height: 1.25;
   max-height: 3.75em;
   overflow: hidden;
@@ -284,7 +301,7 @@ canvas.excalibur-game {
 
 .skill-panel .skill-prompt {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: 15px;
   line-height: 1.25;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -344,12 +361,16 @@ canvas.excalibur-game {
   gap: 0.4rem;
 }
 
-.hud[data-input-mode='touch'] .panel-body {
+.hud[data-input-mode='touch'] .panel-body:not(.dialogue-body) {
   flex: 1 1 auto;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   gap: 0.35rem;
   padding-right: 0.15rem;
+}
+
+.hud[data-input-mode='touch'] .dialogue-body {
+  overflow: visible;
 }
 
 .hud[data-input-mode='touch'] .panel-actions,
@@ -603,7 +624,9 @@ canvas.excalibur-game {
     0 0 16px var(--yellow);
 }
 
-.btn:disabled {
+.btn:disabled,
+.btn.is-disabled,
+.btn[aria-disabled='true'] {
   opacity: 0.45;
   cursor: not-allowed;
 }
@@ -643,8 +666,9 @@ canvas.excalibur-game {
 }
 
 .dialogue-body {
-  max-height: min(36vh, 260px);
-  overflow-y: auto;
+  /* Playtest #47: no inner scrollbar / clipped VIP transcript. */
+  max-height: none;
+  overflow: visible;
   overflow-wrap: anywhere;
   word-break: break-word;
   flex: 1 1 auto;
@@ -653,6 +677,7 @@ canvas.excalibur-game {
 
 .dialogue-body .line {
   line-height: 1.35;
+  margin: 0.2rem 0;
 }
 
 .dialogue-body .dialogue-system {
@@ -666,12 +691,6 @@ canvas.excalibur-game {
   color: #ffdf00;
   letter-spacing: 0.08em;
   text-shadow: 0 0 8px #ffdf0088;
-}
-
-.dialogue-panel {
-  display: flex;
-  flex-direction: column;
-  max-height: min(70vh, 520px);
 }
 
 .dialogue-panel .panel-actions {
@@ -778,27 +797,28 @@ canvas.excalibur-game {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  /* Playtest #45: wider + taller so interactive content fits without scroll. */
-  width: min(560px, 94vw);
-  min-width: min(520px, 94vw);
-  max-height: min(85vh, 720px);
+  /* Playtest #47: ≥720px when the viewport allows; body ≥15px / title ≥20px. */
+  width: min(720px, 92vw);
+  min-width: min(720px, 92vw);
+  max-height: min(85vh, 760px);
   overflow: hidden;
   background: #0c0c14f2;
   border: 2px solid var(--cyan);
   border-radius: 10px;
-  padding: 0.65rem 0.9rem;
+  padding: 0.75rem 1rem;
   z-index: 40;
   box-shadow: 0 0 28px #00277688;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.3rem;
+  font-size: 15px;
 }
 
 .skill-panel > h2,
 .skill-panel .skill-title {
   margin: 0 0 0.15rem;
-  font-size: 1.05rem;
-  line-height: 1.2;
+  font-size: 20px;
+  line-height: 1.25;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -807,7 +827,7 @@ canvas.excalibur-game {
 
 .skill-panel .skill-meta {
   margin: 0 0 0.2rem;
-  font-size: 0.82rem;
+  font-size: 15px;
   font-weight: 600;
   color: var(--cyan);
   opacity: 0.95;
@@ -824,24 +844,44 @@ canvas.excalibur-game {
   padding-right: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.25rem;
+  font-size: 15px;
+}
+
+.skill-panel .skill-seq,
+.skill-panel .skill-prompt,
+.skill-panel .skill-clue,
+.skill-panel .lockpick-hint {
+  font-size: 15px;
 }
 
 .skill-panel .skill-actions {
   position: static;
   flex: 0 0 auto;
-  margin-top: 0.2rem;
-  padding-top: 0.4rem;
+  margin-top: 0.25rem;
+  padding-top: 0.45rem;
   padding-bottom: 0.1rem;
   border-top: 1px solid #2bfff233;
   background: #0c0c14;
 }
 
+.skill-panel .skill-actions .btn {
+  min-height: 40px;
+  font-size: 15px;
+  padding: 0.45rem 0.9rem;
+}
+
+.skill-seq-slot {
+  min-height: 1.75em;
+  display: flex;
+  align-items: center;
+}
+
 @media (max-width: 420px) {
   .skill-panel {
     min-width: 0;
-    width: min(560px, 96vw);
-    padding: 0.5rem 0.65rem;
+    width: min(720px, 92vw);
+    padding: 0.55rem 0.7rem;
   }
 
   .skill-panel .skill-meta {

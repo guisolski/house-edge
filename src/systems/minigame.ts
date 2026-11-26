@@ -333,12 +333,9 @@ function attemptSequence(
   const seq = phaseSequence(phase);
   const expected = SEQ_KEYS.indexOf(seq[progress.seqIndex]!);
   if (Math.round(value) !== expected) {
-    const missed = phaseMiss(progress);
-    const cap = phase.maxMisses;
-    if (cap !== undefined && missed.misses >= cap) {
-      return { ...missed, done: true, won: false };
-    }
-    return missed;
+    // Playtest #47: never auto-finish on key misses — UI shows Retry/Leave miss card.
+    // Timer expiry / Leave still resolve the encounter.
+    return phaseMiss(progress);
   }
   const nextSeq = progress.seqIndex + 1;
   if (nextSeq < seq.length) {

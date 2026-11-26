@@ -78,16 +78,20 @@ describe('v1.22.21 lockpick + fail card', () => {
     expect(formatLockpickPinVerdict(undefined)).toBe('');
   });
 
-  it('sequence encounter fail always leaves a result banner', () => {
+  it('sequence soft misses leave a miss card; timer/leave still lose', () => {
     const session = new GameSession();
     session.startNew();
     session.player.addCredits(200);
     expect(session.forceStorySkill('feira-radio')).toBe(true);
-    let guard = 0;
-    while (session.getSkillProgress() && !session.getSkillResult() && guard < 30) {
-      guard += 1;
-      session.submitSkill(0);
-    }
+    session.submitSkill(0);
+    expect(session.getSkillMissCard()).toBeTruthy();
+    expect(session.getSkillResult()).toBeNull();
+    session.retrySkillMiss();
+    session.submitSkill(0);
+    expect(session.getSkillMissCard()).toBeTruthy();
+    expect(session.getSkillProgress()?.done).toBe(false);
+    // Explicit fail path (timer expiry / leave) still produces a lose banner.
+    session.failSkillOffer();
     const result = session.getSkillResult();
     expect(result).toBeTruthy();
     expect(result!.won).toBe(false);

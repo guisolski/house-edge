@@ -173,6 +173,8 @@ export class GameSession {
   private skillMissCard: SkillMissCard | null = null;
   /** QA `?timescale=` — slows minigame clocks (1 = realtime). */
   private qaTimescale = 1;
+  /** QA `?minigame=` — win/lose returns to play, never story dialogue. */
+  private qaSandbox = false;
   /** Rematch anti-spam after Close — short arm; held keys need release. */
   private interactLockUntil = 0;
   /** After a dialog closes/opens, require Interact key release if it was held. */
@@ -287,12 +289,29 @@ export class GameSession {
   /** Soft-miss card → keep progress and remount the phase. */
   retrySkillMiss(): void {
     this.skillMissCard = null;
+    const p = this.skillProgress;
+    if (!p || p.done) return;
+    const phase = p.def.phases[p.phaseIndex];
+    const cap = phase?.maxMisses;
+    // At/over the soft-miss cap, Retry resets the phase attempt.
+    if (cap !== undefined && p.misses >= cap) {
+      this.skillProgress = {
+        ...p,
+        misses: 0,
+        seqIndex: 0,
+        justMissed: false,
+      };
+    }
   }
 
   /** Soft-miss card → abandon the encounter. */
   leaveSkillMiss(): void {
     this.skillMissCard = null;
     this.cancelBet();
+  }
+
+  isQaSandbox(): boolean {
+    return this.qaSandbox;
   }
 
   getQaTimescale(): number {
@@ -308,11 +327,15 @@ export class GameSession {
     const betId = DEBUG_MINIGAME_BETS[id];
     if (!betId) return false;
     this.player.addCredits(500);
-    return this.forceStorySkill(betId);
+    this.qaSandbox = true;
+    this.pendingStoryBeat = 'qa-minigame';
+    return this.offerBet(betId);
   }
 
   startNew(): void {
     this.applySave(createDefaultSave());
+    this.qaSandbox = false;
+    this.qaTimescale = 1;
     this.vipFloor = false;
     this.exitLatch = false;
     this.exitLatchUntil = 0;
@@ -1204,6 +1227,12 @@ export class GameSession {
   dismissSkillResult(): void {
     if (!this.skillResult) return;
     this.skillResult = null;
+    // Playtest #47: ?minigame sandbox always returns to the world.
+    if (this.qaSandbox) {
+      this.qaSandbox = false;
+      this.pendingStoryBeat = null;
+      this.lastDialogue = [];
+    }
     if (!this.elevating && !this.ui.is('ending')) this.ui.go('play');
     this.setTutorialOverlay(false);
   }
@@ -1231,25 +1260,7 @@ export class GameSession {
       // Retry current phase only — no stake drain, optional timing assist.
       this.skillProgress = assistAfterMiss(next);
       this.clearNeedleArm();
-      const phase = this.skillProgress.def.phases[this.skillProgress.phaseIndex];
-      const pickLeft =
-        phase?.kind === 'lockpick' && this.skillProgress.pickLeft !== undefined
-          ? tf('ui.toast.missedPhasePickLeft', {
-              n: String(this.skillProgress.pickLeft),
-            })
-          : '';
-      const missHint = this.missHintForBet(this.pendingBetId!);
-      const detail =
-        phase?.kind === 'timing' && this.skillProgress.misses >= 2
-          ? tf('ui.toast.missedPhaseZoneWide', { hint: missHint })
-          : `${tf('ui.toast.missedPhaseRetry', { hint: missHint })}${pickLeft}`;
-      // Playtest #46: soft miss → fail card (retry/leave), not toast-only.
-      this.skillMissCard = {
-        headline: tf('ui.skill.missCardTitle', {
-          phase: String(this.skillProgress.phaseIndex + 1),
-        }),
-        detail: detail.trim() || t('ui.skill.missCardDetail'),
-      };
+      this.showSoftMissCard();
       this.bus.emit('audio:play-sfx', { id: 'lose' });
       this.bus.emit('fx:flash', { kind: 'lose' });
       return true;
@@ -1491,6 +1502,37 @@ export class GameSession {
     // Playtest #43: Esc-cancel must not leave Enter arming that swallows the
     // first Enter when the NPC dialogue is re-opened.
     this.clearModalConfirmGate();
+  }
+
+  /** Soft-miss fail card detail (sequence feedback / timing widen / lockpick). */
+  private showSoftMissCard(): void {
+    if (!this.skillProgress || !this.pendingBetId) return;
+    const phase = this.skillProgress.def.phases[this.skillProgress.phaseIndex];
+    const pickLeft =
+      phase?.kind === 'lockpick' && this.skillProgress.pickLeft !== undefined
+        ? tf('ui.toast.missedPhasePickLeft', {
+            n: String(this.skillProgress.pickLeft),
+          })
+        : '';
+    const missHint = this.missHintForBet(this.pendingBetId);
+    const seqCap = phase?.maxMisses;
+    const isSeq =
+      phase?.kind === 'chase' || phase?.kind === 'hack' || phase?.kind === 'evade';
+    const detail =
+      isSeq && seqCap
+        ? tf('ui.skill.missSeqFeedback', {
+            current: String(this.skillProgress.misses),
+            max: String(seqCap),
+          })
+        : phase?.kind === 'timing' && this.skillProgress.misses >= 2
+          ? tf('ui.toast.missedPhaseZoneWide', { hint: missHint })
+          : `${tf('ui.toast.missedPhaseRetry', { hint: missHint })}${pickLeft}`;
+    this.skillMissCard = {
+      headline: tf('ui.skill.missCardTitle', {
+        phase: String(this.skillProgress.phaseIndex + 1),
+      }),
+      detail: detail.trim() || t('ui.skill.missCardDetail'),
+    };
   }
 
   /** Playtest #38: negotiate/choice timer expired — lose the encounter (toast already shown). */
@@ -1968,6 +2010,18 @@ export class GameSession {
   }
 
   private afterBetResolved(bet: BetDefinition, won: boolean): void {
+    // Playtest #47: QA `?minigame=` never advances story / opens dialogue.
+    if (this.qaSandbox || this.pendingStoryBeat === 'qa-minigame') {
+      this.pendingStoryBeat = null;
+      if (won) {
+        this.lossesByBet.set(bet.id, 0);
+        // Still grant bet unlocks so sandbox feels real — skip finishBeat.
+        this.applyBetWins(bet);
+      } else {
+        this.lossesByBet.set(bet.id, (this.lossesByBet.get(bet.id) ?? 0) + 1);
+      }
+      return;
+    }
     if (won) {
       this.lossesByBet.set(bet.id, 0);
       this.applyBetWins(bet);

@@ -186,11 +186,10 @@ test('Esc-cancel skill then re-open: first Enter advances Take bet', async ({ pa
   await expect(page.locator('.skill-panel')).toBeVisible({ timeout: 5000 });
 });
 
-test('title screen ArrowDown + Enter starts New Game', async ({ page }) => {
+test('title screen focuses New Game — Enter starts', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('.title-screen button').first()).toBeVisible();
-  await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('ArrowDown');
+  // Playtest #47: primary actions come first; focus lands on New Game.
   const focused = await page.evaluate(() => document.activeElement?.textContent ?? '');
   expect(focused).toMatch(/New Game|Novo jogo/i);
   await page.keyboard.press('Enter');

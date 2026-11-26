@@ -77,10 +77,50 @@ async function openSkill(page: Page, betId: string): Promise<void> {
   });
 }
 
+async function assertPanelMetrics(page: Page, tag: string): Promise<void> {
+  const panel = page.locator('.skill-panel:not([hidden])');
+  const metrics = await panel.evaluate((root) => {
+    const title = root.querySelector('.skill-title, h2') as HTMLElement | null;
+    const body = root.querySelector('.skill-body') as HTMLElement | null;
+    const btn = root.querySelector('.skill-actions .btn') as HTMLElement | null;
+    const titleFs = title ? parseFloat(getComputedStyle(title).fontSize) : 0;
+    const bodyFs = body ? parseFloat(getComputedStyle(body).fontSize) : 0;
+    const btnH = btn ? btn.getBoundingClientRect().height : 0;
+    const expectedMin = Math.min(720, window.innerWidth * 0.92);
+    return {
+      width: root.getBoundingClientRect().width,
+      expectedMin,
+      titleFs,
+      bodyFs,
+      btnH,
+      scrollOverflow:
+        root.scrollHeight > root.clientHeight + 2 ||
+        Boolean(body && body.scrollHeight > body.clientHeight + 2),
+    };
+  });
+  expect(
+    metrics.width,
+    `${tag}: panel width ${metrics.width} < min(720,92vw)=${metrics.expectedMin}`,
+  ).toBeGreaterThanOrEqual(metrics.expectedMin - 1);
+  expect(metrics.titleFs, `${tag}: title font ${metrics.titleFs}`).toBeGreaterThanOrEqual(
+    19.5,
+  );
+  expect(metrics.bodyFs, `${tag}: body font ${metrics.bodyFs}`).toBeGreaterThanOrEqual(
+    14.5,
+  );
+  if (metrics.btnH > 0) {
+    expect(metrics.btnH, `${tag}: button height ${metrics.btnH}`).toBeGreaterThanOrEqual(
+      39.5,
+    );
+  }
+  expect(metrics.scrollOverflow, `${tag}: panel/body should not scroll`).toBe(false);
+}
+
 async function assertLayout(page: Page, kind: string, phase: string): Promise<void> {
   const panel = page.locator('.skill-panel:not([hidden])');
   await expect(panel).toBeVisible();
   const tag = `${kind}/${phase}`;
+  await assertPanelMetrics(page, tag);
 
   const report = await panel.evaluate((root) => {
     const toBox = (el: Element, i: number): Box => {

@@ -1,6 +1,6 @@
 {
   "name": "house-edge",
-  "version": "1.22.22",
+  "version": "1.22.23",
   "description": "House Edge — cyberpunk bets in a Brazilian megacity",
   "type": "module",
   "private": true,

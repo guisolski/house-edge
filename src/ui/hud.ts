@@ -191,7 +191,12 @@ function baseShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudHa
       only(p, 'title');
       for (const btn of p.title.querySelectorAll('button')) {
         if (btn.textContent === UI.continue) {
-          (btn as HTMLButtonElement).disabled = !hasSave;
+          // Playtest #47: keep Continue focusable (aria-disabled) so ArrowDown
+          // moves focus before the language row even when there is no save.
+          const b = btn as HTMLButtonElement;
+          b.disabled = false;
+          b.setAttribute('aria-disabled', hasSave ? 'false' : 'true');
+          b.classList.toggle('is-disabled', !hasSave);
         }
       }
     },
@@ -617,63 +622,87 @@ function hideAll(nodes: HTMLElement[]): void {
   for (const n of nodes) setVisible(n, false);
 }
 
+function saveAllowsCredits(): boolean {
+  try {
+    const raw = localStorage.getItem('house-edge-save-v1');
+    if (!raw) return false;
+    const data = JSON.parse(raw) as { flags?: Record<string, boolean> };
+    return Boolean(data.flags?.epilogue_done || data.flags?.casa_quebrada);
+  } catch {
+    return false;
+  }
+}
+
+function applyContinueAria(panel: HTMLElement): void {
+  let hasSave = false;
+  try {
+    hasSave = Boolean(localStorage.getItem('house-edge-save-v1'));
+  } catch {
+    /* privacy / quota */
+  }
+  for (const btn of panel.querySelectorAll('button')) {
+    if (btn.textContent !== UI.continue) continue;
+    const b = btn as HTMLButtonElement;
+    b.disabled = false;
+    b.setAttribute('aria-disabled', hasSave ? 'false' : 'true');
+    b.classList.toggle('is-disabled', !hasSave);
+  }
+}
+
 function fillTitle(panel: HTMLElement, session: GameSession): void {
   clearNode(panel);
   const kids: HTMLElement[] = [
     el('h1', 'logo', UI.title),
     el('p', 'tagline', UI.tagline),
     el('p', 'version', UI.version),
-    langRow((code) => {
-      setLocale(code);
-      fillTitle(panel, session);
-    }),
     button(UI.newGame, () => {
       blurActive();
-      // Defer so focus leaves the title before it becomes inert/hidden.
       queueMicrotask(() => session.startNew());
     }),
     button(UI.continue, () => {
+      const cont = [...panel.querySelectorAll('button')].find(
+        (b) => b.textContent === UI.continue,
+      );
+      if (cont?.getAttribute('aria-disabled') === 'true') return;
       blurActive();
       queueMicrotask(() => {
         if (!session.tryLoad()) session.startNew();
       });
     }),
   ];
-  // Playtest #46: Créditos once the story has completed (live session or save).
-  const saveAllowsCredits = (() => {
-    try {
-      const raw = localStorage.getItem('house-edge-save-v1');
-      if (!raw) return false;
-      const data = JSON.parse(raw) as { flags?: Record<string, boolean> };
-      return Boolean(data.flags?.epilogue_done || data.flags?.casa_quebrada);
-    } catch {
-      return false;
-    }
-  })();
-  if (session.canRewatchCredits() || saveAllowsCredits) {
+  if (session.canRewatchCredits() || saveAllowsCredits()) {
     kids.push(
       button(UI.credits, () => {
         blurActive();
         queueMicrotask(() => {
           if (!session.canRewatchCredits()) session.tryLoad();
           if (!session.openCreditsRoll()) return;
-          const he = (
-            window as unknown as {
-              __HOUSE_EDGE__?: { hud?: HudHandles };
-            }
-          ).__HOUSE_EDGE__;
+          const he = (window as unknown as { __HOUSE_EDGE__?: { hud?: HudHandles } })
+            .__HOUSE_EDGE__;
           he?.hud?.syncScreen();
         });
       }),
     );
   }
+  kids.push(
+    langRow((code) => {
+      setLocale(code);
+      fillTitle(panel, session);
+    }),
+  );
   panel.append(...kids);
-  // Keyboard/gamepad can reach language → New Game without a prior click.
-  focusFirst(panel);
+  applyContinueAria(panel);
+  const primary = [...panel.querySelectorAll('button')].find(
+    (b) => !b.closest('.lang-row'),
+  ) as HTMLButtonElement | undefined;
+  if (primary) primary.focus();
+  else focusFirst(panel);
 }
 
 function langRow(onPick: (code: LocaleCode) => void): HTMLElement {
   const row = el('div', 'lang-row');
+  // Playtest #47: focus starts on New Game; Up/Down move focus. Left/Right on
+  // this row (see wiring handleTitleAction) changes locale without Enter.
   row.append(
     el('span', 'lang-label', UI.language),
     button(UI.languageEn, () => onPick('en')),

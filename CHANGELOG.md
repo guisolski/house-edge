@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.22.23] — 2026-11-26
+
+### Fixed
+- **Panel size / readability**: skill panels are `min(720px, 92vw)` wide with body ≥15px, title ≥20px, buttons ≥40px tall; layout e2e asserts width + fonts and no-scroll at 1280×720 and 390×844.
+- **Sequence fail flow**: wrong key shows `Errou n/max — rever?` miss card (Tentar de novo / Sair, never auto-closes); R pauses the timer instead of adding time; fixed pattern slot; full-sequence hold (~2s) verified via `sequence-hold` artifact.
+- **Offer / dialogue**: drop duplicate title=prompt subtitle; VIP dialogue no longer scrolls with clipped/repeated lines.
+- **Needle**: starts outside the green zone (random side) so the first armed E is not an instant win.
+- **Title menu**: ArrowDown/Up move focus among primary actions; language changes only with Left/Right (or Enter) on the language row.
+- **QA `?minigame=`**: after a win, return to the world — never open story dialogue.
+
+### Added
+- Panel screenshot set `artifacts/panels-v1.22.23/` (keyboard mode, Português) plus Augusto duel e2e at timescale 0.33.
+
 ## [1.22.22] — 2026-11-26
 
 ### Fixed

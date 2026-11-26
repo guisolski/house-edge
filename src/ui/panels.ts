@@ -41,6 +41,7 @@ import {
 import {
   needleCountdownSeconds,
   needleInCountdown,
+  needleStartOutsideZone,
   NEEDLE_COUNTDOWN_MS,
   NEEDLE_ARM_GRACE_MS,
 } from '../systems/needle-arm';
@@ -207,6 +208,34 @@ function fillDialogueActions(
   actions.appendChild(close);
 }
 
+function appendDialogueLines(
+  body: HTMLElement,
+  lines: DialogueLine[],
+  closingLine: boolean | undefined,
+): { lastLine: HTMLElement | null; pendingChoices: DialogueLine['choices'] | undefined } {
+  let pendingChoices: DialogueLine['choices'] | undefined;
+  let lastLine: HTMLElement | null = null;
+  const visible = closingLine ? lines : dialogueVisibleLines(lines);
+  const seen = new Set<string>();
+  for (const line of visible) {
+    const system = isSystemSpeaker(line.speaker);
+    const text = system ? line.text : `${line.speaker}: ${line.text}`;
+    // Playtest #47: never paint the same VIP/transcript line twice in one open.
+    if (seen.has(text)) continue;
+    seen.add(text);
+    const cls = closingLine
+      ? 'line dialogue-closing-line'
+      : system
+        ? 'line dialogue-system'
+        : 'line';
+    const node = el('p', cls, text);
+    body.appendChild(node);
+    lastLine = node;
+    if (line.choices?.length) pendingChoices = line.choices;
+  }
+  return { lastLine, pendingChoices };
+}
+
 export function paintDialogue(
   panel: HTMLElement,
   lines: DialogueLine[],
@@ -215,24 +244,7 @@ export function paintDialogue(
   clearNode(panel);
   panel.classList.toggle('dialogue-closing', Boolean(opts.closingLine));
   const body = el('div', 'panel-body dialogue-body');
-  let pendingChoices: DialogueLine['choices'] | undefined;
-  let lastLine: HTMLElement | null = null;
-  const visible = opts.closingLine ? lines : dialogueVisibleLines(lines);
-  for (const line of visible) {
-    const system = isSystemSpeaker(line.speaker);
-    const node = el(
-      'p',
-      opts.closingLine
-        ? 'line dialogue-closing-line'
-        : system
-          ? 'line dialogue-system'
-          : 'line',
-      system ? line.text : `${line.speaker}: ${line.text}`,
-    );
-    body.appendChild(node);
-    lastLine = node;
-    if (line.choices?.length) pendingChoices = line.choices;
-  }
+  const { lastLine, pendingChoices } = appendDialogueLines(body, lines, opts.closingLine);
   const actions = el('div', 'panel-actions');
   fillDialogueActions(actions, pendingChoices, opts);
   panel.append(body, actions);
@@ -383,36 +395,17 @@ function paintSkillMissCard(
   });
 }
 
-export function paintSkill(
-  panel: HTMLElement,
+function paintSkillHeader(
+  body: HTMLElement,
   session: GameSession,
-  after: () => void,
-): void {
-  clearNode(panel);
-  const result = session.getSkillResult();
-  if (result) {
-    paintSkillResult(panel, session, after);
-    return;
-  }
-  if (session.getSkillMissCard()) {
-    paintSkillMissCard(panel, session, after);
-    return;
-  }
-  const progress = session.getSkillProgress();
-  const bet = session.getPendingBet();
-  if (!progress || !bet) return;
-  const localizedDef = localizeSkillDef(bet.id, progress.def);
-  const multi = progress.def.phases.length > 1;
-  const phase = localizePhase(
-    bet.id,
-    progress.def.phases[progress.phaseIndex]!,
-    progress.phaseIndex,
-    multi,
-  );
-  const body = el('div', 'panel-body skill-body');
+  betId: string,
+  progress: NonNullable<ReturnType<GameSession['getSkillProgress']>>,
+  phase: SkillPhase | undefined,
+  panel: HTMLElement,
+): string {
+  const localizedDef = localizeSkillDef(betId, progress.def);
   const streak = session.getSkillStreak();
-  const sideHustle = bet.id === 'agua-gelada' && session.story.getFlag('free_roam');
-  // Playtest #45: compact header — title + one meta line (stake/phase/combo).
+  const sideHustle = betId === 'agua-gelada' && session.story.getFlag('free_roam');
   const metaVars = {
     stake: String(session.getPendingStake()),
     current: String(progress.phaseIndex + 1),
@@ -421,11 +414,10 @@ export function paintSkill(
   };
   const meta =
     streak > 0 ? tf('ui.skill.metaCombo', metaVars) : tf('ui.skill.meta', metaVars);
-  body.append(
-    el('h2', 'skill-title', sideHustle ? t('ui.sideHustle.title') : localizedDef.title),
-    el('p', 'skill-meta', meta),
-  );
-  if (phase?.prompt) {
+  const titleText = sideHustle ? t('ui.sideHustle.title') : localizedDef.title;
+  body.append(el('h2', 'skill-title', titleText), el('p', 'skill-meta', meta));
+  // Playtest #47: never duplicate the title as a subtitle/prompt.
+  if (phase?.prompt && phase.prompt.trim() !== titleText.trim()) {
     body.appendChild(el('p', 'skill-seq skill-prompt', phase.prompt));
   }
   if (phase?.clue) {
@@ -436,6 +428,35 @@ export function paintSkill(
   if (phase?.kind === 'lockpick' && progress.pickLeft !== undefined) {
     appendPickDurability(body, progress.pickLeft, panel);
   }
+  return titleText;
+}
+
+export function paintSkill(
+  panel: HTMLElement,
+  session: GameSession,
+  after: () => void,
+): void {
+  clearNode(panel);
+  if (session.getSkillResult()) {
+    paintSkillResult(panel, session, after);
+    return;
+  }
+  if (session.getSkillMissCard()) {
+    paintSkillMissCard(panel, session, after);
+    return;
+  }
+  const progress = session.getSkillProgress();
+  const bet = session.getPendingBet();
+  if (!progress || !bet) return;
+  const multi = progress.def.phases.length > 1;
+  const phase = localizePhase(
+    bet.id,
+    progress.def.phases[progress.phaseIndex]!,
+    progress.phaseIndex,
+    multi,
+  );
+  const body = el('div', 'panel-body skill-body');
+  paintSkillHeader(body, session, bet.id, progress, phase, panel);
   const actions = el('div', 'panel-actions skill-actions');
   if (phase) paintPhaseControls(body, actions, session, after, phase, progress.pickLeft);
   const cancel = button(UI.cancel, () => {
@@ -643,6 +664,9 @@ function stepNeedleMotion(
 ): void {
   if (!motion.ready) {
     motion.ready = true;
+    // Playtest #47: first frame starts outside the green zone (not an instant win).
+    motion.pos = needleStartOutsideZone(zone);
+    o.needle.style.left = `${(motion.pos * 100).toFixed(3)}%`;
     o.session.markNeedleMotionStarted(ts);
     o.meter.dataset.needleReady = '0'; // still in grace — not armed yet
     if (readyLine) readyLine.textContent = t('ui.skill.needleGo');
@@ -1192,38 +1216,81 @@ function buildLockpickRow(
   return row;
 }
 
-function bindSequenceTimer(ui: SeqUi, timerMs: number, timerEl: HTMLElement): () => void {
-  const { body, seq, settled, session, after } = ui;
+type SeqTimerCtl = {
+  /** Start (or resume after reveal). */
+  run: () => void;
+  /** Pause during R re-show — does not add time. */
+  pause: () => void;
+  /** Resume after re-show with remaining ms. */
+  resume: () => void;
+};
+
+function bindSequenceTimer(
+  ui: SeqUi,
+  timerMs: number,
+  timerEl: HTMLElement,
+): SeqTimerCtl {
+  const { body, settled, session, after } = ui;
   let started = 0;
+  let remaining = timerMs;
+  let paused = true;
   let tick = 0;
-  const run = (): void => {
-    started = Date.now();
+  const paint = (left: number): void => {
+    timerEl.textContent =
+      left > 0
+        ? tf('ui.skill.timer', { s: String(Math.ceil(left / 1000)) })
+        : t('ui.skill.timerExpiredSeq');
+  };
+  const clear = (): void => {
+    if (tick) window.clearInterval(tick);
+    tick = 0;
+  };
+  const expire = (): void => {
+    clear();
+    if (settled.v) return;
+    settled.v = true;
+    session.failSkillOffer();
+    after();
+  };
+  const startTick = (): void => {
+    clear();
     tick = window.setInterval(() => {
       if (!body.isConnected) {
-        window.clearInterval(tick);
+        clear();
         return;
       }
-      const left = Math.max(0, timerMs - (Date.now() - started));
-      timerEl.textContent =
-        left > 0
-          ? tf('ui.skill.timer', { s: String(Math.ceil(left / 1000)) })
-          : t('ui.skill.timerExpiredSeq');
+      if (paused) return;
+      const left = Math.max(0, remaining - (Date.now() - started));
+      paint(left);
       if (left > 0 || settled.v) return;
-      window.clearInterval(tick);
-      settled.v = true;
-      let p = session.getSkillProgress();
-      while (p && !p.done) {
-        session.submitSkill((SEQ_KEYS.indexOf(seq[0]!) + 1) % SEQ_KEYS.length);
-        p = session.getSkillProgress();
-      }
-      after();
+      expire();
     }, 200);
   };
+  const ctl: SeqTimerCtl = {
+    run: () => {
+      paused = false;
+      started = Date.now();
+      remaining = timerMs;
+      paint(remaining);
+      startTick();
+    },
+    pause: () => {
+      if (paused) return;
+      remaining = Math.max(0, remaining - (Date.now() - started));
+      paused = true;
+      paint(remaining);
+    },
+    resume: () => {
+      if (!paused || settled.v) return;
+      paused = false;
+      started = Date.now();
+      paint(remaining);
+      startTick();
+    },
+  };
   const skillPanel = body.closest('.skill-panel') ?? body;
-  onPanelDispose(skillPanel as HTMLElement, () => {
-    if (tick) window.clearInterval(tick);
-  });
-  return run;
+  onPanelDispose(skillPanel as HTMLElement, clear);
+  return ctl;
 }
 
 /** Mastermind: reveal matched glyphs; · for remaining. */
@@ -1247,6 +1314,8 @@ type SeqUi = {
   session: GameSession;
   after: () => void;
   startTimer?: () => void;
+  pauseTimer?: () => void;
+  resumeTimer?: () => void;
   /** Invalidate an in-flight reveal when re-show / miss restarts. */
   revealGen: { n: number };
 };
@@ -1256,7 +1325,12 @@ type SeqUi = {
  * setInterval keeps ticking even if showSkill is called twice — callers must
  * skip repaint while the same phase signature is live (see hud showSkill).
  */
-function flashSequence(ui: SeqUi, index: number, panel: HTMLElement): void {
+function flashSequence(
+  ui: SeqUi,
+  index: number,
+  panel: HTMLElement,
+  resumeTimer = false,
+): void {
   ui.armed.v = false;
   ui.revealGen.n += 1;
   const gen = ui.revealGen.n;
@@ -1284,7 +1358,8 @@ function flashSequence(ui: SeqUi, index: number, panel: HTMLElement): void {
         total: String(ui.seq.length),
       }) + (ui.missCap ? tf('ui.skill.missesFail', { n: String(ui.missCap) }) : '');
     updateSequenceHint(ui);
-    ui.startTimer?.();
+    if (resumeTimer) ui.resumeTimer?.();
+    else ui.startTimer?.();
   };
   const tick = window.setInterval(() => {
     if (!panel.isConnected || ui.settled.v || gen !== ui.revealGen.n) {
@@ -1317,6 +1392,8 @@ function updateSequenceHint(ui: SeqUi): void {
 function tryReshowSequence(ui: SeqUi): boolean {
   if (ui.settled.v || ui.reshowUsed.v || !ui.armed.v) return false;
   ui.reshowUsed.v = true;
+  // Playtest #47: R pauses the input timer — never adds time.
+  ui.pauseTimer?.();
   updateSequenceHint(ui);
   const btn = ui.body
     .closest('.skill-panel')
@@ -1331,7 +1408,7 @@ function tryReshowSequence(ui: SeqUi): boolean {
     (ui.body.closest('.skill-panel') as HTMLElement | null) ??
     (ui.body.closest('.panel') as HTMLElement | null) ??
     ui.body;
-  flashSequence(ui, index, panel);
+  flashSequence(ui, index, panel, true);
   return true;
 }
 
@@ -1341,6 +1418,12 @@ function onSequenceKey(ui: SeqUi, keyIndex: number): void {
   const beforeMiss = ui.session.getSkillProgress()?.misses ?? 0;
   ui.session.submitSkill(keyIndex);
   const next = ui.session.getSkillProgress();
+  // Playtest #47: soft miss → fail card (Retry/Leave), never silent replay.
+  if (ui.session.getSkillMissCard()) {
+    ui.settled.v = true;
+    ui.after();
+    return;
+  }
   if (!next || next.done || next.phaseIndex !== beforePhase) {
     ui.settled.v = true;
     ui.after();
@@ -1358,21 +1441,8 @@ function onSequenceKey(ui: SeqUi, keyIndex: number): void {
       total: String(ui.seq.length),
     }) + left;
   if (next.misses > beforeMiss) {
-    // New attempt → another free re-show.
-    ui.reshowUsed.v = false;
-    const btn = ui.body
-      .closest('.skill-panel')
-      ?.querySelector('.skill-reshow-btn') as HTMLButtonElement | null;
-    if (btn) {
-      btn.disabled = false;
-      btn.hidden = false;
-    }
-    updateSequenceHint(ui);
-    const panel =
-      (ui.body.closest('.skill-panel') as HTMLElement | null) ??
-      (ui.body.closest('.panel') as HTMLElement | null) ??
-      ui.body;
-    flashSequence(ui, next.seqIndex, panel);
+    ui.settled.v = true;
+    ui.after();
     return;
   }
   ui.pattern.textContent = seqRevealLabel(ui.seq, next.seqIndex);
@@ -1426,10 +1496,11 @@ function paintSequenceSkill(
   const phase = progress?.def.phases[progress.phaseIndex];
   if (!progress || !phase) return;
   const seq = phaseSequence(phase);
-  const status = el('p', 'skill-seq', t('ui.skill.memorizeSeq'));
+  const status = el('p', 'skill-seq skill-seq-status', t('ui.skill.memorizeSeq'));
+  // Playtest #47: fixed-height pattern slot so reveal → input does not shift layout.
   const pattern = el(
     'p',
-    'skill-pattern skill-seq-flash',
+    'skill-pattern skill-seq-flash skill-seq-slot',
     tf('ui.skill.sequenceLabel', { seq: sequenceRevealGlyphs(seq, 1) }),
   );
   const timerEl = el('p', 'skill-seq skill-seq-timer', '');
@@ -1454,7 +1525,12 @@ function paintSequenceSkill(
     sequenceInputMs(seq.length, phase.timerMs),
     session.getQaTimescale(),
   );
-  if (inputMs > 0) ui.startTimer = bindSequenceTimer(ui, inputMs, timerEl);
+  if (inputMs > 0) {
+    const ctl = bindSequenceTimer(ui, inputMs, timerEl);
+    ui.startTimer = ctl.run;
+    ui.pauseTimer = ctl.pause;
+    ui.resumeTimer = ctl.resume;
+  }
   bindSequencePad(ui, actions, session);
   queueMicrotask(() => {
     const panel =

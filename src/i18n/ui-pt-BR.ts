@@ -163,6 +163,7 @@ export const uiPtBR = {
   'ui.skill.resultContinue': 'Continuar',
   'ui.skill.missCardTitle': 'Errou a fase {phase}',
   'ui.skill.missCardDetail': 'Tente de novo ou saia do encontro.',
+  'ui.skill.missSeqFeedback': 'Errou {current}/{max} — rever?',
   'ui.skill.missRetry': 'Tentar de novo',
   'ui.skill.missLeave': 'Sair',
   'ui.skill.offerExpiredToast': 'Oferta expirou — o Anfitrião foi embora.',

@@ -206,19 +206,86 @@ function wireModes(
   modes.onChange(apply);
 }
 
+function titlePrimaryButtons(title: HTMLElement): HTMLButtonElement[] {
+  // Include disabled Continue so ArrowDown still moves focus before language.
+  return [...title.querySelectorAll('button')].filter(
+    (b) => !b.closest('.lang-row'),
+  ) as HTMLButtonElement[];
+}
+
+function titleLangButtons(title: HTMLElement): HTMLButtonElement[] {
+  return [...title.querySelectorAll('.lang-row button')] as HTMLButtonElement[];
+}
+
+function focusTitleLangStep(
+  primary: HTMLButtonElement[],
+  langs: HTMLButtonElement[],
+  active: HTMLButtonElement | null,
+  dir: 'up' | 'down',
+): void {
+  const li = langs.indexOf(active as HTMLButtonElement);
+  if (dir === 'down') {
+    if (li >= 0 && li < langs.length - 1) langs[li + 1]!.focus();
+    else primary[0]?.focus();
+    return;
+  }
+  if (li > 0) langs[li - 1]!.focus();
+  else primary[primary.length - 1]?.focus();
+}
+
+function focusTitleStep(title: HTMLElement, dir: 'up' | 'down'): void {
+  const primary = titlePrimaryButtons(title);
+  const langs = titleLangButtons(title);
+  if (!primary.length) return;
+  const active = document.activeElement as HTMLButtonElement | null;
+  const activeLang =
+    langs.find((b) => b.classList.contains('lang-active')) ?? langs[0] ?? null;
+  // On the language row, Up/Down only move focus (no locale change).
+  if (active?.closest?.('.lang-row') && langs.length) {
+    focusTitleLangStep(primary, langs, active, dir);
+    return;
+  }
+  const i = primary.indexOf(active as HTMLButtonElement);
+  if (dir === 'down') {
+    if (i >= 0 && i < primary.length - 1) primary[i + 1]!.focus();
+    else activeLang?.focus();
+    return;
+  }
+  if (i > 0) primary[i - 1]!.focus();
+  else activeLang?.focus();
+}
+
 function handleTitleAction(
   session: GameSession,
   hud: HudHandles,
   action: string,
 ): boolean {
   if (!session.ui.is('title')) return false;
-  // Playtest #27: language row is a real menu — arrows move focus, Enter activates.
-  if (action === 'up' || action === 'left') {
-    hud.gamepadNav('up');
+  const title = document.querySelector('.title-screen') as HTMLElement | null;
+  if (!title) return true;
+  const active = document.activeElement as HTMLElement | null;
+  const onLang = Boolean(active?.closest?.('.lang-row'));
+  // Playtest #47: Up/Down move focus (primary first; lang last). Language
+  // *value* changes only via Left/Right or Enter on the language row.
+  if (action === 'left' || action === 'right') {
+    if (onLang) {
+      const btns = titleLangButtons(title);
+      if (btns.length >= 2) {
+        const i = btns.indexOf(active as HTMLButtonElement);
+        const next =
+          action === 'right'
+            ? btns[(Math.max(0, i) + 1) % btns.length]!
+            : btns[(Math.max(0, i) - 1 + btns.length) % btns.length]!;
+        next.focus();
+        next.click();
+      }
+      return true;
+    }
+    focusTitleStep(title, action === 'left' ? 'up' : 'down');
     return true;
   }
-  if (action === 'down' || action === 'right') {
-    hud.gamepadNav('down');
+  if (action === 'up' || action === 'down') {
+    focusTitleStep(title, action === 'up' ? 'up' : 'down');
     return true;
   }
   if (action === 'interact' || action === 'bet') {
