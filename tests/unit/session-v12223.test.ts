@@ -141,9 +141,11 @@ describe('v1.22.23 QA sandbox + title nav helpers', () => {
     session.startNew();
     expect(session.debugOpenMinigame('quiz')).toBe(true);
     expect(session.isQaSandbox()).toBe(true);
+    session.setQaTimescale(0.33);
     session.startNew();
     expect(session.isQaSandbox()).toBe(false);
-    expect(session.getQaTimescale()).toBe(1);
+    // Playtest #50: timescale survives startNew / chapter jumps.
+    expect(session.getQaTimescale()).toBe(0.33);
   });
 });
 

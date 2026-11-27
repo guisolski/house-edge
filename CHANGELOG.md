@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.22.26] — 2026-11-27
+
+### Fixed
+- **Panel helper text (P1)**: sequence/hack hints, meta, and status ≥15/14px; Sequência glyphs ≥28px.
+- **Dialogue boxes (P1)**: same `clamp(520px, 60vw, 960px)` width as skill panels; body ≥17px.
+- **Win/fail cards (P1)**: share panel width + `min-height` so the card does not jump shorter.
+- **QA timescale (P1)**: `?timescale=` survives `?chapter=` / `startNew` (was wiped); duel hack input timer e2e-asserted.
+- **Title screen (P2)**: chrome ≥16px rendered at 1280×720 and 1920×1080.
+
+### Added
+- Rendered-metrics e2e for dialogue / title / win card / glyphs at 1280, 1920, 390.
+
 ## [1.22.25] — 2026-11-26
 
 ### Fixed

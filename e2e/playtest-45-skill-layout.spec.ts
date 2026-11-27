@@ -101,6 +101,9 @@ async function assertPanelMetrics(page: Page, tag: string): Promise<void> {
     };
     const titleFs = title ? parseFloat(getComputedStyle(title).fontSize) : 0;
     const bodyFs = body ? parseFloat(getComputedStyle(body).fontSize) : 0;
+    const meta = root.querySelector('.skill-meta') as HTMLElement | null;
+    const pattern = root.querySelector('.skill-pattern') as HTMLElement | null;
+    const hint = root.querySelector('.skill-seq-hint') as HTMLElement | null;
     const scale = scaleOf(root);
     const btnH = btn ? btn.getBoundingClientRect().height : 0;
     const vw = window.innerWidth;
@@ -111,6 +114,9 @@ async function assertPanelMetrics(page: Page, tag: string): Promise<void> {
       expectedMin,
       titleFs: titleFs * scale,
       bodyFs: bodyFs * scale,
+      metaFs: meta ? parseFloat(getComputedStyle(meta).fontSize) * scale : 0,
+      patternFs: pattern ? parseFloat(getComputedStyle(pattern).fontSize) * scale : 0,
+      hintFs: hint ? parseFloat(getComputedStyle(hint).fontSize) * scale : 0,
       btnH,
       scale,
       scrollOverflow:
@@ -130,6 +136,15 @@ async function assertPanelMetrics(page: Page, tag: string): Promise<void> {
     metrics.bodyFs,
     `${tag}: rendered body ${metrics.bodyFs} (scale ${metrics.scale})`,
   ).toBeGreaterThanOrEqual(14.5);
+  if (metrics.metaFs > 0) {
+    expect(metrics.metaFs, `${tag}: meta`).toBeGreaterThanOrEqual(13.5);
+  }
+  if (metrics.patternFs > 0) {
+    expect(metrics.patternFs, `${tag}: sequence glyphs`).toBeGreaterThanOrEqual(27.5);
+  }
+  if (metrics.hintFs > 0) {
+    expect(metrics.hintFs, `${tag}: seq hint`).toBeGreaterThanOrEqual(14.5);
+  }
   if (metrics.btnH > 0) {
     expect(metrics.btnH, `${tag}: button height ${metrics.btnH}`).toBeGreaterThanOrEqual(
       43.5,

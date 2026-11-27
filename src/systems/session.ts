@@ -344,7 +344,7 @@ export class GameSession {
   startNew(): void {
     this.applySave(createDefaultSave());
     this.qaSandbox = false;
-    this.qaTimescale = 1;
+    // Playtest #50: keep QA `?timescale=` across chapter jumps / New Game.
     this.vipFloor = false;
     this.exitLatch = false;
     this.exitLatchUntil = 0;

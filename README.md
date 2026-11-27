@@ -1,6 +1,6 @@
 # House Edge
 
-Top-down cyberpunk bets in a Brazilian megacity. Story gates are skill encounters (timing, choice, chase, hack, lockpick, negotiate) plus an in-world **drone stealth** corridor on Odds Avenue. Play Rita Odds from Morro Neon to Casa Suprema Tower (v1.22.25: duel timescale + fail/win cards, lockpick direction chips, wider panels).
+Top-down cyberpunk bets in a Brazilian megacity. Story gates are skill encounters (timing, choice, chase, hack, lockpick, negotiate) plus an in-world **drone stealth** corridor on Odds Avenue. Play Rita Odds from Morro Neon to Casa Suprema Tower (v1.22.26: readable helpers/glyphs, dialogue width, timescale survives chapter jumps).
 
 ## Quick start
 

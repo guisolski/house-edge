@@ -79,12 +79,10 @@ export function createGameApp(host: HTMLElement): GameApp {
   return { engine, session, start: () => engine.start() };
 }
 
-/** Playtest #44/#46 QA: `?chapter=`, `?minigame=`, `?timescale=`. */
+/** Playtest #44/#46/#50 QA: `?chapter=`, `?minigame=`, `?timescale=`. */
 function applyQaQueryParams(session: GameSession, hud: HudHandles): void {
   if (typeof window === 'undefined') return;
   const params = new URLSearchParams(window.location.search);
-  const timescale = parseDebugTimescale(params.get('timescale'));
-  if (timescale < 1) session.setQaTimescale(timescale);
   const chapter = parseDebugChapter(params.get('chapter'));
   if (chapter) {
     if (!session.debugStartChapter(chapter)) return;
@@ -102,6 +100,9 @@ function applyQaQueryParams(session: GameSession, hud: HudHandles): void {
       hud.syncScreen();
     }
   }
+  // Playtest #50: apply timescale AFTER chapter/startNew so it is not wiped.
+  const timescale = parseDebugTimescale(params.get('timescale'));
+  if (timescale < 1) session.setQaTimescale(timescale);
 }
 
 function bindInputs(

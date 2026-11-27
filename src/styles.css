@@ -92,14 +92,15 @@ canvas.excalibur-game {
   gap: 0.55rem;
 }
 
-/* Playtest #47: dialogue is sized separately — no nested scrollbar / clipped VIP text. */
+/* Playtest #47/#50: dialogue matches skill panel width + readable body (≥17px). */
 .dialogue-panel {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: min(720px, 92vw);
-  min-width: min(720px, 92vw);
+  width: clamp(520px, 60vw, 960px);
+  min-width: 0;
+  max-width: min(960px, 96vw);
   max-height: min(85vh, 720px);
   overflow: hidden;
   padding: 1.25rem 1.5rem;
@@ -109,11 +110,24 @@ canvas.excalibur-game {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  font-size: clamp(15px, 1.45vw, 18px);
+  font-size: clamp(17px, 1.55vw, 20px);
 }
 
 .dialogue-panel h2 {
   font-size: clamp(20px, 2.1vw, 26px);
+}
+
+.dialogue-panel .line,
+.dialogue-panel .dialogue-body,
+.dialogue-panel .dialogue-choice {
+  font-size: clamp(17px, 1.55vw, 20px);
+}
+
+@media (max-width: 420px) {
+  .dialogue-panel {
+    width: 92vw;
+    max-width: 92vw;
+  }
 }
 
 .ending-panel .ending-art {
@@ -290,7 +304,7 @@ canvas.excalibur-game {
 .skill-lockpick-feedback {
   min-height: 1.15em;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: clamp(15px, 1.45vw, 18px);
   margin: 0.1rem 0 0.2rem;
   color: var(--yellow, #ffdf00);
 }
@@ -521,14 +535,17 @@ canvas.excalibur-game {
   text-shadow: 0 0 12px var(--magenta);
 }
 
-.title-screen .tagline {
+.title-screen .tagline,
+.title-screen .hint,
+.title-screen .version,
+.title-screen .lang-label {
   font-size: clamp(16px, 1.6vw, 22px);
   font-weight: 600;
 }
 
 .title-screen .btn {
   min-height: 44px;
-  font-size: clamp(15px, 1.4vw, 18px);
+  font-size: clamp(16px, 1.45vw, 18px);
 }
 
 .tagline,
@@ -821,12 +838,13 @@ canvas.excalibur-game {
   top: 50%;
   transform: translate(-50%, -50%);
   /*
-   * Playtest #49: desktop clamp(520px, 60vw, 960px) so 1920-wide is ~60%;
-   * mobile keeps ~92vw. Win/fail cards share this size.
+   * Playtest #49/#50: desktop clamp(520px, 60vw, 960px); mobile ~92vw.
+   * Win/fail cards share width + min-height so the card does not jump.
    */
   width: clamp(520px, 60vw, 960px);
   min-width: 0;
   max-width: min(960px, 96vw);
+  min-height: min(52vh, 420px);
   max-height: min(85vh, 760px);
   overflow: hidden;
   background: #0c0c14f2;
@@ -845,6 +863,7 @@ canvas.excalibur-game {
 .skill-panel.skill-miss-panel {
   width: clamp(520px, 60vw, 960px);
   min-width: 0;
+  min-height: min(52vh, 420px);
 }
 
 .skill-panel > h2,
@@ -860,7 +879,8 @@ canvas.excalibur-game {
 
 .skill-panel .skill-meta {
   margin: 0 0 0.2rem;
-  font-size: clamp(15px, 1.45vw, 18px);
+  /* Playtest #50: meta ≥14px rendered. */
+  font-size: clamp(14px, 1.35vw, 17px);
   font-weight: 600;
   color: var(--cyan);
   opacity: 0.95;
@@ -885,8 +905,17 @@ canvas.excalibur-game {
 .skill-panel .skill-prompt,
 .skill-panel .skill-clue,
 .skill-panel .lockpick-hint,
-.skill-panel .skill-howto {
+.skill-panel .skill-howto,
+.skill-panel .skill-seq-hint,
+.skill-panel .skill-seq-status,
+.skill-panel .skill-seq-timer {
   font-size: clamp(15px, 1.45vw, 18px);
+}
+
+/* Playtest #50: sequence glyphs under Sequência: ≥28px. */
+.skill-panel .skill-pattern {
+  font-size: clamp(28px, 2.6vw, 36px);
+  letter-spacing: 0.08em;
 }
 
 .skill-panel .skill-actions {
@@ -938,7 +967,7 @@ canvas.excalibur-game {
 }
 
 .skill-seq-slot {
-  min-height: 2.1em;
+  min-height: 2.4em;
   display: flex;
   align-items: center;
 }
@@ -1080,7 +1109,6 @@ canvas.excalibur-game {
 
 .skill-clue {
   color: var(--yellow);
-  font-size: 0.92rem;
   margin: 0.15rem 0 0.25rem;
 }
 
@@ -1108,13 +1136,12 @@ canvas.excalibur-game {
 .skill-seq-hint {
   flex-shrink: 0;
   margin: 0.1rem 0 0;
-  font-size: 0.85rem;
 }
 
 @media (max-width: 420px) {
   .skill-seq-pad .btn {
     min-width: 2.1rem;
-    font-size: 0.95rem;
+    font-size: clamp(15px, 3.8vw, 18px);
     flex: 1 1 calc(25% - 0.35rem);
     padding-left: 0.25rem;
     padding-right: 0.25rem;
