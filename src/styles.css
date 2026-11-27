@@ -847,6 +847,31 @@ canvas.excalibur-game {
   display: none;
 }
 
+/*
+ * Playtest #51: touch-controls sit outside .hud (z-index 7 > hud 5), so the
+ * stick/actions can intercept skill/dialogue buttons on mobile. Disable them
+ * while any modal panel is open.
+ */
+.hud:has(.skill-panel:not([hidden])) ~ .touch-controls,
+.hud:has(.dialogue-panel:not([hidden])) ~ .touch-controls,
+.hud:has(.bet-panel:not([hidden])) ~ .touch-controls,
+.hud:has(.menu-panel:not([hidden])) ~ .touch-controls,
+.hud:has(.travel-panel:not([hidden])) ~ .touch-controls,
+.hud:has(.jobs-panel:not([hidden])) ~ .touch-controls,
+.hud:has(.upgrades-panel:not([hidden])) ~ .touch-controls,
+.hud:has(.ending-panel:not([hidden])) ~ .touch-controls {
+  pointer-events: none !important;
+}
+
+.hud:has(.skill-panel:not([hidden])) ~ .touch-controls .stick-zone,
+.hud:has(.skill-panel:not([hidden])) ~ .touch-controls .touch-actions,
+.hud:has(.dialogue-panel:not([hidden])) ~ .touch-controls .stick-zone,
+.hud:has(.dialogue-panel:not([hidden])) ~ .touch-controls .touch-actions,
+.hud:has(.bet-panel:not([hidden])) ~ .touch-controls .stick-zone,
+.hud:has(.bet-panel:not([hidden])) ~ .touch-controls .touch-actions {
+  pointer-events: none !important;
+}
+
 .bet-roll {
   font-size: 1.25rem;
   letter-spacing: 0.2em;

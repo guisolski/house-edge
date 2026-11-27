@@ -3,6 +3,7 @@
 ## [1.22.27] — 2026-11-27
 
 ### Fixed
+- **Mobile touch overlay (CI)**: stick/actions no longer intercept skill/dialogue buttons (touch-controls sit above `.hud` in z-order).
 - **Type scale (P0)**: shared `--type-*` tokens — buttons ≥16px, meta ≥14px, body ≥16px; dialogue choices, lockpick pins, credits, status lines included. E2e walks every visible text node in panels/dialogues/cards/credits.
 - **Lockpick timer (P0)**: fixed timer slot above pins; soft-miss retry resets to the frozen scaled budget (no 42→116 double-scale).
 - **Lockpick solvability (P0)**: per-pin pista bullets; pickDurability 5/7; pin click selects then raises; perfect-info + chip-follower unit tests.
