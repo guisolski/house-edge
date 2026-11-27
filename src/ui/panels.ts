@@ -81,6 +81,23 @@ export function focusFirst(panel: HTMLElement): void {
   btn?.focus();
 }
 
+/** Playtest #51: primary action — needle Stop even while arming (aria-disabled). */
+export function focusPrimarySkillAction(panel: HTMLElement): void {
+  const stop = panel.querySelector('.btn-needle-stop') as HTMLElement | null;
+  if (stop) {
+    stop.focus({ preventScroll: true });
+    return;
+  }
+  const submit = panel.querySelector(
+    '.skill-actions button.btn:not([data-skipNav])',
+  ) as HTMLElement | null;
+  if (submit && submit.getAttribute('aria-disabled') !== 'true') {
+    submit.focus({ preventScroll: true });
+    return;
+  }
+  focusFirst(panel);
+}
+
 /** Hide lines after an unresolved choice so closing beats don't spoil the pick. */
 export function dialogueVisibleLines(lines: DialogueLine[]): DialogueLine[] {
   const cut = lines.findIndex((l) => Boolean(l.choices?.length));
@@ -428,25 +445,49 @@ function paintSkillHeader(
     streak > 0 ? tf('ui.skill.metaCombo', metaVars) : tf('ui.skill.meta', metaVars);
   const titleText = sideHustle ? t('ui.sideHustle.title') : localizedDef.title;
   body.append(el('h2', 'skill-title', titleText), el('p', 'skill-meta', meta));
-  // Playtest #48: first-open howto line (one sentence how to win).
-  const tipId = session.getLastMinigameTip();
-  if (tipId) {
-    body.appendChild(el('p', 'skill-howto', t(`ui.minigameTip.${tipId}`)));
-    session.clearLastMinigameTip();
+  appendSkillHowto(body, session, phase);
+  appendSkillPromptClue(body, titleText, phase);
+  if (phase?.kind === 'lockpick' && progress.pickLeft !== undefined) {
+    appendPickDurability(body, progress.pickLeft, panel);
   }
-  // Playtest #47: never duplicate the title as a subtitle/prompt.
+  return titleText;
+}
+
+function appendSkillHowto(
+  body: HTMLElement,
+  session: GameSession,
+  phase: SkillPhase | undefined,
+): void {
+  const tipId = session.getLastMinigameTip();
+  if (!tipId) return;
+  // Playtest #51: skip when per-pin pistas already explain the solve.
+  if (!(phase?.pinHints && phase.pinHints.length > 0)) {
+    body.appendChild(el('p', 'skill-howto', t(`ui.minigameTip.${tipId}`)));
+  }
+  session.clearLastMinigameTip();
+}
+
+function appendSkillPromptClue(
+  body: HTMLElement,
+  titleText: string,
+  phase: SkillPhase | undefined,
+): void {
   if (phase?.prompt && phase.prompt.trim() !== titleText.trim()) {
     body.appendChild(el('p', 'skill-seq skill-prompt', phase.prompt));
+  }
+  if (phase?.pinHints && phase.pinHints.length > 0) {
+    const list = el('ul', 'skill-pin-hints');
+    for (const hint of phase.pinHints) {
+      list.appendChild(el('li', 'skill-pin-hint', hint));
+    }
+    body.appendChild(list);
+    return;
   }
   if (phase?.clue) {
     body.appendChild(
       el('p', 'skill-clue', tf('ui.skill.clueLabel', { clue: phase.clue })),
     );
   }
-  if (phase?.kind === 'lockpick' && progress.pickLeft !== undefined) {
-    appendPickDurability(body, progress.pickLeft, panel);
-  }
-  return titleText;
 }
 
 export function paintSkill(
@@ -488,7 +529,7 @@ export function paintSkill(
   focusSkillPanel(panel, session, phase, cancel);
 }
 
-/** Sequence → Cancel; choiceish → no default focus; else first control. */
+/** Sequence → Cancel; choiceish → no default focus; timing → Para!; else first. */
 function focusSkillPanel(
   panel: HTMLElement,
   session: GameSession,
@@ -505,7 +546,12 @@ function focusSkillPanel(
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     return;
   }
-  focusFirst(panel);
+  // Playtest #51: never land on Cancel when a primary action exists.
+  if (phase?.kind === 'timing') {
+    focusPrimarySkillAction(panel);
+    return;
+  }
+  focusPrimarySkillAction(panel);
 }
 
 function paintPhaseControls(
@@ -585,13 +631,16 @@ function paintTimingSkill(
     zoneEl,
     missHint,
   });
-  // Playtest #46: Parar starts disabled/greyed; arms only after countdown + grace.
-  const stopBtn = button(t('ui.skill.stop'), () => stopAt(true));
-  stopBtn.classList.add('btn-needle-stop');
-  stopBtn.disabled = true;
+  // Playtest #51: keep Para! focusable while arming (aria-disabled, not disabled).
+  const stopBtn = button(t('ui.skill.stop'), () => {
+    if (stopBtn.getAttribute('aria-disabled') === 'true') return;
+    if (!session.isNeedleInputArmed()) return;
+    stopAt(true);
+  });
+  stopBtn.classList.add('btn-needle-stop', 'is-disabled');
   stopBtn.setAttribute('aria-disabled', 'true');
   bindEnterGate(stopBtn, () => {
-    if (stopBtn.disabled) return;
+    if (stopBtn.getAttribute('aria-disabled') === 'true') return;
     if (!session.isNeedleInputArmed()) return;
     if (!session.allowModalConfirm(session.getLastInteractCode() ?? undefined)) return;
     stopAt(false);
@@ -667,7 +716,8 @@ function paintNeedleCountdown(
     .closest('.skill-panel')
     ?.querySelector('.btn-needle-stop') as HTMLButtonElement | null;
   if (stop) {
-    stop.disabled = true;
+    stop.disabled = false;
+    stop.classList.add('is-disabled');
     stop.setAttribute('aria-disabled', 'true');
   }
 }
@@ -699,7 +749,10 @@ function stepNeedleMotion(
       ?.querySelector('.btn-needle-stop') as HTMLButtonElement | null;
     if (stop) {
       stop.disabled = false;
+      stop.classList.remove('is-disabled');
       stop.removeAttribute('aria-disabled');
+      // Playtest #51: keep Enter on Para! after arm / retry.
+      if (document.activeElement !== stop) stop.focus();
     }
   }
   const dt = Math.min(48, Math.max(8, ts - motion.lastTs));
@@ -1029,6 +1082,7 @@ function persistLockpickUi(
     hinted: [...state.hinted],
     selected: state.selected,
     timerStartedAt: timerStartedAt ?? progress.lockpickUi?.timerStartedAt ?? Date.now(),
+    timerBudgetMs: progress.lockpickUi?.timerBudgetMs,
   };
   progress.lockpickUi = ui;
 }
@@ -1057,13 +1111,19 @@ function bindLockpickTimer(
   ctx: { cleanup: () => void; session: GameSession; after: () => void },
 ): void {
   if (!phase.timerMs) return;
+  // Playtest #51: fixed timer slot above the pin row (no overlap).
+  const slot = el('div', 'skill-lockpick-timer-slot');
   const timerEl = el('p', 'skill-seq skill-lockpick-timer', '');
+  slot.appendChild(timerEl);
   const row = body.querySelector('.lockpick-row');
-  if (row?.parentElement === body) body.insertBefore(timerEl, row);
-  else body.appendChild(timerEl);
-  // Playtest #45: wrong tests remount the panel — keep the original start.
-  const started = state.timerStartedAt;
+  if (row?.parentElement === body) body.insertBefore(slot, row);
+  else body.appendChild(slot);
   const progress = ctx.session.getSkillProgress();
+  const started = state.timerStartedAt;
+  // Freeze scaled budget once — remount/retry must not re-apply timescale.
+  const budget =
+    progress?.lockpickUi?.timerBudgetMs ??
+    scaleQaMs(phase.timerMs, ctx.session.getQaTimescale());
   if (progress) {
     progress.lockpickUi = {
       ...(progress.lockpickUi ?? {
@@ -1074,20 +1134,24 @@ function bindLockpickTimer(
         selected: state.selected,
       }),
       timerStartedAt: started,
+      timerBudgetMs: budget,
     };
   }
-  const ms = scaleQaMs(phase.timerMs, ctx.session.getQaTimescale());
+  const paintLeft = (): number => {
+    const left = Math.max(0, budget - (Date.now() - started));
+    timerEl.textContent =
+      left > 0
+        ? tf('ui.skill.timer', { s: String(Math.ceil(left / 1000)) })
+        : t('ui.skill.timerExpiredPick');
+    return left;
+  };
+  paintLeft();
   const tick = window.setInterval(() => {
     if (!body.isConnected) {
       window.clearInterval(tick);
       return;
     }
-    const left = Math.max(0, ms - (Date.now() - started));
-    timerEl.textContent =
-      left > 0
-        ? tf('ui.skill.timer', { s: String(Math.ceil(left / 1000)) })
-        : t('ui.skill.timerExpiredPick');
-    if (left > 0) return;
+    if (paintLeft() > 0) return;
     window.clearInterval(tick);
     state.expired = true;
     if (state.settled) return;
@@ -1239,8 +1303,9 @@ function buildLockpickRow(
     const btn = button(
       lockpickPinLabel(i + 1, h, state.hinted.has(i), i === state.selected),
       () => {
-        selectPin(i);
-        bumpPin(i);
+        // Playtest #51: first click selects; second click on selected pin raises.
+        if (state.selected === i) bumpPin(i);
+        else selectPin(i);
       },
     );
     btn.classList.add('lockpick-pin');

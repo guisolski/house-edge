@@ -79,10 +79,14 @@ export function createGameApp(host: HTMLElement): GameApp {
   return { engine, session, start: () => engine.start() };
 }
 
-/** Playtest #44/#46/#50 QA: `?chapter=`, `?minigame=`, `?timescale=`. */
+/** Playtest #44/#46/#50/#51 QA: `?chapter=`, `?minigame=`, `?timescale=`. */
 function applyQaQueryParams(session: GameSession, hud: HudHandles): void {
   if (typeof window === 'undefined') return;
   const params = new URLSearchParams(window.location.search);
+  // Playtest #51: set timescale BEFORE opening a minigame so timers freeze the
+  // scaled budget on first paint (startNew no longer wipes qaTimescale).
+  const timescale = parseDebugTimescale(params.get('timescale'));
+  if (timescale < 1) session.setQaTimescale(timescale);
   const chapter = parseDebugChapter(params.get('chapter'));
   if (chapter) {
     if (!session.debugStartChapter(chapter)) return;
@@ -95,14 +99,13 @@ function applyQaQueryParams(session: GameSession, hud: HudHandles): void {
       session.startNew();
       session.skipTutorialNow();
     }
+    // Re-assert after startNew (belt + suspenders).
+    if (timescale < 1) session.setQaTimescale(timescale);
     if (session.debugOpenMinigame(minigame)) {
       hud.showHud();
       hud.syncScreen();
     }
   }
-  // Playtest #50: apply timescale AFTER chapter/startNew so it is not wiped.
-  const timescale = parseDebugTimescale(params.get('timescale'));
-  if (timescale < 1) session.setQaTimescale(timescale);
 }
 
 function bindInputs(

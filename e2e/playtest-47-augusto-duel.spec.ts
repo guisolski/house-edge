@@ -100,14 +100,18 @@ async function bootDuel(page: Page): Promise<void> {
 }
 
 async function stopWhenInZone(page: Page): Promise<boolean> {
-  await expect(page.locator('.btn-needle-stop')).toBeEnabled({ timeout: 45_000 });
+  await expect(page.locator('.btn-needle-stop')).not.toHaveAttribute(
+    'aria-disabled',
+    'true',
+    { timeout: 45_000 },
+  );
   return page.evaluate(async () => {
     const deadline = performance.now() + 45_000;
     while (performance.now() < deadline) {
       const zone = document.querySelector('.skill-zone') as HTMLElement | null;
       const needle = document.querySelector('.skill-needle') as HTMLElement | null;
       const btn = document.querySelector('.btn-needle-stop') as HTMLButtonElement | null;
-      if (zone && needle && btn && !btn.disabled) {
+      if (zone && needle && btn && btn.getAttribute('aria-disabled') !== 'true') {
         const left = parseFloat(zone.style.left);
         const width = parseFloat(zone.style.width);
         const at = parseFloat(needle.style.left);
@@ -220,7 +224,10 @@ test.describe('Augusto duel full clear', () => {
     await bootDuel(page);
     await expect(page.locator('.hud')).toHaveAttribute('data-input-mode', 'keyboard');
     await shot(page, 'augusto-duel-needle-start.png');
-    await expect(page.locator('.btn-needle-stop')).toBeDisabled();
+    await expect(page.locator('.btn-needle-stop')).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
     expect(await stopWhenInZone(page)).toBe(true);
     await shot(page, 'augusto-duel-needle-win.png');
     await shot(page, 'augusto-duel-choice.png');

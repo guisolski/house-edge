@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.22.27] — 2026-11-27
+
+### Fixed
+- **Type scale (P0)**: shared `--type-*` tokens — buttons ≥16px, meta ≥14px, body ≥16px; dialogue choices, lockpick pins, credits, status lines included. E2e walks every visible text node in panels/dialogues/cards/credits.
+- **Lockpick timer (P0)**: fixed timer slot above pins; soft-miss retry resets to the frozen scaled budget (no 42→116 double-scale).
+- **Lockpick solvability (P0)**: per-pin pista bullets; pickDurability 5/7; pin click selects then raises; perfect-info + chip-follower unit tests.
+- **Needle focus (P1)**: Para! stays focusable (aria-disabled while arming); open/retry focus lands on Stop, not Cancel.
+- **Win/fail height (P2)**: skill panel + result cards share exact `height: min(52vh, 420px)`.
+
 ## [1.22.26] — 2026-11-27
 
 ### Fixed

@@ -30,8 +30,11 @@ export const skillPtBR = {
   'skill.avenida-drone.clue':
     'Cones varrem o centro do asfalto — cola na sombra do vidro e corta quando a luz piscar.',
   'skill.avenida-drone.prompt': 'Desvia dos cones do drone — passa pelo ponto cego.',
-  'skill.avenida-server.clue':
-    'Corredor: os dois postes das pontas ficam no alto (pilha cheia). O assento macio ao lado do posto esquerdo dorme no fundo. O próximo pino sobe só um clique acima desse assento. Adesivo mente.',
+  'skill.avenida-server.clue': 'Leia cada pista abaixo — um item por pino.',
+  'skill.avenida-server.pinHint.0': 'Pino 1 — poste externo (alto)',
+  'skill.avenida-server.pinHint.1': 'Pino 2 — assento macio (chão)',
+  'skill.avenida-server.pinHint.2': 'Pino 3 — um clique acima do assento (meio)',
+  'skill.avenida-server.pinHint.3': 'Pino 4 — poste externo (alto)',
   'skill.avenida-server.prompt':
     'Quebra os pinos da gaiola do servidor antes da varredura.',
   'skill.avenida-stealth.prompt':
@@ -55,8 +58,10 @@ export const skillPtBR = {
   'skill.feira-garrafa.option.1': 'Incolor corp',
   'skill.feira-garrafa.option.2': 'Rosa neon',
   'skill.feira-garrafa.prompt': 'Qual garrafa ainda tem prova de rua?',
-  'skill.feira-lockbox.clue':
-    'O Maquinista deixa graxa no poste em que se apoia e poeira no assento que ignora. Adesivo gritante mente — o pino honesto luta como madeira úmida sob o palco.',
+  'skill.feira-lockbox.clue': 'Leia cada pista abaixo — um item por pino.',
+  'skill.feira-lockbox.pinHint.0': 'Pino 1 — poste untado (meio)',
+  'skill.feira-lockbox.pinHint.1': 'Pino 2 — riser do palco (alto)',
+  'skill.feira-lockbox.pinHint.2': 'Pino 3 — assento empoeirado (chão)',
   'skill.feira-lockbox.prompt': 'Abre o cofre da Casa debaixo do palco do forró.',
   'skill.feira-radio.prompt': 'Sintoniza o dial pirata — repete 3 cliques.',
   'skill.feira-tipster.clue':

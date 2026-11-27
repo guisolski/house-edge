@@ -42,8 +42,29 @@ import {
   perfectAttempt,
   skillForBet,
   startSkill,
+  type LockpickUiState,
+  type SkillPhase,
   type SkillProgress,
 } from './minigame';
+
+/** Playtest #51: fresh lockpick timer UI at the frozen scaled budget. */
+function lockpickRetryUi(
+  phase: SkillPhase,
+  prev: LockpickUiState | undefined,
+  timescale: number,
+): LockpickUiState {
+  const raw = phase.timerMs;
+  const budget = prev?.timerBudgetMs ?? (raw ? scaleQaMs(raw, timescale) : undefined);
+  return {
+    heights: prev?.heights ?? (phase.pins ?? []).map(() => 0),
+    verdicts: prev?.verdicts ?? [],
+    feedback: prev?.feedback ?? '',
+    hinted: prev?.hinted ?? [],
+    selected: prev?.selected ?? 0,
+    timerStartedAt: Date.now(),
+    timerBudgetMs: budget,
+  };
+}
 import { resolveInteractPriority, shouldClearExitLatch } from './interact-priority';
 import {
   anyDroneSpots,
@@ -79,7 +100,7 @@ import {
   startNeedleArm,
   type NeedleArmState,
 } from './needle-arm';
-import { DEBUG_MINIGAME_BETS, type DebugMinigameId } from './debug-qa';
+import { DEBUG_MINIGAME_BETS, scaleQaMs, type DebugMinigameId } from './debug-qa';
 
 const SAFE_JOB_COOLDOWN_MS = 10_000;
 const SAFE_JOB_CAP = 6;
@@ -304,6 +325,15 @@ export class GameSession {
         justMissed: false,
       };
     }
+    this.resetLockpickTimerOnRetry();
+  }
+
+  /** Playtest #51: restart lockpick timer at the frozen scaled budget. */
+  private resetLockpickTimerOnRetry(): void {
+    const live = this.skillProgress;
+    const livePhase = live?.def.phases[live.phaseIndex];
+    if (!live || livePhase?.kind !== 'lockpick') return;
+    live.lockpickUi = lockpickRetryUi(livePhase, live.lockpickUi, this.getQaTimescale());
   }
 
   /**

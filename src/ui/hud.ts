@@ -337,6 +337,11 @@ function modalShows(session: GameSession, p: Parts, h: HudHandles): Partial<HudH
       else delete p.skill.dataset.heSkillSig;
       // Playtest #35: paintSkill owns focus for choice/puzzle/negotiate (mash-safe).
       paintSkill(p.skill, session, () => h.syncScreen());
+      // Playtest #51: re-assert Para! focus after modal arm (sync can steal it).
+      queueMicrotask(() => {
+        const stop = p.skill.querySelector('.btn-needle-stop') as HTMLElement | null;
+        if (stop) stop.focus({ preventScroll: true });
+      });
       // Playtest #40: mark only keys still held — don't force a ghost needsRelease.
       session.noteModalOpened(session.isInteractHeld(), session.heldInteractCodes());
     },

@@ -13,6 +13,14 @@ function phasePrefix(betId: string, phaseIndex: number, multi: boolean): string 
   return multi ? `skill.${betId}.phase.${phaseIndex}` : `skill.${betId}`;
 }
 
+function localizePinHints(
+  prefix: string,
+  hints: string[] | undefined,
+): string[] | undefined {
+  if (!hints) return hints;
+  return hints.map((hint, i) => lookup(`${prefix}.pinHint.${i}`, hint));
+}
+
 export function localizePhase(
   betId: string,
   phase: SkillPhase,
@@ -23,7 +31,13 @@ export function localizePhase(
   const prompt = lookup(`${prefix}.prompt`, phase.prompt);
   const clue = phase.clue ? lookup(`${prefix}.clue`, phase.clue) : undefined;
   const options = phase.options?.map((opt, i) => lookup(`${prefix}.option.${i}`, opt));
-  return { ...phase, prompt, clue, options: options ?? phase.options };
+  return {
+    ...phase,
+    prompt,
+    clue,
+    options: options ?? phase.options,
+    pinHints: localizePinHints(prefix, phase.pinHints),
+  };
 }
 
 export function localizeSkillDef(betId: string, def: SkillDef): SkillDef {

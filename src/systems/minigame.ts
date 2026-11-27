@@ -125,6 +125,11 @@ export type SkillPhase = {
   sequence?: SeqKey[];
   /** Lockpick target pin heights (0–2 each). */
   pins?: number[];
+  /**
+   * Playtest #51: one clear pista bullet per pin (maps clue → Pino N).
+   * When set, the panel renders these instead of a cryptic paragraph.
+   */
+  pinHints?: string[];
   /** Pin index hidden until first toggle (tension). */
   hiddenPin?: number;
   /** Lockpick / negotiate / sequence countdown in ms. */
@@ -185,8 +190,16 @@ export type LockpickUiState = {
   /** Pin indices with correct height revealed as a hint. */
   hinted: number[];
   selected: number;
-  /** Playtest #45: wall-clock start — wrong tests must not reset the timer. */
+  /**
+   * Playtest #51: wall-clock start for the current attempt.
+   * Soft-miss retry refreshes this so the timer returns to the full budget.
+   */
   timerStartedAt?: number;
+  /**
+   * Playtest #51: scaled budget in ms, frozen once per encounter
+   * (never re-apply timescale on remount — that caused 42s→116s jumps).
+   */
+  timerBudgetMs?: number;
 };
 
 export type SkillProgress = {
@@ -511,6 +524,10 @@ export function choiceClueIndirect(phase: SkillPhase): boolean {
  */
 export function lockpickClueDeducible(phase: SkillPhase): boolean {
   if (phase.kind !== 'lockpick') return true;
+  // Playtest #51: explicit per-pin pista bullets are the solvability contract.
+  if (phase.pinHints && phase.pinHints.length === phasePins(phase).length) {
+    return phase.pinHints.every((h) => h.trim().length > 3);
+  }
   if (!phase.clue || phase.clue.length < 24) return false;
   if (!lockpickClueIsDecoy(phase)) return false;
   const clue = phase.clue.toLowerCase();
@@ -529,6 +546,8 @@ export function choiceClueCoversAnswer(phase: SkillPhase): boolean {
 /** Lockpick clues must not list every pin height digit in order. */
 export function lockpickClueIsDecoy(phase: SkillPhase): boolean {
   if (phase.kind !== 'lockpick') return true;
+  // Playtest #51: pinHints replace the decoy paragraph.
+  if (phase.pinHints && phase.pinHints.length === phasePins(phase).length) return true;
   if (!phase.clue) return false;
   const pins = phasePins(phase);
   const digitRun = pins.join('');

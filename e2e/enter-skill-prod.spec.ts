@@ -22,7 +22,11 @@ test('prod: Enter×4×2 after needle no bet; KeyE Nair done; Luna E works', asyn
   await expect(page.locator('.skill-needle-ready')).toContainText(/Go|Já/i, {
     timeout: 5500,
   });
-  await expect(page.locator('.btn-needle-stop')).toBeEnabled({ timeout: 1000 });
+  await expect(page.locator('.btn-needle-stop')).not.toHaveAttribute(
+    'aria-disabled',
+    'true',
+    { timeout: 1000 },
+  );
   // rAF needle — Stop on the first frame the visible needle is in the drawn zone
   // (DOM style writes no longer drive sampleNeedle).
   const stopped = await page.evaluate(async () => {
@@ -31,7 +35,7 @@ test('prod: Enter×4×2 after needle no bet; KeyE Nair done; Luna E works', asyn
       const zone = document.querySelector('.skill-zone') as HTMLElement | null;
       const needle = document.querySelector('.skill-needle') as HTMLElement | null;
       const btn = document.querySelector('.btn-needle-stop') as HTMLButtonElement | null;
-      if (zone && needle && btn && !btn.disabled) {
+      if (zone && needle && btn && btn.getAttribute('aria-disabled') !== 'true') {
         const left = parseFloat(zone.style.left);
         const width = parseFloat(zone.style.width);
         const at = parseFloat(needle.style.left);

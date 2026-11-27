@@ -25,8 +25,11 @@ export const skillEn = {
   'skill.avenida-drone.clue':
     'Cones sweep the asphalt center — hug the glass shadow, then cut when the light blinks.',
   'skill.avenida-drone.prompt': 'Evade the militia drone cones — slip the blind path.',
-  'skill.avenida-server.clue':
-    'Cage Runner: both outer posts sit high (full stack). The soft seat next to the left post rests flush on the floor. The next tumbler climbs one click above that seat. Stickers lie.',
+  'skill.avenida-server.clue': 'Read each hint below — one bullet per pin.',
+  'skill.avenida-server.pinHint.0': 'Pin 1 — outer post (high)',
+  'skill.avenida-server.pinHint.1': 'Pin 2 — soft seat (floor)',
+  'skill.avenida-server.pinHint.2': 'Pin 3 — one click above the seat (mid)',
+  'skill.avenida-server.pinHint.3': 'Pin 4 — outer post (high)',
   'skill.avenida-server.prompt': 'Crack the server-cage tumblers before the sweep.',
   'skill.avenida-stealth.prompt': 'Slip past lobby cams — match the blind spots.',
   'skill.corrida-moto.prompt': 'Dash the moto lane — clear the gate sequence.',
@@ -54,8 +57,10 @@ export const skillEn = {
   'skill.feira-garrafa.option.1': 'Corp clear',
   'skill.feira-garrafa.option.2': 'Neon pink',
   'skill.feira-garrafa.prompt': 'Which bottle still has street proof?',
-  'skill.feira-lockbox.clue':
-    'Maquinista leaves grease on the post he leans on and dust on the seat he ignores. A loud sticker always lies — the honest tumbler fights like damp wood under the stage.',
+  'skill.feira-lockbox.clue': 'Read each hint below — one bullet per pin.',
+  'skill.feira-lockbox.pinHint.0': 'Pin 1 — greased post (mid)',
+  'skill.feira-lockbox.pinHint.1': 'Pin 2 — stage riser (high)',
+  'skill.feira-lockbox.pinHint.2': 'Pin 3 — dusty seat (floor)',
   'skill.feira-lockbox.prompt': 'Pick the Casa lockbox under the forró stage.',
   'skill.feira-radio.prompt': 'Tune the pirate dial — match 3 clicks.',
   'skill.feira-tipster.clue':

@@ -68,7 +68,11 @@ async function missOutsideZone(page: Page): Promise<{
   done: boolean | undefined;
 }> {
   // Playtest #46: wait until Stop is armed — unarmed submitSkill is a no-op.
-  await expect(page.locator('.btn-needle-stop')).toBeEnabled({ timeout: 5500 });
+  await expect(page.locator('.btn-needle-stop')).not.toHaveAttribute(
+    'aria-disabled',
+    'true',
+    { timeout: 5500 },
+  );
   return page.evaluate(() => {
     const session = (
       window as unknown as {
@@ -103,14 +107,18 @@ async function stopWhenNeedleInDrawnZone(page: Page): Promise<boolean> {
   await expect(page.locator('.skill-needle-ready')).toContainText(/Go|Já/i, {
     timeout: 5500,
   });
-  await expect(page.locator('.btn-needle-stop')).toBeEnabled({ timeout: 1000 });
+  await expect(page.locator('.btn-needle-stop')).not.toHaveAttribute(
+    'aria-disabled',
+    'true',
+    { timeout: 1000 },
+  );
   return page.evaluate(async () => {
     const deadline = performance.now() + 12_000;
     while (performance.now() < deadline) {
       const zone = document.querySelector('.skill-zone') as HTMLElement | null;
       const needle = document.querySelector('.skill-needle') as HTMLElement | null;
       const btn = document.querySelector('.btn-needle-stop') as HTMLButtonElement | null;
-      if (zone && needle && btn && !btn.disabled) {
+      if (zone && needle && btn && btn.getAttribute('aria-disabled') !== 'true') {
         const left = parseFloat(zone.style.left);
         const width = parseFloat(zone.style.width);
         const at = parseFloat(needle.style.left);

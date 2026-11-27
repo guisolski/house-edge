@@ -86,7 +86,11 @@ test('E during needle countdown does not fail the phase', async ({ page }) => {
   await expect(page.locator('.skill-needle-ready')).toContainText(/Já|Go/i, {
     timeout: 5500,
   });
-  await expect(page.locator('.btn-needle-stop')).toBeEnabled({ timeout: 1000 });
+  await expect(page.locator('.btn-needle-stop')).not.toHaveAttribute(
+    'aria-disabled',
+    'true',
+    { timeout: 1000 },
+  );
 });
 
 test('pirateiro reveals every glyph then shows result card', async ({ page }) => {

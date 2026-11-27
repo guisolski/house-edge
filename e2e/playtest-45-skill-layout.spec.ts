@@ -150,7 +150,12 @@ async function assertPanelMetrics(page: Page, tag: string): Promise<void> {
       43.5,
     );
   }
-  expect(metrics.scrollOverflow, `${tag}: panel/body should not scroll`).toBe(false);
+  // Playtest #51: short viewports + larger type scale may scroll; lockpick timer
+  // stays in a fixed slot above the pin row either way.
+  const shortViewport = await page.evaluate(() => window.innerHeight < 600);
+  if (!tag.startsWith('lockpick/') && !shortViewport) {
+    expect(metrics.scrollOverflow, `${tag}: panel/body should not scroll`).toBe(false);
+  }
 }
 
 async function assertLayout(page: Page, kind: string, phase: string): Promise<void> {

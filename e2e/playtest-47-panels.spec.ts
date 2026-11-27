@@ -93,9 +93,13 @@ async function tryWinCard(page: Page, kind: Kind, vp: string): Promise<void> {
 }
 
 async function phaseNeedle(page: Page, kind: Kind, vp: string): Promise<void> {
-  await expect(page.locator('.btn-needle-stop')).toBeDisabled();
+  await expect(page.locator('.btn-needle-stop')).toHaveAttribute('aria-disabled', 'true');
   await shot(page, `${kind}-hold-${vp}.png`);
-  await expect(page.locator('.btn-needle-stop')).toBeEnabled({ timeout: 12_000 });
+  await expect(page.locator('.btn-needle-stop')).not.toHaveAttribute(
+    'aria-disabled',
+    'true',
+    { timeout: 12_000 },
+  );
   await shot(page, `${kind}-input-${vp}.png`);
   await forceMiss(page);
   await expect(page.locator('.skill-miss-panel')).toBeVisible({ timeout: 3000 });

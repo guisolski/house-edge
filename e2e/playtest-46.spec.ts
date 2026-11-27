@@ -42,7 +42,10 @@ test.describe('needle countdown arm', () => {
   test('E at Em 3/2/1 never misses; Parar stays disabled', async ({ page }) => {
     await boot(page);
     await openNeedle(page);
-    await expect(page.locator('.btn-needle-stop')).toBeDisabled();
+    await expect(page.locator('.btn-needle-stop')).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
     await expect(page.locator('.skill-needle-ready')).toContainText(/Em 3|Ready in 3/i);
 
     for (const tick of [3, 2, 1]) {
@@ -55,13 +58,20 @@ test.describe('needle countdown arm', () => {
       await page.keyboard.press('Space');
       await expect(page.locator('.skill-miss-panel')).toHaveCount(0);
       await expect(page.locator('.toast')).not.toContainText(/Errou|Missed|fase|phase/i);
-      await expect(page.locator('.btn-needle-stop')).toBeDisabled();
+      await expect(page.locator('.btn-needle-stop')).toHaveAttribute(
+        'aria-disabled',
+        'true',
+      );
     }
 
     await expect(page.locator('.skill-needle-ready')).toContainText(/Já|Go/i, {
       timeout: 2000,
     });
-    await expect(page.locator('.btn-needle-stop')).toBeEnabled({ timeout: 1000 });
+    await expect(page.locator('.btn-needle-stop')).not.toHaveAttribute(
+      'aria-disabled',
+      'true',
+      { timeout: 1000 },
+    );
     const misses = await page.evaluate(() => {
       const he = (
         window as unknown as {
@@ -94,7 +104,11 @@ test.describe('needle countdown arm', () => {
     await expect(page.locator('.skill-miss-panel')).toHaveCount(0);
     await expect(page.locator('.toast')).not.toContainText(/Errou|Missed|fase|phase/i);
     await expect(page.locator('.skill-meter')).toBeVisible();
-    await expect(page.locator('.btn-needle-stop')).toBeEnabled({ timeout: 2000 });
+    await expect(page.locator('.btn-needle-stop')).not.toHaveAttribute(
+      'aria-disabled',
+      'true',
+      { timeout: 2000 },
+    );
     const misses = await page.evaluate(() => {
       const he = (
         window as unknown as {

@@ -10,6 +10,13 @@
   --text: #f4f1ff;
   --danger: #ff3b5c;
   --font-display: 'Segoe UI', 'Helvetica Neue', sans-serif;
+  /* Playtest #51: shared type scale — buttons ≥16, meta ≥14, body ≥16 rendered. */
+  --type-body: clamp(17px, 1.55vw, 20px);
+  --type-meta: clamp(14px, 1.35vw, 17px);
+  --type-button: clamp(16px, 1.45vw, 18px);
+  --type-title: clamp(20px, 2.1vw, 26px);
+  --type-glyph: clamp(28px, 2.6vw, 36px);
+  --skill-panel-h: min(72vh, 600px);
 }
 
 * {
@@ -92,7 +99,7 @@ canvas.excalibur-game {
   gap: 0.55rem;
 }
 
-/* Playtest #47/#50: dialogue matches skill panel width + readable body (≥17px). */
+/* Playtest #47/#51: dialogue matches skill panel width + shared type scale. */
 .dialogue-panel {
   position: absolute;
   left: 50%;
@@ -110,17 +117,23 @@ canvas.excalibur-game {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  font-size: clamp(17px, 1.55vw, 20px);
+  font-size: var(--type-body);
 }
 
 .dialogue-panel h2 {
-  font-size: clamp(20px, 2.1vw, 26px);
+  font-size: var(--type-title);
 }
 
 .dialogue-panel .line,
 .dialogue-panel .dialogue-body,
-.dialogue-panel .dialogue-choice {
-  font-size: clamp(17px, 1.55vw, 20px);
+.dialogue-panel .dialogue-choice,
+.dialogue-panel .btn {
+  font-size: var(--type-body);
+}
+
+.dialogue-panel .dialogue-choice,
+.dialogue-panel .btn {
+  font-size: var(--type-button);
 }
 
 @media (max-width: 420px) {
@@ -182,7 +195,7 @@ canvas.excalibur-game {
 .credits-roll .credits-line {
   margin: 0;
   color: var(--cyan);
-  font-size: 0.95rem;
+  font-size: var(--type-body);
   text-align: center;
 }
 
@@ -190,6 +203,7 @@ canvas.excalibur-game {
   margin-top: 0.75rem;
   color: var(--yellow, #ffdf00);
   font-weight: 600;
+  font-size: var(--type-body);
   text-align: center;
 }
 
@@ -232,23 +246,23 @@ canvas.excalibur-game {
   font-variant-numeric: tabular-nums;
   min-width: 0;
   width: 100%;
-  font-size: 0.8rem;
+  font-size: var(--type-button);
   padding-left: 0.35rem;
   padding-right: 0.35rem;
 }
 
 .lockpick-pin-verdict {
-  min-height: 1.1em;
+  min-height: 1.25em;
   margin: 0;
   text-align: center;
-  font-size: 0.72rem;
+  font-size: var(--type-meta);
   font-weight: 700;
   color: var(--yellow, #ffdf00);
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 .lockpick-hint {
-  font-size: 0.95rem;
+  font-size: var(--type-body);
   font-weight: 700;
   white-space: nowrap;
   letter-spacing: -0.01em;
@@ -256,25 +270,44 @@ canvas.excalibur-game {
   color: var(--cyan);
 }
 
+.skill-lockpick-timer-slot {
+  flex-shrink: 0;
+  min-height: 1.6em;
+  display: flex;
+  align-items: center;
+  margin: 0.15rem 0 0.2rem;
+}
+
 .skill-lockpick-timer {
   flex-shrink: 0;
-  margin: 0.15rem 0 0;
+  margin: 0;
   font-weight: 800;
+  font-size: var(--type-meta);
 }
 
 .skill-panel:has(.lockpick-row) .skill-body {
   padding-bottom: 0.15rem;
-  overflow: hidden;
+  /* Short viewports: allow body scroll; timer slot stays above the pin row. */
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.skill-pin-hints {
+  margin: 0.05rem 0 0.15rem;
+  padding-left: 1.05rem;
+  font-size: var(--type-meta);
+  line-height: 1.25;
+  color: var(--yellow, #ffdf00);
+}
+
+.skill-pin-hint {
+  margin: 0.05rem 0;
 }
 
 @media (max-width: 480px) {
   .lockpick-hint {
-    font-size: 0.85rem;
     letter-spacing: -0.015em;
-  }
-
-  .lockpick-pin {
-    font-size: 0.72rem;
+    white-space: normal;
   }
 }
 
@@ -304,7 +337,7 @@ canvas.excalibur-game {
 .skill-lockpick-feedback {
   min-height: 1.15em;
   font-weight: 600;
-  font-size: clamp(15px, 1.45vw, 18px);
+  font-size: var(--type-body);
   margin: 0.1rem 0 0.2rem;
   color: var(--yellow, #ffdf00);
 }
@@ -313,9 +346,9 @@ canvas.excalibur-game {
   display: none;
 }
 
-/* Playtest #45/#47/#48: clue/prompt are body-size (≥15px); clamp to a few lines. */
+/* Playtest #51: clue/prompt use shared body scale; clamp to a few lines. */
 .skill-panel .skill-clue {
-  font-size: clamp(15px, 1.45vw, 18px);
+  font-size: var(--type-body);
   line-height: 1.25;
   max-height: 3.75em;
   overflow: hidden;
@@ -327,7 +360,7 @@ canvas.excalibur-game {
 
 .skill-panel .skill-prompt {
   margin: 0;
-  font-size: clamp(15px, 1.45vw, 18px);
+  font-size: var(--type-body);
   line-height: 1.25;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -633,6 +666,7 @@ canvas.excalibur-game {
   padding: 0.55rem 0.9rem;
   cursor: pointer;
   font-weight: 700;
+  font-size: var(--type-button);
   box-shadow: none;
   opacity: 0.88;
 }
@@ -716,6 +750,7 @@ canvas.excalibur-game {
 }
 
 .dialogue-body .line {
+  font-size: var(--type-body);
   line-height: 1.35;
   margin: 0.2rem 0;
 }
@@ -844,7 +879,9 @@ canvas.excalibur-game {
   width: clamp(520px, 60vw, 960px);
   min-width: 0;
   max-width: min(960px, 96vw);
-  min-height: min(52vh, 420px);
+  /* Playtest #51: fixed panel height so win/fail cards match exactly. */
+  height: var(--skill-panel-h);
+  min-height: var(--skill-panel-h);
   max-height: min(85vh, 760px);
   overflow: hidden;
   background: #0c0c14f2;
@@ -856,20 +893,21 @@ canvas.excalibur-game {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  font-size: clamp(15px, 1.45vw, 18px);
+  font-size: var(--type-body);
 }
 
 .skill-panel.skill-result-panel,
 .skill-panel.skill-miss-panel {
   width: clamp(520px, 60vw, 960px);
   min-width: 0;
-  min-height: min(52vh, 420px);
+  height: var(--skill-panel-h);
+  min-height: var(--skill-panel-h);
 }
 
 .skill-panel > h2,
 .skill-panel .skill-title {
   margin: 0 0 0.15rem;
-  font-size: clamp(20px, 2.1vw, 26px);
+  font-size: var(--type-title);
   line-height: 1.25;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -879,8 +917,8 @@ canvas.excalibur-game {
 
 .skill-panel .skill-meta {
   margin: 0 0 0.2rem;
-  /* Playtest #50: meta ≥14px rendered. */
-  font-size: clamp(14px, 1.35vw, 17px);
+  /* Playtest #51: meta ≥14px rendered. */
+  font-size: var(--type-meta);
   font-weight: 600;
   color: var(--cyan);
   opacity: 0.95;
@@ -898,7 +936,7 @@ canvas.excalibur-game {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  font-size: clamp(15px, 1.45vw, 18px);
+  font-size: var(--type-body);
 }
 
 .skill-panel .skill-seq,
@@ -908,13 +946,15 @@ canvas.excalibur-game {
 .skill-panel .skill-howto,
 .skill-panel .skill-seq-hint,
 .skill-panel .skill-seq-status,
-.skill-panel .skill-seq-timer {
-  font-size: clamp(15px, 1.45vw, 18px);
+.skill-panel .skill-seq-timer,
+.skill-panel .skill-lockpick-feedback,
+.skill-panel .skill-pin-hints {
+  font-size: var(--type-body);
 }
 
-/* Playtest #50: sequence glyphs under Sequência: ≥28px. */
+/* Playtest #50/#51: sequence glyphs under Sequência: ≥28px. */
 .skill-panel .skill-pattern {
-  font-size: clamp(28px, 2.6vw, 36px);
+  font-size: var(--type-glyph);
   letter-spacing: 0.08em;
 }
 
@@ -930,7 +970,7 @@ canvas.excalibur-game {
 
 .skill-panel .skill-actions .btn {
   min-height: 44px;
-  font-size: clamp(15px, 1.45vw, 18px);
+  font-size: var(--type-button);
   padding: 0.45rem 0.9rem;
 }
 

@@ -252,13 +252,17 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     // Pins: mid / raised / sunk — left=shoulder mid, center=riser high, right=soft sunk.
     pins: [1, 2, 0],
     hiddenPin: 1,
-    // Playtest #45: 45s total — wrong tests must not feel like a soft reset.
+    // Playtest #45/#51: 45s; retry resets to full budget (timescale applied once).
     timerMs: 45_000,
-    pickDurability: 4,
-    // Playtest #30: clearer without naming heights — ~2–3 tries (≥3 hook words).
-    clue:
-      'Maquinista leaves grease on the post he leans on and dust on the seat he ignores. ' +
-      'A loud sticker always lies — the honest tumbler fights like damp wood under the stage.',
+    // Playtest #51: 3 heights → max 2 bumps/pin; 5 picks so chip-followers always clear.
+    pickDurability: 5,
+    clue: 'Read each pista below — one bullet per pin.',
+    // Playtest #51: explicit Pino → height mapping (solvability).
+    pinHints: [
+      'Pino 1 — poste untado (meio)',
+      'Pino 2 — riser do palco (alto)',
+      'Pino 3 — assento empoeirado (chão)',
+    ],
   },
   'avenida-server': {
     kind: 'lockpick',
@@ -268,11 +272,15 @@ export const SKILL_PHASE_TABLE: Record<string, SkillPhase> = {
     pins: [2, 0, 1, 2],
     // Playtest #33: no hidden pin — every tumbler visible; feedback + clear clue.
     timerMs: 45_000,
-    pickDurability: 6,
-    // Decode in 1–3 tries: ends high, second flush, third one click up.
-    clue:
-      'Cage Runner: both outer posts sit high (full stack). The soft seat next to the left post ' +
-      'rests flush on the floor. The next tumbler climbs one click above that seat. Stickers lie.',
+    // Playtest #51: 4 pins × ≤2 bumps + exploratory tests.
+    pickDurability: 7,
+    clue: 'Read each pista below — one bullet per pin.',
+    pinHints: [
+      'Pino 1 — poste externo (alto)',
+      'Pino 2 — assento macio (chão)',
+      'Pino 3 — um clique acima do assento (meio)',
+      'Pino 4 — poste externo (alto)',
+    ],
   },
   'avenida-betrayal': {
     kind: 'choice',

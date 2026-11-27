@@ -28,7 +28,8 @@ describe('v1.22.7 Gaiola lockpick', () => {
     const phase = SKILL_PHASE_TABLE['avenida-server']!;
     expect(phase.pins).toEqual([2, 0, 1, 2]);
     expect(phase.hiddenPin).toBeUndefined();
-    expect(phase.clue).toMatch(/outer posts|full stack|flush|one click/i);
+    // Playtest #51: per-pin pista bullets on the content table.
+    expect(phase.pinHints?.join(' ')).toMatch(/poste|assento|clique|alto|chão|meio/i);
   });
 
   it('wrong guess keeps encounter open with pick durability', () => {

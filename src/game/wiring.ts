@@ -371,7 +371,8 @@ function needleCountdownBlocksConfirm(): boolean {
   if (!meter) return false;
   if (meter.dataset.needleReady !== '1') return true;
   const stop = document.querySelector('.btn-needle-stop') as HTMLButtonElement | null;
-  return Boolean(stop?.disabled);
+  // Playtest #51: Stop stays focusable via aria-disabled (not the disabled attr).
+  return stop?.getAttribute('aria-disabled') === 'true';
 }
 
 /** Playtest #46: credits leave buttons stay disabled until arm. */

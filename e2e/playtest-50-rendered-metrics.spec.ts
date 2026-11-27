@@ -145,7 +145,7 @@ async function assertWinCardFloors(page: Page, vw: number, vh: number): Promise<
     .evaluate((el) => el.getBoundingClientRect().height);
   expect(winW, 'win card width').toBeGreaterThanOrEqual(panelFloor(vw) - 2);
   expect(winH, 'win card min-height').toBeGreaterThanOrEqual(
-    Math.min(vh * 0.52, 420) - 8,
+    Math.min(vh * 0.72, 600) - 8,
   );
 }
 
