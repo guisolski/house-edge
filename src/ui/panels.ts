@@ -44,6 +44,7 @@ import {
 import {
   needleCountdownSeconds,
   needleInCountdown,
+  needleMotionStep,
   needleStartOutsideZone,
   NEEDLE_COUNTDOWN_MS,
   NEEDLE_ARM_GRACE_MS,
@@ -315,7 +316,7 @@ function appendPickDurability(
   body.appendChild(el('p', 'skill-seq lockpick-hint', lockpickControlHint(panel)));
 }
 
-/** Playtest #41: win/lose banner with credits/rep delta (~1.2s or Enter). */
+/** Playtest #41/#49: win/lose banner — lose never auto-closes; duel win is clear. */
 function paintSkillResult(
   panel: HTMLElement,
   session: GameSession,
@@ -325,15 +326,22 @@ function paintSkillResult(
   if (!result) return;
   panel.classList.add('skill-result-panel');
   const body = el('div', 'panel-body skill-body skill-result-body');
-  const headline = formatSkillResultHeadline(
-    result.won,
-    result.creditsDelta,
-    result.repDelta,
-  );
+  const duel = result.skillKind === 'duel';
+  const headline = duel
+    ? result.won
+      ? t('ui.skill.duelWinHeadline')
+      : t('ui.skill.duelLoseHeadline')
+    : formatSkillResultHeadline(result.won, result.creditsDelta, result.repDelta);
+  const detail = duel
+    ? formatSkillResultHeadline(result.won, result.creditsDelta, result.repDelta)
+    : t('ui.skill.resultHint');
   body.append(
     el('h2', result.won ? 'skill-result-win' : 'skill-result-lose', headline),
-    el('p', 'skill-seq', t('ui.skill.resultHint')),
+    el('p', 'skill-seq', detail),
   );
+  if (duel) {
+    body.appendChild(el('p', 'skill-seq', t('ui.skill.resultHint')));
+  }
   const dismiss = (): void => {
     session.dismissSkillResult();
     after();
@@ -355,9 +363,10 @@ function paintSkillResult(
     dismiss();
   };
   window.addEventListener('keydown', onKey, true);
-  const auto = window.setTimeout(dismiss, 1200);
+  // Playtest #49: only auto-dismiss wins — lose stays until Continuar/Sair.
+  const auto = result.won ? window.setTimeout(dismiss, 1600) : 0;
   onPanelDispose(panel, () => {
-    window.clearTimeout(auto);
+    if (auto) window.clearTimeout(auto);
     window.removeEventListener('keydown', onKey, true);
     panel.classList.remove('skill-result-panel');
   });
@@ -723,7 +732,8 @@ function bindNeedleRuntime(o: NeedleBind): (fromPointer?: boolean) => void {
     scaleQaMs(NEEDLE_COUNTDOWN_MS, scale),
     scaleQaMs(NEEDLE_ARM_GRACE_MS, scale),
   );
-  const step = Math.max(0.015, 0.028 * (o.phase.needleSpeed ?? 0.8));
+  // Playtest #49: sweep speed respects QA timescale (same as timers).
+  const step = needleMotionStep(o.phase.needleSpeed ?? 0.8, scale);
   let raf = 0;
   let onKey: (e: KeyboardEvent) => void = () => undefined;
   const readyLine = o.body.querySelector('.skill-needle-ready') as HTMLElement | null;
@@ -947,10 +957,16 @@ function pinBars(h: number): string {
   return `${'▮'.repeat(h + 1)}${'▯'.repeat(LOCK_PIN_LEVELS - 1 - h)}`;
 }
 
-/** Playtest #44: heights visible from first paint (bars + number), not only after Test. */
-function lockpickPinLabel(n: number, h: number, hinted: boolean): string {
+/** Playtest #44/#49: heights + ▶ on selected pin (chips hold last-test result). */
+function lockpickPinLabel(
+  n: number,
+  h: number,
+  hinted: boolean,
+  selected: boolean,
+): string {
+  const mark = selected ? '▶ ' : '';
   const hint = hinted ? ' ★' : '';
-  return `${tf('ui.skill.pinBtn', { n: String(n) })}: ${pinBars(h)} (${h})${hint}`;
+  return `${mark}${tf('ui.skill.pinBtn', { n: String(n) })}: ${pinBars(h)} (${h})${hint}`;
 }
 
 function refreshLockpick(
@@ -959,16 +975,26 @@ function refreshLockpick(
 ): void {
   state.labels.forEach((btn, i) => {
     const h = state.heights[i] ?? 0;
-    btn.textContent = lockpickPinLabel(i + 1, h, state.hinted.has(i));
-    btn.classList.toggle('lockpick-pin-selected', i === state.selected);
-    btn.setAttribute('aria-current', i === state.selected ? 'true' : 'false');
-    const v = verdicts?.[i];
-    btn.classList.toggle('lockpick-pin-ok', v === 'ok');
-    btn.classList.toggle('lockpick-pin-low', v === 'low');
-    btn.classList.toggle('lockpick-pin-high', v === 'high');
-    btn.classList.toggle('lockpick-pin-bad', v === 'low' || v === 'high');
+    const selected = i === state.selected;
+    btn.textContent = lockpickPinLabel(i + 1, h, state.hinted.has(i), selected);
+    btn.classList.toggle('lockpick-pin-selected', selected);
+    btn.setAttribute('aria-current', selected ? 'true' : 'false');
+    // Verdict colors live on chips — pin buttons keep height readability.
+    btn.classList.remove(
+      'lockpick-pin-ok',
+      'lockpick-pin-low',
+      'lockpick-pin-high',
+      'lockpick-pin-bad',
+    );
     const chip = state.verdictEls[i];
-    if (chip) chip.textContent = formatLockpickPinVerdict(v);
+    if (chip) {
+      const v = verdicts?.[i];
+      chip.textContent = formatLockpickPinVerdict(v);
+      chip.classList.toggle('lockpick-chip-ok', v === 'ok');
+      chip.classList.toggle('lockpick-chip-low', v === 'low');
+      chip.classList.toggle('lockpick-chip-high', v === 'high');
+      chip.classList.toggle('lockpick-chip-empty', !v);
+    }
   });
 }
 
@@ -1210,10 +1236,13 @@ function buildLockpickRow(
   for (let i = 0; i < count; i += 1) {
     const h = state.heights[i] ?? 0;
     const slot = el('div', 'lockpick-slot');
-    const btn = button(lockpickPinLabel(i + 1, h, state.hinted.has(i)), () => {
-      selectPin(i);
-      bumpPin(i);
-    });
+    const btn = button(
+      lockpickPinLabel(i + 1, h, state.hinted.has(i), i === state.selected),
+      () => {
+        selectPin(i);
+        bumpPin(i);
+      },
+    );
     btn.classList.add('lockpick-pin');
     btn.dataset.skipNav = '1';
     const verdict = el('p', 'lockpick-pin-verdict', '');

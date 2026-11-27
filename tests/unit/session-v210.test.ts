@@ -155,9 +155,11 @@ describe('v1.21.0 late-game needle curve', () => {
     expect(elev.window ?? 1).toBeLessThanOrEqual(0.12);
     const duel = skillForBet('duelo-casa', 'duel')!;
     const p0 = duel.phases[0]!;
-    expect(p0.window ?? 1).toBeLessThanOrEqual(0.08);
+    // Playtest #49: duel matches regular needle tier (was ≤0.08 / 1.55).
+    expect(p0.window ?? 1).toBeLessThanOrEqual(0.14);
+    expect(p0.needleSpeed ?? 1).toBeLessThanOrEqual(0.95);
     const zone = timingZone(p0);
-    expect(zone.hi - zone.lo).toBeLessThanOrEqual(0.16);
+    expect(zone.hi - zone.lo).toBeLessThanOrEqual(0.28);
   });
 
   it('assistAfterMiss widens only after 2+ misses on a phase', () => {

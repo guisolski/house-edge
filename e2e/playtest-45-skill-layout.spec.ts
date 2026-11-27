@@ -104,8 +104,8 @@ async function assertPanelMetrics(page: Page, tag: string): Promise<void> {
     const scale = scaleOf(root);
     const btnH = btn ? btn.getBoundingClientRect().height : 0;
     const vw = window.innerWidth;
-    // Playtest #48: desktop ≥55% of viewport (≤720); mobile ≥92vw.
-    const expectedMin = vw <= 420 ? Math.min(720, vw * 0.92) : Math.min(720, vw * 0.55);
+    // Playtest #49: desktop clamp(520, 60vw, 960); mobile ≥92vw.
+    const expectedMin = vw <= 420 ? vw * 0.92 : Math.min(960, Math.max(520, vw * 0.6));
     return {
       width: root.getBoundingClientRect().width,
       expectedMin,
@@ -132,7 +132,7 @@ async function assertPanelMetrics(page: Page, tag: string): Promise<void> {
   ).toBeGreaterThanOrEqual(14.5);
   if (metrics.btnH > 0) {
     expect(metrics.btnH, `${tag}: button height ${metrics.btnH}`).toBeGreaterThanOrEqual(
-      39.5,
+      43.5,
     );
   }
   expect(metrics.scrollOverflow, `${tag}: panel/body should not scroll`).toBe(false);

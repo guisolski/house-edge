@@ -122,7 +122,7 @@ describe('v1.22.23 QA sandbox + title nav helpers', () => {
     );
   });
 
-  it('leaveSkillMiss cancels the encounter after a soft miss', () => {
+  it('leaveSkillMiss ends the encounter with a lose result card', () => {
     const session = new GameSession();
     session.startNew();
     session.player.addCredits(200);
@@ -132,7 +132,8 @@ describe('v1.22.23 QA sandbox + title nav helpers', () => {
     session.leaveSkillMiss();
     expect(session.getSkillMissCard()).toBeNull();
     expect(session.getSkillProgress()).toBeNull();
-    expect(session.ui.is('play')).toBe(true);
+    expect(session.getSkillResult()?.won).toBe(false);
+    expect(session.ui.is('skill')).toBe(true);
   });
 
   it('startNew clears qaSandbox from a prior ?minigame open', () => {

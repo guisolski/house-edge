@@ -76,6 +76,17 @@ export function needleInputArmAt(state: NeedleArmState): number {
 }
 
 /**
+ * Playtest #49: per-frame needle step. `timescale` (QA `?timescale=`) slows
+ * sweep the same way timers stretch — 0.33 → ~⅓ speed.
+ */
+export function needleMotionStep(needleSpeed: number, timescale = 1): number {
+  const speed = needleSpeed > 0 ? needleSpeed : 0.8;
+  const base = Math.max(0.015, 0.028 * speed);
+  const t = timescale > 0 && timescale <= 1 ? timescale : 1;
+  return base * t;
+}
+
+/**
  * Playtest #47: start the needle outside the green zone so the first armed E
  * is not an instant win. `seed` picks left vs right of the zone.
  */

@@ -1,12 +1,12 @@
 /**
- * Playtest #47/#48: Augusto duel (needle + choice + hack) to the end at timescale 0.33.
- * Screenshots land in artifacts/panels-v1.22.24/ (keyboard mode, Português).
+ * Playtest #49 / v1.22.25: Augusto duel win + lose at timescale 0.33 (real key timing).
+ * Screenshots land in artifacts/panels-v1.22.25/ (keyboard mode, Português).
  */
 import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import fs from 'node:fs';
 
-const ART = path.join('artifacts', 'panels-v1.22.24');
+const ART = path.join('artifacts', 'panels-v1.22.25');
 const KEY: Record<string, string> = {
   R: 'KeyR',
   G: 'KeyG',
@@ -100,9 +100,9 @@ async function bootDuel(page: Page): Promise<void> {
 }
 
 async function stopWhenInZone(page: Page): Promise<boolean> {
-  await expect(page.locator('.btn-needle-stop')).toBeEnabled({ timeout: 20_000 });
+  await expect(page.locator('.btn-needle-stop')).toBeEnabled({ timeout: 45_000 });
   return page.evaluate(async () => {
-    const deadline = performance.now() + 20_000;
+    const deadline = performance.now() + 45_000;
     while (performance.now() < deadline) {
       const zone = document.querySelector('.skill-zone') as HTMLElement | null;
       const needle = document.querySelector('.skill-needle') as HTMLElement | null;
@@ -128,6 +128,7 @@ async function stopWhenInZone(page: Page): Promise<boolean> {
 
 async function playHackPhase(page: Page): Promise<void> {
   await expect(page.locator('.skill-pattern')).toBeVisible({ timeout: 8000 });
+  // Reveal → hold must show all glyphs (no dots) for the memorize bar phase.
   await page.waitForFunction(
     () => {
       const panel = document.querySelector(
@@ -138,12 +139,12 @@ async function playHackPhase(page: Page): Promise<void> {
       const text = el?.textContent ?? '';
       return text.length > 0 && !text.includes('·');
     },
-    { timeout: 45_000 },
+    { timeout: 60_000 },
   );
   await shot(page, 'augusto-duel-hack-hold.png');
   await page.waitForFunction(
     () => !document.querySelector('.skill-panel:not([hidden]) .skill-seq-flash'),
-    { timeout: 30_000 },
+    { timeout: 45_000 },
   );
   await shot(page, 'augusto-duel-hack-input.png');
   const seq = await page.evaluate(() => {
@@ -168,6 +169,41 @@ async function playHackPhase(page: Page): Promise<void> {
   }
 }
 
+async function pickLedgerChoice(page: Page): Promise<void> {
+  const btn = page.getByRole('button', { name: /Livro nervoso|Ledger twitch/i });
+  await expect(btn).toBeVisible({ timeout: 8000 });
+  await page.waitForTimeout(600);
+  await btn.click();
+}
+
+async function waitHackInputArmed(page: Page): Promise<void> {
+  await expect(page.locator('.skill-pattern')).toBeVisible({ timeout: 12_000 });
+  await page.waitForFunction(
+    () => {
+      const panel = document.querySelector(
+        '.skill-panel:not([hidden])',
+      ) as HTMLElement | null;
+      return panel?.dataset.seqPhase === 'hold';
+    },
+    { timeout: 60_000 },
+  );
+  await page.waitForFunction(
+    () => !document.querySelector('.skill-panel:not([hidden]) .skill-seq-flash'),
+    { timeout: 45_000 },
+  );
+}
+
+async function exhaustHackMisses(page: Page): Promise<void> {
+  for (let i = 0; i < 4; i += 1) {
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(250);
+    if (i >= 3) break;
+    await expect(page.locator('.skill-miss-panel')).toBeVisible({ timeout: 5000 });
+    await page.getByRole('button', { name: /Tentar de novo|Retry/i }).click();
+    await waitHackInputArmed(page);
+  }
+}
+
 test.describe('Augusto duel full clear', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
 
@@ -180,32 +216,26 @@ test.describe('Augusto duel full clear', () => {
   });
 
   test('needle + choice + hack win at timescale 0.33', async ({ page }) => {
-    test.setTimeout(180_000);
+    test.setTimeout(240_000);
     await bootDuel(page);
     await expect(page.locator('.hud')).toHaveAttribute('data-input-mode', 'keyboard');
     await shot(page, 'augusto-duel-needle-start.png');
     await expect(page.locator('.btn-needle-stop')).toBeDisabled();
     expect(await stopWhenInZone(page)).toBe(true);
     await shot(page, 'augusto-duel-needle-win.png');
-
-    await expect(page.locator('.skill-actions .btn').nth(1)).toBeVisible({
-      timeout: 8000,
-    });
     await shot(page, 'augusto-duel-choice.png');
-    await page.waitForTimeout(500);
-    await page.locator('.skill-actions .btn').nth(1).click();
-
+    await pickLedgerChoice(page);
     await playHackPhase(page);
     await expect(page.locator('.skill-result-win')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.skill-result-win')).toContainText(/Augusto|feed|torre/i);
     await shot(page, 'augusto-duel-win.png');
-
     const done = await page.evaluate(() => {
       const he = (
         window as unknown as {
           __HOUSE_EDGE__: {
             session: {
               getSkillProgress: () => { done: boolean; won: boolean } | null;
-              getSkillResult: () => { won: boolean } | null;
+              getSkillResult: () => { won: boolean; skillKind?: string } | null;
               story: { getFlag: (f: string) => boolean };
             };
           };
@@ -216,6 +246,7 @@ test.describe('Augusto duel full clear', () => {
       return {
         progressWon: progress?.won ?? null,
         resultWon: result?.won ?? null,
+        skillKind: result?.skillKind ?? null,
         casa: he.session.story.getFlag('casa_quebrada'),
       };
     });
@@ -223,5 +254,22 @@ test.describe('Augusto duel full clear', () => {
       done.resultWon === true || done.progressWon === true || done.casa === true,
       JSON.stringify(done),
     ).toBe(true);
+  });
+
+  test('duel hack exhaust shows lose result (not silent world drop)', async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    await bootDuel(page);
+    expect(await stopWhenInZone(page)).toBe(true);
+    await pickLedgerChoice(page);
+    await waitHackInputArmed(page);
+    await exhaustHackMisses(page);
+    await expect(page.locator('.skill-result-lose')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.skill-result-lose')).toContainText(
+      /Augusto|casa|Failed|Falhou/i,
+    );
+    await shot(page, 'augusto-duel-lose.png');
+    await expect(page.locator('.skill-panel:not([hidden])')).toBeVisible();
   });
 });

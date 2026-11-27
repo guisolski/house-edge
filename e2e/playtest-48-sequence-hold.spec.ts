@@ -6,7 +6,7 @@ import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import fs from 'node:fs';
 
-const ART = path.join('artifacts', 'panels-v1.22.24');
+const ART = path.join('artifacts', 'panels-v1.22.25');
 
 test.beforeAll(() => {
   fs.mkdirSync(ART, { recursive: true });

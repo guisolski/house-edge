@@ -62,11 +62,11 @@ describe('v1.22.21 lockpick + fail card', () => {
   it('lockpick verdict line is plain (no colon-heavy toast style)', () => {
     setLocale('pt-BR');
     expect(formatLockpickVerdictLine(['low', 'low', 'ok'])).toBe(
-      'Pino 1 baixo, Pino 2 baixo, Pino 3 certo',
+      'Pino 1 ↑ subir, Pino 2 ↑ subir, Pino 3 ✓ certo',
     );
     setLocale('en');
     expect(formatLockpickVerdictLine(['high', 'ok', 'low'])).toBe(
-      'Pin 1 high, Pin 2 set, Pin 3 low',
+      'Pin 1 ↓ lower, Pin 2 ✓ set, Pin 3 ↑ raise',
     );
   });
 

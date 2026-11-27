@@ -265,20 +265,26 @@ canvas.excalibur-game {
 }
 
 .lockpick-pin-selected {
-  outline: 2px solid var(--neon-cyan, #2bfff2);
-  outline-offset: 2px;
+  outline: 3px solid var(--neon-cyan, #2bfff2);
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 2px #0c0c14,
+    0 0 14px #2bfff266;
+  border-color: var(--neon-cyan, #2bfff2);
+  font-weight: 800;
 }
 
-.lockpick-pin-ok {
+.lockpick-pin-verdict.lockpick-chip-ok {
   color: #7bc96f;
-  border-color: #7bc96f;
 }
 
-.lockpick-pin-low,
-.lockpick-pin-high,
-.lockpick-pin-bad {
+.lockpick-pin-verdict.lockpick-chip-low,
+.lockpick-pin-verdict.lockpick-chip-high {
   color: #ffdf00;
-  border-color: #ffdf00;
+}
+
+.lockpick-pin-verdict.lockpick-chip-empty {
+  color: transparent;
 }
 
 .skill-lockpick-feedback {
@@ -509,10 +515,20 @@ canvas.excalibur-game {
 
 .logo {
   margin: 0;
-  font-size: clamp(2rem, 8vw, 3.5rem);
+  font-size: clamp(2.75rem, 9vw, 4.5rem);
   letter-spacing: 0.08em;
   color: var(--yellow);
   text-shadow: 0 0 12px var(--magenta);
+}
+
+.title-screen .tagline {
+  font-size: clamp(16px, 1.6vw, 22px);
+  font-weight: 600;
+}
+
+.title-screen .btn {
+  min-height: 44px;
+  font-size: clamp(15px, 1.4vw, 18px);
 }
 
 .tagline,
@@ -805,12 +821,12 @@ canvas.excalibur-game {
   top: 50%;
   transform: translate(-50%, -50%);
   /*
-   * Playtest #48: keep HUD in unscaled screen space (never nest under a
-   * canvas letterbox). Width ≥55vw on desktop, capped at 720; body/title
-   * use viewport clamps so 15/20px CSS stays ≥15/20 rendered px.
+   * Playtest #49: desktop clamp(520px, 60vw, 960px) so 1920-wide is ~60%;
+   * mobile keeps ~92vw. Win/fail cards share this size.
    */
-  width: min(720px, 92vw);
-  min-width: min(720px, 92vw);
+  width: clamp(520px, 60vw, 960px);
+  min-width: 0;
+  max-width: min(960px, 96vw);
   max-height: min(85vh, 760px);
   overflow: hidden;
   background: #0c0c14f2;
@@ -823,6 +839,12 @@ canvas.excalibur-game {
   flex-direction: column;
   gap: 0.3rem;
   font-size: clamp(15px, 1.45vw, 18px);
+}
+
+.skill-panel.skill-result-panel,
+.skill-panel.skill-miss-panel {
+  width: clamp(520px, 60vw, 960px);
+  min-width: 0;
 }
 
 .skill-panel > h2,
@@ -878,7 +900,7 @@ canvas.excalibur-game {
 }
 
 .skill-panel .skill-actions .btn {
-  min-height: 40px;
+  min-height: 44px;
   font-size: clamp(15px, 1.45vw, 18px);
   padding: 0.45rem 0.9rem;
 }
@@ -909,14 +931,14 @@ canvas.excalibur-game {
 }
 
 .skill-panel[data-seq-phase='hold'] .skill-pattern {
+  /* Playtest #49: glow only — no font-size bump (fixed panel height). */
   color: #ffdf00;
   letter-spacing: 0.1em;
   text-shadow: 0 0 10px #ffdf0088;
-  font-size: clamp(18px, 2vw, 24px);
 }
 
 .skill-seq-slot {
-  min-height: 1.75em;
+  min-height: 2.1em;
   display: flex;
   align-items: center;
 }
@@ -924,7 +946,8 @@ canvas.excalibur-game {
 @media (max-width: 420px) {
   .skill-panel {
     min-width: 0;
-    width: min(720px, 92vw);
+    width: 92vw;
+    max-width: 92vw;
     padding: 0.55rem 0.7rem;
   }
 

@@ -595,11 +595,11 @@ function duelSkill(betId: string): SkillDef {
     phases: [
       {
         kind: 'timing',
-        // Playtest #26: boss is the hardest needle — tighter than Dancer Sol.
+        // Playtest #49: same sweep tier as regular needle (was 1.55 / 0.055 — too fast).
         prompt: 'Phase 1 — stop the house needle.',
         target: 0.5,
-        window: 0.055,
-        needleSpeed: 1.55,
+        window: 0.12,
+        needleSpeed: 0.8,
       },
       {
         kind: 'choice',

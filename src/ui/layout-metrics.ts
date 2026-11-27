@@ -3,12 +3,15 @@
  * Used by e2e to assert what the player actually sees (not raw CSS alone).
  */
 
-/** Minimum panel width for a viewport: desktop ≥55% (capped 720); mobile ≥92vw. */
+/**
+ * Minimum panel width for a viewport.
+ * Playtest #49: desktop CSS `clamp(520px, 60vw, 960px)`; mobile ≥92vw.
+ */
 export function panelWidthFloor(viewportWidth: number): number {
   if (viewportWidth <= 420) {
-    return Math.min(720, Math.floor(viewportWidth * 0.92));
+    return Math.floor(viewportWidth * 0.92);
   }
-  return Math.min(720, Math.floor(viewportWidth * 0.55));
+  return Math.min(960, Math.max(520, Math.floor(viewportWidth * 0.6)));
 }
 
 /** Computed font-size × ancestor/visual scale → on-screen CSS px. */

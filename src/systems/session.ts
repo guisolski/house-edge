@@ -108,6 +108,8 @@ export type SkillResultBanner = {
   payout: number;
   creditsDelta: number;
   repDelta: number;
+  /** Playtest #49: duel win/lose uses a dedicated headline. */
+  skillKind?: string;
 };
 
 /** Playtest #46: soft-miss fail card (retry / leave) — not toast-only. */
@@ -304,9 +306,16 @@ export class GameSession {
     }
   }
 
-  /** Soft-miss card → abandon the encounter. */
+  /**
+   * Soft-miss card → abandon the encounter with a lose result card
+   * (playtest #49: never silent-drop back to the world).
+   */
   leaveSkillMiss(): void {
     this.skillMissCard = null;
+    if (this.skillProgress && this.pendingBetId) {
+      this.finishSkill(false);
+      return;
+    }
     this.cancelBet();
   }
 
@@ -1274,6 +1283,18 @@ export class GameSession {
       // Retry current phase only — no stake drain, optional timing assist.
       this.skillProgress = assistAfterMiss(next);
       this.clearNeedleArm();
+      // Playtest #49: duel maxMisses → lose result (other skills keep soft miss card).
+      const phaseNow = this.skillProgress.def.phases[this.skillProgress.phaseIndex];
+      const cap = phaseNow?.maxMisses;
+      if (
+        this.skillProgress.def.kind === 'duel' &&
+        cap !== undefined &&
+        this.skillProgress.misses >= cap
+      ) {
+        this.bus.emit('audio:play-sfx', { id: 'lose' });
+        this.bus.emit('fx:flash', { kind: 'lose' });
+        return this.finishSkill(false);
+      }
       this.showSoftMissCard();
       this.bus.emit('audio:play-sfx', { id: 'lose' });
       this.bus.emit('fx:flash', { kind: 'lose' });
@@ -1355,6 +1376,7 @@ export class GameSession {
       payout: won ? payout : 0,
       stake: won ? stake : 0,
     });
+    const skillKind = this.skillProgress?.def.kind;
     this.pendingBetId = null;
     this.pendingStake = 0;
     this.skillProgress = null;
@@ -1363,7 +1385,13 @@ export class GameSession {
     this.stealthProgress = null;
     if (!this.ui.is('ending')) {
       // Playtest #43: set result before credit floater so HUD can suppress it.
-      this.skillResult = { won, payout, creditsDelta: delta, repDelta: rep };
+      this.skillResult = {
+        won,
+        payout,
+        creditsDelta: delta,
+        repDelta: rep,
+        skillKind,
+      };
       // Result card already shows the delta — skip overlapping +N cr floater.
       this.afterSkillUi(won, payout, storyBeat);
     } else {

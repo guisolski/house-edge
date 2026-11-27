@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.22.25] — 2026-11-26
+
+### Fixed
+- **Augusto duel (P0)**: QA timescale slows needle sweep + every duel phase; hack uses the same reveal→hold→input; duel needle matches regular tier (~0.8); Leave / maxMisses show a lose result card (never silent world drop); clear duel win/lose headlines.
+- **Lockpick clarity (P1)**: selected pin gets ▶ + strong border; per-pin chips are ↑ subir / ↓ descer / ✓ certo; last-test chips stay separate from heights; lockpick timer already respects timescale.
+- **Panel width (P1)**: desktop `clamp(520px, 60vw, 960px)`; buttons ≥44px; win/fail cards share panel size; title logo/tagline/buttons scaled up.
+- **Sequence hold (P2)**: fixed slot height — hold uses glow, not a larger font.
+
+### Added
+- Duel win + lose e2e at timescale 0.33 (real key timing) → `artifacts/panels-v1.22.25/`.
+
 ## [1.22.24] — 2026-11-26
 
 ### Fixed

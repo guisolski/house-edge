@@ -78,10 +78,14 @@ describe('v1.22.24 sequence hold phase', () => {
 });
 
 describe('v1.22.24 layout metrics helpers', () => {
-  it('floors desktop panel width at 55% capped by 720', () => {
-    expect(panelWidthFloor(1280)).toBe(Math.min(720, Math.floor(1280 * 0.55)));
-    expect(panelWidthFloor(1024)).toBe(Math.min(720, Math.floor(1024 * 0.55)));
-    expect(panelWidthFloor(390)).toBe(Math.min(720, Math.floor(390 * 0.92)));
+  it('floors desktop panel width at clamp(520, 60vw, 960)', () => {
+    expect(panelWidthFloor(1280)).toBe(
+      Math.min(960, Math.max(520, Math.floor(1280 * 0.6))),
+    );
+    expect(panelWidthFloor(1024)).toBe(
+      Math.min(960, Math.max(520, Math.floor(1024 * 0.6))),
+    );
+    expect(panelWidthFloor(390)).toBe(Math.floor(390 * 0.92));
   });
 
   it('multiplies computed font by ancestor scale', () => {
